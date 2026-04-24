@@ -308,9 +308,10 @@ func TestInitWithBatchExporterFlushesOnShutdown(t *testing.T) {
 	// So we must read spans after ForceFlush but before Shutdown on the exporter.
 	// The only safe way: use a custom exporter. Since InMemoryExporter always resets
 	// on Shutdown, verify via IsRecording instead.
-	if !span.IsRecording() {
-		// span.IsRecording() is false after End() — this is expected.
-		// The real assertion: no panic, no error from the batch processor.
+	// span.IsRecording() must be false after End() — batch processor
+	// consumed and ended the span.
+	if span.IsRecording() {
+		t.Fatalf("span should not be recording after End()")
 	}
 	if err := shutdown(context.Background()); err != nil {
 		t.Fatalf("shutdown: %v", err)
