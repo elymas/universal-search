@@ -1,8 +1,6 @@
 module github.com/elymas/universal-search
 
-go 1.25.0
-
-toolchain go1.25.3
+go 1.25.7
 
 require (
 	github.com/oklog/ulid/v2 v2.1.1
