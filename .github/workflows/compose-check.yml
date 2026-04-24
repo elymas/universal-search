@@ -1,0 +1,30 @@
+name: Compose Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate compose config
+        run: docker compose -f deploy/docker-compose.yml config
+
+      - name: Copy env example
+        run: cp .env.example .env
+
+      - name: Start stack
+        run: docker compose -f deploy/docker-compose.yml up --wait --quiet-pull
+        timeout-minutes: 2
+
+      - name: Check service status
+        run: docker compose -f deploy/docker-compose.yml ps
+
+      - name: Teardown
+        if: always()
+        run: docker compose -f deploy/docker-compose.yml down -v
