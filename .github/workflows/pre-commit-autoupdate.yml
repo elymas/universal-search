@@ -1,0 +1,58 @@
+# SPEC-DEP-001 — Pre-commit Autoupdate CI
+# REQ-DEP-002
+#
+# Runs weekly on Monday 06:00 UTC and opens a PR when hook revs change.
+# All action refs are pinned to @v<major> per NFR-DEP-001.
+
+name: pre-commit autoupdate
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Monday 06:00 UTC (REQ-DEP-002)
+  workflow_dispatch:
+
+jobs:
+  autoupdate:
+    name: pre-commit autoupdate
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Fetch full history so create-pull-request can detect changes
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pre-commit (pinned version)
+        run: pip install pre-commit==4.0.1
+
+      - name: Run pre-commit autoupdate
+        # Updates all hook revs in .pre-commit-config.yaml to latest stable
+        run: pre-commit autoupdate
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(deps): pre-commit autoupdate"
+          title: "chore(deps): pre-commit autoupdate"
+          body: |
+            Automated weekly pre-commit autoupdate.
+
+            Updated hook revs via `pre-commit autoupdate`. All changes have been
+            validated by running the hooks locally.
+
+            See [SPEC-DEP-001](/.moai/specs/SPEC-DEP-001/spec.md) for policy details.
+          branch: automated/pre-commit-autoupdate
+          labels: |
+            dependencies
+            automated
+          delete-branch: true
+          # Only create PR if there are actual changes
+          base: main

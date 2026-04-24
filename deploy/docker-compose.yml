@@ -11,8 +11,9 @@ version: "3.9"
 # Run: make compose-up
 # Stop: make compose-down
 #
-# Note: searxng:latest is intentional for SPEC-BOOT-001.
-# SPEC-DEP-001 will replace it with a dated digest.
+# SearXNG pinned to dated tag at SPEC-DEP-001 merge time (2026-04-24).
+# Digest: sha256:37c616a774b90fb5df9239eb143f1b11866ddf7b830cd1ebcca6ba11b38cc2bf
+# To update: follow the procedure in docs/dependencies.md §SearXNG digest pin procedure.
 
 networks:
   app:
@@ -102,11 +103,11 @@ services:
       - app
 
   # ── SearXNG metasearch engine ────────────────────────────────────────────────
-  # Image stays :latest for SPEC-BOOT-001; SPEC-DEP-001 pins to a dated digest.
+  # Pinned to dated tag 2026.4.22-74f1ca203 by SPEC-DEP-001 (2026-04-24).
   # SearXNG is AGPL-3.0; consumed as an external service (service-boundary, not linked).
-  # See NOTICE and README for license compliance details.
+  # See NOTICE and docs/dependencies.md for license compliance details.
   searxng:
-    image: searxng/searxng:latest
+    image: searxng/searxng:2026.04.22-74f1ca203
     ports:
       - "${SEARXNG_PORT:-8080}:8080"
     volumes:

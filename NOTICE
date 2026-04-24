@@ -34,5 +34,6 @@ Third-Party Services (run as external processes; not bundled or statically linke
 - LiteLLM (MIT): consumed as a Docker image (ghcr.io/berriai/litellm).
   See https://github.com/BerriAI/litellm.
 
-Full third-party attribution files will be collected under docs/licenses/ as
-SPECs add direct dependencies (SPEC-DEP-001 onwards).
+Third-party attribution files are maintained under docs/licenses/ and
+docs/dependencies.md (SPEC-DEP-001). The full dependency manifest including
+pinned versions, licenses, and rationale is at docs/dependencies.md.
