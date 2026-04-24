@@ -41,8 +41,10 @@ repos:
       - id: go-mod-tidy
 
   # ── Python linting and formatting (ruff) ────────────────────────────────────
+  # rev kept in sync with the ruff version declared in services/*/pyproject.toml
+  # dev dependency-group to avoid cross-version format drift.
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.0
+    rev: v0.15.11
     hooks:
       - id: ruff
         args: [--fix]

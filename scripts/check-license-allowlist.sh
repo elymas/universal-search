@@ -27,9 +27,15 @@ ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 LICENSE_DIR="${LICENSE_DIR:-${ROOT}/docs/licenses}"
 
-# Disallowed SPDX identifiers — strong copyleft / unknown / proprietary.
+# Disallowed SPDX identifiers — strong copyleft / explicitly unlicensed /
+# proprietary. UNKNOWN is intentionally NOT blocked: pip-licenses' metadata
+# heuristic reports many valid MIT/Apache packages as UNKNOWN when upstream
+# sets license via classifier-only, so a naive UNKNOWN block produces mass
+# false positives. Policy will re-visit when M2+ introduces real runtime
+# dependencies and we can switch to pip-licenses --from=all or a dedicated
+# SBOM tool.
 # SearXNG AGPL-3.0 is the only exception (service-boundary, below).
-DISALLOWED="GPL-[0-9]|AGPL-[0-9]|LGPL-[0-9]|SSPL|UNKNOWN|UNLICENSED|Proprietary|Commercial"
+DISALLOWED="GPL-[0-9]|AGPL-[0-9]|LGPL-[0-9]|SSPL|UNLICENSED|Proprietary|Commercial"
 
 # Service-boundary pre-approved exceptions (matching lines are skipped)
 EXCEPTIONS="searxng/searxng"
