@@ -1,0 +1,22 @@
+general:
+  instance_name: "universal-search-dev"
+  debug: false
+
+server:
+  secret_key: "${SEARXNG_SECRET}"
+  limiter: false
+  image_proxy: false
+
+ui:
+  static_use_hash: false
+
+search:
+  safe_search: 0
+  autocomplete: ""
+  default_lang: "all"
+
+engines:
+  - name: google
+    engine: google
+    shortcut: g
+    disabled: false
