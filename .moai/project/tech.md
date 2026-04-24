@@ -15,7 +15,7 @@
 | Language | Version | Where | Why |
 |----------|---------|-------|-----|
 | Go | 1.23+ | `cmd/`, `internal/`, `pkg/` | Single-binary deploy, stdlib HTTP, goroutines for fanout, project's native stack |
-| Python | 3.12+ | `services/*` | gpt-researcher, STORM, embedding models |
+| Python | 3.11+ | `services/*` | gpt-researcher, STORM, embedding models (minimum floor per upstream) |
 | TypeScript | 5.4+ | `web/` | Next.js 16 App Router for Web UI |
 | SQL (PostgreSQL) | 16+ | schema under `internal/index/postgres/migrations/` | metadata + audit |
 
@@ -165,5 +165,12 @@ RRF formula: `score(d) = Σ 1 / (k + rank_i(d))` with `k=60` by convention.
 | 2026-04-24 | Primary orchestration language = Go | existing MoAI stack convention, powernap LSP |
 | 2026-04-24 | SearXNG as service, not fork | AGPL boundary preserved |
 | 2026-04-24 | Korean tokenization = mecab-ko sidecar | Meili default tokenizer is weak for Korean |
+| 2026-04-24 | Go module path = `github.com/elymas/universal-search` | User-selected (SPEC-BOOT-001 annotation); canonical "universal-search" spelling despite dir typo |
+| 2026-04-24 | Python baseline refined 3.12+ → 3.11+ | gpt-researcher and knowledge-storm declare `>=3.11`; 3.12 is strictly stricter and unnecessary (SPEC-BOOT-001 annotation) |
+| 2026-04-24 | Task queue backing = redis:7-alpine (not Valkey) | Asynq primary test matrix is Redis; zero migration risk at M1 (SPEC-BOOT-001 annotation) |
+| 2026-04-24 | Node LTS = 22 (not 20) | Active LTS support through 2027-04; Next.js 16 official (SPEC-BOOT-001 annotation) |
+| 2026-04-24 | Python package manager = uv with workspace | 2026 consensus for monorepo with heterogeneous sidecars; single top-level uv.lock (SPEC-BOOT-001 D3) |
+| 2026-04-24 | Node package manager = pnpm | Disk-efficient workspace hoisting (SPEC-BOOT-001 D5) |
+| 2026-04-24 | Service image pins | Qdrant v1.16.3, Meilisearch v1.42.1, Postgres 16.13-alpine3.23, LiteLLM v1.83.7-stable.patch.1, Redis 7-alpine, SearXNG `searxng/searxng:latest` (dated digest pin deferred to SPEC-DEP-001) |
 
 Subsequent decisions append to this table, never overwrite.
