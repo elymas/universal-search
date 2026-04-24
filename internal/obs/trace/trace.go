@@ -68,6 +68,14 @@ func InitWithExporter(ctx context.Context, cfg Config, exp sdktrace.SpanExporter
 	return initWithProcessor(ctx, cfg, sdktrace.NewSimpleSpanProcessor(exp))
 }
 
+// InitWithBatchExporter is like InitWithExporter but wraps exp in a
+// BatchSpanProcessor, matching the production code path. Useful for verifying
+// that batch flush occurs correctly in integration tests.
+// Note: call shutdown before reading spans; InMemoryExporter.Shutdown resets its store.
+func InitWithBatchExporter(ctx context.Context, cfg Config, exp sdktrace.SpanExporter) (func(context.Context) error, error) {
+	return initWithExporter(ctx, cfg, exp)
+}
+
 // initWithExporter wires the TracerProvider around the given exporter using a
 // BatchSpanProcessor — the production path for OTLP gRPC export.
 func initWithExporter(ctx context.Context, cfg Config, exp sdktrace.SpanExporter) (func(context.Context) error, error) {

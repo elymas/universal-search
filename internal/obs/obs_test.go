@@ -204,6 +204,42 @@ func TestObsAdminServerStartsWhenPortSet(t *testing.T) {
 	}
 }
 
+// TestObsInitAdminServerBindFailReturnsError verifies that an invalid AdminAddr
+// causes Init to return an error.
+// REQ-OBS-004
+func TestObsInitAdminServerBindFailReturnsError(t *testing.T) {
+	t.Parallel()
+
+	cfg := obs.Config{
+		ServiceName: "test-svc",
+		// Port 1 is privileged on most systems and will fail to bind without root.
+		// Use an invalid address format to guarantee a bind error.
+		AdminAddr: "256.256.256.256:9999",
+	}
+	_, _, err := obs.Init(context.Background(), cfg)
+	if err == nil {
+		t.Error("expected error for invalid AdminAddr, got nil")
+	}
+}
+
+// TestObsInitOTLPPathSucceeds verifies that Init succeeds with a non-empty
+// OTLPEndpoint (lazy gRPC dial — no actual collector needed).
+// REQ-OBS-005
+func TestObsInitOTLPPathSucceeds(t *testing.T) {
+	// Not parallel: modifies global OTel state.
+
+	cfg := obs.Config{
+		ServiceName:  "test-svc",
+		OTLPEndpoint: "localhost:4317",
+		SampleRatio:  0.1,
+	}
+	_, shutdown, err := obs.Init(context.Background(), cfg)
+	if err != nil {
+		t.Fatalf("Init with OTLP endpoint: %v", err)
+	}
+	_ = shutdown(context.Background())
+}
+
 // Ensure slog and os are used to avoid "imported and not used" errors.
 var _ = slog.LevelDebug
 var _ = os.Stdout
