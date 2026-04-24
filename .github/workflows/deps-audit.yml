@@ -135,11 +135,16 @@ jobs:
 
       - name: Generate Python license report
         run: |
-          uv pip install pip-licenses==5.0.0
+          : > docs/licenses/python.txt
           for svc in services/*/; do
             [ -f "${svc}pyproject.toml" ] || continue
             svcname=$(basename "$svc")
-            pip-licenses --format=plain 2>/dev/null >> docs/licenses/python.txt || true
+            echo "# === ${svcname} ===" >> docs/licenses/python.txt
+            # Sync service (pip-licenses is in the dev group)
+            uv sync --group dev --directory "${svc}" >/dev/null 2>&1 || true
+            uv run --directory "${svc}" --with pip-licenses==5.0.0 \
+              pip-licenses --format=plain 2>/dev/null >> docs/licenses/python.txt || true
+            echo "" >> docs/licenses/python.txt
           done
 
       - name: Generate Web license report

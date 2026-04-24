@@ -15,10 +15,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Set up Go (for go-fmt/go-imports hooks)
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      - name: Install hadolint binary (required by hadolint pre-commit hook)
+        run: |
+          sudo curl -sSL -o /usr/local/bin/hadolint \
+            https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64
+          sudo chmod +x /usr/local/bin/hadolint
+          hadolint --version
 
       - name: Install pre-commit
         run: pip install pre-commit
