@@ -1,0 +1,24 @@
+[project]
+name = "researcher"
+version = "0.0.1-dev"
+description = "gpt-researcher sidecar service — FastAPI wrapper for deep research synthesis"
+requires-python = ">=3.11"
+dependencies = [
+    "gpt-researcher>=0.12,<1.0",
+    "fastapi>=0.115,<1.0",
+    "uvicorn[standard]>=0.30,<1.0",
+    "pydantic>=2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "httpx", "ruff"]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
