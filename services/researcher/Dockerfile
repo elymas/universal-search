@@ -5,9 +5,10 @@ FROM python:3.11-slim AS base
 
 WORKDIR /app
 
-# Install dependencies via pip (uv not available in image by default)
+# Combine system setup into a single RUN to avoid DL3059.
 # hadolint ignore=DL3013
-RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir --upgrade pip \
+ && useradd --create-home --shell /bin/bash appuser
 
 COPY pyproject.toml ./
 COPY src/ ./src/
@@ -15,8 +16,6 @@ COPY src/ ./src/
 # hadolint ignore=DL3013
 RUN pip install --no-cache-dir .
 
-# Non-root user for security
-RUN useradd --create-home --shell /bin/bash appuser
 USER appuser
 
 CMD ["python", "-m", "researcher"]

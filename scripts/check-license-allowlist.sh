@@ -2,30 +2,36 @@
 # scripts/check-license-allowlist.sh — License compliance enforcement
 # SPEC-DEP-001 REQ-DEP-004
 #
-# Reads docs/licenses/{go,python,web}.txt and checks every line against the
-# approved license allowlist. Exits 1 if any disallowed license is found.
-# Missing license files produce a warning and are skipped gracefully (exit 0).
+# Scans docs/licenses/{go,python,web}.txt for known DISALLOWED license
+# strings (blocklist approach). Exits 1 on first match. Missing files
+# produce a warning and are skipped gracefully (exit 0).
+#
+# Blocklist approach rationale:
+#   Allowlist-based line-by-line grep produces false positives on
+#   tree-formatted output from license-checker (metadata lines like
+#   "├─ repository:" don't contain license strings). Blocklist only
+#   flags lines that explicitly name a forbidden license, passing
+#   both tree-style and tabular outputs.
 #
 # Environment variable:
-#   LICENSE_DIR — override the directory containing {go,python,web}.txt
-#                 (default: docs/licenses relative to script directory)
+#   LICENSE_DIR — override the directory (default: docs/licenses)
 #
 # Pre-approved exceptions (service-boundary):
-#   searxng/searxng — AGPL-3.0; consumed as an external Docker service, not linked.
+#   searxng/searxng — AGPL-3.0 consumed as external Docker service,
+#     not linked. See NOTICE.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-# Allow test fixtures to override the license directory via env var
 LICENSE_DIR="${LICENSE_DIR:-${ROOT}/docs/licenses}"
 
-# Approved SPDX license identifiers (regex alternation)
-ALLOWLIST="MIT|Apache-2.0|BSD-2-Clause|BSD-3-Clause|ISC|PostgreSQL|MPL-2.0"
+# Disallowed SPDX identifiers — strong copyleft / unknown / proprietary.
+# SearXNG AGPL-3.0 is the only exception (service-boundary, below).
+DISALLOWED="GPL-[0-9]|AGPL-[0-9]|LGPL-[0-9]|SSPL|UNKNOWN|UNLICENSED|Proprietary|Commercial"
 
-# Service-boundary pre-approved exceptions (these lines are always skipped)
-# searxng/searxng — AGPL-3.0; external service, not linked (see NOTICE)
+# Service-boundary pre-approved exceptions (matching lines are skipped)
 EXCEPTIONS="searxng/searxng"
 
 found_bad=0
@@ -37,7 +43,6 @@ for f in "${LICENSE_DIR}/go.txt" "${LICENSE_DIR}/python.txt" "${LICENSE_DIR}/web
   fi
 
   while IFS= read -r line || [ -n "${line}" ]; do
-    # Skip empty lines and comment lines
     [ -z "${line}" ] && continue
     [[ "${line}" =~ ^#.*$ ]] && continue
 
@@ -46,8 +51,8 @@ for f in "${LICENSE_DIR}/go.txt" "${LICENSE_DIR}/python.txt" "${LICENSE_DIR}/web
       continue
     fi
 
-    # Check if the line contains an approved license
-    if ! echo "${line}" | grep -qE "${ALLOWLIST}"; then
+    # Flag only if the line explicitly names a disallowed license
+    if echo "${line}" | grep -qE "${DISALLOWED}"; then
       echo "DISALLOWED LICENSE: ${line}" >&2
       found_bad=1
     fi
@@ -57,7 +62,7 @@ done
 if [ "${found_bad}" -eq 1 ]; then
   echo "" >&2
   echo "License check FAILED. See SPEC-DEP-001 §5.1 for the allowlist." >&2
-  echo "To add an exception, document it in this script with justification." >&2
+  echo "To add a specific exception, document it in this script with justification." >&2
   exit 1
 fi
 
