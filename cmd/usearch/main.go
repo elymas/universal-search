@@ -13,7 +13,7 @@ func main() {
 	flag.Parse()
 
 	if *version {
-		fmt.Printf("usearch %s\n", meta.Version)
+		fmt.Printf("usearch v%s\n", meta.Version)
 		os.Exit(0)
 	}
 
