@@ -130,16 +130,22 @@ services:
       - app
 
   # ── LiteLLM proxy (unified LLM gateway) ────────────────────────────────────
+  # SPEC-LLM-001: REQ-LLM-001..REQ-LLM-008
   litellm:
     image: ghcr.io/berriai/litellm:v1.83.7-stable.patch.1
     ports:
       - "${LITELLM_PORT:-4000}:4000"
+    volumes:
+      - ./litellm/config.yaml:/app/config.yaml:ro
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
     environment:
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      LITELLM_BUDGET_USD: ${LITELLM_BUDGET_USD:-0.50}
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
     depends_on:
       postgres:
         condition: service_healthy

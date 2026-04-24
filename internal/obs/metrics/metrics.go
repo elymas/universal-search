@@ -124,6 +124,9 @@ func NewRegistry() *Registry {
 	adapterDuration.WithLabelValues("").Observe(0)
 	buildInfo.WithLabelValues("", "", "").Set(0)
 
+	// Register LLM metrics (SPEC-LLM-001).
+	registerLLM(pr)
+
 	return &Registry{
 		Prometheus:          pr,
 		HTTPRequests:        httpRequests,
@@ -137,6 +140,8 @@ func NewRegistry() *Registry {
 			"adapter_class",
 			"adapter", "outcome",
 			"version", "commit", "go_version",
+			// LLM labels (SPEC-LLM-001 REQ-LLM-007)
+			"provider", "model",
 		},
 	}
 }
