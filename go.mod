@@ -1,6 +1,6 @@
 module github.com/elymas/universal-search
 
-go 1.25.7
+go 1.25.8
 
 require (
 	github.com/oklog/ulid/v2 v2.1.1
