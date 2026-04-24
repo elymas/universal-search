@@ -1,0 +1,29 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":dependencyDashboard"],
+  "timezone": "UTC",
+  "schedule": [
+    "after 10pm every weekday",
+    "before 5am every weekday",
+    "every weekend"
+  ],
+  "prConcurrentLimit": 5,
+  "separateMajorMinor": true,
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "minor-and-patch-deps",
+      "schedule": ["before 5am on monday"]
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "groupName": null,
+      "labels": ["major-upgrade", "needs-review"]
+    }
+  ],
+  "ignorePaths": [".moai/**"],
+  "docker": {
+    "enabled": false
+  },
+  "assignees": ["limbowl"]
+}

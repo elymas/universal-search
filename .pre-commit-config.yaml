@@ -1,0 +1,77 @@
+---
+# Universal Search — pre-commit hook configuration (REQ-BOOT-008)
+# Install: pip install pre-commit && pre-commit install
+# Run all: pre-commit run --all-files
+# Update revs: pre-commit autoupdate
+#
+# Framework directories (.claude/, .moai/) are excluded from file-hygiene
+# and formatter hooks because those files are managed by MoAI-ADK upstream
+# (see `moai update`) and auto-formatting them would create spurious churn.
+
+# Global exclude: skip framework-managed and generated artifacts.
+exclude: |
+  (?x)^(
+    \.claude/.*|
+    \.moai/.*|
+    web/node_modules/.*|
+    web/\.next/.*|
+    web/pnpm-lock\.yaml|
+    uv\.lock|
+    docs/licenses/.*
+  )$
+
+repos:
+  # ── General file hygiene ────────────────────────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+
+  # ── Go formatting and imports ────────────────────────────────────────────────
+  - repo: https://github.com/dnephin/pre-commit-golang
+    rev: v0.5.1
+    hooks:
+      - id: go-fmt
+      - id: go-imports
+      - id: go-mod-tidy
+
+  # ── Python linting and formatting (ruff) ────────────────────────────────────
+  # rev kept in sync with the ruff version declared in services/*/pyproject.toml
+  # dev dependency-group to avoid cross-version format drift.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.11
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  # ── Web formatting (Prettier) ────────────────────────────────────────────────
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v4.0.0-alpha.8
+    hooks:
+      - id: prettier
+        files: \.(js|ts|tsx|jsx|json|md|yaml|yml)$
+
+  # ── Dockerfile linting ───────────────────────────────────────────────────────
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint
+
+  # ── Shell script linting ─────────────────────────────────────────────────────
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+
+  # ── YAML linting ─────────────────────────────────────────────────────────────
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        args: [-d, relaxed]

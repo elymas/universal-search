@@ -1,0 +1,198 @@
+# SPEC-DEP-001 — Dependency Audit CI
+# REQ-DEP-003, REQ-DEP-004, REQ-DEP-005
+#
+# Triggers: pull_request + weekly schedule (Monday 04:00 UTC)
+# Jobs:
+#   govulncheck   - Go vulnerability scanning (call-graph-filtered)
+#   pip-audit     - Python vulnerability scanning (per-service matrix)
+#   pnpm-audit    - Web vulnerability scanning (high severity blocks merge)
+#   hadolint      - Dockerfile linting (warning threshold)
+#   license-scan  - License compliance enforcement
+#   searxng-digest-check - Ensure SearXNG image is not :latest
+
+name: deps-audit
+
+on:
+  pull_request:
+  schedule:
+    - cron: "0 4 * * 1" # Monday 04:00 UTC (REQ-DEP-003)
+  workflow_dispatch:
+
+jobs:
+  # ── govulncheck: Go vulnerability scanning ─────────────────────────────────
+  # Reports only vulnerabilities reachable via the call graph (not all transitive).
+  # HIGH severity → exits non-zero → PR status check fails (REQ-DEP-003).
+  govulncheck:
+    name: govulncheck (Go)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+          cache: true
+
+      - name: Install govulncheck (pinned)
+        run: go install golang.org/x/vuln/cmd/govulncheck@v1.1.4
+
+      - name: Run govulncheck
+        run: govulncheck ./...
+
+  # ── pip-audit: Python vulnerability scanning ────────────────────────────────
+  # Runs per-service via matrix. Each service must have pyproject.toml.
+  # HIGH severity → exits non-zero (REQ-DEP-003).
+  pip-audit:
+    name: pip-audit (${{ matrix.service }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [researcher, storm, embedder]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v3
+
+      - name: Install service dev dependencies (pip-audit)
+        run: uv sync --group dev --directory services/${{ matrix.service }}
+
+      - name: Run pip-audit for ${{ matrix.service }}
+        run: uv run --directory services/${{ matrix.service }} pip-audit
+
+  # ── pnpm-audit: Web vulnerability scanning ─────────────────────────────────
+  # --audit-level=high: only HIGH/CRITICAL findings fail the job (REQ-DEP-003).
+  pnpm-audit:
+    name: pnpm audit (web)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: "web/.nvmrc"
+          cache: "pnpm"
+          cache-dependency-path: "web/pnpm-lock.yaml"
+
+      - name: Install web dependencies
+        run: pnpm --dir web install --frozen-lockfile
+
+      - name: pnpm audit (high severity)
+        run: pnpm --dir web audit --audit-level=high
+        continue-on-error: false
+
+  # ── hadolint: Dockerfile linting ────────────────────────────────────────────
+  # warning threshold means the job fails on warnings or above (REQ-DEP-003).
+  hadolint:
+    name: hadolint (Dockerfiles)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hadolint/hadolint-action@v3.1.0
+        with:
+          recursive: true
+          dockerfile: "**/Dockerfile"
+          failure-threshold: warning
+
+  # ── license-scan: License compliance enforcement ────────────────────────────
+  # Generates docs/licenses/{go,python,web}.txt and runs allowlist check.
+  # REQ-DEP-004: any license outside the allowlist → exit 1 → blocks merge.
+  license-scan:
+    name: license-scan
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+          cache: true
+
+      - uses: astral-sh/setup-uv@v3
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: "web/.nvmrc"
+          cache: "pnpm"
+          cache-dependency-path: "web/pnpm-lock.yaml"
+
+      - name: Create docs/licenses directory
+        run: mkdir -p docs/licenses
+
+      - name: Generate Go license report
+        run: |
+          go install github.com/google/go-licenses@v1.6.0
+          go-licenses report ./... > docs/licenses/go.txt 2>/dev/null || true
+
+      - name: Generate Python license report
+        run: |
+          : > docs/licenses/python.txt
+          for svc in services/*/; do
+            [ -f "${svc}pyproject.toml" ] || continue
+            svcname=$(basename "$svc")
+            echo "# === ${svcname} ===" >> docs/licenses/python.txt
+            # Sync service (pip-licenses is in the dev group)
+            uv sync --group dev --directory "${svc}" >/dev/null 2>&1 || true
+            uv run --directory "${svc}" --with pip-licenses==5.0.0 \
+              pip-licenses --format=plain 2>/dev/null >> docs/licenses/python.txt || true
+            echo "" >> docs/licenses/python.txt
+          done
+
+      - name: Generate Web license report
+        run: |
+          pnpm --dir web install --frozen-lockfile
+          npm install -g license-checker@25.0.1
+          license-checker --start web --excludePrivatePackages \
+            --out docs/licenses/web.txt 2>/dev/null || true
+
+      - name: Check license allowlist
+        run: bash scripts/check-license-allowlist.sh
+
+      # On scheduled main-branch runs, commit the generated license files
+      - name: Commit license files (scheduled runs only)
+        if: github.event_name == 'schedule' && github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/licenses/
+          git diff --staged --quiet || git commit -m "chore(deps): regenerate license reports [skip ci]"
+          git push
+
+  # ── searxng-digest-check: Ensure SearXNG image is not :latest ───────────────
+  # REQ-DEP-005: fails if SearXNG image is referenced by :latest tag.
+  searxng-digest-check:
+    name: searxng digest pin
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assert SearXNG image is digest-pinned
+        run: |
+          # Extract the SearXNG image line from compose file
+          line=$(grep -E '^\s*image:\s*searxng/searxng' deploy/docker-compose.yml || true)
+          if [ -z "$line" ]; then
+            echo "ERROR: No searxng/searxng image line found in deploy/docker-compose.yml"
+            exit 1
+          fi
+          # Must match dated tag (YYYY.MM.DD-...) or sha256 digest
+          if echo "$line" | grep -Eq '(@sha256:[a-f0-9]{64}|:[0-9]{4}\.[0-9]{2}\.[0-9]{2}[-a-f0-9]*)'; then
+            echo "OK: SearXNG image is properly pinned: $line"
+          else
+            echo "FAIL: SearXNG must be digest-pinned (dated tag or sha256). Got: $line"
+            echo "See docs/dependencies.md §SearXNG digest pin procedure for instructions."
+            exit 1
+          fi
+          # Ensure :latest is absent
+          if echo "$line" | grep -q ':latest'; then
+            echo "FAIL: SearXNG image must not use :latest"
+            exit 1
+          fi

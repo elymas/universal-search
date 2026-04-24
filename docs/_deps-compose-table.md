@@ -1,0 +1,14 @@
+## Compose Services
+
+Hardcoded table of all Docker Compose services in `deploy/docker-compose.yml`.
+Image tags pinned at SPEC-BOOT-001 merge time; SearXNG pinned at SPEC-DEP-001 merge time.
+Manual bumps require a new SPEC-DEP-NNN with justification (REQ-DEP-005).
+
+| Service     | Image                     | Tag / Digest                                                                                                                    | Upstream Repo                              | License                                           | Rationale                                                |
+| ----------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------- | -------------------------------------------------------- |
+| qdrant      | `qdrant/qdrant`           | `v1.16.3`                                                                                                                       | https://github.com/qdrant/qdrant           | Apache-2.0                                        | Vector database for semantic search (SPEC-VECTOR-001)    |
+| meilisearch | `getmeili/meilisearch`    | `v1.42.1`                                                                                                                       | https://github.com/meilisearch/meilisearch | MIT                                               | Keyword + hybrid full-text index (SPEC-IR-001)           |
+| postgres    | `postgres`                | `16.13-alpine3.23`                                                                                                              | https://www.postgresql.org                 | PostgreSQL                                        | Metadata, audit log, LiteLLM backend DB (SPEC-DB-001)    |
+| redis       | `redis`                   | `7-alpine`                                                                                                                      | https://github.com/redis/redis             | BSD-3-Clause                                      | Session cache + Asynq task queue (SPEC-LLM-001)          |
+| searxng     | `searxng/searxng`         | `2026.04.22-74f1ca203` (digest: `sha256:37c616a774b90fb5df9239eb143f1b11866ddf7b830cd1ebcca6ba11b38cc2bf`, captured 2026-04-24) | https://github.com/searxng/searxng         | AGPL-3.0 (service-boundary exception; see NOTICE) | Metasearch engine for web query federation (SPEC-IR-001) |
+| litellm     | `ghcr.io/berriai/litellm` | `v1.83.7-stable.patch.1`                                                                                                        | https://github.com/BerriAI/litellm         | MIT                                               | Unified LLM gateway proxy (SPEC-LLM-001)                 |

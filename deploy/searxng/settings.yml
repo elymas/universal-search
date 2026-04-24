@@ -1,0 +1,43 @@
+# SearXNG local configuration for Universal Search dev stack.
+# Secret key is sourced from the SEARXNG_SECRET environment variable (compose injects it).
+# Only public/no-auth engines are enabled here; API-key engines are opt-in.
+# Ref: https://docs.searxng.org/admin/settings/settings.html
+
+use_default_settings: true
+
+general:
+  debug: false
+  instance_name: "Universal Search — SearXNG"
+
+server:
+  port: 8080
+  bind_address: "0.0.0.0"
+  secret_key: "${SEARXNG_SECRET}"
+  # Allow all origins in local dev; tighten in production
+  cors_allow_all: true
+
+search:
+  safe_search: 0
+  autocomplete: ""
+  default_lang: "en"
+
+ui:
+  query_in_title: true
+  infinite_scroll: false
+  default_locale: "en"
+
+# Only enable engines that require no API keys for local dev.
+# Per-source adapters are wired in SPEC-ADP-001 through SPEC-ADP-009.
+engines:
+  - name: google
+    engine: google
+    shortcut: g
+    disabled: false
+  - name: bing
+    engine: bing
+    shortcut: b
+    disabled: false
+  - name: duckduckgo
+    engine: duckduckgo
+    shortcut: d
+    disabled: false

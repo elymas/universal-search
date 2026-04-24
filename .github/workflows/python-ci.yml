@@ -1,0 +1,41 @@
+name: Python CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  python:
+    name: Python ${{ matrix.service }} — pytest + ruff
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [researcher, storm, embedder]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: latest
+
+      - name: Set up Python 3.11
+        run: uv python install 3.11
+
+      - name: Install service dependencies (with dev group)
+        run: uv sync --group dev --directory services/${{ matrix.service }}
+
+      - name: Ruff lint
+        run: uv run --directory services/${{ matrix.service }} ruff check .
+
+      - name: Ruff format check
+        run: uv run --directory services/${{ matrix.service }} ruff format --check .
+
+      - name: Pytest
+        run: uv run --directory services/${{ matrix.service }} pytest
