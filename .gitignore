@@ -211,3 +211,18 @@ dist-ssr/
 .vercel/
 .netlify/
 .firebase/
+
+# ===========================================
+# Universal Search project-specific
+# ===========================================
+# Go binary artifacts
+cmd/usearch/usearch
+cmd/usearch/usearch.exe
+cmd/usearch-mcp/usearch-mcp
+cmd/usearch-api/usearch-api
+
+# Local env overrides (never commit)
+*.local.env
+
+# uv.lock is tracked (not ignored)
+# .venv/ already covered above
