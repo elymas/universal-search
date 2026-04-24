@@ -48,11 +48,15 @@ func readFile(t *testing.T, path string) string {
 // ---------------------------------------------------------------------------
 
 // TestGovulncheckInvocation verifies that deps-audit.yml invokes govulncheck.
+// Accepts either plain `govulncheck ./...` or the JSON-filtered variant
+// (`govulncheck -json ./...`) used once stdlib findings became informational
+// per the REQ-DEP-003 policy refinement.
 func TestGovulncheckInvocation(t *testing.T) {
 	root := projectRoot(t)
 	content := readFile(t, filepath.Join(root, ".github/workflows/deps-audit.yml"))
-	if !strings.Contains(content, "govulncheck ./...") {
-		t.Error("deps-audit.yml must contain 'govulncheck ./...'")
+	if !strings.Contains(content, "govulncheck ./...") &&
+		!strings.Contains(content, "govulncheck -json ./...") {
+		t.Error("deps-audit.yml must invoke govulncheck against ./...")
 	}
 }
 

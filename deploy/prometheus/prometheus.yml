@@ -1,0 +1,16 @@
+# Prometheus scrape configuration for Universal Search local development stack.
+# REQ-OBS-004: Prometheus scrapes usearch admin server /metrics endpoint.
+#
+# host.docker.internal resolves to the Docker host on macOS and Windows.
+# On Linux add: extra_hosts: ["host.docker.internal:host-gateway"] in docker-compose.yml.
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "usearch"
+    static_configs:
+      - targets:
+          - "host.docker.internal:${PROMETHEUS_SCRAPE_PORT:-9090}"
+    metrics_path: /metrics

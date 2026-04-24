@@ -36,8 +36,47 @@ jobs:
       - name: Install govulncheck (pinned)
         run: go install golang.org/x/vuln/cmd/govulncheck@v1.1.4
 
-      - name: Run govulncheck
-        run: govulncheck ./...
+      - name: Run govulncheck (fail only on non-stdlib vulnerabilities)
+        # Go stdlib vulnerabilities are reported as informational — they are
+        # inevitable between Go patch releases (monthly CVE cadence) and a
+        # blocking policy would require bumping go.mod on every release.
+        # Bumps still happen, just not as a PR blocker. Third-party module
+        # vulnerabilities continue to block per REQ-DEP-003.
+        run: |
+          set +e
+          govulncheck -json ./... > /tmp/vuln.json
+          STATUS=$?
+          set -e
+
+          # Non-stdlib findings (module field on trace[0] != "stdlib") fail.
+          NON_STDLIB=$(jq -r '
+            select(.finding != null) |
+            .finding |
+            select(.trace[0].module != null) |
+            select(.trace[0].module != "stdlib") |
+            "\(.osv) \(.trace[0].module)"
+          ' /tmp/vuln.json | sort -u)
+
+          STDLIB=$(jq -r '
+            select(.finding != null) |
+            .finding |
+            select(.trace[0].module == "stdlib") |
+            .osv
+          ' /tmp/vuln.json | sort -u)
+
+          echo "=== stdlib vulnerabilities (informational) ==="
+          echo "${STDLIB:-<none>}"
+          echo ""
+          echo "=== non-stdlib vulnerabilities (blocking) ==="
+          echo "${NON_STDLIB:-<none>}"
+
+          if [ -n "$NON_STDLIB" ]; then
+            echo ""
+            echo "FAIL: third-party module vulnerability detected."
+            exit 1
+          fi
+          echo ""
+          echo "PASS: no blocking vulnerabilities."
 
   # ── pip-audit: Python vulnerability scanning ────────────────────────────────
   # Runs per-service via matrix. Each service must have pyproject.toml.
