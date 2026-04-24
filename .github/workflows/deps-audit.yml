@@ -54,6 +54,9 @@ jobs:
 
       - uses: astral-sh/setup-uv@v3
 
+      - name: Install service dev dependencies (pip-audit)
+        run: uv sync --group dev --directory services/${{ matrix.service }}
+
       - name: Run pip-audit for ${{ matrix.service }}
         run: uv run --directory services/${{ matrix.service }} pip-audit
 

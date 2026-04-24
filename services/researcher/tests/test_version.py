@@ -4,7 +4,6 @@ import re
 
 import researcher
 
-
 SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+")
 
 

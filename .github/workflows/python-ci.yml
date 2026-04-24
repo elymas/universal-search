@@ -28,8 +28,8 @@ jobs:
       - name: Set up Python 3.11
         run: uv python install 3.11
 
-      - name: Install service dependencies
-        run: uv sync --directory services/${{ matrix.service }}
+      - name: Install service dependencies (with dev group)
+        run: uv sync --group dev --directory services/${{ matrix.service }}
 
       - name: Ruff lint
         run: uv run --directory services/${{ matrix.service }} ruff check .

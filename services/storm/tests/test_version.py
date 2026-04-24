@@ -4,7 +4,6 @@ import re
 
 import storm
 
-
 SEMVER_PATTERN = re.compile(r"^\d+\.\d+\.\d+")
 
 
