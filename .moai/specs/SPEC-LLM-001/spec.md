@@ -2,13 +2,15 @@
 id: SPEC-LLM-001
 title: LiteLLM Proxy Integration
 milestone: M1 — Foundation
-status: draft
+status: approved
 priority: P0
 owner: expert-backend
 methodology: tdd
 coverage_target: 85
 created: 2026-04-25
 updated: 2026-04-25
+approved_by: limbowl
+approved_at: 2026-04-25
 depends_on: [SPEC-BOOT-001, SPEC-OBS-001]
 blocks: [SPEC-SYN-001, SPEC-DEEP-001, SPEC-DEEP-002, SPEC-DEEP-003, SPEC-DEEP-004]
 ---
