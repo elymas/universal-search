@@ -2,13 +2,15 @@
 id: SPEC-OBS-001
 title: Observability Baseline
 milestone: M1 — Foundation
-status: draft
+status: approved
 priority: P0
 owner: expert-performance
 methodology: tdd
 coverage_target: 85
 created: 2026-04-24
 updated: 2026-04-24
+approved_by: limbowl
+approved_at: 2026-04-24
 depends_on: [SPEC-BOOT-001]
 blocks: [SPEC-SYN-004, SPEC-EVAL-002]
 ---
