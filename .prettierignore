@@ -1,0 +1,13 @@
+# Framework-managed (moai-adk upstream)
+.claude/
+.moai/
+
+# Build artifacts
+web/.next/
+web/node_modules/
+node_modules/
+
+# Lockfiles and generated
+web/pnpm-lock.yaml
+uv.lock
+docs/licenses/

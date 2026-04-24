@@ -2,7 +2,11 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended", ":dependencyDashboard"],
   "timezone": "UTC",
-  "schedule": ["after 10pm every weekday", "before 5am every weekday", "every weekend"],
+  "schedule": [
+    "after 10pm every weekday",
+    "before 5am every weekday",
+    "every weekend"
+  ],
   "prConcurrentLimit": 5,
   "separateMajorMinor": true,
   "packageRules": [

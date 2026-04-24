@@ -7,6 +7,7 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 ### Added
+
 - **SPEC-BOOT-001** — M1 Foundation repo scaffold and CI bootstrap
   - Go module `github.com/elymas/universal-search` with `cmd/usearch` CLI (prints semver via `--version`), `internal/` domain stubs, `pkg/` public interfaces
   - Python `uv` workspace with three services (`researcher`, `storm`, `embedder`), each with `pyproject.toml`, `Dockerfile`, test skeleton
@@ -21,10 +22,11 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - `.github/workflows/pre-commit-autoupdate.yml` weekly cron (Monday 06:00 UTC) opening automated PR
   - `renovate.json` with `prConcurrentLimit: 5`, minor/patch grouping, `.moai/**` ignored, docker digest updates disabled (manual SPEC-gated)
   - `scripts/gen-deps-manifest.sh` idempotent manifest generator
-  - `scripts/check-license-allowlist.sh` enforcing MIT / Apache-2.0 / BSD-* / ISC / PostgreSQL / MPL-2.0 with SearXNG AGPL service-boundary exception, supporting `$LICENSE_DIR` override for tests
+  - `scripts/check-license-allowlist.sh` enforcing MIT / Apache-2.0 / BSD-\* / ISC / PostgreSQL / MPL-2.0 with SearXNG AGPL service-boundary exception, supporting `$LICENSE_DIR` override for tests
   - `tests/spec_dep_001_test.go` — 11 TDD acceptance tests covering REQ-DEP-001..007
 
 ### Changed
+
 - **SearXNG image** pinned from `searxng/searxng:latest` to `searxng/searxng:2026.04.22-74f1ca203` (digest `sha256:37c616a774b90fb5df9239eb143f1b11866ddf7b830cd1ebcca6ba11b38cc2bf`, captured 2026-04-24 via Docker Hub API) per REQ-DEP-005
 - **NOTICE** updated to point at `docs/dependencies.md` as the authoritative manifest
 

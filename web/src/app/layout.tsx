@@ -1,9 +1,9 @@
-import type { Metadata } from 'next';
-import './globals.css';
+import type { Metadata } from "next";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: 'Universal Search',
-  description: 'Hybrid AI-powered search engine',
+  title: "Universal Search",
+  description: "Hybrid AI-powered search engine",
 };
 
 export default function RootLayout({

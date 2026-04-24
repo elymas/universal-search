@@ -3,6 +3,22 @@
 # Install: pip install pre-commit && pre-commit install
 # Run all: pre-commit run --all-files
 # Update revs: pre-commit autoupdate
+#
+# Framework directories (.claude/, .moai/) are excluded from file-hygiene
+# and formatter hooks because those files are managed by MoAI-ADK upstream
+# (see `moai update`) and auto-formatting them would create spurious churn.
+
+# Global exclude: skip framework-managed and generated artifacts.
+exclude: |
+  (?x)^(
+    \.claude/.*|
+    \.moai/.*|
+    web/node_modules/.*|
+    web/\.next/.*|
+    web/pnpm-lock\.yaml|
+    uv\.lock|
+    docs/licenses/.*
+  )$
 
 repos:
   # ── General file hygiene ────────────────────────────────────────────────────

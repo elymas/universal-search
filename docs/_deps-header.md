@@ -20,6 +20,7 @@ The machine-generated sections (Go, Python, Web) are produced by
 > within the minor line; Renovate weekly bump.
 >
 > **Security updates**:
+>
 > - HIGH severity → patch within 7 days (emergency SPEC or hotfix PR)
 > - MEDIUM → next weekly Renovate run
 > - LOW → next scheduled dependency review
@@ -32,13 +33,13 @@ The machine-generated sections (Go, Python, Web) are produced by
 Planned Go dependencies not yet added. Each must be introduced via a PR referencing the
 corresponding consumer SPEC.
 
-| Package | Planned Consumer SPEC | Purpose |
-|---------|-----------------------|---------|
-| `github.com/go-chi/chi/v5` | SPEC-IR-001 | HTTP router for Information Retrieval service |
-| `github.com/prometheus/client_golang` | SPEC-OBS-001 | Prometheus metrics instrumentation |
-| `github.com/hibiken/asynq` | SPEC-LLM-001 | Redis-backed task queue for LLM orchestration |
-| `github.com/jackc/pgx/v5` | SPEC-DB-001 (tentative) | PostgreSQL driver |
-| `github.com/qdrant/go-client` | SPEC-VECTOR-001 (tentative) | Qdrant client |
+| Package                               | Planned Consumer SPEC       | Purpose                                       |
+| ------------------------------------- | --------------------------- | --------------------------------------------- |
+| `github.com/go-chi/chi/v5`            | SPEC-IR-001                 | HTTP router for Information Retrieval service |
+| `github.com/prometheus/client_golang` | SPEC-OBS-001                | Prometheus metrics instrumentation            |
+| `github.com/hibiken/asynq`            | SPEC-LLM-001                | Redis-backed task queue for LLM orchestration |
+| `github.com/jackc/pgx/v5`             | SPEC-DB-001 (tentative)     | PostgreSQL driver                             |
+| `github.com/qdrant/go-client`         | SPEC-VECTOR-001 (tentative) | Qdrant client                                 |
 
 ---
 
@@ -50,6 +51,7 @@ See [SPEC-DEP-001 §5.1](/.moai/specs/SPEC-DEP-001/spec.md) for the allowlist ta
 Approved licenses: MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, PostgreSQL, MPL-2.0
 
 Pre-approved exceptions:
+
 - `searxng/searxng` (AGPL-3.0): consumed as an external Docker service, not linked.
   Service boundary means AGPL copyleft does not apply. See NOTICE.
 
@@ -60,10 +62,12 @@ Pre-approved exceptions:
 Per REQ-DEP-005, the SearXNG image must be pinned to a dated tag or sha256 digest.
 
 **Current pin** (captured 2026-04-24 via Docker Hub API):
+
 - Tag: `searxng/searxng:2026.04.22-74f1ca203`
 - Digest: `sha256:37c616a774b90fb5df9239eb143f1b11866ddf7b830cd1ebcca6ba11b38cc2bf`
 
 **Procedure to update the pin**:
+
 1. Query Docker Hub API: `curl "https://hub.docker.com/v2/repositories/searxng/searxng/tags/?page_size=20&ordering=last_updated"`
 2. Identify the most recent stable dated tag (format `YYYY.MM.DD-<hash>`, not `latest` or `edge`).
 3. Or pull and capture digest: `docker pull searxng/searxng:latest && docker inspect searxng/searxng:latest --format='{{index .RepoDigests 0}}'`
@@ -84,4 +88,3 @@ After installation, Renovate will create a Dependency Dashboard issue and begin 
 PRs according to the schedule in `renovate.json`.
 
 ---
-
