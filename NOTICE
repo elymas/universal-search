@@ -1,0 +1,26 @@
+Universal Search
+Copyright (c) 2026 elymas
+
+This product includes software developed by the Universal Search contributors
+under the Apache License, Version 2.0.
+
+---
+
+Third-Party Services (run as external processes; not bundled or statically linked):
+
+- SearXNG (AGPL-3.0): consumed as a Docker image via docker-compose. Universal
+  Search does not modify, fork, or redistribute SearXNG source code. Network
+  interaction across a service boundary does not constitute a derivative work
+  under AGPL-3.0.
+
+- gpt-researcher (Apache-2.0): imported as a Python dependency in
+  services/researcher.
+
+- knowledge-storm (MIT): imported as a Python dependency in services/storm.
+
+- Qdrant (Apache-2.0), Meilisearch (MIT), PostgreSQL (PostgreSQL License),
+  Redis (BSD-3-Clause / SSPL — see redis:7-alpine image labels),
+  LiteLLM (MIT): all consumed as Docker images.
+
+Full third-party attribution files will be collected under docs/licenses/ as
+SPECs add direct dependencies.
