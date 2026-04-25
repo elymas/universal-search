@@ -84,12 +84,12 @@ type EmbedRequest struct {
 
 // EmbedResponse is a provider-agnostic embedding response.
 type EmbedResponse struct {
-	Vectors       [][]float32
-	Provider      string
-	Model         string
-	PromptTokens  int
-	LatencyMs     int64
-	CostUSD       float64
+	Vectors      [][]float32
+	Provider     string
+	Model        string
+	PromptTokens int
+	LatencyMs    int64
+	CostUSD      float64
 }
 
 // Client is the primary interface for LLM operations.

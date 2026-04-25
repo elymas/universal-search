@@ -28,7 +28,12 @@ const (
 func runStream(
 	ctx context.Context,
 	cancel context.CancelFunc,
-	stream interface{ Next() bool; Current() openai.ChatCompletionChunk; Err() error; Close() error },
+	stream interface {
+		Next() bool
+		Current() openai.ChatCompletionChunk
+		Err() error
+		Close() error
+	},
 	ch chan<- Delta,
 ) {
 	defer close(ch)

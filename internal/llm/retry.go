@@ -11,17 +11,6 @@ import (
 	"time"
 )
 
-// retryableStatusCodes is the set of HTTP status codes that trigger a retry.
-// @MX:NOTE: [AUTO] Only transient errors retry; auth/bad-request errors fail immediately per REQ-LLM-004
-var retryableStatusCodes = map[int]bool{
-	http.StatusTooManyRequests:     true, // 429
-	http.StatusRequestTimeout:      true, // 408
-	http.StatusInternalServerError: true, // 500
-	http.StatusBadGateway:          true, // 502
-	http.StatusServiceUnavailable:  true, // 503
-	http.StatusGatewayTimeout:      true, // 504
-}
-
 // nonRetryableStatusCodes are returned immediately with no retry and no fallthrough.
 var nonRetryableStatusCodes = map[int]bool{
 	http.StatusBadRequest:   true, // 400
@@ -47,22 +36,6 @@ type httpStatusError struct {
 }
 
 func (e *httpStatusError) Error() string { return e.msg }
-
-// isRetryable returns true when err indicates a transient failure that should be retried.
-func isRetryable(err error) bool {
-	if err == nil {
-		return false
-	}
-	var hse *httpStatusError
-	if errors.As(err, &hse) {
-		if nonRetryableStatusCodes[hse.code] {
-			return false
-		}
-		return retryableStatusCodes[hse.code]
-	}
-	// Network errors (connection refused, DNS, reset) are retryable.
-	return true
-}
 
 // isNonRetryable returns true when err must not be retried and must not fall through.
 func isNonRetryable(err error) bool {

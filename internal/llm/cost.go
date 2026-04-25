@@ -20,20 +20,6 @@ import (
 // costHeaderKey is the LiteLLM response header carrying USD cost per request.
 const costHeaderKey = "x-litellm-response-cost"
 
-// costContextKey is used to store the extracted cost in the request context via middleware.
-type costContextKey struct{}
-
-// setCost stores cost in context (set by costMiddleware, read by extractCost).
-func setCost(ctx context.Context, v float64) context.Context {
-	return context.WithValue(ctx, costContextKey{}, v)
-}
-
-// getCost retrieves the cost set by setCost; returns 0 if unset.
-func getCost(ctx context.Context) (float64, bool) {
-	v, ok := ctx.Value(costContextKey{}).(float64)
-	return v, ok
-}
-
 // costMiddlewareFunc is the signature consumed by openai-go's option.WithMiddleware.
 // It captures the x-litellm-response-cost header and stores it in the request context.
 //
