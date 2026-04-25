@@ -2,13 +2,13 @@
 id: SPEC-DEP-001
 title: Dependency Pinning Policy and Audit CI
 milestone: M1 — Foundation
-status: draft
+status: approved
 priority: P0
 owner: expert-devops
 methodology: tdd
 coverage_target: 85
 created: 2026-04-24
-updated: 2026-04-24
+updated: 2026-04-26
 depends_on: [SPEC-BOOT-001]
 blocks: [SPEC-OBS-001, SPEC-LLM-001, SPEC-IR-001]
 ---
