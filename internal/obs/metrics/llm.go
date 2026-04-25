@@ -14,41 +14,34 @@ import "github.com/prometheus/client_golang/prometheus"
 // large-model long requests (Opus), with fine resolution under 5 s.
 var llmCallBuckets = []float64{0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60}
 
-// LLM metric collectors — exported as package-level vars so internal/llm
-// can call them without importing prometheus directly (SPEC-OBS-001 boundary).
-//
-// @MX:ANCHOR: [AUTO] LLM metric entry points; callers: internal/llm/cost.go, internal/llm/client.go, tests
-// @MX:REASON: fan_in >= 3; these vars are the only Prometheus interface for LLM telemetry
-var (
-	// LLMCalls is total LLM calls, partitioned by provider, model, and outcome.
-	// outcome ∈ {success, failure, timeout}
-	LLMCalls *prometheus.CounterVec
+// llmCollectors bundles the three LLM metric vectors created per Registry.
+// Stored as Registry.LLMCalls / LLMCost / LLMLatency fields. Per-Registry
+// instances avoid the global-variable race that t.Parallel tests revealed
+// when multiple Registry instances co-existed.
+type llmCollectors struct {
+	calls   *prometheus.CounterVec
+	cost    *prometheus.CounterVec
+	latency *prometheus.HistogramVec
+}
 
-	// LLMCost is the cumulative USD cost per provider/model pair.
-	LLMCost *prometheus.CounterVec
-
-	// LLMLatency is the LLM call latency distribution per provider/model pair.
-	LLMLatency *prometheus.HistogramVec
-)
-
-// registerLLM creates and registers the three LLM metric collectors on r.
-// Called from NewRegistry alongside the base collectors.
-func registerLLM(r *prometheus.Registry) {
-	LLMCalls = prometheus.NewCounterVec(
+// registerLLM creates the three LLM metric collectors, registers them on r,
+// and returns them for storage on the owning Registry.
+func registerLLM(r *prometheus.Registry) llmCollectors {
+	calls := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "usearch_llm_calls_total",
 			Help: "Total LLM calls, partitioned by provider, model, and outcome.",
 		},
 		[]string{"provider", "model", "outcome"},
 	)
-	LLMCost = prometheus.NewCounterVec(
+	cost := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "usearch_llm_cost_usd_total",
 			Help: "Cumulative LLM cost in USD, partitioned by provider and model.",
 		},
 		[]string{"provider", "model"},
 	)
-	LLMLatency = prometheus.NewHistogramVec(
+	latency := prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name:    "usearch_llm_latency_seconds",
 			Help:    "LLM call latency distribution.",
@@ -57,11 +50,13 @@ func registerLLM(r *prometheus.Registry) {
 		[]string{"provider", "model"},
 	)
 
-	r.MustRegister(LLMCalls, LLMCost, LLMLatency)
+	r.MustRegister(calls, cost, latency)
 
 	// Pre-initialise with placeholder values so families appear in /metrics
 	// output even before any real LLM calls are made.
-	LLMCalls.WithLabelValues("anthropic", "claude-sonnet-4-6", "success").Add(0)
-	LLMCost.WithLabelValues("anthropic", "claude-sonnet-4-6").Add(0)
-	LLMLatency.WithLabelValues("anthropic", "claude-sonnet-4-6").Observe(0)
+	calls.WithLabelValues("anthropic", "claude-sonnet-4-6", "success").Add(0)
+	cost.WithLabelValues("anthropic", "claude-sonnet-4-6").Add(0)
+	latency.WithLabelValues("anthropic", "claude-sonnet-4-6").Observe(0)
+
+	return llmCollectors{calls: calls, cost: cost, latency: latency}
 }

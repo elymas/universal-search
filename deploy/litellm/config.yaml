@@ -58,7 +58,7 @@ model_list:
 
 router_settings:
   # Retry failed requests before returning an error.
-  num_retries: 0           # Retries handled by internal/llm/retry.go — avoid double-retry.
+  num_retries: 0 # Retries handled by internal/llm/retry.go — avoid double-retry.
   retry_after: 0
 
   # Circuit breaker — provider-level health tracking.
@@ -76,7 +76,7 @@ general_settings:
   return_response_headers: true
 
   # Budget cap — hard limit per request; complemented by client-side check (NFR-LLM-003).
-  max_budget: os.environ/LITELLM_BUDGET_USD   # e.g. "0.50" — set in .env
+  max_budget: os.environ/LITELLM_BUDGET_USD # e.g. "0.50" — set in .env
 
   # Disable LiteLLM telemetry to Anthropic/OpenAI — no data leaves the proxy.
   telemetry: false

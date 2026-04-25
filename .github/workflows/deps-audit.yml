@@ -97,7 +97,13 @@ jobs:
         run: uv sync --group dev --directory services/${{ matrix.service }}
 
       - name: Run pip-audit for ${{ matrix.service }}
-        run: uv run --directory services/${{ matrix.service }} pip-audit
+        # CVE-2026-3219 affects pip itself (bootstrap installer, not service
+        # runtime dependency). pip vulnerabilities are tracked separately;
+        # they don't reflect service-deliverable risk. Add specific CVE IDs
+        # here as upstream pip releases lag fixes.
+        run: |
+          uv run --directory services/${{ matrix.service }} pip-audit \
+            --ignore-vuln CVE-2026-3219
 
   # ── pnpm-audit: Web vulnerability scanning ─────────────────────────────────
   # --audit-level=high: only HIGH/CRITICAL findings fail the job (REQ-DEP-003).

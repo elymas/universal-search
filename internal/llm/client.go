@@ -25,7 +25,6 @@ import (
 
 	"github.com/elymas/universal-search/internal/llm/config"
 	"github.com/elymas/universal-search/internal/obs"
-	"github.com/elymas/universal-search/internal/obs/metrics"
 	"github.com/elymas/universal-search/internal/obs/reqid"
 )
 
@@ -241,14 +240,15 @@ func (c *defaultClient) emitObservability(ctx context.Context, provider, model, 
 		slog.Float64("cost_usd", cost),
 	)
 
-	if metrics.LLMCalls != nil {
-		metrics.LLMCalls.WithLabelValues(provider, model, outcome).Inc()
+	reg := c.obs.Metrics
+	if reg != nil && reg.LLMCalls != nil {
+		reg.LLMCalls.WithLabelValues(provider, model, outcome).Inc()
 	}
-	if metrics.LLMLatency != nil {
+	if reg != nil && reg.LLMLatency != nil {
 		latencySec := float64(latencyMs) / 1000.0
-		metrics.LLMLatency.WithLabelValues(provider, model).Observe(latencySec)
+		reg.LLMLatency.WithLabelValues(provider, model).Observe(latencySec)
 	}
-	emitCostMetric(ctx, provider, model, cost)
+	emitCostMetric(ctx, reg, provider, model, cost)
 }
 
 // Stream sends a streaming chat completion request.

@@ -43,6 +43,12 @@ type Registry struct {
 	// Build metadata.
 	BuildInfo *prometheus.GaugeVec
 
+	// LLM metrics (SPEC-LLM-001). Per-Registry instances avoid the global-
+	// variable race that surfaces under t.Parallel.
+	LLMCalls   *prometheus.CounterVec
+	LLMCost    *prometheus.CounterVec
+	LLMLatency *prometheus.HistogramVec
+
 	// labelNames tracks all registered label names for cardinality validation.
 	labelNames []string
 }
@@ -125,7 +131,7 @@ func NewRegistry() *Registry {
 	buildInfo.WithLabelValues("", "", "").Set(0)
 
 	// Register LLM metrics (SPEC-LLM-001).
-	registerLLM(pr)
+	llm := registerLLM(pr)
 
 	return &Registry{
 		Prometheus:          pr,
@@ -135,6 +141,9 @@ func NewRegistry() *Registry {
 		AdapterCalls:        adapterCalls,
 		AdapterCallDuration: adapterDuration,
 		BuildInfo:           buildInfo,
+		LLMCalls:            llm.calls,
+		LLMCost:             llm.cost,
+		LLMLatency:          llm.latency,
 		labelNames: []string{
 			"method", "route", "status_class",
 			"adapter_class",

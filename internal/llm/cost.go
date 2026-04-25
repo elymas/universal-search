@@ -68,22 +68,22 @@ func (c costRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 
 // emitCostMetric records cost on the LLMCost counter and LLMLatency exemplar.
 // When ctx carries an active OTel span and a request ID, it emits a Prometheus exemplar.
-func emitCostMetric(ctx context.Context, provider, model string, cost float64) {
-	if metrics.LLMCost == nil {
+func emitCostMetric(ctx context.Context, reg *metrics.Registry, provider, model string, cost float64) {
+	if reg == nil || reg.LLMCost == nil {
 		return
 	}
 	if cost > 0 {
-		metrics.LLMCost.WithLabelValues(provider, model).Add(cost)
+		reg.LLMCost.WithLabelValues(provider, model).Add(cost)
 	}
 
 	// Exemplar on LLMLatency histogram for trace→metric linking (REQ-LLM-007).
-	if metrics.LLMLatency == nil {
+	if reg.LLMLatency == nil {
 		return
 	}
 	span := trace.SpanFromContext(ctx)
 	rid := reqid.FromContext(ctx)
 	if span.SpanContext().IsValid() && rid != "" {
-		obs := metrics.LLMLatency.WithLabelValues(provider, model)
+		obs := reg.LLMLatency.WithLabelValues(provider, model)
 		if o, ok := obs.(prometheus.ExemplarObserver); ok {
 			o.ObserveWithExemplar(0, prometheus.Labels{
 				"trace_id":   span.SpanContext().TraceID().String(),
