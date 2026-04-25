@@ -24,6 +24,24 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - `scripts/gen-deps-manifest.sh` idempotent manifest generator
   - `scripts/check-license-allowlist.sh` enforcing MIT / Apache-2.0 / BSD-\* / ISC / PostgreSQL / MPL-2.0 with SearXNG AGPL service-boundary exception, supporting `$LICENSE_DIR` override for tests
   - `tests/spec_dep_001_test.go` — 11 TDD acceptance tests covering REQ-DEP-001..007
+- **SPEC-OBS-001** — M1 observability baseline (slog + Prometheus + OTel + request-ID)
+  - `internal/obs/` — central `Obs` bundle (Logger, Metrics, Tracer) with idempotent `Init()` lifecycle and graceful shutdown
+  - `internal/obs/log/` — slog JSON handler with level from env; structured key=value logs
+  - `internal/obs/metrics/` — Prometheus registry with `usearch_adapter_calls_total{adapter,outcome}` counter, `usearch_adapter_call_duration_seconds{adapter}` histogram, HTTP request metrics, LLM cost/latency families; static cardinality allowlist enforced by `TestNoUnboundedLabels` (NFR-OBS-002); admin HTTP server on `:6090` (configurable)
+  - `internal/obs/trace/` — OpenTelemetry TracerProvider with gRPC OTLP exporter, configurable endpoint, 10% default sample ratio, no-op fallback when endpoint unset
+  - `internal/obs/reqid/` — ULID-based request-ID generation, X-Request-ID HTTP middleware (ingress) and Transport wrapper (egress), context propagation
+  - 18 @MX tags across 5 source files; coverage: obs 86.5% / log 89.6% / metrics 89.7% / reqid 95.2% / trace 90.5%
+  - Merged in PR #3 (commit 0234b71)
+- **SPEC-LLM-001** — M1 LiteLLM proxy integration (provider routing + cost tracking + circuit breaker)
+  - `deploy/litellm/` — LiteLLM proxy v1.83.7 docker-compose service with model aliases (claude-opus-4-5, claude-sonnet-4-6, gpt-4o, ollama), per-key budgets via `LITELLM_BUDGET_USD`, Postgres + Redis backing, `/health` endpoint
+  - `internal/llm/client.go` — openai-go v0.x client with Bearer auth, observability emission (counter + histogram + span + slog per call), cost-header extraction, streaming support
+  - `internal/llm/router.go` — provider priority router with sync.RWMutex, per-provider fallthrough on transient errors, capacity-aware routing
+  - `internal/llm/retry.go` — typed-error classification (transient/permanent/timeout), exponential backoff with jitter
+  - `internal/llm/cost.go` — Anthropic prompt-cache hit detection, cumulative cost tracking, per-call cost histogram emission
+  - `internal/llm/stream.go` — SSE streaming with backpressure handling and circuit-breaker integration
+  - `internal/llm/config/` — koanf-layered config (TOML + env + flag), validation, hot-reload guard
+  - 18 @MX tags across 7 source files; coverage: llm 89.9% / config 94.7%
+  - Merged in PR #4 (commit 5005eb0); depends on SPEC-OBS-001 (Obs bundle DI)
 - **SPEC-CORE-001** — Adapter contract foundation (NormalizedDoc + Registry)
   - `pkg/types/` — public SDK boundary with stdlib-only imports: NormalizedDoc (15 fields, Validate, CanonicalHash), Adapter interface (Name/Search/Healthcheck/Capabilities), Query, Capabilities, four-sentinel error taxonomy (`ErrTransient`, `ErrPermanent`, `ErrRateLimited`, `ErrSourceUnavailable`), `*ValidationError` and `*SourceError` typed errors, `CategorizeError` and `OutcomeFromError` helpers
   - `internal/adapters/registry.go` — concurrency-safe Registry with sync.RWMutex; `Register(Adapter, RegisterOptions)` rejects duplicates with typed `*RegistryError` wrapping `ErrDuplicateAdapter`; `Get(name)` returns wrappedAdapter that emits exactly one Prometheus counter increment + one histogram observation + one OTel span + one slog record per Search call (reuses existing AdapterCalls / AdapterCallDuration from SPEC-OBS-001 — zero new metric families)

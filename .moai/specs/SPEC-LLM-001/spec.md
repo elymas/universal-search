@@ -2,13 +2,13 @@
 id: SPEC-LLM-001
 title: LiteLLM Proxy Integration
 milestone: M1 — Foundation
-status: approved
+status: implemented
 priority: P0
 owner: expert-backend
 methodology: tdd
 coverage_target: 85
 created: 2026-04-25
-updated: 2026-04-25
+updated: 2026-04-26
 approved_by: limbowl
 approved_at: 2026-04-25
 depends_on: [SPEC-BOOT-001, SPEC-OBS-001]
@@ -836,6 +836,8 @@ pre-decided. They do not block SPEC approval.
    silently dropped from the priority list at `llm.New` time with a WARN log.
 
 ## 12. HISTORY
+
+- 2026-04-26 — Implemented and merged in PR #4 (commit 5005eb0). Coverage: llm 89.9% / config 94.7% (both ≥85% target). 18 @MX tags applied across 7 source files. Provider router pattern (router.go:148-198) and per-call observability emit (client.go:230-252) now serve as reference patterns for SPEC-CORE-001 adapter Registry.
 
 - 2026-04-25 (initial draft v0.1, limbowl via manager-spec):
   First EARS-formatted SPEC drafted after research phase. Scope derived from

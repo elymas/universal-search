@@ -2,13 +2,13 @@
 id: SPEC-OBS-001
 title: Observability Baseline
 milestone: M1 — Foundation
-status: approved
+status: implemented
 priority: P0
 owner: expert-performance
 methodology: tdd
 coverage_target: 85
 created: 2026-04-24
-updated: 2026-04-24
+updated: 2026-04-26
 approved_by: limbowl
 approved_at: 2026-04-24
 depends_on: [SPEC-BOOT-001]
@@ -676,6 +676,8 @@ pre-decided. They do not block SPEC approval.
    run phase during compose delta implementation.
 
 ## 12. HISTORY
+
+- 2026-04-26 — Implemented and merged in PR #3 (commit 0234b71). Coverage: obs 86.5% / log 89.6% / metrics 89.7% / reqid 95.2% / trace 90.5% (all ≥85% target). 18 @MX tags applied across 5 source files. Cardinality allowlist + AdapterCalls/AdapterCallDuration metric families now consumed by SPEC-CORE-001.
 
 - 2026-04-24 (initial draft v0.1, limbowl via manager-spec):
   First EARS-formatted SPEC drafted after research phase. Scope derived
