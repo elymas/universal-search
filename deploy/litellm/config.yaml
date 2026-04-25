@@ -1,0 +1,88 @@
+# LiteLLM Proxy configuration — Universal Search
+# SPEC-LLM-001: REQ-LLM-001..REQ-LLM-008, NFR-LLM-001..NFR-LLM-003
+#
+# Mount: ./litellm/config.yaml:/app/config.yaml:ro (see docker-compose.yml)
+# Start: litellm --config /app/config.yaml --port 4000
+#
+# Model aliases used by internal/llm/provider.go defaultPriorities.
+# Label cardinality: provider ∈ {anthropic,openai,ollama} — REQ-LLM-007.
+
+model_list:
+  # ── Anthropic ────────────────────────────────────────────────────────────────
+  - model_name: claude-opus-4-5
+    litellm_params:
+      model: anthropic/claude-opus-4-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: claude-sonnet-4-6
+    litellm_params:
+      model: anthropic/claude-sonnet-4-6
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: claude-haiku-4-5
+    litellm_params:
+      model: anthropic/claude-haiku-4-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  # ── OpenAI ───────────────────────────────────────────────────────────────────
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: gpt-4o-mini
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: text-embedding-3-large
+    litellm_params:
+      model: openai/text-embedding-3-large
+      api_key: os.environ/OPENAI_API_KEY
+
+  # ── Ollama (local, optional) ─────────────────────────────────────────────────
+  - model_name: ollama/llama3.1
+    litellm_params:
+      model: ollama/llama3.1
+      api_base: os.environ/OLLAMA_BASE_URL
+
+  - model_name: ollama/llama3.1:8b-instruct
+    litellm_params:
+      model: ollama/llama3.1:8b-instruct
+      api_base: os.environ/OLLAMA_BASE_URL
+
+  - model_name: ollama/nomic-embed-text
+    litellm_params:
+      model: ollama/nomic-embed-text
+      api_base: os.environ/OLLAMA_BASE_URL
+
+router_settings:
+  # Retry failed requests before returning an error.
+  num_retries: 0 # Retries handled by internal/llm/retry.go — avoid double-retry.
+  retry_after: 0
+
+  # Circuit breaker — provider-level health tracking.
+  # MoAI router (NFR-LLM-002) manages circuit state; proxy-level CB is disabled.
+  enable_pre_call_checks: false
+
+  # Routing strategy: simple-shuffle is deterministic and respects provider order.
+  routing_strategy: simple-shuffle
+
+general_settings:
+  # Authentication — master key required for all requests (REQ-LLM-005).
+  master_key: os.environ/LITELLM_MASTER_KEY
+
+  # Response cost header — enables x-litellm-response-cost on every response (REQ-LLM-006).
+  return_response_headers: true
+
+  # Budget cap — hard limit per request; complemented by client-side check (NFR-LLM-003).
+  max_budget: os.environ/LITELLM_BUDGET_USD # e.g. "0.50" — set in .env
+
+  # Disable LiteLLM telemetry to Anthropic/OpenAI — no data leaves the proxy.
+  telemetry: false
+
+  # Drop OpenAI-incompatible params that some providers reject.
+  drop_params: true
+
+  # Logging level for the proxy itself.
+  set_verbose: false

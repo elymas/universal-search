@@ -258,6 +258,10 @@ func TestCardinalityGuardRejectsUnboundedLabels(t *testing.T) {
 		"version":       true,
 		"commit":        true,
 		"go_version":    true,
+		// LLM labels added by SPEC-LLM-001 (REQ-LLM-007); bounded by
+		// provider ∈ {anthropic,openai,ollama} and model ∈ config.yaml aliases (≤15).
+		"provider": true,
+		"model":    true,
 	}
 
 	reg := metrics.NewRegistry()
