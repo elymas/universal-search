@@ -2,7 +2,7 @@
 id: SPEC-CORE-001
 title: Adapter Interface and NormalizedDoc Contract
 milestone: M2 — Foundation contracts (inserted)
-status: draft
+status: implemented
 priority: P0
 owner: expert-backend
 methodology: tdd
@@ -876,6 +876,7 @@ Internal (project files):
 
 ## 13. HISTORY
 
+- 2026-04-26 — Implemented in commit f728aa2. Tests: pkg/types 85.5% / internal/adapters 90.8% / noop 100%. All 8 EARS REQ entries verified by green tests. @MX tags applied (5 ANCHOR + 1 WARN + 6 NOTE).
 - 2026-04-26 (initial draft v0.1, limbowl via manager-spec):
   First EARS-formatted SPEC drafted after research phase. Scope derived
   from `.moai/project/roadmap.md` M2-M3 dependency analysis: extracted

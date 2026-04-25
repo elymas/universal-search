@@ -24,6 +24,12 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - `scripts/gen-deps-manifest.sh` idempotent manifest generator
   - `scripts/check-license-allowlist.sh` enforcing MIT / Apache-2.0 / BSD-\* / ISC / PostgreSQL / MPL-2.0 with SearXNG AGPL service-boundary exception, supporting `$LICENSE_DIR` override for tests
   - `tests/spec_dep_001_test.go` — 11 TDD acceptance tests covering REQ-DEP-001..007
+- **SPEC-CORE-001** — Adapter contract foundation (NormalizedDoc + Registry)
+  - `pkg/types/` — public SDK boundary with stdlib-only imports: NormalizedDoc (15 fields, Validate, CanonicalHash), Adapter interface (Name/Search/Healthcheck/Capabilities), Query, Capabilities, four-sentinel error taxonomy (`ErrTransient`, `ErrPermanent`, `ErrRateLimited`, `ErrSourceUnavailable`), `*ValidationError` and `*SourceError` typed errors, `CategorizeError` and `OutcomeFromError` helpers
+  - `internal/adapters/registry.go` — concurrency-safe Registry with sync.RWMutex; `Register(Adapter, RegisterOptions)` rejects duplicates with typed `*RegistryError` wrapping `ErrDuplicateAdapter`; `Get(name)` returns wrappedAdapter that emits exactly one Prometheus counter increment + one histogram observation + one OTel span + one slog record per Search call (reuses existing AdapterCalls / AdapterCallDuration from SPEC-OBS-001 — zero new metric families)
+  - `internal/adapters/noop/` — 46-LoC reference adapter as compile-time interface check and stable test fixture for FAN-001/IR-001
+  - Race-clean Registry concurrency tests; benchmark gates: `Validate` 2 ns/op (target 1 µs), `CanonicalHash` 182 ns/op (target 5 µs)
+  - Unblocks SPEC-IR-001, SPEC-ADP-001..009, SPEC-FAN-001, SPEC-IDX-001 (12 downstream SPECs)
 
 ### Changed
 
