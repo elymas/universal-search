@@ -48,6 +48,17 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - `internal/adapters/noop/` — 46-LoC reference adapter as compile-time interface check and stable test fixture for FAN-001/IR-001
   - Race-clean Registry concurrency tests; benchmark gates: `Validate` 2 ns/op (target 1 µs), `CanonicalHash` 182 ns/op (target 5 µs)
   - Unblocks SPEC-IR-001, SPEC-ADP-001..009, SPEC-FAN-001, SPEC-IDX-001 (12 downstream SPECs)
+- **SPEC-IR-001** — M2 Intent Router v0 (rule-based + LLM fallback, library-only)
+  - `internal/router/` — pure library Router classifying free-text Query into RoutingDecision{Category, Confidence, AdapterSet, Lang, Source, Metadata}
+  - Six categories: web, social, academic, korean, mixed, unknown (Unknown is recoverable via web ∪ social ensemble fallback)
+  - Pre-flight validation → deterministic confidence-scoring formula (spec.md §2.3) over four signals (hangul_ratio, particle_density, kwd_density_C, has_english_token) → six per-category aggregators with fixed tie-break order (academic > korean > social > mixed > web > unknown)
+  - LLM escalation when confidence < τ_high=0.85 via `internal/llm.Client.Classify` (Haiku 4.5 default per `provider.go:34-38`); 2-second deadline; circuit-breaker-aware degraded fallback
+  - Korean detection via Hangul Unicode regex (4 blocks: U+AC00–D7A3, U+1100–11FF, U+3130–318F, U+A960–A97F); thresholds 0.10/0.30 with LLM in the ambiguous band; 11 Korean particle function-words for additional signal
+  - AdapterSet selection: Category-eligible DocTypes ∩ Lang-compatible adapters (Capabilities-driven); web fallback when intersection empty
+  - `internal/obs/metrics/router.go` — two new Prometheus families (`usearch_router_classifications_total{adapter,outcome}`, `usearch_router_classification_duration_seconds{adapter}`); cardinality allowlist UNCHANGED
+  - 67 tests + 2 benchmarks; coverage 90.6% router / 90.8% metrics; race-clean (TestClassifyConcurrent: 50 goroutines × 20 calls); BenchmarkRulesScore 2.5 µs/op (~400× under NFR-IR-001 1 ms p50 target)
+  - 12 @MX tags applied; independent plan-auditor review-1 FAIL → review-2 PASS (4 non-blocking findings)
+  - Unblocks SPEC-FAN-001, SPEC-CLI-001, SPEC-SYN-001, SPEC-ADP-001, SPEC-ADP-002
 
 ### Changed
 

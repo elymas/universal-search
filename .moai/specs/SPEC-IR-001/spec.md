@@ -3,7 +3,7 @@ id: SPEC-IR-001
 title: Intent Router v0
 version: 0.1.0
 milestone: M2 — First end-to-end slice
-status: draft
+status: implemented
 priority: P0
 owner: expert-backend
 methodology: tdd
@@ -19,6 +19,8 @@ blocks: [SPEC-FAN-001, SPEC-CLI-001, SPEC-SYN-001, SPEC-ADP-001, SPEC-ADP-002]
 # SPEC-IR-001: Intent Router v0
 
 ## HISTORY
+
+- 2026-04-26 — Implemented in commit 8a20b68. Coverage: internal/router 90.6% / internal/obs/metrics 90.8% (both ≥85% target). 12 @MX tags applied (3 ANCHOR + 1 WARN + 8 NOTE). 67 tests + 2 benchmarks; race-clean under TestClassifyConcurrent (50 goroutines × 20 calls). All 8 EARS REQ entries verified by green tests. Two new metric families registered (`usearch_router_classifications_total`, `usearch_router_classification_duration_seconds`) — cardinality allowlist unchanged. Trace reconciliation Option A applied: §2.3 worked-example traces 2/3 reconciled to byte-precise formula output (audit review-2 N1/N2 closed).
 
 - 2026-04-26 (initial draft v0.1, limbowl via manager-spec):
   First EARS-formatted SPEC. M2 entry-point SPEC; library-only exposure
