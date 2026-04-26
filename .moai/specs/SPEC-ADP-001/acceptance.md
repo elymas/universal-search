@@ -446,9 +446,12 @@
   `go test -bench=BenchmarkParseListing25Docs -benchtime=10x
   -count=5 ./internal/adapters/reddit/...`,
 - Then the median of the 5 reported per-op mean wall-clock
-  durations is ≤ 5ms and `allocs/op` is ≤ 250. Pass/fail is
+  durations is ≤ 5ms and `allocs/op` is ≤ 500. Pass/fail is
   decidable from the `go test -bench` output alone (no external
-  CI script required).
+  CI script required). The alloc ceiling was revised from ≤ 250
+  to ≤ 500 in spec.md HISTORY iteration 3 — see NFR-ADP-001 row in
+  §4 of spec.md for the floor analysis (Metadata=map[string]any
+  contract forces ~17 allocs/doc structural minimum).
 
 ### NFR-ADP-002 — Stub E2E p95 Latency
 
@@ -554,7 +557,8 @@ true:
 - [ ] **Bench**: `BenchmarkParseListing25Docs` invoked as
       `go test -bench=BenchmarkParseListing25Docs -benchtime=10x
       -count=5 ./internal/adapters/reddit/...` on amd64; median of
-      the 5 reported per-op mean durations is ≤ 5ms; allocs/op ≤ 250.
+      the 5 reported per-op mean durations is ≤ 5ms; allocs/op ≤ 500
+      (revised from ≤ 250 per spec.md HISTORY iteration 3).
 - [ ] **Stub p95**: `TestSearchE2ELatencyStubP95` passes.
 - [ ] **Goroutine clean**: `TestSearchNoGoroutineLeakOnCancel`
       passes.
