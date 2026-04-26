@@ -1,0 +1,10 @@
+{
+  "kind": "Listing",
+  "data": {
+    "after": null,
+    "dist": 1,
+    "children": [
+      {"kind": "t3", "data": {"name": "t3_deleted_001", "permalink": "/r/golang/comments/deleted_001/deleted_post/", "title": "Deleted Post Title", "selftext": "[removed]", "created_utc": 1700030001, "author": "[deleted]", "score": 10, "subreddit": "golang", "over_18": false, "num_comments": 2, "upvote_ratio": 0.60, "url": "https://www.reddit.com/r/golang/comments/deleted_001/deleted_post/", "subreddit_name_prefixed": "r/golang", "ups": 10}}
+    ]
+  }
+}
