@@ -34,7 +34,7 @@ S-17 (LLM JSON parse error), S-18 (registry empty at New), S-19
 **Given**:
 - A `Router` with adapter registry containing `naver`, `daum`, `rss_korean`, `hackernews`, `searxng`
 - A `RouterQuery{Text: "ChatGPT 사용법과 프롬프트 엔지니어링 팁", Lang: "", MaxResults: 10}`
-- The query has Hangul ratio ≈ 0.55 (above 0.30 threshold)
+- The query has Hangul ratio ≈ 0.667 (above 0.30 threshold; byte-precise per spec.md §2.3 trace 3)
 
 **When**:
 - `Classify(ctx, q)` is invoked
@@ -42,12 +42,12 @@ S-17 (LLM JSON parse error), S-18 (registry empty at New), S-19
 **Then**:
 - Returned err is nil
 - `decision.Category == CategoryKorean`
-- `decision.Confidence ≥ 0.90` (per spec.md §2.3 worked example 3: `score_korean = clamp(0.55 + 0.4 + 0.1*pd, 0, 1) ≈ 0.96` for this fixture)
+- `decision.Confidence ≥ 0.90` (per spec.md §2.3 worked example 3: `score_korean = clamp(0.667 + 0.4 + 0.1*0.2, 0, 1) = 1.0` saturated for this fixture)
 - `decision.Source == SourceRuleBased`
 - `decision.Lang == "ko"`
 - `decision.AdapterSet ⊇ {daum, naver, rss_korean, searxng}` (sorted, alphabetical)
 - `decision.AdapterSet` does NOT contain `hackernews`
-- `decision.Metadata["hangul_ratio"] ≈ 0.55 ± 0.05`
+- `decision.Metadata["hangul_ratio"] ≈ 0.667 ± 0.05`
 - `decision.Metadata["rule_triggers"]` is a non-empty slice including `"hangul_ratio_high"`
 - `RouterClassifications.WithLabelValues("classified_korean")` incremented exactly once
 - `RouterClassificationDuration.WithLabelValues("classified_korean")` observed exactly once
@@ -79,11 +79,11 @@ S-17 (LLM JSON parse error), S-18 (registry empty at New), S-19
 
 ---
 
-### S-3: Mixed Korean+English at 15% hangul → escalates to LLM
+### S-3: Mixed Korean+English at ~13% hangul → escalates to LLM
 
 **Given**:
 - A `Router` with normal registry
-- `RouterQuery{Text: "best Korean GPT 모델 추천", Lang: "", MaxResults: 10}` — hangul ratio ≈ 0.18 (in ambiguous band 0.10-0.30)
+- `RouterQuery{Text: "best Korean LLM 모델", Lang: "", MaxResults: 10}` — hangul ratio ≈ 0.133 (in ambiguous band 0.10-0.30; per spec.md §2.3 worked example 2 the rule formula yields `score_mixed ≈ 0.589`, below τ_high=0.85)
 - A mock `llm.Client` whose `Complete` returns
   `{"category":"mixed","confidence":0.78,"rationale":"Korean-English code-mixed query asking for Korean LLM recommendations"}`
   in 800ms
@@ -96,13 +96,15 @@ S-17 (LLM JSON parse error), S-18 (registry empty at New), S-19
 - `decision.Category == CategoryMixed`
 - `decision.Confidence == 0.78` (LLM's value wins)
 - `decision.Source == SourceLLMFallback`
-- `decision.Metadata["hangul_ratio"] ≈ 0.18`
+- `decision.Metadata["hangul_ratio"] ≈ 0.133`
 - `decision.Metadata["llm_rationale"]` is the truncated rationale
 - `decision.Metadata["rule_confidence"]` is set (debug-aid, the rule confidence shadowed by LLM)
 - Mock `llm.Client.Complete` was called exactly ONCE
 - Total elapsed ≈ 800ms ± 100ms (no timeout, no retry)
 - `RouterClassifications{outcome="classified_mixed"}` +1
 - One slog INFO record with `llm_used=true`, `request_id` populated
+
+**Reconciliation note**: the original S-3 query `"best Korean GPT 모델 추천"` byte-precise produces `r ≈ 0.235` and `score_mixed ≈ 0.86`, which is ABOVE τ_high=0.85 — the iteration-2 audit (N2) flagged that the LLM-escalation expectation in this scenario would not fire under the actual formula. Per the iteration-2 reconciliation policy, the query has been replaced with `"best Korean LLM 모델"` whose byte-precise `r ≈ 0.133` and `score_mixed ≈ 0.589` cleanly land below τ_high. See spec.md §2.3 "Trace Reconciliation".
 
 ---
 

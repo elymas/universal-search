@@ -49,6 +49,11 @@ type Registry struct {
 	LLMCost    *prometheus.CounterVec
 	LLMLatency *prometheus.HistogramVec
 
+	// Intent Router metrics (SPEC-IR-001). Reuse the existing `outcome`
+	// label name; no new label is added to the cardinality allowlist.
+	RouterClassifications        *prometheus.CounterVec
+	RouterClassificationDuration *prometheus.HistogramVec
+
 	// labelNames tracks all registered label names for cardinality validation.
 	labelNames []string
 }
@@ -133,17 +138,22 @@ func NewRegistry() *Registry {
 	// Register LLM metrics (SPEC-LLM-001).
 	llm := registerLLM(pr)
 
+	// Register Intent Router metrics (SPEC-IR-001).
+	router := registerRouter(pr)
+
 	return &Registry{
-		Prometheus:          pr,
-		HTTPRequests:        httpRequests,
-		HTTPRequestDuration: httpDuration,
-		FanoutInflight:      fanoutInflight,
-		AdapterCalls:        adapterCalls,
-		AdapterCallDuration: adapterDuration,
-		BuildInfo:           buildInfo,
-		LLMCalls:            llm.calls,
-		LLMCost:             llm.cost,
-		LLMLatency:          llm.latency,
+		Prometheus:                   pr,
+		HTTPRequests:                 httpRequests,
+		HTTPRequestDuration:          httpDuration,
+		FanoutInflight:               fanoutInflight,
+		AdapterCalls:                 adapterCalls,
+		AdapterCallDuration:          adapterDuration,
+		BuildInfo:                    buildInfo,
+		LLMCalls:                     llm.calls,
+		LLMCost:                      llm.cost,
+		LLMLatency:                   llm.latency,
+		RouterClassifications:        router.classifications,
+		RouterClassificationDuration: router.duration,
 		labelNames: []string{
 			"method", "route", "status_class",
 			"adapter_class",

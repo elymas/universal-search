@@ -240,25 +240,39 @@ destination SPEC; this list prevents scope creep into IR-001.
 - `winner = academic`, `confidence = 1.0`
 - `1.0 ≥ τ_high` → no LLM escalation. Acceptance S-2 asserts `Confidence ≥ 0.85` (formula gives 1.0; passes).
 
-**Worked example 2** — `q.Text = "best Korean GPT 모델 추천"` (the S-3 mixed query):
+**Worked example 2** — `q.Text = "best Korean LLM 모델"` (the S-3 mixed query, post-iteration-2 reconciliation):
 
-- Tokens: `["best", "korean", "gpt", "모델", "추천"]`, `|T| = 5`
-- `r ≈ 0.18` (in ambiguous band `[0.10, 0.30]`); `pd = 0`; `has_english_token = true`
-- `score_korean = 0.3 + 0.5 * (0.18 - 0.10) / (0.30 - 0.10) = 0.3 + 0.5 * 0.4 = 0.50`
-- `score_mixed = 0.5 + 0.4 * (1 - |0.18 - 0.25| / 0.15) = 0.5 + 0.4 * 0.533 = 0.713`
-- (other scores lower by inspection)
-- `winner = mixed`, `confidence = 0.713`
-- `0.713 < τ_high (0.85)` → **escalates to LLM**. Acceptance S-3 confirms exactly one LLM call.
+- Tokens: `["best", "Korean", "LLM", "모델"]`, `|T| = 4`
+- non-whitespace runes = 4 + 6 + 3 + 2 = 15; Hangul runes = 2 (`모`, `델`)
+- `r = 2/15 ≈ 0.1333`; `pd = 0` (no token ends in a Korean particle); `has_english_token = true` (`best`, `Korean`, `LLM` are ASCII letters of length ≥ 3)
+- `kwd_density_C = 0` for all `C ∈ {web, social, academic}` (no token in any keyword table)
+- `score_korean = 0.3 + 0.5 * (0.1333 - 0.10) / (0.30 - 0.10) = 0.3 + 0.5 * 0.1665 = 0.3825`
+- `score_mixed = 0.5 + 0.4 * (1 - |0.1333 - 0.25| / 0.15) = 0.5 + 0.4 * (1 - 0.778) = 0.5 + 0.4 * 0.222 = 0.589`
+- (other scores ≤ 0.30 by inspection)
+- `winner = mixed`, `confidence = 0.589`
+- `0.589 < τ_high (0.85)` → **escalates to LLM**. Acceptance S-3 confirms exactly one LLM call.
 
-**Worked example 3** — `q.Text = "ChatGPT 사용법과 프롬프트 엔지니어링 팁"` (the S-1 Korean-heavy query):
+**Worked example 3** — `q.Text = "ChatGPT 사용법과 프롬프트 엔지니어링 팁"` (the S-1 Korean-heavy query, post-iteration-2 reconciliation):
 
-- `r ≈ 0.55` (well above `ratio_high`); `pd ≈ 0.1` (`과` particle in `사용법과`)
-- `score_korean = clamp(0.55 + 0.4 + 0.1*0.1, 0, 1) = clamp(0.96, 0, 1) = 0.96`
+- Tokens: `["ChatGPT", "사용법과", "프롬프트", "엔지니어링", "팁"]`, `|T| = 5`
+- non-whitespace runes = 7 + 4 + 4 + 5 + 1 = 21; Hangul runes = 14
+- `r = 14/21 ≈ 0.6667` (well above `ratio_high`); `pd = 1/5 = 0.20` (one token, `사용법과`, ends in `과`)
+- `score_korean = clamp(0.6667 + 0.4 + 0.1 * 0.20, 0, 1) = clamp(1.087, 0, 1) = 1.0` (saturated)
 - All other scores ≤ 0.20 by inspection
-- `winner = korean`, `confidence = 0.96`
-- `0.96 ≥ τ_high` → no LLM escalation; `0.96 ≥ 0.90` → S-1 assertion passes.
+- `winner = korean`, `confidence = 1.0`
+- `1.0 ≥ τ_high` → no LLM escalation; `1.0 ≥ 0.90` → S-1 assertion passes.
 
-These three traces are reproduced in `internal/router/testdata/queries_golden.json` as fixtures with their expected `(Category, confidence_band)` tuples; `rules_test.go::TestRulesScoreFormulaTraces` walks the formula step-by-step on these fixtures and asserts each intermediate signal value within `±0.005` of the documented derivation.
+### Trace Reconciliation (iteration-2 audit)
+
+The plan-auditor's iteration-2 review (`SPEC-IR-001-review-2.md` findings N1/N2) noted that the original Trace 2 query (`"best Korean GPT 모델 추천"`) byte-precise produces `r ≈ 0.235` and `score_mixed ≈ 0.86`, which is ABOVE `τ_high = 0.85` — meaning the query would NOT trigger LLM escalation under the formula, contradicting acceptance scenario S-3. The original Trace 3 cited `r ≈ 0.55` and `pd ≈ 0.1` but byte-precise computation yields `r ≈ 0.667` and `pd = 0.2`.
+
+Per the iteration-2 reconciliation policy: the formula above is the **source of truth** and the worked-example traces have been recomputed to match the formula's actual byte-precise output:
+
+- Trace 2 — query replaced from `"best Korean GPT 모델 추천"` to `"best Korean LLM 모델"`. Byte-precise `r = 2/15 ≈ 0.1333`, formula gives `score_mixed ≈ 0.589`, below `τ_high`. LLM escalation fires as S-3 expects.
+- Trace 3 — query unchanged. Cited values updated from `(r=0.55, pd=0.1, score=0.96)` to `(r=0.667, pd=0.2, score=1.0)`, matching byte-precise computation.
+- Trace 1 — unchanged. The cited `score_academic = 1.0` is correct.
+
+These three traces are reproduced verbatim in `internal/router/rules_test.go::TestRulesScoreFormulaTraces`, which asserts each intermediate signal value within `±0.005` of the formula derivation.
 
 ---
 

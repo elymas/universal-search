@@ -1,0 +1,40 @@
+[
+  {"text": "latest news climate change 2026", "expected_category": "web", "min_confidence": 0.5},
+  {"text": "best wireless earbuds review", "expected_category": "web", "min_confidence": 0.5},
+  {"text": "wikipedia tutorial guide", "expected_category": "web", "min_confidence": 0.85},
+  {"text": "blog post documentation site", "expected_category": "web", "min_confidence": 0.7},
+  {"text": "news blog tutorial guide review", "expected_category": "web", "min_confidence": 0.85},
+  {"text": "newsletter latest tutorials", "expected_category": "web", "min_confidence": 0.85},
+
+  {"text": "reddit thread Rust async runtime", "expected_category": "social", "min_confidence": 0.5},
+  {"text": "hackernews discussion thread AI", "expected_category": "social", "min_confidence": 0.7},
+  {"text": "tiktok viral cooking trends", "expected_category": "social", "min_confidence": 0.5},
+  {"text": "youtube tiktok comment thread", "expected_category": "social", "min_confidence": 0.85},
+  {"text": "polymarket prediction outcome", "expected_category": "social", "min_confidence": 0.4},
+  {"text": "discussion thread upvote downvote", "expected_category": "social", "min_confidence": 0.85},
+
+  {"text": "transformer attention paper", "expected_category": "academic", "min_confidence": 0.85},
+  {"text": "arxiv preprint neural network", "expected_category": "academic", "min_confidence": 0.7},
+  {"text": "ICLR 2024 benchmark scaling", "expected_category": "academic", "min_confidence": 0.7},
+  {"text": "thesis dissertation theorem proof", "expected_category": "academic", "min_confidence": 0.85},
+  {"text": "gradient regression tokenizer", "expected_category": "academic", "min_confidence": 0.85},
+  {"text": "neural attention transformer benchmark", "expected_category": "academic", "min_confidence": 0.85},
+
+  {"text": "ChatGPT 사용법과 프롬프트 엔지니어링 팁", "expected_category": "korean", "min_confidence": 0.9},
+  {"text": "네이버 뉴스 오늘", "expected_category": "korean", "min_confidence": 0.9},
+  {"text": "한국어 번역기 추천", "expected_category": "korean", "min_confidence": 0.9},
+  {"text": "카카오 정책 변경", "expected_category": "korean", "min_confidence": 0.9},
+  {"text": "안녕하세요 한국 친구들", "expected_category": "korean", "min_confidence": 0.9},
+  {"text": "다음 카카오 뉴스 헤드라인", "expected_category": "korean", "min_confidence": 0.9},
+
+  {"text": "best Korean LLM 모델", "expected_category": "mixed", "min_confidence": 0.5, "allow_llm": true},
+  {"text": "AI 모델 review", "expected_category": "mixed", "min_confidence": 0.5, "allow_llm": true},
+  {"text": "GPT 한국어 fine-tuning", "expected_category": "mixed", "min_confidence": 0.5, "allow_llm": true},
+  {"text": "best AI 모델 추천", "expected_category": "mixed", "min_confidence": 0.5, "allow_llm": true},
+
+  {"text": "asdf qwerty", "expected_category": "unknown", "min_confidence": 0.0},
+  {"text": "x y z xx", "expected_category": "unknown", "min_confidence": 0.0},
+  {"text": "foo bar baz", "expected_category": "unknown", "min_confidence": 0.0},
+  {"text": "hello world", "expected_category": "unknown", "min_confidence": 0.0},
+  {"text": "a b c d e", "expected_category": "unknown", "min_confidence": 0.0}
+]
