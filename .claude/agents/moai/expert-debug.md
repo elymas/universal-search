@@ -10,7 +10,7 @@ description: |
   ZH: 调试, 错误, bug, 异常, 崩溃, 故障排除, 诊断
   NOT for: new feature development, architecture design, code review, security audits, documentation
 tools: Read, Grep, Glob, Bash, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
-model: opus
+model: sonnet
 permissionMode: bypassPermissions
 memory: project
 skills:

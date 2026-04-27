@@ -10,7 +10,7 @@ description: |
   ZH: 测试策略, E2E, 集成测试, 负载测试, 测试自动化, 覆盖率, QA
   NOT for: production code implementation, architecture design, DevOps, security audits, performance optimization
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs, mcp__claude-in-chrome__*
-model: opus
+model: sonnet
 permissionMode: bypassPermissions
 memory: project
 skills:

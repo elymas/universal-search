@@ -10,7 +10,7 @@ description: |
   ZH: 创建技能, 新技能, 技能优化, 知识领域, YAML前置信息
   NOT for: agent creation (use builder-agent), plugin creation (use builder-plugin), code implementation, testing
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Agent, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
-model: opus
+model: sonnet
 permissionMode: bypassPermissions
 memory: user
 skills:

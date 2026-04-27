@@ -10,7 +10,7 @@ description: |
   ZH: 创建代理, 新代理, 代理蓝图, 子代理, 代理定义
   NOT for: skill creation (use builder-skill), plugin creation (use builder-plugin), code implementation, testing, documentation
 tools: Read, Write, Edit, Grep, Glob, WebFetch, WebSearch, Bash, TodoWrite, Agent, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
-model: opus
+model: sonnet
 permissionMode: bypassPermissions
 memory: user
 skills:
