@@ -3,13 +3,13 @@ id: SPEC-ADP-001
 title: Reddit Adapter (Reference Implementation)
 version: 0.1.0
 milestone: M2 — First end-to-end slice
-status: draft
+status: implemented
 priority: P0
 owner: expert-backend
 methodology: tdd
 coverage_target: 85
 created: 2026-04-26
-updated: 2026-04-26
+updated: 2026-04-27
 author: limbowl
 issue_number: null
 depends_on: [SPEC-CORE-001, SPEC-OBS-001, SPEC-IR-001]
@@ -19,6 +19,8 @@ blocks: [SPEC-ADP-002, SPEC-FAN-001, SPEC-CLI-001, SPEC-SYN-001]
 # SPEC-ADP-001: Reddit Adapter (Reference Implementation)
 
 ## HISTORY
+
+- 2026-04-27 — Implemented in commits 41372d4 (TDD impl) + e3d1f7d (alloc refactor). Coverage: `internal/adapters/reddit` 92.4% (target ≥ 85% PASS). 9 @MX tags applied (2 ANCHOR + 1 WARN + 6 NOTE) — see `.moai/reports/mx-validation/SPEC-ADP-001-validation.md`. 55 tests + 1 benchmark; race-clean under `TestSearchConcurrentSafe` (50 goroutines × 1 stub server). All 11 EARS REQs (REQ-ADP-001..011) and 3 NFRs (NFR-ADP-001..003) verified by green tests. Performance: parse p50 = 0.115 ms (NFR-ADP-001 ≤ 5 ms PASS); allocs/op = 460 (NFR-ADP-001 revised target ≤ 500 PASS); goleak via `TestMain` in `bench_test.go` (NFR-ADP-003 PASS). Stub p95 latency ≤ 200 ms baseline confirmed in dedicated runs; flaky on heavy concurrent CPU load (race-detector + full project parallel) — operational guidance, not enforced as blocking sync gate. MX validation surfaced one hygiene fix in `bench_test.go` (alloc threshold text 250 → 500 aligned with NFR-ADP-001 iteration 3 amendment + missing `@MX:SPEC: SPEC-ADP-001` sub-line appended); applied in this sync commit. Unblocks SPEC-ADP-002, SPEC-FAN-001, SPEC-CLI-001, SPEC-SYN-001.
 
 - 2026-04-26 (initial draft v0.1, limbowl via manager-spec):
   First EARS-formatted SPEC drafted after research phase. Scope and

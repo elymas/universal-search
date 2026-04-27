@@ -18,10 +18,12 @@ func TestMain(m *testing.M) {
 }
 
 // BenchmarkParseListing25Docs measures parsing performance for the standard
-// 25-document fixture. The benchmark aims for p50 ≤ 5ms / allocs ≤ 250.
+// 25-document fixture. The benchmark aims for p50 ≤ 5ms / allocs ≤ 500
+// (NFR-ADP-001 revised in HISTORY iteration 3 from ≤ 250 after empirical baseline).
 //
-// @MX:NOTE: [AUTO] Performance sentinel — if allocs/op regresses beyond 250
+// @MX:NOTE: [AUTO] Performance sentinel — if allocs/op regresses beyond 500
 // or ns/op beyond 5_000_000, investigate transformation or JSON decode path.
+// @MX:SPEC: SPEC-ADP-001
 func BenchmarkParseListing25Docs(b *testing.B) {
 	body, err := os.ReadFile("testdata/search_response.json")
 	if err != nil {

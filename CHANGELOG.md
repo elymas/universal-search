@@ -59,6 +59,21 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - 67 tests + 2 benchmarks; coverage 90.6% router / 90.8% metrics; race-clean (TestClassifyConcurrent: 50 goroutines × 20 calls); BenchmarkRulesScore 2.5 µs/op (~400× under NFR-IR-001 1 ms p50 target)
   - 12 @MX tags applied; independent plan-auditor review-1 FAIL → review-2 PASS (4 non-blocking findings)
   - Unblocks SPEC-FAN-001, SPEC-CLI-001, SPEC-SYN-001, SPEC-ADP-001, SPEC-ADP-002
+- **SPEC-ADP-001** — M2 Reddit reference adapter (public `.json`, NSFW filter, Retry-After + redirect allowlist + circuit-breaker)
+  - `internal/adapters/reddit/` — first real adapter consuming the SPEC-CORE-001 contract end-to-end (12 source files: `reddit.go`, `search.go`, `client.go`, `parse.go`, `score.go`, `errors.go`, plus tests + bench)
+  - `parseListing` — JSON Listing → `[]NormalizedDoc` with `kind=="t3"` filter, pagination cursor on the last doc's `Metadata["next_cursor"]`, NSFW guard
+  - `categorizeStatus` — HTTP 429 / 4xx / 5xx / network → `*types.SourceError` Category mapping (RateLimited / Permanent / Unavailable / Unknown)
+  - `parseRetryAfter` — RFC 7231 §7.1.3 (integer-seconds tried first, then HTTP-date), 60s cap, 5s default when missing or malformed
+  - `redirectAllowlist` — 4-host SSRF guard (`www.reddit.com`, `old.reddit.com`, `new.reddit.com`, `reddit.com`); maximum 3 redirect hops per REQ-ADP-010; cross-domain rejection mapped to `CategoryPermanent` via `isCrossDomainRedirectErr`
+  - `normalizeScore` — `clamp(0.5 + 0.5*tanh(score/100), 0, 1)`; semantic center at score=0 (0.5), inflection at score=100 (~0.88)
+  - 55 tests + 1 benchmark, 92.4% coverage, race-clean (`TestSearchConcurrentSafe`: 50 goroutines × 1 stub server)
+  - Performance: parse p50 = 0.115 ms (NFR-ADP-001 ≤ 5 ms PASS); allocs/op = 460 (NFR-ADP-001 revised target ≤ 500 PASS, raised from ≤ 250 in run-phase iteration 3 after empirical baseline showed `pkg/types.NormalizedDoc.Metadata = map[string]any` forces a structural floor of ~17 allocs/doc)
+  - Goroutine-leak guard via `goleak.VerifyTestMain` in `bench_test.go` (NFR-ADP-003)
+  - 9 @MX tags (2 ANCHOR + 1 WARN + 6 NOTE) — see `.moai/reports/mx-validation/SPEC-ADP-001-validation.md`
+  - Public no-auth `https://www.reddit.com/search.json` endpoint (D1 user-locked decision); OAuth (`oauth.reddit.com`) deferred to a future ADP-001a SPEC if measured value warrants
+  - Adapter is stateless: no internal retry, no per-instance state mutation, no circuit; the fanout layer (SPEC-FAN-001, M3) owns retry orchestration — division-of-labor matches SPEC-CORE-001 §6.3
+  - Implemented in commit 41372d4 (TDD); refactored in e3d1f7d (parseListing slice pre-size, allocs/op 465 → 460)
+  - Unblocks SPEC-ADP-002, SPEC-FAN-001, SPEC-CLI-001, SPEC-SYN-001
 
 ### Changed
 
