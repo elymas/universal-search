@@ -89,7 +89,7 @@ func parseListing(body []byte, retrievedAt time.Time) ([]types.NormalizedDoc, st
 		cursor = *listing.Data.After
 	}
 
-	var docs []types.NormalizedDoc
+	docs := make([]types.NormalizedDoc, 0, len(children))
 	for _, child := range children {
 		if child.Kind != "t3" {
 			continue
