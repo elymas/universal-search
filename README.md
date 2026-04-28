@@ -34,7 +34,7 @@ make build
 | Tool    | Minimum version | Notes                                        |
 | ------- | --------------- | -------------------------------------------- |
 | Docker  | 24+             | Required for `make compose-up`               |
-| Go      | 1.23+           | Required for `make build` and `make test`    |
+| Go      | 1.25+           | Required for `make build` and `make test`    |
 | Python  | 3.11+           | Required for Python services                 |
 | Node.js | 22+             | Required for web frontend                    |
 | make    | Any             | Standard build tool                          |

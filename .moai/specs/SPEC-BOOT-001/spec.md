@@ -54,7 +54,7 @@ This SPEC establishes the greenfield foundation for the Universal Search monorep
 
 | ID | Category | EARS Statement | Priority |
 |----|----------|----------------|----------|
-| REQ-BOOT-001 | Ubiquitous | The repository shall contain a valid Go module rooted at `go.mod` with module path `github.com/elymas/universal-search`, Go 1.23, and three package roots (`cmd/`, `internal/`, `pkg/`). | P0 |
+| REQ-BOOT-001 | Ubiquitous | The repository shall contain a valid Go module rooted at `go.mod` with module path `github.com/elymas/universal-search`, Go 1.25, and three package roots (`cmd/`, `internal/`, `pkg/`). | P0 |
 | REQ-BOOT-002 | Ubiquitous | The repository shall contain `services/researcher/`, `services/storm/`, `services/embedder/`, each with `__init__.py`, `pyproject.toml`, `Dockerfile`, and `README.md`, each declaring `python = ">=3.11"`. | P0 |
 | REQ-BOOT-003 | Ubiquitous | The repository shall contain a Next.js 16 App Router scaffold under `web/` configured with shadcn/ui, Tailwind CSS, ESLint, and Prettier. | P0 |
 | REQ-BOOT-004 | Event-driven | When a developer runs `make compose-up`, the docker-compose stack shall start Qdrant v1.16.3, Meilisearch v1.42.1, PostgreSQL 16.13-alpine3.23, SearXNG (`searxng/searxng`), LiteLLM v1.83.7-stable.patch.1, and Redis 7-alpine, with every service reporting healthy within 60 seconds. | P0 |
@@ -64,7 +64,7 @@ This SPEC establishes the greenfield foundation for the Universal Search monorep
 | REQ-BOOT-008 | Ubiquitous | A pre-commit framework shall configure hooks for `gofmt`, `goimports`, `ruff`, `prettier`, `eslint`, `trailing-whitespace`, `end-of-file-fixer`, `hadolint`, `shellcheck`, and `yamllint`. | P1 |
 | REQ-BOOT-009 | Ubiquitous | The repository shall contain an `.editorconfig` with language-specific indent rules (Go: tabs, width 4; Python: spaces, width 4; TS/JS: spaces, width 2; YAML: spaces, width 2; Markdown: spaces, width 2). | P1 |
 | REQ-BOOT-010 | Ubiquitous | The `Makefile` shall expose targets `dev`, `test`, `lint`, `build`, `clean`, `compose-up`, `compose-down`, `fmt`, `tidy`, and `install-py` for the uv workspace. | P0 |
-| REQ-BOOT-011 | Ubiquitous | `README.md` shall provide a quickstart, list prerequisites (Docker, Go 1.23+, Python 3.11+, Node 22+, make), and link to `.moai/project/` documentation. | P1 |
+| REQ-BOOT-011 | Ubiquitous | `README.md` shall provide a quickstart, list prerequisites (Docker, Go 1.25+, Python 3.11+, Node 22+, make), and link to `.moai/project/` documentation. | P1 |
 | REQ-BOOT-012 | Event-driven | When a developer runs `./cmd/usearch/usearch --version` after `make build`, the binary shall print a semver string and exit with code 0. | P0 |
 
 ## 4. Non-Functional Requirements
@@ -88,7 +88,7 @@ This SPEC establishes the greenfield foundation for the Universal Search monorep
 ### REQ-BOOT-001 (Go module)
 
 - [ ] `go mod verify` exits 0.
-- [ ] `go.mod` declares `module github.com/elymas/universal-search` and `go 1.23`.
+- [ ] `go.mod` declares `module github.com/elymas/universal-search` and `go 1.25`.
 - [ ] `go.sum` is present and committed.
 - [ ] `cmd/usearch/`, `internal/`, and `pkg/` each contain at least one `.go` file.
 - [ ] `go build ./...` exits 0.
@@ -143,7 +143,7 @@ This SPEC establishes the greenfield foundation for the Universal Search monorep
 - [ ] All four jobs green on a fresh checkout of `main`.
 - [ ] `compose-check.yml` invokes `docker compose up --wait` and completes within 90 seconds.
 - [ ] `web.yml` uses Node 22 LTS.
-- [ ] `go.yml` uses Go 1.23.x.
+- [ ] `go.yml` uses Go 1.25.x.
 - [ ] `python.yml` uses Python 3.11.
 
 ### REQ-BOOT-008 (Pre-commit)
@@ -177,7 +177,7 @@ This SPEC establishes the greenfield foundation for the Universal Search monorep
 
 - [ ] `README.md` is non-empty at the repo root.
 - [ ] Contains a `## Quickstart` section with clone → `cp .env.example .env` → `make compose-up` → `make build` → `./cmd/usearch/usearch --version`.
-- [ ] Prerequisites section lists Docker, Go 1.23+, Python 3.11+, Node 22+, make.
+- [ ] Prerequisites section lists Docker, Go 1.25+, Python 3.11+, Node 22+, make.
 - [ ] Contains four relative links: `.moai/project/product.md`, `.moai/project/structure.md`, `.moai/project/tech.md`, `.moai/project/roadmap.md`.
 
 ### REQ-BOOT-012 (usearch --version)
@@ -377,7 +377,7 @@ volumes:
 
 Four workflow files under `.github/workflows/`:
 
-- **go.yml** — triggers on push/PR to `main`; matrix single Go 1.23.x; steps: `actions/checkout@v4` → `actions/setup-go@v5` (with built-in cache) → `go mod download` → `go vet ./...` → `golangci-lint run` → `go test -race -cover ./...`.
+- **go.yml** — triggers on push/PR to `main`; matrix single Go 1.25.x; steps: `actions/checkout@v4` → `actions/setup-go@v5` (with built-in cache) → `go mod download` → `go vet ./...` → `golangci-lint run` → `go test -race -cover ./...`.
 - **python.yml** — matrix strategy over the three services (`researcher`, `storm`, `embedder`); Python 3.11; `actions/setup-python@v5` → `pip install uv` → `uv sync --frozen --package {service}` → `ruff check services/{service}` → `uv run --package {service} pytest`.
 - **web.yml** — Node 22 LTS; `actions/setup-node@v4` with pnpm cache → `pnpm -C web install --frozen-lockfile` → `pnpm -C web typecheck` → `pnpm -C web lint` → `pnpm -C web build`.
 - **compose-check.yml** — ubuntu-latest; `docker compose -f deploy/docker-compose.yml config` → `docker compose up --wait --quiet-pull` (timeout 90s) → `docker compose ps` → `docker compose down -v`.
@@ -458,7 +458,7 @@ SPECs add direct dependencies.
 
 | Path | Purpose |
 |------|---------|
-| `go.mod` | Go module declaration (`module github.com/elymas/universal-search`, `go 1.23`) |
+| `go.mod` | Go module declaration (`module github.com/elymas/universal-search`, `go 1.25`) |
 | `go.sum` | Go checksum lockfile |
 | `cmd/usearch/main.go` | CLI entrypoint; parses `--version`; <50 LOC |
 | `cmd/usearch/main_test.go` | `TestVersionFlag` — REQ-BOOT-012 RED test |
@@ -541,7 +541,7 @@ Development follows RED-GREEN-REFACTOR per `development_mode: tdd` in `.moai/con
 2. **REQ-BOOT-001 — `TestModulePath`** (`internal/meta/module_test.go`)
    - Reads `go.mod` at repo root.
    - Asserts first `module` directive equals `github.com/elymas/universal-search`.
-   - Asserts `go` directive equals `1.23`.
+   - Asserts `go` directive equals `1.25`.
    - Fails until `go.mod` is created with the correct values.
 
 3. **REQ-BOOT-002 — `test_services_importable`** (`tests/scaffold/test_services.py` at repo root using pytest)

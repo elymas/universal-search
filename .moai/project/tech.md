@@ -14,7 +14,7 @@
 
 | Language | Version | Where | Why |
 |----------|---------|-------|-----|
-| Go | 1.23+ | `cmd/`, `internal/`, `pkg/` | Single-binary deploy, stdlib HTTP, goroutines for fanout, project's native stack |
+| Go | 1.25+ | `cmd/`, `internal/`, `pkg/` | Single-binary deploy, stdlib HTTP, goroutines for fanout, project's native stack |
 | Python | 3.12+ | `services/*` | gpt-researcher, STORM, embedding models |
 | TypeScript | 5.4+ | `web/` | Next.js 16 App Router for Web UI |
 | SQL (PostgreSQL) | 16+ | schema under `internal/index/postgres/migrations/` | metadata + audit |
