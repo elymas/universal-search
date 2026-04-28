@@ -8,6 +8,19 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **SPEC-ADP-002** — Hacker News reference adapter (M2)
+  - `internal/adapters/hn/` package implementing `types.Adapter` against the Algolia HN Search public API (`https://hn.algolia.com/api/v1/search`)
+  - `Search()`: query + tags=story, hitsPerPage clamped [1,100], integer-cursor pagination, numeric filters (`since` → `created_at_i>=`, `min_points` → `points>=`), SSRF-guard redirect allowlist (`{hn.algolia.com, news.ycombinator.com}`, max 3 hops), 5 MB body cap
+  - `Capabilities()`: SourceID=hackernews, SupportsSince=true, RateLimitPerMin=60, DefaultMaxResults=25, RequiresAuth=false
+  - `Healthcheck()`: TCP dial to `hn.algolia.com:443`
+  - `normalizeScore()`: `clamp(0.5 + 0.5*tanh(points/100), 0, 1)` Tanh formula
+  - `stripHTML()`: conservative stdlib-only HTML tag stripper with entity decoding
+  - `parseRetryAfter()`: RFC 7231 §7.1.3, integer-seconds first then HTTP-date, 5s default, 60s cap
+  - Two-branch URL construction: external `url` for link posts, `news.ycombinator.com/item?id=<objectID>` permalink for self-posts
+  - Defensive `_tags` filter: client-side guard against Algolia API drift
+  - 7 golden-file fixtures under `testdata/`, 95.1% statement coverage, 441 allocs/op per NFR-ADP2-001
+  - MX tags: `@MX:ANCHOR` on `Search` + `parseHits`, `@MX:WARN` on `doRequest`, `@MX:NOTE` on constants and `categorizeStatus`
+
 - **SPEC-BOOT-001** — M1 Foundation repo scaffold and CI bootstrap
   - Go module `github.com/elymas/universal-search` with `cmd/usearch` CLI (prints semver via `--version`), `internal/` domain stubs, `pkg/` public interfaces
   - Python `uv` workspace with three services (`researcher`, `storm`, `embedder`), each with `pyproject.toml`, `Dockerfile`, test skeleton

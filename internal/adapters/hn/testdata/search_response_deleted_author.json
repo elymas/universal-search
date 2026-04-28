@@ -1,0 +1,9 @@
+{
+  "hits": [
+    {"objectID": "99999001", "title": "Story by deleted user", "url": "https://example.com/deleted-author-story", "author": "", "points": 25, "story_text": null, "num_comments": 5, "created_at_i": 1713169931, "_tags": ["story", "story_99999001"]}
+  ],
+  "nbHits": 1,
+  "page": 0,
+  "nbPages": 1,
+  "hitsPerPage": 25
+}

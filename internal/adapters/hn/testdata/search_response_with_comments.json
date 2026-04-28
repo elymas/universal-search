@@ -1,0 +1,12 @@
+{
+  "hits": [
+    {"objectID": "88001001", "title": "Story one (should be included)", "url": "https://example.com/story-one", "author": "story_author", "points": 100, "story_text": null, "num_comments": 40, "created_at_i": 1713169931, "_tags": ["story", "author_story_author", "story_88001001"]},
+    {"objectID": "88001002", "title": "This is a comment (should be filtered)", "url": "", "author": "commenter", "points": 0, "story_text": "This is a comment body text.", "num_comments": 0, "created_at_i": 1713169932, "_tags": ["comment", "author_commenter", "story_88001001"]},
+    {"objectID": "88001003", "title": "Story two (should be included)", "url": "https://example.com/story-two", "author": "story_author2", "points": 200, "story_text": null, "num_comments": 60, "created_at_i": 1713169933, "_tags": ["story", "front_page", "author_story_author2", "story_88001003"]},
+    {"objectID": "88001004", "title": "Another comment (should be filtered)", "url": "", "author": "commenter2", "points": 0, "story_text": "Another comment body.", "num_comments": 0, "created_at_i": 1713169934, "_tags": ["comment", "author_commenter2", "story_88001003"]}
+  ],
+  "nbHits": 2,
+  "page": 0,
+  "nbPages": 1,
+  "hitsPerPage": 25
+}

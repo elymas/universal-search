@@ -3,7 +3,8 @@ id: SPEC-ADP-002
 title: Hacker News Adapter
 version: 0.1.0
 milestone: M2 — First end-to-end slice
-status: draft
+status: implemented
+implemented_at: 2026-04-28
 priority: P0
 owner: expert-backend
 methodology: tdd

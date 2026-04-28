@@ -1,0 +1,11 @@
+{
+  "hits": [
+    {"objectID": "39001001", "title": "Pagination test story 1", "url": "https://example.com/page-test-1", "author": "page_author", "points": 100, "story_text": null, "num_comments": 10, "created_at_i": 1713169931, "_tags": ["story", "author_page_author", "story_39001001"]},
+    {"objectID": "39001002", "title": "Pagination test story 2", "url": "https://example.com/page-test-2", "author": "page_author", "points": 200, "story_text": null, "num_comments": 20, "created_at_i": 1713169932, "_tags": ["story", "author_page_author", "story_39001002"]},
+    {"objectID": "39001003", "title": "Pagination test story 3", "url": "https://example.com/page-test-3", "author": "page_author", "points": 300, "story_text": null, "num_comments": 30, "created_at_i": 1713169933, "_tags": ["story", "author_page_author", "story_39001003"]}
+  ],
+  "nbHits": 15,
+  "page": 0,
+  "nbPages": 5,
+  "hitsPerPage": 3
+}

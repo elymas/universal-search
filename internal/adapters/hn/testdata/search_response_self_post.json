@@ -1,0 +1,9 @@
+{
+  "hits": [
+    {"objectID": "12345", "title": "Ask HN: Self post test", "url": "", "author": "self_poster", "points": 50, "story_text": "<p>Hello <b>world</b></p>&amp; goodbye", "num_comments": 15, "created_at_i": 1713169931, "_tags": ["story", "ask_hn", "author_self_poster", "story_12345"]}
+  ],
+  "nbHits": 1,
+  "page": 0,
+  "nbPages": 1,
+  "hitsPerPage": 25
+}
