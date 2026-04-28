@@ -13,9 +13,18 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - Python `uv` workspace with three services (`researcher`, `storm`, `embedder`), each with `pyproject.toml`, `Dockerfile`, test skeleton
   - Next.js 16 web scaffold under `web/` with Tailwind, shadcn/ui config, ESLint + Prettier
   - `deploy/docker-compose.yml` with six pinned services (Qdrant v1.16.3, Meilisearch v1.42.1, PostgreSQL 16.13-alpine3.23, SearXNG, LiteLLM v1.83.7-stable.patch.1, Redis 7-alpine), all healthchecked, `${VAR}` env interpolation, named volumes
-  - GitHub Actions CI matrix (`go-ci`, `python-ci`, `web-ci`, `compose-check`, `pre-commit`) on Node 22 LTS with all actions pinned
+  - GitHub Actions CI matrix (`go.yml`, `python.yml`, `web.yml`, `compose-check.yml`, `pre-commit.yml`) on Node 22 LTS with all actions pinned
   - `.pre-commit-config.yaml` (gofmt, goimports, ruff, prettier, eslint, trailing-whitespace, end-of-file-fixer, hadolint, shellcheck, yamllint)
   - `Makefile` (dev, test, lint, build, clean, compose-up/down, fmt, tidy, install-py), `.editorconfig`, `LICENSE` (Apache-2.0), `NOTICE`, `README.md`
+
+### Changed
+
+- **SPEC-BOOT-001** — toolchain and scaffold polish (post-implementation sync)
+  - Go toolchain version aligned with reality: SPEC + tech.md + README updated from Go 1.23 to Go 1.25 (matches `go.mod` since bootstrap; CI workflows already pin via `go-version-file: go.mod`)
+  - CI workflow filenames renamed to match SPEC §6.3: `go-ci.yml` → `go.yml`, `python-ci.yml` → `python.yml`, `web-ci.yml` → `web.yml`
+  - `.pre-commit-config.yaml` adds local `eslint` hook delegating to `pnpm -C web exec eslint` (REQ-BOOT-008)
+  - `web/src/components/` and `web/src/lib/` placeholders added under existing src layout (REQ-BOOT-003)
+  - SPEC-BOOT-001 frontmatter status flipped `approved` → `implemented` with `implemented_at: 2026-04-28`
 - **SPEC-DEP-001** — Dependency pinning policy and audit CI
   - `docs/dependencies.md` manifest with Go pinning policy, future-dependencies placeholder table (chi → SPEC-IR-001, client_golang → SPEC-OBS-001, asynq → SPEC-LLM-001, pgx → SPEC-DB-001, qdrant/go-client → SPEC-VECTOR-001), compose service table, license allowlist
   - `.github/workflows/deps-audit.yml` running `govulncheck`, `pip-audit` (per-service matrix), `pnpm audit`, `hadolint`, license scan with allowlist enforcement, and SearXNG digest regression check on every PR and weekly cron

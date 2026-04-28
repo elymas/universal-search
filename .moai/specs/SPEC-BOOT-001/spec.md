@@ -2,15 +2,16 @@
 id: SPEC-BOOT-001
 title: Repo Scaffold and CI Bootstrap
 milestone: M1 — Foundation
-status: approved
+status: implemented
 priority: P0
 owner: expert-devops
 methodology: tdd
 coverage_target: 85
 created: 2026-04-24
-updated: 2026-04-24
+updated: 2026-04-28
 approved_by: limbowl
 approved_at: 2026-04-24
+implemented_at: 2026-04-28
 depends_on: []
 blocks: [SPEC-DEP-001, SPEC-OBS-001, SPEC-LLM-001, SPEC-IR-001, SPEC-ADP-001, SPEC-CLI-001, SPEC-IDX-001, SPEC-UI-001]
 ---
