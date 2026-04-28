@@ -57,6 +57,19 @@ repos:
       - id: prettier
         files: \.(js|ts|tsx|jsx|json|md|yaml|yml)$
 
+  # ── Web linting (ESLint via local pnpm) ─────────────────────────────────────
+  # Runs the workspace's pinned ESLint config from web/eslint.config.mjs against
+  # staged TS/JS files. Local hook so the version stays in lockstep with
+  # web/package.json (no separate rev to drift).
+  - repo: local
+    hooks:
+      - id: eslint
+        name: eslint (web)
+        language: system
+        files: ^web/.*\.(js|jsx|ts|tsx|mjs|cjs)$
+        entry: pnpm -C web exec eslint --max-warnings=0
+        pass_filenames: true
+
   # ── Dockerfile linting ───────────────────────────────────────────────────────
   - repo: https://github.com/hadolint/hadolint
     rev: v2.12.0
