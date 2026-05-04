@@ -15,6 +15,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 	"time"
 	"unicode"
@@ -471,6 +472,11 @@ func determineExitCode(
 // adapters have RequiresAuth=false so no env-var preconditions apply.
 // In tests, withRegistry() injects an alternative registry.
 //
+// Env-var overrides (used by NFR-CLI-001 integration tests):
+//   - REDDIT_BASE_URL: redirects Reddit adapter to a stub HTTP server
+//   - HN_BASE_URL: redirects HN adapter to a stub HTTP server
+// Empty values fall back to the adapter's compiled-in defaults.
+//
 // @MX:NOTE: [AUTO] Production adapter wiring per SPEC-CLI-001 §2.1(m).
 // New M3 adapters are registered here; auth-gated adapters check
 // Capabilities.AuthEnvVars before Register.
@@ -478,10 +484,14 @@ func determineExitCode(
 func buildProductionRegistry() *adapters.Registry {
 	reg := adapters.NewRegistry(nil)
 
-	if a, err := reddit.New(reddit.Options{}); err == nil {
+	if a, err := reddit.New(reddit.Options{
+		BaseURL: os.Getenv("REDDIT_BASE_URL"),
+	}); err == nil {
 		_ = reg.Register(a)
 	}
-	if a, err := hn.New(hn.Options{}); err == nil {
+	if a, err := hn.New(hn.Options{
+		BaseURL: os.Getenv("HN_BASE_URL"),
+	}); err == nil {
 		_ = reg.Register(a)
 	}
 
