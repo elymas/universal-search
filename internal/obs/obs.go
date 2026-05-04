@@ -19,6 +19,7 @@ import (
 	obslog "github.com/elymas/universal-search/internal/obs/log"
 	"github.com/elymas/universal-search/internal/obs/metrics"
 	obstrace "github.com/elymas/universal-search/internal/obs/trace"
+	"github.com/prometheus/client_golang/prometheus"
 	oteltrace "go.opentelemetry.io/otel/trace"
 )
 
@@ -144,4 +145,31 @@ func Init(ctx context.Context, cfg Config) (*Obs, func(context.Context) error, e
 // goVersion returns the Go runtime version string (e.g. "go1.25.0").
 func goVersion() string {
 	return runtime.Version()
+}
+
+// SynthesisCalls re-exports the synthesis calls counter from the Metrics registry.
+// Returns nil when Metrics is nil (safe for tests).
+func (o *Obs) SynthesisCalls() *prometheus.CounterVec {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.SynthesisCalls
+}
+
+// SynthesisLatency re-exports the synthesis latency histogram from the Metrics registry.
+// Returns nil when Metrics is nil (safe for tests).
+func (o *Obs) SynthesisLatency() *prometheus.HistogramVec {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.SynthesisLatency
+}
+
+// SynthesisCost re-exports the synthesis cost counter from the Metrics registry.
+// Returns nil when Metrics is nil (safe for tests).
+func (o *Obs) SynthesisCost() prometheus.Counter {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.SynthesisCost
 }

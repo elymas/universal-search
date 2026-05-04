@@ -3,13 +3,14 @@ id: SPEC-SYN-001
 title: Basic synthesis v0
 version: 0.1.0
 milestone: M2 — First end-to-end slice
-status: draft
+status: implemented
 priority: P0
 owner: expert-backend
 methodology: tdd
 coverage_target: 80
 created: 2026-04-28
-updated: 2026-04-28
+updated: 2026-05-04
+implemented_at: 2026-05-04
 author: limbowl
 issue_number: null
 depends_on: [SPEC-CORE-001, SPEC-LLM-001, SPEC-BOOT-001]
@@ -19,6 +20,18 @@ blocks: [SPEC-SYN-002, SPEC-SYN-003, SPEC-SYN-004]
 # SPEC-SYN-001: Basic synthesis v0
 
 ## HISTORY
+
+- 2026-05-04 (implemented v0.1.0, manager-tdd via TDD RED-GREEN-REFACTOR):
+  Full brownfield TDD implementation. Python sidecar (`services/researcher/`)
+  built with FastAPI + Pydantic v2; citation assembly via extracted-scaffold
+  pattern (SPEC §11.1 fallback — gpt-researcher not installed, uv workspace
+  conflict). LiteLLM gateway tested with injectable `httpx.AsyncBaseTransport`.
+  `_process_markers()` strips out-of-range markers with WARN log. Degraded mode
+  returns bullet-list within 2s on `ConnectError`. Go client (`internal/synthesis/`)
+  uses context timeout, 2-retry exponential backoff (500ms/1500ms ±10% jitter),
+  retries only on net errors or 5xx. Prometheus metrics family registered via
+  `internal/obs/metrics/synthesis.go`. OTel span "synthesis.call" added.
+  Coverage: Go 86.3%, Python 86%. All 33 Python + 15 Go tests passing.
 
 - 2026-04-28 (initial draft v0.1, limbowl via manager-spec):
   First EARS-formatted SPEC for the synthesis layer. Establishes the

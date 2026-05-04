@@ -161,6 +161,32 @@ services:
     networks:
       - app
 
+  # ── Researcher synthesis sidecar (SPEC-SYN-001) ────────────────────────────
+  researcher:
+    build:
+      context: ../services/researcher
+    ports:
+      - "${RESEARCHER_PORT:-8081}:8081"
+    environment:
+      LITELLM_BASE_URL: http://litellm:4000
+      LITELLM_API_KEY: ${LITELLM_MASTER_KEY}
+      RESEARCHER_PORT: "8081"
+      RESEARCHER_MODEL_DEFAULT: claude-haiku-4-5
+      RESEARCHER_TIMEOUT_SECONDS: "8"
+      RESEARCHER_LOG_LEVEL: INFO
+    depends_on:
+      litellm:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - app
+
   # ── Prometheus metrics scraper ───────────────────────────────────────────────
   # REQ-OBS-004: Scrapes usearch admin server /metrics.
   # host.docker.internal resolves to the Docker host (macOS/Windows).

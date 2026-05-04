@@ -8,6 +8,14 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **SPEC-SYN-001** — Basic synthesis v0 (M2)
+  - `services/researcher/` Python FastAPI sidecar: `app.py` (lifespan + POST /synthesize + GET /health), `models.py` (Pydantic v2 NormalizedDocPayload / SynthesizeRequest / Citation / SynthesizeResponse with ConfigDict extra=forbid), `synthesis.py` (citation-assembly + marker validation), `gateway.py` (OpenAI SDK wired to LiteLLM), `obs.py` (JSON stdlib logger + Timer context manager), `__main__.py` (uvicorn entrypoint)
+  - `internal/synthesis/` Go HTTP client: `types.go` (Request/Result/Citation + ErrInvalidRequest/ErrSidecarUnreachable/ErrTimeout), `config.go` (RESEARCHER_BASE_URL + RESEARCHER_REQUEST_TIMEOUT_SECONDS env binder), `client.go` (context timeout + exponential backoff retry, 2 retries, 500ms/1500ms ±10% jitter)
+  - `internal/obs/metrics/synthesis.go` — new metric family: `usearch_synthesis_calls_total{outcome}`, `usearch_synthesis_latency_seconds{outcome}`, `usearch_synthesis_cost_usd_total`
+  - Degraded mode: when LiteLLM is unreachable, sidecar returns 200 with `degraded=true` + bullet-list of doc titles/URLs within 2s
+  - REQ-SYN-001..007 + NFR-SYN-001..004 fully implemented; 33 Python tests + 11 Go tests; >80% coverage on both sides
+  - MX tags: `@MX:ANCHOR` on `synthesize()` (Python), `Synthesize()` (Go), `Config` (Go); `@MX:WARN` on `complete()` gateway call, `withRetry()` loop
+
 - **SPEC-ADP-002** — Hacker News reference adapter (M2)
   - `internal/adapters/hn/` package implementing `types.Adapter` against the Algolia HN Search public API (`https://hn.algolia.com/api/v1/search`)
   - `Search()`: query + tags=story, hitsPerPage clamped [1,100], integer-cursor pagination, numeric filters (`since` → `created_at_i>=`, `min_points` → `points>=`), SSRF-guard redirect allowlist (`{hn.algolia.com, news.ycombinator.com}`, max 3 hops), 5 MB body cap

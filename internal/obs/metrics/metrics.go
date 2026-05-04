@@ -54,6 +54,12 @@ type Registry struct {
 	RouterClassifications        *prometheus.CounterVec
 	RouterClassificationDuration *prometheus.HistogramVec
 
+	// Synthesis metrics (SPEC-SYN-001). Reuse the existing `outcome` label;
+	// SynthesisCost has no labels (no new cardinality introduced).
+	SynthesisCalls   *prometheus.CounterVec
+	SynthesisLatency *prometheus.HistogramVec
+	SynthesisCost    prometheus.Counter
+
 	// labelNames tracks all registered label names for cardinality validation.
 	labelNames []string
 }
@@ -141,6 +147,9 @@ func NewRegistry() *Registry {
 	// Register Intent Router metrics (SPEC-IR-001).
 	router := registerRouter(pr)
 
+	// Register Synthesis metrics (SPEC-SYN-001).
+	synth := registerSynthesis(pr)
+
 	return &Registry{
 		Prometheus:                   pr,
 		HTTPRequests:                 httpRequests,
@@ -154,6 +163,9 @@ func NewRegistry() *Registry {
 		LLMLatency:                   llm.latency,
 		RouterClassifications:        router.classifications,
 		RouterClassificationDuration: router.duration,
+		SynthesisCalls:               synth.calls,
+		SynthesisLatency:             synth.latency,
+		SynthesisCost:                synth.cost,
 		labelNames: []string{
 			"method", "route", "status_class",
 			"adapter_class",
