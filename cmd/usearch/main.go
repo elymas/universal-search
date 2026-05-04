@@ -7,7 +7,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log/slog"
 	"os"
@@ -87,9 +86,18 @@ func runQueryWithObs(args []string) int {
 	ctx := context.Background()
 
 	// Check for --no-llm early so we can configure obs before handing off.
-	noLLMFlag := flag.NewFlagSet("pre", flag.ContinueOnError)
-	noLLM := noLLMFlag.Bool("no-llm", false, "skip LLM")
-	_ = noLLMFlag.Parse(args)
+	// Strip --no-llm tokens from args so the query subcommand's FlagSet does
+	// not see them (the query FlagSet does not declare --no-llm).
+	noLLM := false
+	filtered := make([]string, 0, len(args))
+	for _, a := range args {
+		if a == "--no-llm" || a == "-no-llm" {
+			noLLM = true
+			continue
+		}
+		filtered = append(filtered, a)
+	}
+	args = filtered
 
 	o, shutdown, err := obs.Init(ctx, obs.Config{
 		ServiceName:    "usearch",
@@ -107,7 +115,7 @@ func runQueryWithObs(args []string) int {
 	_ = o // obs bundle available for future registry wiring
 
 	// Initialise LLM client when LITELLM_MASTER_KEY is set and --no-llm is absent.
-	if !*noLLM && os.Getenv("LITELLM_MASTER_KEY") != "" {
+	if !noLLM && os.Getenv("LITELLM_MASTER_KEY") != "" {
 		cfg, cfgErr := llmconfig.Load()
 		if cfgErr != nil {
 			o.Logger.Error("llm config load failed", slog.String("err", cfgErr.Error()))
@@ -123,7 +131,7 @@ func runQueryWithObs(args []string) int {
 			slog.String("base_url", cfg.BaseURL),
 			slog.Float64("budget_usd", cfg.PerRequestCapUSD),
 		)
-	} else if !*noLLM {
+	} else if !noLLM {
 		o.Logger.Warn("llm disabled: LITELLM_MASTER_KEY not set; use --no-llm to suppress this warning")
 	}
 

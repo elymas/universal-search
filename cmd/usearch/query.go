@@ -24,6 +24,8 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/elymas/universal-search/internal/adapters"
+	"github.com/elymas/universal-search/internal/adapters/hn"
+	"github.com/elymas/universal-search/internal/adapters/reddit"
 	"github.com/elymas/universal-search/internal/obs/reqid"
 	"github.com/elymas/universal-search/internal/router"
 	"github.com/elymas/universal-search/internal/synthesis"
@@ -464,11 +466,26 @@ func determineExitCode(
 }
 
 // buildProductionRegistry constructs the adapter registry for production use.
-// Registration is done with auth checks (RequiresAuth adapters need env vars).
+//
+// Registers Reddit (SPEC-ADP-001) and Hacker News (SPEC-ADP-002). Both
+// adapters have RequiresAuth=false so no env-var preconditions apply.
+// In tests, withRegistry() injects an alternative registry.
+//
+// @MX:NOTE: [AUTO] Production adapter wiring per SPEC-CLI-001 §2.1(m).
+// New M3 adapters are registered here; auth-gated adapters check
+// Capabilities.AuthEnvVars before Register.
+// @MX:SPEC: SPEC-CLI-001
 func buildProductionRegistry() *adapters.Registry {
-	// This is populated by main.go in production.
-	// In tests, withRegistry() injects the registry.
-	return adapters.NewRegistry(nil)
+	reg := adapters.NewRegistry(nil)
+
+	if a, err := reddit.New(reddit.Options{}); err == nil {
+		_ = reg.Register(a)
+	}
+	if a, err := hn.New(hn.Options{}); err == nil {
+		_ = reg.Register(a)
+	}
+
+	return reg
 }
 
 // buildRouter constructs the Intent Router from a registry.

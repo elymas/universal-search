@@ -16,25 +16,37 @@ import (
 // --- buildProductionRegistry / buildProductionSynth ---
 
 // TestBuildProductionRegistryReturnsRegistry verifies the production registry
-// constructor does not panic and returns a non-nil registry.
+// constructor does not panic, returns a non-nil registry, and registers the
+// expected M2 adapters (Reddit + Hacker News) per SPEC-CLI-001 §2.1(m).
 func TestBuildProductionRegistryReturnsRegistry(t *testing.T) {
 	reg := buildProductionRegistry()
 	if reg == nil {
 		t.Fatal("buildProductionRegistry() returned nil")
 	}
+	for _, name := range []string{"reddit", "hackernews"} {
+		if _, ok := reg.Get(name); !ok {
+			t.Errorf("expected adapter %q to be registered", name)
+		}
+	}
 }
 
-// TestBuildProductionSynthReturnsNopClient verifies the production synth
-// constructor returns a usable nopSynthClient.
-func TestBuildProductionSynthReturnsNopClient(t *testing.T) {
+// TestBuildProductionSynthReturnsClient verifies the production synth
+// constructor returns a non-nil client. The client may be either the real
+// productionSynthAdapter (when synthesis.LoadConfig succeeds) or
+// nopSynthClient (fallback). Both satisfy synthClientIface.
+func TestBuildProductionSynthReturnsClient(t *testing.T) {
 	s := buildProductionSynth()
 	if s == nil {
 		t.Fatal("buildProductionSynth() returned nil")
 	}
-	// The nop client must return errSynthUnavailable (not panic).
-	res, err := s.Synthesize(context.Background(), "query", "en", nil)
+	// Calling Synthesize against an unreachable sidecar (or the nop fallback)
+	// must return an error (not panic). Use a short-cancelled context so the
+	// real client does not actually open a TCP connection that would leak.
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	res, err := s.Synthesize(ctx, "query", "en", nil)
 	if err == nil {
-		t.Error("expected error from nopSynthClient, got nil")
+		t.Error("expected error from synth client (cancelled ctx or nop), got nil")
 	}
 	_ = res
 }
@@ -197,25 +209,10 @@ func TestDetermineExitCodeSystemErrorNoDocs(t *testing.T) {
 	}
 }
 
-// --- Execute: buildRouter error path ---
-
-// TestExecuteWithEmptyRegistryExitsTwo verifies ExitSystemError when registry is empty
-// (no adapters registered, buildRouter should either succeed with empty list or return error).
-func TestExecuteRouterWithNoAdaptersExitsTwo(t *testing.T) {
-	var stdout, stderr bytes.Buffer
-	// Empty registry — no adapters registered.
-	reg := buildProductionRegistry()
-	code := Execute(
-		context.Background(),
-		[]string{"--no-obs", "hello world"},
-		&stdout, &stderr,
-		withRegistry(reg),
-	)
-	// With no adapters, all adapters "fail" so exit should be 2.
-	if code != ExitSystemError && code != ExitPartial {
-		t.Errorf("empty registry: exit %d, want ExitSystemError or ExitPartial", code)
-	}
-}
+// (TestExecuteRouterWithNoAdaptersExitsTwo removed: buildProductionRegistry()
+// now registers Reddit + HN per SPEC-CLI-001 §2.1(m), so the test premise
+// ("empty registry") no longer holds. The "all adapters fail" path is still
+// covered by TestExitTwoOnAllAdaptersFail in query_test.go using mock adapters.)
 
 // --- formatText error paths via failing writer ---
 
