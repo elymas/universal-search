@@ -26,6 +26,7 @@ import (
 	"github.com/elymas/universal-search/internal/adapters"
 	"github.com/elymas/universal-search/internal/obs/reqid"
 	"github.com/elymas/universal-search/internal/router"
+	"github.com/elymas/universal-search/internal/synthesis"
 	"github.com/elymas/universal-search/pkg/types"
 )
 
@@ -479,7 +480,48 @@ func buildRouter(reg *adapters.Registry) (*router.Router, error) {
 }
 
 // buildProductionSynth constructs the synthesis client for production use.
-// Returns nopSynthClient when synthesis is not configured.
+//
+// Wires the real synthesis.Client (SPEC-SYN-001) using RESEARCHER_BASE_URL
+// and RESEARCHER_REQUEST_TIMEOUT_SECONDS env vars. Falls back to
+// nopSynthClient if config load fails or client construction errors;
+// the nop fallback satisfies REQ-CLI-009 degraded-mode behavior.
+//
+// obs is nil here: REQ-SYN-006 guarantees the synthesis.Client is nil-safe
+// across obs.Obs, individual collectors, and obs.Logger.
 func buildProductionSynth() synthClientIface {
-	return &nopSynthClient{}
+	cfg, err := synthesis.LoadConfig()
+	if err != nil {
+		return &nopSynthClient{}
+	}
+	client, err := synthesis.New(cfg, nil)
+	if err != nil {
+		return &nopSynthClient{}
+	}
+	return &productionSynthAdapter{client: client}
+}
+
+// productionSynthAdapter bridges *synthesis.Client to synthClientIface.
+//
+// @MX:NOTE: [AUTO] Type adapter — synthesis.Result -> synthResult mapping
+// to keep cmd/usearch decoupled from internal/synthesis concrete types.
+// @MX:SPEC: SPEC-CLI-001
+type productionSynthAdapter struct {
+	client *synthesis.Client
+}
+
+func (a *productionSynthAdapter) Synthesize(ctx context.Context, query, lang string, docs []types.NormalizedDoc) (synthResult, error) {
+	res, err := a.client.Synthesize(ctx, query, lang, docs)
+	if err != nil {
+		return synthResult{}, err
+	}
+	citations := make([]synthCitation, len(res.Citations))
+	for i, c := range res.Citations {
+		citations[i] = synthCitation{
+			Marker: c.Marker,
+			DocID:  c.DocID,
+			URL:    c.URL,
+			Title:  c.Title,
+		}
+	}
+	return synthResult{Text: res.Text, Citations: citations}, nil
 }
