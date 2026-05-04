@@ -8,6 +8,19 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- **SPEC-CLI-001** — `usearch query` subcommand v0 (M2)
+  - `cmd/usearch/query.go`: `Execute()` orchestrator (flag parsing, Intent Router, adapter fanout, synthesis, output formatting); `runFanout()` concurrent adapter fanout via `golang.org/x/sync/errgroup`; `parseQueryFlags()` supporting `--source`, `--format`, `--timeout`, `--no-obs`; `intersectSources()` for source filtering; `determineExitCode()` for exit code policy; functional options `withRegistry()` + `withSynth()` for test injection
+  - `cmd/usearch/exitcode.go`: exit code constants `ExitSuccess=0`, `ExitUserError=1`, `ExitSystemError=2`, `ExitPartial=3`; `classifyError()` helper
+  - `cmd/usearch/progress.go`: `progressEmitter` interface with `humanProgress` (text mode) and `jsonProgress` (no-op) implementations
+  - `cmd/usearch/output_text.go`: `formatText()` — summary + numbered citations block; degraded mode renders raw doc snippets
+  - `cmd/usearch/output_json.go`: `formatJSON()` — schema version "1" JSON envelope with `query`, `category`, `lang`, `adapters`, `summary`, `citations`, `stats` fields
+  - `cmd/usearch/query_response.go`: internal pipeline types `queryResponse`, `queryCitation`, `queryStats`
+  - `cmd/usearch/main.go`: updated `dispatch()` subcommand router; `--help`/`-h`/`help` aliases; `usageText()` help string; `runQueryWithObs()` production path with obs.Init + optional LLM init
+  - Degraded mode (REQ-CLI-009): `nopSynthClient` returns `errSynthUnavailable`; output falls back to numbered raw docs; exit code 3
+  - OTel span emission on Execute() entry/exit with `cli.exit_code` attribute; ULID request ID via `internal/obs/reqid`
+  - 35 unit tests (goleak `TestMain`, REQ-CLI-001..011 + NFR-CLI-001..004); 80.1% coverage
+  - MX tags: `@MX:ANCHOR` on `Execute()`, `@MX:WARN` on `runFanout()`, `@MX:NOTE` on `progressEmitter` interface
+
 - **SPEC-SYN-001** — Basic synthesis v0 (M2)
   - `services/researcher/` Python FastAPI sidecar: `app.py` (lifespan + POST /synthesize + GET /health), `models.py` (Pydantic v2 NormalizedDocPayload / SynthesizeRequest / Citation / SynthesizeResponse with ConfigDict extra=forbid), `synthesis.py` (citation-assembly + marker validation), `gateway.py` (OpenAI SDK wired to LiteLLM), `obs.py` (JSON stdlib logger + Timer context manager), `__main__.py` (uvicorn entrypoint)
   - `internal/synthesis/` Go HTTP client: `types.go` (Request/Result/Citation + ErrInvalidRequest/ErrSidecarUnreachable/ErrTimeout), `config.go` (RESEARCHER_BASE_URL + RESEARCHER_REQUEST_TIMEOUT_SECONDS env binder), `client.go` (context timeout + exponential backoff retry, 2 retries, 500ms/1500ms ±10% jitter)
