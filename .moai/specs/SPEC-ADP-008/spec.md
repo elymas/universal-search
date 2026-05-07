@@ -3,13 +3,13 @@ id: SPEC-ADP-008
 title: Naver Suite Adapter
 version: 0.1.0
 milestone: M3 — Fanout, adapters, index
-status: draft
+status: implemented
 priority: P0
 owner: expert-backend
 methodology: tdd
 coverage_target: 85
 created: 2026-05-04
-updated: 2026-05-04
+updated: 2026-05-07
 author: limbowl
 issue_number: null
 depends_on: [SPEC-CORE-001, SPEC-OBS-001, SPEC-IR-001]
