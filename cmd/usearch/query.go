@@ -24,8 +24,12 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/elymas/universal-search/internal/adapters"
+	"github.com/elymas/universal-search/internal/adapters/arxiv"
+	"github.com/elymas/universal-search/internal/adapters/github"
 	"github.com/elymas/universal-search/internal/adapters/hn"
 	"github.com/elymas/universal-search/internal/adapters/reddit"
+	"github.com/elymas/universal-search/internal/adapters/searxng"
+	"github.com/elymas/universal-search/internal/adapters/youtube"
 	"github.com/elymas/universal-search/internal/fanout"
 	"github.com/elymas/universal-search/internal/obs/reqid"
 	"github.com/elymas/universal-search/internal/router"
@@ -433,12 +437,17 @@ func determineExitCode(
 // Env-var overrides (used by NFR-CLI-001 integration tests):
 //   - REDDIT_BASE_URL: redirects Reddit adapter to a stub HTTP server
 //   - HN_BASE_URL: redirects HN adapter to a stub HTTP server
+//   - ARXIV_BASE_URL: redirects arXiv adapter to a stub HTTP server
+//   - GITHUB_BASE_URL: redirects GitHub adapter to a stub HTTP server
+//   - GITHUB_TOKEN: PAT for GitHub adapter (omit to skip registration)
+//   - YOUTUBE_BASE_URL: redirects YouTube adapter to a stub HTTP server
+//   - USEARCH_SEARXNG_URL: SearXNG instance URL (default http://searxng:8080)
 // Empty values fall back to the adapter's compiled-in defaults.
 //
 // @MX:NOTE: [AUTO] Production adapter wiring per SPEC-CLI-001 §2.1(m).
 // New M3 adapters are registered here; auth-gated adapters check
 // Capabilities.AuthEnvVars before Register.
-// @MX:SPEC: SPEC-CLI-001
+// @MX:SPEC: SPEC-CLI-001 SPEC-ADP-003 SPEC-ADP-004 SPEC-ADP-005 SPEC-ADP-007
 func buildProductionRegistry() *adapters.Registry {
 	reg := adapters.NewRegistry(nil)
 
@@ -450,6 +459,27 @@ func buildProductionRegistry() *adapters.Registry {
 	if a, err := hn.New(hn.Options{
 		BaseURL: os.Getenv("HN_BASE_URL"),
 	}); err == nil {
+		_ = reg.Register(a)
+	}
+	if a, err := arxiv.New(arxiv.Options{
+		BaseURL: os.Getenv("ARXIV_BASE_URL"),
+	}); err == nil {
+		_ = reg.Register(a)
+	}
+	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
+		if a, err := github.New(github.Options{
+			BaseURL: os.Getenv("GITHUB_BASE_URL"),
+			Token:   token,
+		}); err == nil {
+			_ = reg.Register(a)
+		}
+	}
+	if a, err := youtube.New(youtube.Options{
+		BaseURL: os.Getenv("YOUTUBE_BASE_URL"),
+	}); err == nil {
+		_ = reg.Register(a)
+	}
+	if a, err := searxng.New(searxng.Options{}); err == nil {
 		_ = reg.Register(a)
 	}
 
