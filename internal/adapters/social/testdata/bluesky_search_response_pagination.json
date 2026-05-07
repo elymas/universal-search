@@ -1,0 +1,46 @@
+{
+  "cursor": "nextpagecursor_abc123",
+  "hitsTotal": 100,
+  "posts": [
+    {
+      "uri": "at://did:plc:paginationuser/app.bsky.feed.post/3pag0000001aa",
+      "cid": "bafyreipagination001",
+      "author": {
+        "did": "did:plc:paginationuser",
+        "handle": "paginator.bsky.social",
+        "displayName": "Paginator"
+      },
+      "record": {
+        "$type": "app.bsky.feed.post",
+        "text": "First post on page 2 of results.",
+        "createdAt": "2026-04-15T10:00:00Z",
+        "langs": ["en"]
+      },
+      "replyCount": 1,
+      "repostCount": 2,
+      "likeCount": 10,
+      "quoteCount": 0,
+      "indexedAt": "2026-04-15T10:00:03Z"
+    },
+    {
+      "uri": "at://did:plc:paginationuser/app.bsky.feed.post/3pag0000002bb",
+      "cid": "bafyreipagination002",
+      "author": {
+        "did": "did:plc:paginationuser",
+        "handle": "paginator.bsky.social",
+        "displayName": "Paginator"
+      },
+      "record": {
+        "$type": "app.bsky.feed.post",
+        "text": "Second post on page 2 of results.",
+        "createdAt": "2026-04-15T11:00:00Z",
+        "langs": ["en"]
+      },
+      "replyCount": 0,
+      "repostCount": 1,
+      "likeCount": 5,
+      "quoteCount": 0,
+      "indexedAt": "2026-04-15T11:00:02Z"
+    }
+  ]
+}
