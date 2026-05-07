@@ -1,0 +1,26 @@
+{
+  "items": [
+    {
+      "id": "notranscript001",
+      "url": "https://www.youtube.com/watch?v=notranscript001",
+      "title": "Video Without Transcript",
+      "description": "A video that has no transcript available.",
+      "channel": "No Transcript Channel",
+      "channel_id": "UCnotranscript1",
+      "channel_url": "https://www.youtube.com/@NoTranscriptChannel",
+      "uploader": "No Transcript Channel",
+      "uploader_id": "NoTranscriptChannel",
+      "duration_seconds": 120,
+      "view_count": 1000,
+      "like_count": 50,
+      "upload_date": "2023-03-15",
+      "thumbnail_url": "https://i.ytimg.com/vi/notranscript001/hqdefault.jpg",
+      "tags": [],
+      "available_transcript_langs": [],
+      "transcript_snippet": "",
+      "transcript_lang": "",
+      "transcript_is_auto": false
+    }
+  ],
+  "has_more": false
+}

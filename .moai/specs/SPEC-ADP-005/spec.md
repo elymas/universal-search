@@ -3,13 +3,13 @@ id: SPEC-ADP-005
 title: YouTube Adapter
 version: 0.1.0
 milestone: M3 — Fanout, adapters, index
-status: draft
+status: implemented
 priority: P0
 owner: expert-backend
 methodology: tdd
 coverage_target: 85
 created: 2026-05-04
-updated: 2026-05-04
+updated: 2026-05-07
 author: limbowl
 issue_number: null
 depends_on: [SPEC-CORE-001, SPEC-OBS-001, SPEC-IR-001]
@@ -19,6 +19,12 @@ blocks: []
 # SPEC-ADP-005: YouTube Adapter
 
 ## HISTORY
+
+- 2026-05-07 (implemented v0.1, manager-tdd via TDD RED-GREEN-REFACTOR):
+  Implementation complete. 91.2% test coverage (target 85%). All SPEC acceptance
+  criteria met. golangci-lint clean. Race detector clean. Score formula corrected
+  per exact Go math (SPEC §2.3 table had rounding in tanh column; formula
+  Score = clamp(0.5 + 0.5*tanh(log10(v+1)/5.0)) is authoritative).
 
 - 2026-05-04 (initial draft v0.1, limbowl via manager-spec):
   M3 YouTube adapter SPEC drafted following the SPEC-ADP-001 reference
