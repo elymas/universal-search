@@ -1,0 +1,33 @@
+{
+  "lastBuildDate": "Wed, 07 May 2026 10:00:00 +0900",
+  "total": 1000,
+  "start": 1,
+  "display": 25,
+  "items": [
+    {"title": "뉴스 기사 1", "originallink": "https://news.example.com/article1", "link": "https://news.naver.com/article1", "description": "첫 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:00:00 +0900"},
+    {"title": "뉴스 기사 2", "originallink": "https://news.example.com/article2", "link": "https://news.naver.com/article2", "description": "두 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:01:00 +0900"},
+    {"title": "뉴스 기사 3", "originallink": "https://news.example.com/article3", "link": "https://news.naver.com/article3", "description": "세 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:02:00 +0900"},
+    {"title": "뉴스 기사 4", "originallink": "https://news.example.com/article4", "link": "https://news.naver.com/article4", "description": "네 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:03:00 +0900"},
+    {"title": "뉴스 기사 5", "originallink": "https://news.example.com/article5", "link": "https://news.naver.com/article5", "description": "다섯 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:04:00 +0900"},
+    {"title": "뉴스 기사 6", "originallink": "", "link": "https://news.naver.com/article6", "description": "originallink 없는 뉴스 기사.", "pubDate": "Wed, 07 May 2026 09:05:00 +0900"},
+    {"title": "뉴스 기사 7", "originallink": "https://news.example.com/article7", "link": "https://news.naver.com/article7", "description": "일곱 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:06:00 +0900"},
+    {"title": "뉴스 기사 8", "originallink": "https://news.example.com/article8", "link": "https://news.naver.com/article8", "description": "여덟 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:07:00 +0900"},
+    {"title": "뉴스 기사 9", "originallink": "https://news.example.com/article9", "link": "https://news.naver.com/article9", "description": "아홉 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:08:00 +0900"},
+    {"title": "뉴스 기사 10", "originallink": "https://news.example.com/article10", "link": "https://news.naver.com/article10", "description": "열 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:09:00 +0900"},
+    {"title": "뉴스 기사 11", "originallink": "https://news.example.com/article11", "link": "https://news.naver.com/article11", "description": "열한 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:10:00 +0900"},
+    {"title": "뉴스 기사 12", "originallink": "https://news.example.com/article12", "link": "https://news.naver.com/article12", "description": "열두 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:11:00 +0900"},
+    {"title": "뉴스 기사 13", "originallink": "https://news.example.com/article13", "link": "https://news.naver.com/article13", "description": "열세 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:12:00 +0900"},
+    {"title": "뉴스 기사 14", "originallink": "https://news.example.com/article14", "link": "https://news.naver.com/article14", "description": "열네 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:13:00 +0900"},
+    {"title": "뉴스 기사 15", "originallink": "https://news.example.com/article15", "link": "https://news.naver.com/article15", "description": "열다섯 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:14:00 +0900"},
+    {"title": "뉴스 기사 16", "originallink": "https://news.example.com/article16", "link": "https://news.naver.com/article16", "description": "열여섯 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:15:00 +0900"},
+    {"title": "뉴스 기사 17", "originallink": "https://news.example.com/article17", "link": "https://news.naver.com/article17", "description": "열일곱 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:16:00 +0900"},
+    {"title": "뉴스 기사 18", "originallink": "https://news.example.com/article18", "link": "https://news.naver.com/article18", "description": "열여덟 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:17:00 +0900"},
+    {"title": "뉴스 기사 19", "originallink": "https://news.example.com/article19", "link": "https://news.naver.com/article19", "description": "열아홉 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:18:00 +0900"},
+    {"title": "뉴스 기사 20", "originallink": "https://news.example.com/article20", "link": "https://news.naver.com/article20", "description": "스물 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:19:00 +0900"},
+    {"title": "뉴스 기사 21", "originallink": "https://news.example.com/article21", "link": "https://news.naver.com/article21", "description": "스물한 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:20:00 +0900"},
+    {"title": "뉴스 기사 22", "originallink": "https://news.example.com/article22", "link": "https://news.naver.com/article22", "description": "스물두 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:21:00 +0900"},
+    {"title": "뉴스 기사 23", "originallink": "https://news.example.com/article23", "link": "https://news.naver.com/article23", "description": "스물세 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:22:00 +0900"},
+    {"title": "뉴스 기사 24", "originallink": "https://news.example.com/article24", "link": "https://news.naver.com/article24", "description": "스물네 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:23:00 +0900"},
+    {"title": "뉴스 기사 25", "originallink": "https://news.example.com/article25", "link": "https://news.naver.com/article25", "description": "스물다섯 번째 뉴스 기사 설명입니다.", "pubDate": "Wed, 07 May 2026 09:24:00 +0900"}
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "lastBuildDate": "Wed, 07 May 2026 10:00:00 +0900",
+  "total": 3,
+  "start": 1,
+  "display": 3,
+  "items": [
+    {"title": "<b>강조된</b> 블로그 제목 &amp; 특수문자", "link": "https://blog.naver.com/htmltest/post1", "description": "<b>검색어</b>가 포함된 설명입니다. &lt;script&gt;alert(1)&lt;/script&gt; 안전하게 처리됩니다.", "bloggername": "htmltest", "bloggerlink": "https://blog.naver.com/htmltest", "postdate": "20260507"},
+    {"title": "일반 제목 &lt;태그&gt; 테스트", "link": "https://blog.naver.com/htmltest/post2", "description": "HTML 엔티티: &amp; &lt; &gt; &quot; &#39; &nbsp; 모두 처리되어야 합니다.", "bloggername": "htmltest2", "bloggerlink": "https://blog.naver.com/htmltest2", "postdate": "20260506"},
+    {"title": "Caf&eacute; &amp; Restaurant <b>리뷰</b>", "link": "https://blog.naver.com/htmltest/post3", "description": "맛있는 카페 리뷰. Tom &amp; Jerry &quot;최고&quot; &#39;맛집&#39; 추천합니다.", "bloggername": "foodblog", "bloggerlink": "https://blog.naver.com/foodblog", "postdate": "20260505"}
+  ]
+}
