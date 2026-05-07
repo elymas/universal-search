@@ -27,8 +27,11 @@ import (
 	"github.com/elymas/universal-search/internal/adapters/arxiv"
 	"github.com/elymas/universal-search/internal/adapters/github"
 	"github.com/elymas/universal-search/internal/adapters/hn"
+	"github.com/elymas/universal-search/internal/adapters/koreanews"
+	"github.com/elymas/universal-search/internal/adapters/naver"
 	"github.com/elymas/universal-search/internal/adapters/reddit"
 	"github.com/elymas/universal-search/internal/adapters/searxng"
+	"github.com/elymas/universal-search/internal/adapters/social"
 	"github.com/elymas/universal-search/internal/adapters/youtube"
 	"github.com/elymas/universal-search/internal/fanout"
 	"github.com/elymas/universal-search/internal/obs/reqid"
@@ -447,7 +450,7 @@ func determineExitCode(
 // @MX:NOTE: [AUTO] Production adapter wiring per SPEC-CLI-001 §2.1(m).
 // New M3 adapters are registered here; auth-gated adapters check
 // Capabilities.AuthEnvVars before Register.
-// @MX:SPEC: SPEC-CLI-001 SPEC-ADP-003 SPEC-ADP-004 SPEC-ADP-005 SPEC-ADP-007
+// @MX:SPEC: SPEC-CLI-001 SPEC-ADP-003 SPEC-ADP-004 SPEC-ADP-005 SPEC-ADP-006 SPEC-ADP-007 SPEC-ADP-008 SPEC-ADP-009
 func buildProductionRegistry() *adapters.Registry {
 	reg := adapters.NewRegistry(nil)
 
@@ -480,6 +483,20 @@ func buildProductionRegistry() *adapters.Registry {
 		_ = reg.Register(a)
 	}
 	if a, err := searxng.New(searxng.Options{}); err == nil {
+		_ = reg.Register(a)
+	}
+	// Bluesky live (X is stub-only — disabled until provider configured).
+	if a, err := social.NewBluesky(social.BlueskyOptions{
+		BaseURL: os.Getenv("BLUESKY_BASE_URL"),
+	}); err == nil {
+		_ = reg.Register(a)
+	}
+	// Naver: requires NAVER_CLIENT_ID + NAVER_CLIENT_SECRET; skipped silently when absent.
+	if a, err := naver.New(naver.Options{}); err == nil {
+		_ = reg.Register(a)
+	}
+	// Korean news composite: RSS enabled by default; KNC/Daum gated by env flags.
+	if a, err := koreanews.New(koreanews.Options{}); err == nil {
 		_ = reg.Register(a)
 	}
 
