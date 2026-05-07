@@ -22,11 +22,11 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"golang.org/x/sync/errgroup"
 
 	"github.com/elymas/universal-search/internal/adapters"
 	"github.com/elymas/universal-search/internal/adapters/hn"
 	"github.com/elymas/universal-search/internal/adapters/reddit"
+	"github.com/elymas/universal-search/internal/fanout"
 	"github.com/elymas/universal-search/internal/obs/reqid"
 	"github.com/elymas/universal-search/internal/router"
 	"github.com/elymas/universal-search/internal/synthesis"
@@ -203,9 +203,24 @@ func Execute(ctx context.Context, args []string, stdout, stderr io.Writer, opts 
 	prog.Emit("router", fmt.Sprintf("classified as %s (lang=%s, adapters=%s)",
 		decision.Category, decision.Lang, strings.Join(effectiveSet, ",")))
 
-	// Fanout to adapters (REQ-CLI-005: context timeout propagated).
+	// Build Fanout dispatcher (SPEC-FAN-001).
+	// Decision.AdapterSet is the effective set already narrowed by source filter above.
+	fanoutDecision := router.RoutingDecision{
+		Category:   decision.Category,
+		AdapterSet: effectiveSet,
+		Lang:       decision.Lang,
+	}
+	f, fanoutInitErr := fanout.New(fanout.Options{Registry: reg})
+	if fanoutInitErr != nil {
+		fmt.Fprintf(stderr, "usearch query: fanout init failed: %v\n", fanoutInitErr)
+		return ExitSystemError
+	}
+
+	// Fanout to adapters (REQ-CLI-005: context timeout propagated via spanCtx).
 	prog.Emit("fanout", fmt.Sprintf("querying %d adapters", len(effectiveSet)))
-	docs, adapterErrs := runFanout(spanCtx, effectiveSet, reg, prompt)
+	fanoutResult, _ := f.Dispatch(spanCtx, fanoutDecision, types.Query{Text: prompt})
+	docs := fanoutResult.Docs
+	adapterErrs := fanoutResult.AdapterErrors
 
 	// Emit adapter error warnings (REQ-CLI-006).
 	for name, aerr := range adapterErrs {
@@ -308,63 +323,6 @@ func parseQueryFlags(args []string) (queryFlags, string, error) {
 		Format:  format,
 		Timeout: timeout,
 	}, positionals[0], nil
-}
-
-// runFanout dispatches the query to each adapter in effectiveSet concurrently.
-// Returns the merged docs slice and a map of adapter name -> error for adapters that failed.
-//
-// @MX:ANCHOR: [AUTO] CLI-internal fanout; replacement target when SPEC-FAN-001 lands.
-// @MX:REASON: fan_in >= 2 (Execute + tests); clean function boundary for future swap.
-// @MX:SPEC: SPEC-CLI-001
-//
-// @MX:WARN: [AUTO] runFanout spawns one goroutine per adapter using errgroup.
-// @MX:REASON: goroutine cancellation discipline is load-bearing for NFR-CLI-002
-// (goleak zero-leak requirement); all goroutines must select on ctx.Done().
-// @MX:SPEC: SPEC-CLI-001
-func runFanout(ctx context.Context, names []string, reg *adapters.Registry, prompt string) (
-	docs []types.NormalizedDoc, errs map[string]error,
-) {
-	type result struct {
-		name string
-		docs []types.NormalizedDoc
-		err  error
-	}
-
-	results := make([]result, len(names))
-	eg, egCtx := errgroup.WithContext(ctx)
-
-	for i, name := range names {
-		i, name := i, name // capture loop vars
-		eg.Go(func() error {
-			ad, ok := reg.Get(name)
-			if !ok {
-				results[i] = result{name: name, err: fmt.Errorf("adapter %q not found in registry", name)}
-				return nil
-			}
-			docs, err := ad.Search(egCtx, types.Query{Text: prompt})
-			results[i] = result{name: name, docs: docs, err: err}
-			return nil // never return error to eg; collect individually
-		})
-	}
-
-	// Wait for all goroutines. Context cancellation propagates via egCtx.
-	_ = eg.Wait()
-
-	errs = make(map[string]error)
-	for _, r := range results {
-		if r.err != nil {
-			errs[r.name] = r.err
-		} else {
-			docs = append(docs, r.docs...)
-		}
-	}
-
-	// If context was cancelled (timeout), return context error.
-	if ctx.Err() != nil {
-		return docs, errs
-	}
-
-	return docs, errs
 }
 
 // intersectSources returns the subset of adapterSet that matches sourceFilter.
