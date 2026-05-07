@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>한국 기술 뉴스</title>
+  <link href="https://tech.example.kr"/>
+  <id>urn:uuid:tech-example-kr</id>
+  <updated>2026-05-01T10:00:00+09:00</updated>
+  <entry>
+    <title>AI 스타트업 투자 급증</title>
+    <link href="https://tech.example.kr/ai/1"/>
+    <id>https://tech.example.kr/ai/1</id>
+    <updated>2026-05-01T10:00:00+09:00</updated>
+    <published>2026-05-01T10:00:00+09:00</published>
+    <author>
+      <name>기술부 기자</name>
+    </author>
+    <summary>국내 AI 스타트업에 대한 투자가 올해 들어 크게 증가하고 있습니다.</summary>
+    <content>국내 AI 스타트업에 대한 벤처캐피탈 투자가 전년 대비 200% 증가했다는 보고서가 발표되었습니다. 특히 생성형 AI 분야의 투자가 두드러졌습니다.</content>
+  </entry>
+  <entry>
+    <title>국내 전기차 판매 사상 최고</title>
+    <link href="https://tech.example.kr/ev/2"/>
+    <id>https://tech.example.kr/ev/2</id>
+    <updated>2026-04-30T14:00:00+09:00</updated>
+    <published>2026-04-30T14:00:00+09:00</published>
+    <author>
+      <name>자동차부 기자</name>
+    </author>
+    <summary>국내 전기차 판매가 사상 최고치를 기록했습니다.</summary>
+    <content>4월 국내 전기차 판매량이 5만 대를 돌파하며 사상 최고치를 기록했습니다.</content>
+  </entry>
+  <entry>
+    <title>5G 통신 서비스 전국 확대</title>
+    <link href="https://tech.example.kr/telecom/3"/>
+    <id>https://tech.example.kr/telecom/3</id>
+    <updated>2026-04-29T09:00:00+09:00</updated>
+    <published>2026-04-29T09:00:00+09:00</published>
+    <author>
+      <name>통신부 기자</name>
+    </author>
+    <summary>5G 서비스가 전국 농어촌 지역으로 확대됩니다.</summary>
+    <content>통신 3사가 공동으로 농어촌 지역 5G 통신 서비스를 올해 말까지 완료하겠다고 발표했습니다.</content>
+  </entry>
+</feed>

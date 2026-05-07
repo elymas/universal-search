@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>한국 뉴스 피드</title>
+    <link>https://news.example.kr</link>
+    <description>한국 주요 뉴스</description>
+    <item>
+      <title>한국 경제 성장률 3% 기록</title>
+      <link>https://news.example.kr/economy/1</link>
+      <guid>https://news.example.kr/economy/1</guid>
+      <pubDate>Wed, 01 May 2026 10:00:00 +0900</pubDate>
+      <author>경제부 기자</author>
+      <description>&lt;p&gt;한국 경제가 올해 3% 성장률을 기록했다고 정부가 발표했습니다.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>서울 지하철 파업 예고</title>
+      <link>https://news.example.kr/society/2</link>
+      <guid>https://news.example.kr/society/2</guid>
+      <pubDate>Wed, 01 May 2026 11:00:00 +0900</pubDate>
+      <author>사회부 기자</author>
+      <description>&lt;p&gt;서울 지하철 노조가 다음 주 총파업을 예고했습니다.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>국내 반도체 수출 증가</title>
+      <link>https://news.example.kr/tech/3</link>
+      <guid>https://news.example.kr/tech/3</guid>
+      <pubDate>Tue, 30 Apr 2026 09:00:00 +0900</pubDate>
+      <author>기술부 기자</author>
+      <description>&lt;p&gt;국내 반도체 수출이 전월 대비 15% 증가했다고 무역협회가 발표했습니다.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>K-pop 아티스트 빌보드 1위</title>
+      <link>https://news.example.kr/culture/4</link>
+      <guid>https://news.example.kr/culture/4</guid>
+      <pubDate>Tue, 30 Apr 2026 14:00:00 +0900</pubDate>
+      <author>문화부 기자</author>
+      <description>&lt;p&gt;국내 유명 K-pop 그룹이 빌보드 차트 1위를 달성했습니다.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>부산 국제 영화제 개최 발표</title>
+      <link>https://news.example.kr/culture/5</link>
+      <guid>https://news.example.kr/culture/5</guid>
+      <pubDate>Mon, 29 Apr 2026 10:00:00 +0900</pubDate>
+      <author>문화부 기자</author>
+      <description>&lt;p&gt;부산 국제 영화제가 오는 10월에 개최될 예정이라고 조직위원회가 밝혔습니다.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>정부 기후변화 대응 정책 발표</title>
+      <link>https://news.example.kr/politics/6</link>
+      <guid>https://news.example.kr/politics/6</guid>
+      <pubDate>Mon, 29 Apr 2026 16:00:00 +0900</pubDate>
+      <author>정치부 기자</author>
+      <description>&lt;p&gt;정부가 2030년까지 온실가스 배출량을 40% 줄이는 계획을 발표했습니다.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>코로나19 변이 바이러스 주의 권고</title>
+      <link>https://news.example.kr/health/7</link>
+      <guid>https://news.example.kr/health/7</guid>
+      <pubDate>Sun, 28 Apr 2026 12:00:00 +0900</pubDate>
+      <author>보건부 기자</author>
+      <description>&lt;p&gt;보건당국이 코로나19 새 변이 바이러스에 대한 주의를 당부했습니다.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>전국 아파트 가격 하락세</title>
+      <link>https://news.example.kr/realestate/8</link>
+      <guid>https://news.example.kr/realestate/8</guid>
+      <pubDate>Sat, 27 Apr 2026 08:00:00 +0900</pubDate>
+      <author>부동산부 기자</author>
+      <description>&lt;p&gt;전국 아파트 가격이 3개월 연속 하락세를 보이고 있습니다.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>한국 축구 대표팀 월드컵 예선 승리</title>
+      <link>https://news.example.kr/sports/9</link>
+      <guid>https://news.example.kr/sports/9</guid>
+      <pubDate>Fri, 26 Apr 2026 22:00:00 +0900</pubDate>
+      <author>스포츠부 기자</author>
+      <description>&lt;p&gt;한국 축구 대표팀이 월드컵 최종 예선에서 2:0으로 승리했습니다.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>삼성전자 1분기 영업이익 발표</title>
+      <link>https://news.example.kr/business/10</link>
+      <guid>https://news.example.kr/business/10</guid>
+      <pubDate>Thu, 25 Apr 2026 15:00:00 +0900</pubDate>
+      <author>경제부 기자</author>
+      <description>&lt;p&gt;삼성전자가 1분기 영업이익이 전년 대비 30% 증가했다고 발표했습니다.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
