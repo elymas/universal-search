@@ -1,0 +1,47 @@
+{
+  "query": "go programming language",
+  "number_of_results": 3,
+  "results": [
+    {
+      "url": "https://go.dev/",
+      "title": "The Go Programming Language",
+      "content": "Go is an open source programming language that makes it easy to build simple, reliable, and efficient software.",
+      "engine": "google",
+      "engines": ["google", "bing", "duckduckgo"],
+      "category": "general",
+      "score": 1.5,
+      "template": "default.html",
+      "positions": [1, 1, 1],
+      "publishedDate": ""
+    },
+    {
+      "url": "https://go.dev/doc/",
+      "title": "Documentation - The Go Programming Language",
+      "content": "The Go programming language documentation.",
+      "engine": "bing",
+      "engines": ["bing", "google"],
+      "category": "general",
+      "score": 1.1,
+      "template": "default.html",
+      "positions": [2, 2],
+      "publishedDate": "2026-01-01T00:00:00Z"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Go_(programming_language)",
+      "title": "Go (programming language) - Wikipedia",
+      "content": "Go is a statically typed, compiled high-level programming language designed at Google.",
+      "engine": "duckduckgo",
+      "engines": ["duckduckgo"],
+      "category": "general",
+      "score": 0.8,
+      "template": "default.html",
+      "positions": [2],
+      "publishedDate": ""
+    }
+  ],
+  "suggestions": ["golang", "go tutorial"],
+  "corrections": [],
+  "answers": [],
+  "infoboxes": [],
+  "unresponsive_engines": []
+}

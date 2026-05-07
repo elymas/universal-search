@@ -1,0 +1,44 @@
+{
+  "query": "no date results",
+  "number_of_results": 3,
+  "results": [
+    {
+      "url": "https://example.com/article1",
+      "title": "Article Without Date 1",
+      "content": "This article has no published date.",
+      "engine": "google",
+      "engines": ["google"],
+      "category": "general",
+      "score": 0.9,
+      "template": "default.html",
+      "positions": [1]
+    },
+    {
+      "url": "https://example.com/article2",
+      "title": "Article Without Date 2",
+      "content": "Another article with no published date.",
+      "engine": "bing",
+      "engines": ["bing"],
+      "category": "general",
+      "score": 0.7,
+      "template": "default.html",
+      "positions": [2]
+    },
+    {
+      "url": "https://example.com/article3",
+      "title": "Article Without Date 3",
+      "content": "Third article with no published date field at all.",
+      "engine": "duckduckgo",
+      "engines": ["duckduckgo"],
+      "category": "general",
+      "score": 0.5,
+      "template": "default.html",
+      "positions": [3]
+    }
+  ],
+  "suggestions": [],
+  "corrections": [],
+  "answers": [],
+  "infoboxes": [],
+  "unresponsive_engines": []
+}
