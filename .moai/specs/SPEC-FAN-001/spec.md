@@ -3,24 +3,41 @@ id: SPEC-FAN-001
 title: Multi-source Fanout
 version: 0.1.0
 milestone: M3 — Fanout, adapters, index
-status: approved
+status: implemented
 priority: P0
 owner: expert-backend
 methodology: tdd
 coverage_target: 85
 created: 2026-05-04
-updated: 2026-05-05
+updated: 2026-05-07
 author: limbowl
 issue_number: null
 depends_on: [SPEC-CORE-001, SPEC-IR-001, SPEC-ADP-001, SPEC-ADP-002, SPEC-OBS-001]
 blocks: [SPEC-ADP-003, SPEC-ADP-004, SPEC-ADP-005, SPEC-ADP-006, SPEC-ADP-007, SPEC-ADP-008, SPEC-ADP-009, SPEC-IDX-001, SPEC-CACHE-001]
 status_history: |
   draft (2026-05-04) → approved (2026-05-05) after plan-auditor cycle-2 confirmed zero HIGH residuals.
+  → implemented (2026-05-07) after run-phase TDD completion (commit 04308b8) and sync verification.
 ---
 
 # SPEC-FAN-001: Multi-source Fanout
 
 ## HISTORY
+
+- 2026-05-07 (sync — status implemented, limbowl via /moai sync):
+  Run-phase TDD complete (commit 04308b8). Implementation summary:
+  9 source files + 11 test files = 2232 LOC under internal/fanout/.
+  Tests: 51 passing, coverage 98.1% (target 85%, NFR exceeded).
+  Quality gates: go vet 0, golangci-lint 0, go test -race PASS, full
+  project build PASS, no regression in 14 dependent packages.
+  MX tags applied: 2 ANCHOR (Dispatch entry point at fanout.go:21,
+  dedup transform at dedup.go:26), 2 WARN (goroutine spawn warnings
+  on dispatch.go:82 and fanout.go:58 with REASON), 4 NOTE (locked
+  decisions D1/D2/D3 documented inline), 6 SPEC anchors. All 13
+  REQ-FAN-001..013 + 4 NFR-FAN-* satisfied per acceptance matrix
+  in progress.md. cmd/usearch/query.go migrated from inline
+  runFanout to fanout.New + fanout.Dispatch — backward-compatible
+  behavior, integration tests still passing. Status flipped from
+  `approved` to `implemented`.
 
 - 2026-05-05 (iteration 3 — plan-auditor cycle 2, status APPROVED):
   Cycle-2 audit confirmed all 3 cycle-1 HIGH concerns CLOSED via the
