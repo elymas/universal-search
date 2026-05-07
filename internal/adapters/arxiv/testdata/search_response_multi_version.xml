@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Single entry with high version number v15; ID stripping must preserve the version suffix -->
+<feed xmlns="http://www.w3.org/2005/Atom"
+      xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"
+      xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <title>ArXiv Query: search_query=ti:multi_version&amp;start=0&amp;max_results=1</title>
+  <id>http://arxiv.org/api/query?search_query=ti:multi_version&amp;start=0&amp;max_results=1</id>
+  <opensearch:totalResults>1</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <opensearch:itemsPerPage>1</opensearch:itemsPerPage>
+  <entry>
+    <id>http://arxiv.org/abs/1706.03762v15</id>
+    <updated>2024-01-01T00:00:00Z</updated>
+    <published>2017-06-12T17:57:34Z</published>
+    <title>Attention Is All You Need (v15)</title>
+    <summary>The dominant sequence transduction models are based on complex recurrent or convolutional neural networks. This is revision v15 for ID-stripping test.</summary>
+    <author><name>Ashish Vaswani</name></author>
+    <author><name>Noam Shazeer</name></author>
+    <link href="http://arxiv.org/abs/1706.03762v15" rel="alternate" type="text/html"/>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+  </entry>
+</feed>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Single entry with DOI; URL should use the DOI link, not abs link -->
+<feed xmlns="http://www.w3.org/2005/Atom"
+      xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"
+      xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <title>ArXiv Query: search_query=ti:doi_test&amp;start=0&amp;max_results=1</title>
+  <id>http://arxiv.org/api/query?search_query=ti:doi_test&amp;start=0&amp;max_results=1</id>
+  <opensearch:totalResults>1</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <opensearch:itemsPerPage>1</opensearch:itemsPerPage>
+  <entry>
+    <id>http://arxiv.org/abs/2402.00001v2</id>
+    <updated>2024-02-20T10:00:00Z</updated>
+    <published>2024-02-15T09:00:00Z</published>
+    <title>A Paper With a DOI Link</title>
+    <summary>This paper has been published in a journal and has a DOI assigned to it.</summary>
+    <author><name>John Doi</name></author>
+    <author><name>Jane Publisher</name></author>
+    <link href="http://arxiv.org/abs/2402.00001v2" rel="alternate" type="text/html"/>
+    <link title="doi" href="http://dx.doi.org/10.1234/example.2024.001" rel="related"/>
+    <arxiv:doi xmlns:arxiv="http://arxiv.org/schemas/atom">10.1234/example.2024.001</arxiv:doi>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+  </entry>
+</feed>

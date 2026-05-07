@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Entry with LaTeX-heavy title and multi-line whitespace in title/summary -->
+<feed xmlns="http://www.w3.org/2005/Atom"
+      xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"
+      xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <title>ArXiv Query: search_query=ti:latex&amp;start=0&amp;max_results=1</title>
+  <id>http://arxiv.org/api/query?search_query=ti:latex&amp;start=0&amp;max_results=1</id>
+  <opensearch:totalResults>1</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <opensearch:itemsPerPage>1</opensearch:itemsPerPage>
+  <entry>
+    <id>http://arxiv.org/abs/2404.00001v1</id>
+    <updated>2024-04-01T10:00:00Z</updated>
+    <published>2024-04-01T10:00:00Z</published>
+    <title>
+      On the Convergence of $\mathcal{O}(n^2)$   Algorithms for
+      Sparse   Matrix Factorization   with $\epsilon$-Approximation
+    </title>
+    <summary>
+      We study the convergence properties of $O(n^2)$ algorithms
+      for sparse   matrix   factorization.  Our analysis shows   that
+      the approximation error is bounded by $\epsilon$ under mild
+      assumptions on the   input matrix structure.
+    </summary>
+    <author><name>LaTeX Author</name></author>
+    <link href="http://arxiv.org/abs/2404.00001v1" rel="alternate" type="text/html"/>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.NA" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.NA" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="math.NA" scheme="http://arxiv.org/schemas/atom"/>
+  </entry>
+</feed>

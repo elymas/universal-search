@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- arXiv API error response: HTTP 400 with error element in feed -->
+<feed xmlns="http://www.w3.org/2005/Atom"
+      xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"
+      xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <title>Error</title>
+  <id>http://arxiv.org/api/errors</id>
+  <entry>
+    <id>http://arxiv.org/api/errors</id>
+    <updated>2024-01-01T00:00:00Z</updated>
+    <title>Error</title>
+    <summary>incorrect id format for field start</summary>
+    <author>
+      <name>arXiv</name>
+    </author>
+    <link href="http://arxiv.org/api/errors" rel="alternate" type="text/html"/>
+  </entry>
+</feed>

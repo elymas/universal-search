@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Single entry without DOI; URL should use the abs link -->
+<feed xmlns="http://www.w3.org/2005/Atom"
+      xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"
+      xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <title>ArXiv Query: search_query=ti:nodoi_test&amp;start=0&amp;max_results=1</title>
+  <id>http://arxiv.org/api/query?search_query=ti:nodoi_test&amp;start=0&amp;max_results=1</id>
+  <opensearch:totalResults>1</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <opensearch:itemsPerPage>1</opensearch:itemsPerPage>
+  <entry>
+    <id>http://arxiv.org/abs/2402.00002v1</id>
+    <updated>2024-02-16T08:00:00Z</updated>
+    <published>2024-02-16T08:00:00Z</published>
+    <title>A Preprint Without a DOI</title>
+    <summary>This paper is a preprint only and has not been assigned a DOI yet.</summary>
+    <author><name>Alice Preprint</name></author>
+    <link href="http://arxiv.org/abs/2402.00002v1" rel="alternate" type="text/html"/>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+  </entry>
+</feed>

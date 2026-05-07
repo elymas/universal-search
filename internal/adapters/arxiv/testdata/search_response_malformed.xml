@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Intentionally malformed XML: unclosed tag triggers xml.Decoder error -->
+<feed xmlns="http://www.w3.org/2005/Atom"
+      xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"
+      xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <title>Malformed Feed</title>
+  <entry>
+    <id>http://arxiv.org/abs/2404.99999v1</id>
+    <title>This entry is missing its closing title tag
+    <summary>Abstract here.</summary>
