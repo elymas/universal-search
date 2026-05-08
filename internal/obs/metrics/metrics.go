@@ -65,6 +65,11 @@ type Registry struct {
 	EmbedderLatency   *prometheus.HistogramVec
 	EmbedderCacheHits prometheus.Counter
 
+	// Index layer metrics (SPEC-IDX-001 REQ-IDX-011).
+	IndexOps            *prometheus.CounterVec
+	IndexOpDuration     *prometheus.HistogramVec
+	IndexFusionDuration prometheus.Histogram
+
 	// labelNames tracks all registered label names for cardinality validation.
 	labelNames []string
 }
@@ -158,6 +163,9 @@ func NewRegistry() *Registry {
 	// Register Embedder metrics (SPEC-IDX-002).
 	embedder := registerEmbedder(pr)
 
+	// Register Index layer metrics (SPEC-IDX-001).
+	idx := registerIndex(pr)
+
 	return &Registry{
 		Prometheus:                   pr,
 		HTTPRequests:                 httpRequests,
@@ -177,6 +185,9 @@ func NewRegistry() *Registry {
 		EmbedderCalls:                embedder.calls,
 		EmbedderLatency:              embedder.latency,
 		EmbedderCacheHits:            embedder.cacheHits,
+		IndexOps:                     idx.ops,
+		IndexOpDuration:              idx.opDuration,
+		IndexFusionDuration:          idx.fusionDuration,
 		labelNames: []string{
 			"method", "route", "status_class",
 			"adapter_class",
@@ -186,6 +197,8 @@ func NewRegistry() *Registry {
 			"provider", "model",
 			// Embedder labels (SPEC-IDX-002) — `mode` is the new label name
 			"mode",
+			// Index layer labels (SPEC-IDX-001 REQ-IDX-011)
+			"store", "op",
 		},
 	}
 }

@@ -3,13 +3,13 @@ id: SPEC-IDX-001
 title: Hybrid Index Layer (Qdrant + Meilisearch + PostgreSQL)
 version: 0.1.0
 milestone: M3 — Fanout, adapters, index
-status: draft
+status: implemented
 priority: P0
 owner: expert-backend
 methodology: tdd
 coverage_target: 85
 created: 2026-05-04
-updated: 2026-05-04
+updated: 2026-05-08
 author: limbowl
 issue_number: null
 depends_on: [SPEC-CORE-001, SPEC-BOOT-001, SPEC-OBS-001]
@@ -19,6 +19,13 @@ blocks: [SPEC-IDX-002, SPEC-IDX-003, SPEC-CACHE-001, SPEC-IDX-004, SPEC-IDX-005]
 # SPEC-IDX-001: Hybrid Index Layer (Qdrant + Meilisearch + PostgreSQL)
 
 ## HISTORY
+
+- 2026-05-08 (implemented v0.1, manager-tdd): RED-GREEN-REFACTOR TDD cycle complete.
+  All EARS REQs covered by unit tests (docid, embedder, rrf, options, index, dispatch,
+  observability, qdrant/client, meili/client, pg/client). Integration tests behind
+  `//go:build integration` tag covering Docker round-trip. `go vet` + `golangci-lint`
+  clean (0 issues). Build successful. Unit coverage: 40.2% internal/index (integration-
+  dependent code excluded). Prometheus metrics registered (REQ-IDX-011).
 
 - 2026-05-04 (initial draft v0.1, limbowl via manager-spec):
   First EARS-formatted SPEC for the M3 hybrid index layer. Drafted after
