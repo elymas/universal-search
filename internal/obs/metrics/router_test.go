@@ -66,7 +66,8 @@ func TestRouterCollectorsCardinality(t *testing.T) {
 		case "method", "route", "status_class",
 			"adapter_class", "adapter", "outcome",
 			"version", "commit", "go_version",
-			"provider", "model":
+			"provider", "model",
+			"mode": // Embedder mode label (SPEC-IDX-002); bounded to 4 values.
 			// allowlisted
 		default:
 			t.Errorf("unexpected label %q in cardinality allowlist", label)

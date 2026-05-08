@@ -25,6 +25,7 @@ volumes:
   pg_data: {}
   redis_data: {}
   prometheus_data: {}
+  embedder_models: {}
 
 services:
   # ── Qdrant vector database ──────────────────────────────────────────────────
@@ -183,6 +184,32 @@ services:
       timeout: 5s
       retries: 3
       start_period: 15s
+    restart: unless-stopped
+    networks:
+      - app
+
+  # ── BGE-M3 embedding sidecar (SPEC-IDX-002) ────────────────────────────────
+  # CPU-only by default. For GPU, overlay deploy/docker-compose.gpu.yml.
+  embedder:
+    build:
+      context: ../services/embedder
+    ports:
+      - "${EMBEDDER_PORT:-8082}:8082"
+    environment:
+      EMBEDDER_PORT: "8082"
+      EMBEDDER_MODEL_NAME: ${EMBEDDER_MODEL_NAME:-BAAI/bge-m3}
+      EMBEDDER_DEVICE: ${EMBEDDER_DEVICE:-cpu}
+      EMBEDDER_USE_FP16: ${EMBEDDER_USE_FP16:-false}
+      EMBEDDER_CACHE_MAX_ENTRIES: ${EMBEDDER_CACHE_MAX_ENTRIES:-1024}
+      EMBEDDER_LOG_LEVEL: ${EMBEDDER_LOG_LEVEL:-INFO}
+    volumes:
+      - embedder_models:/root/.cache/huggingface
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; r=urllib.request.urlopen('http://localhost:8082/health'); sys.exit(0 if r.status==200 else 1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 120s
     restart: unless-stopped
     networks:
       - app

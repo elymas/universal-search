@@ -60,6 +60,11 @@ type Registry struct {
 	SynthesisLatency *prometheus.HistogramVec
 	SynthesisCost    prometheus.Counter
 
+	// Embedder metrics (SPEC-IDX-002). New label `mode` added to allowlist.
+	EmbedderCalls     *prometheus.CounterVec
+	EmbedderLatency   *prometheus.HistogramVec
+	EmbedderCacheHits prometheus.Counter
+
 	// labelNames tracks all registered label names for cardinality validation.
 	labelNames []string
 }
@@ -150,6 +155,9 @@ func NewRegistry() *Registry {
 	// Register Synthesis metrics (SPEC-SYN-001).
 	synth := registerSynthesis(pr)
 
+	// Register Embedder metrics (SPEC-IDX-002).
+	embedder := registerEmbedder(pr)
+
 	return &Registry{
 		Prometheus:                   pr,
 		HTTPRequests:                 httpRequests,
@@ -166,6 +174,9 @@ func NewRegistry() *Registry {
 		SynthesisCalls:               synth.calls,
 		SynthesisLatency:             synth.latency,
 		SynthesisCost:                synth.cost,
+		EmbedderCalls:                embedder.calls,
+		EmbedderLatency:              embedder.latency,
+		EmbedderCacheHits:            embedder.cacheHits,
 		labelNames: []string{
 			"method", "route", "status_class",
 			"adapter_class",
@@ -173,6 +184,8 @@ func NewRegistry() *Registry {
 			"version", "commit", "go_version",
 			// LLM labels (SPEC-LLM-001 REQ-LLM-007)
 			"provider", "model",
+			// Embedder labels (SPEC-IDX-002) — `mode` is the new label name
+			"mode",
 		},
 	}
 }

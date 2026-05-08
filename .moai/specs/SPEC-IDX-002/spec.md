@@ -1,15 +1,15 @@
 ---
 id: SPEC-IDX-002
 title: Embedding Service (BGE-M3 Python sidecar)
-version: 0.1.0
+version: 0.2.0
 milestone: M3 — Fanout, adapters, index
-status: draft
+status: implemented
 priority: P0
 owner: expert-backend
 methodology: tdd
 coverage_target: 85
 created: 2026-05-04
-updated: 2026-05-04
+updated: 2026-05-08
 author: limbowl
 issue_number: null
 depends_on: [SPEC-BOOT-001, SPEC-OBS-001]
@@ -19,6 +19,30 @@ blocks: [SPEC-IDX-001, SPEC-CACHE-001]
 # SPEC-IDX-002: Embedding Service (BGE-M3 Python sidecar)
 
 ## HISTORY
+
+- 2026-05-08 (implemented v0.2.0, manager-tdd via RED-GREEN-REFACTOR TDD):
+  Full implementation complete. Python sidecar: 62 tests, 93% coverage.
+  Go client: 89.3% coverage. All acceptance criteria met.
+  Files created/modified:
+  - `services/embedder/pyproject.toml` (runtime + dev deps)
+  - `services/embedder/src/embedder/__init__.py`
+  - `services/embedder/src/embedder/models.py` (Pydantic v2 request/response)
+  - `services/embedder/src/embedder/cache.py` (LRU + SHA-256 key)
+  - `services/embedder/src/embedder/obs.py` (JSON logger + timer)
+  - `services/embedder/src/embedder/embed.py` (Embedder + validation)
+  - `services/embedder/src/embedder/app.py` (FastAPI lifespan + endpoints)
+  - `services/embedder/src/embedder/__main__.py` (uvicorn entrypoint)
+  - `services/embedder/Dockerfile` (multi-stage, HEALTHCHECK, non-root appuser)
+  - `services/embedder/tests/` (conftest, test_models, test_cache, test_obs,
+    test_embed, test_app, test_throughput, test_latency, test_memory)
+  - `internal/embedder/types.go`, `config.go`, `client.go`, `embedder.go`
+  - `internal/embedder/client_test.go`, `concurrent_test.go`, `bench_test.go`
+  - `internal/obs/metrics/embedder.go` (EmbedderCalls, EmbedderLatency, EmbedderCacheHits)
+  - `internal/obs/metrics/metrics.go` (mode label + embedder collectors)
+  - `internal/obs/obs.go` (HasTracer() method)
+  - `deploy/docker-compose.yml` (embedder service + embedder_models volume)
+  - `deploy/docker-compose.gpu.yml` (GPU overlay)
+  - `.env.example` (EMBEDDER_* vars)
 
 - 2026-05-04 (initial draft v0.1, limbowl via manager-spec):
   First EARS-formatted SPEC for the M3 embedding service. Drafted after

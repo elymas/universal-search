@@ -262,6 +262,8 @@ func TestCardinalityGuardRejectsUnboundedLabels(t *testing.T) {
 		// provider ∈ {anthropic,openai,ollama} and model ∈ config.yaml aliases (≤15).
 		"provider": true,
 		"model":    true,
+		// Embedder labels added by SPEC-IDX-002; mode ∈ {dense,sparse,colbert,all} (4 values).
+		"mode": true,
 	}
 
 	reg := metrics.NewRegistry()

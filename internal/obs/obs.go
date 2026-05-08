@@ -66,6 +66,12 @@ func (o *Obs) Tracer(name string) oteltrace.Tracer {
 	return o.tracerProvider(name)
 }
 
+// HasTracer reports whether this Obs bundle has a tracer provider wired.
+// Returns false for zero-value or partially-initialised Obs bundles used in tests.
+func (o *Obs) HasTracer() bool {
+	return o != nil && o.tracerProvider != nil
+}
+
 // Init initialises all observability subsystems from cfg and returns an Obs
 // bundle and a shutdown function. The shutdown function is idempotent and safe
 // to call multiple times.
