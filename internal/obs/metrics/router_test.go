@@ -67,7 +67,9 @@ func TestRouterCollectorsCardinality(t *testing.T) {
 			"adapter_class", "adapter", "outcome",
 			"version", "commit", "go_version",
 			"provider", "model",
-			"mode": // Embedder mode label (SPEC-IDX-002); bounded to 4 values.
+			"mode",          // Embedder mode label (SPEC-IDX-002); bounded to 4 values.
+			"store", "op",   // Index layer labels (SPEC-IDX-001); bounded qdrant/meili/pg, search/upsert.
+			"shard":         // Tokenizer shard label (SPEC-IDX-003); bounded to ko/default.
 			// allowlisted
 		default:
 			t.Errorf("unexpected label %q in cardinality allowlist", label)

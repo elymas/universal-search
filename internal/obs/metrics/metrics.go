@@ -70,6 +70,12 @@ type Registry struct {
 	IndexOpDuration     *prometheus.HistogramVec
 	IndexFusionDuration prometheus.Histogram
 
+	// Tokenizer sidecar metrics (SPEC-IDX-003).
+	// New label "shard" ∈ {"ko", "default"} added to cardinality allowlist.
+	TokenizerCalls   *prometheus.CounterVec
+	TokenizerLatency *prometheus.HistogramVec
+	IndexShardWrites *prometheus.CounterVec
+
 	// labelNames tracks all registered label names for cardinality validation.
 	labelNames []string
 }
@@ -166,6 +172,9 @@ func NewRegistry() *Registry {
 	// Register Index layer metrics (SPEC-IDX-001).
 	idx := registerIndex(pr)
 
+	// Register Tokenizer sidecar metrics (SPEC-IDX-003).
+	tok := registerTokenizer(pr)
+
 	return &Registry{
 		Prometheus:                   pr,
 		HTTPRequests:                 httpRequests,
@@ -188,6 +197,9 @@ func NewRegistry() *Registry {
 		IndexOps:                     idx.ops,
 		IndexOpDuration:              idx.opDuration,
 		IndexFusionDuration:          idx.fusionDuration,
+		TokenizerCalls:               tok.calls,
+		TokenizerLatency:             tok.latency,
+		IndexShardWrites:             tok.shardWrites,
 		labelNames: []string{
 			"method", "route", "status_class",
 			"adapter_class",
@@ -199,6 +211,8 @@ func NewRegistry() *Registry {
 			"mode",
 			// Index layer labels (SPEC-IDX-001 REQ-IDX-011)
 			"store", "op",
+			// Tokenizer sidecar labels (SPEC-IDX-003)
+			"shard",
 		},
 	}
 }

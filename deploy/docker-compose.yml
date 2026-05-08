@@ -241,3 +241,24 @@ services:
     restart: unless-stopped
     networks:
       - app
+
+  # ── Korean tokenizer sidecar ─────────────────────────────────────────────────
+  # SPEC-IDX-003: mecab-ko FastAPI sidecar on port 8083.
+  # Go services reach it via TOKENIZER_KO_BASE_URL=http://tokenizer-ko:8083.
+  tokenizer-ko:
+    build:
+      context: ../services/tokenizer-ko
+      dockerfile: Dockerfile
+    ports:
+      - "${TOKENIZER_KO_PORT:-8083}:8083"
+    environment:
+      TOKENIZER_KO_PORT: "8083"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8083/health')\" || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - app

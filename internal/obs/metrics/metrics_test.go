@@ -264,6 +264,11 @@ func TestCardinalityGuardRejectsUnboundedLabels(t *testing.T) {
 		"model":    true,
 		// Embedder labels added by SPEC-IDX-002; mode ∈ {dense,sparse,colbert,all} (4 values).
 		"mode": true,
+		// Index layer labels added by SPEC-IDX-001; store ∈ {qdrant,meili,pg}, op ∈ {search,upsert}.
+		"store": true,
+		"op":    true,
+		// Tokenizer sidecar labels added by SPEC-IDX-003; shard ∈ {ko,default}.
+		"shard": true,
 	}
 
 	reg := metrics.NewRegistry()

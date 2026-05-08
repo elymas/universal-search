@@ -179,3 +179,30 @@ func (o *Obs) SynthesisCost() prometheus.Counter {
 	}
 	return o.Metrics.SynthesisCost
 }
+
+// TokenizerCalls re-exports the tokenizer calls counter from the Metrics registry.
+// Returns nil when Metrics is nil (safe for tests).
+func (o *Obs) TokenizerCalls() *prometheus.CounterVec {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.TokenizerCalls
+}
+
+// TokenizerLatency re-exports the tokenizer latency histogram from the Metrics registry.
+// Returns nil when Metrics is nil (safe for tests).
+func (o *Obs) TokenizerLatency() *prometheus.HistogramVec {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.TokenizerLatency
+}
+
+// IndexShardWrites re-exports the shard write counter from the Metrics registry.
+// Returns nil when Metrics is nil (safe for tests).
+func (o *Obs) IndexShardWrites() *prometheus.CounterVec {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.IndexShardWrites
+}
