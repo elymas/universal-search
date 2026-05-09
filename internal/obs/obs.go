@@ -226,3 +226,43 @@ func (o *Obs) SynthesisFaithfulnessRetries() prometheus.Counter {
 	}
 	return o.Metrics.SynthesisFaithfulnessRetries
 }
+
+// StreamSynthOutcomes re-exports the stream synthesis outcomes CounterVec
+// from the Metrics registry. Returns nil when Metrics is nil (safe for tests).
+// SPEC-SYN-004 REQ-SYN4-002/004/005/006.
+func (o *Obs) StreamSynthOutcomes() *prometheus.CounterVec {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.StreamSynthOutcomes
+}
+
+// StreamSynthSentencesEmitted re-exports the stream synthesis sentences emitted
+// histogram from the Metrics registry. Returns nil when Metrics is nil.
+// SPEC-SYN-004 REQ-SYN4-002.
+func (o *Obs) StreamSynthSentencesEmitted() prometheus.Histogram {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.StreamSynthSentencesEmitted
+}
+
+// SynthClusterOutcomes re-exports the synthcluster outcomes CounterVec from
+// the Metrics registry. Returns nil when Metrics is nil (safe for tests).
+// SPEC-SYN-003 §2.1(f): mode-exclusive counter per cluster.
+func (o *Obs) SynthClusterOutcomes() *prometheus.CounterVec {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.SynthClusterOutcomes
+}
+
+// SynthClusterMembers re-exports the synthcluster member-size histogram from
+// the Metrics registry. Returns nil when Metrics is nil (safe for tests).
+// SPEC-SYN-003 §2.1(f): cluster-size distribution.
+func (o *Obs) SynthClusterMembers() prometheus.Histogram {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.SynthClusterMembers
+}

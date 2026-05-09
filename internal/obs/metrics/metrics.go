@@ -87,6 +87,11 @@ type Registry struct {
 	StreamSynthOutcomes         *prometheus.CounterVec
 	StreamSynthSentencesEmitted prometheus.Histogram
 
+	// SynthCluster metrics (SPEC-SYN-003). New label "mode" with three
+	// pre-declared values added to cardinality allowlist per SPEC-OBS-001.
+	SynthClusterOutcomes *prometheus.CounterVec
+	SynthClusterMembers  prometheus.Histogram
+
 	// labelNames tracks all registered label names for cardinality validation.
 	labelNames []string
 }
@@ -189,6 +194,9 @@ func NewRegistry() *Registry {
 	// Register Stream synthesis metrics (SPEC-SYN-004).
 	streamSynth := registerStreamSynth(pr)
 
+	// Register SynthCluster metrics (SPEC-SYN-003).
+	synthCluster := registerSynthCluster(pr)
+
 	return &Registry{
 		Prometheus:                   pr,
 		HTTPRequests:                 httpRequests,
@@ -218,6 +226,8 @@ func NewRegistry() *Registry {
 		IndexShardWrites:             tok.shardWrites,
 		StreamSynthOutcomes:          streamSynth.outcomes,
 		StreamSynthSentencesEmitted:  streamSynth.sentencesEmitted,
+		SynthClusterOutcomes:         synthCluster.outcomes,
+		SynthClusterMembers:          synthCluster.members,
 		labelNames: []string{
 			"method", "route", "status_class",
 			"adapter_class",
