@@ -206,3 +206,23 @@ func (o *Obs) IndexShardWrites() *prometheus.CounterVec {
 	}
 	return o.Metrics.IndexShardWrites
 }
+
+// SynthesisFaithfulnessOutcomes re-exports the faithfulness outcomes CounterVec
+// from the Metrics registry. Returns nil when Metrics is nil (safe for tests).
+// SPEC-SYN-002 §2.1(h).
+func (o *Obs) SynthesisFaithfulnessOutcomes() *prometheus.CounterVec {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.SynthesisFaithfulnessOutcomes
+}
+
+// SynthesisFaithfulnessRetries re-exports the faithfulness retries Counter
+// from the Metrics registry. Returns nil when Metrics is nil (safe for tests).
+// SPEC-SYN-002 §2.1(h).
+func (o *Obs) SynthesisFaithfulnessRetries() prometheus.Counter {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.SynthesisFaithfulnessRetries
+}

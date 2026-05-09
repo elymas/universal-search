@@ -60,6 +60,11 @@ type Registry struct {
 	SynthesisLatency *prometheus.HistogramVec
 	SynthesisCost    prometheus.Counter
 
+	// Faithfulness metrics (SPEC-SYN-002 §2.1(f,g)). `outcome` label reuses
+	// existing allowlist entry; no new label name is added (NFR-OBS-002).
+	SynthesisFaithfulnessOutcomes *prometheus.CounterVec
+	SynthesisFaithfulnessRetries  prometheus.Counter
+
 	// Embedder metrics (SPEC-IDX-002). New label `mode` added to allowlist.
 	EmbedderCalls     *prometheus.CounterVec
 	EmbedderLatency   *prometheus.HistogramVec
@@ -75,6 +80,12 @@ type Registry struct {
 	TokenizerCalls   *prometheus.CounterVec
 	TokenizerLatency *prometheus.HistogramVec
 	IndexShardWrites *prometheus.CounterVec
+
+	// Stream synthesis metrics (SPEC-SYN-004).
+	// outcome label allowlist: streamed_complete, client_disconnect, write_timeout,
+	// error_upstream, accept_fallback_to_json (5 pre-declared values).
+	StreamSynthOutcomes         *prometheus.CounterVec
+	StreamSynthSentencesEmitted prometheus.Histogram
 
 	// labelNames tracks all registered label names for cardinality validation.
 	labelNames []string
@@ -175,6 +186,9 @@ func NewRegistry() *Registry {
 	// Register Tokenizer sidecar metrics (SPEC-IDX-003).
 	tok := registerTokenizer(pr)
 
+	// Register Stream synthesis metrics (SPEC-SYN-004).
+	streamSynth := registerStreamSynth(pr)
+
 	return &Registry{
 		Prometheus:                   pr,
 		HTTPRequests:                 httpRequests,
@@ -188,9 +202,11 @@ func NewRegistry() *Registry {
 		LLMLatency:                   llm.latency,
 		RouterClassifications:        router.classifications,
 		RouterClassificationDuration: router.duration,
-		SynthesisCalls:               synth.calls,
-		SynthesisLatency:             synth.latency,
-		SynthesisCost:                synth.cost,
+		SynthesisCalls:                synth.calls,
+		SynthesisLatency:              synth.latency,
+		SynthesisCost:                 synth.cost,
+		SynthesisFaithfulnessOutcomes: synth.faithfulnessOutcomes,
+		SynthesisFaithfulnessRetries:  synth.faithfulnessRetries,
 		EmbedderCalls:                embedder.calls,
 		EmbedderLatency:              embedder.latency,
 		EmbedderCacheHits:            embedder.cacheHits,
@@ -200,6 +216,8 @@ func NewRegistry() *Registry {
 		TokenizerCalls:               tok.calls,
 		TokenizerLatency:             tok.latency,
 		IndexShardWrites:             tok.shardWrites,
+		StreamSynthOutcomes:          streamSynth.outcomes,
+		StreamSynthSentencesEmitted:  streamSynth.sentencesEmitted,
 		labelNames: []string{
 			"method", "route", "status_class",
 			"adapter_class",
