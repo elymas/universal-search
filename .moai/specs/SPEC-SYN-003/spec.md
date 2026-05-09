@@ -1,7 +1,7 @@
 ---
 id: SPEC-SYN-003
 version: 0.1.1
-status: approved
+status: implemented
 created: 2026-05-09
 updated: 2026-05-09
 author: limbowl
