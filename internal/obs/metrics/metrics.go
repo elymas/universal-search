@@ -92,6 +92,11 @@ type Registry struct {
 	SynthClusterOutcomes *prometheus.CounterVec
 	SynthClusterMembers  prometheus.Histogram
 
+	// Deep report metrics (SPEC-DEEP-001 M6). Reuses existing `outcome` label;
+	// no new label name is added (NFR-OBS-002).
+	DeepReportOutcomes *prometheus.CounterVec
+	DeepReportLatency  prometheus.Histogram
+
 	// labelNames tracks all registered label names for cardinality validation.
 	labelNames []string
 }
@@ -197,6 +202,9 @@ func NewRegistry() *Registry {
 	// Register SynthCluster metrics (SPEC-SYN-003).
 	synthCluster := registerSynthCluster(pr)
 
+	// Register Deep report metrics (SPEC-DEEP-001 M6).
+	deepReport := registerDeepReport(pr)
+
 	return &Registry{
 		Prometheus:                   pr,
 		HTTPRequests:                 httpRequests,
@@ -228,6 +236,8 @@ func NewRegistry() *Registry {
 		StreamSynthSentencesEmitted:  streamSynth.sentencesEmitted,
 		SynthClusterOutcomes:         synthCluster.outcomes,
 		SynthClusterMembers:          synthCluster.members,
+		DeepReportOutcomes:           deepReport.outcomes,
+		DeepReportLatency:            deepReport.latency,
 		labelNames: []string{
 			"method", "route", "status_class",
 			"adapter_class",

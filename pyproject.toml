@@ -1,2 +1,8 @@
 [tool.uv.workspace]
-members = ["services/*"]
+members = [
+    "services/embedder",
+    "services/koreanews",
+    "services/researcher",
+    "services/tokenizer-ko",
+]
+exclude = ["services/storm"]

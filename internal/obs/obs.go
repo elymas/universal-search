@@ -266,3 +266,23 @@ func (o *Obs) SynthClusterMembers() prometheus.Histogram {
 	}
 	return o.Metrics.SynthClusterMembers
 }
+
+// DeepReportOutcomes re-exports the deep report outcomes CounterVec
+// from the Metrics registry. Returns nil when Metrics is nil (safe for tests).
+// SPEC-DEEP-001 M6: usearch_deep_outcomes_total{outcome}.
+func (o *Obs) DeepReportOutcomes() *prometheus.CounterVec {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.DeepReportOutcomes
+}
+
+// DeepReportLatency re-exports the deep report latency histogram from
+// the Metrics registry. Returns nil when Metrics is nil (safe for tests).
+// SPEC-DEEP-001 M6: usearch_deep_latency_seconds.
+func (o *Obs) DeepReportLatency() prometheus.Histogram {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.DeepReportLatency
+}
