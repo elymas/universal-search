@@ -19,6 +19,7 @@ import (
 	obslog "github.com/elymas/universal-search/internal/obs/log"
 	"github.com/elymas/universal-search/internal/obs/metrics"
 	obstrace "github.com/elymas/universal-search/internal/obs/trace"
+	"github.com/prometheus/client_golang/prometheus"
 	oteltrace "go.opentelemetry.io/otel/trace"
 )
 
@@ -63,6 +64,12 @@ type Obs struct {
 // Tracer returns a named OTel tracer from the initialised provider.
 func (o *Obs) Tracer(name string) oteltrace.Tracer {
 	return o.tracerProvider(name)
+}
+
+// HasTracer reports whether this Obs bundle has a tracer provider wired.
+// Returns false for zero-value or partially-initialised Obs bundles used in tests.
+func (o *Obs) HasTracer() bool {
+	return o != nil && o.tracerProvider != nil
 }
 
 // Init initialises all observability subsystems from cfg and returns an Obs
@@ -144,4 +151,138 @@ func Init(ctx context.Context, cfg Config) (*Obs, func(context.Context) error, e
 // goVersion returns the Go runtime version string (e.g. "go1.25.0").
 func goVersion() string {
 	return runtime.Version()
+}
+
+// SynthesisCalls re-exports the synthesis calls counter from the Metrics registry.
+// Returns nil when Metrics is nil (safe for tests).
+func (o *Obs) SynthesisCalls() *prometheus.CounterVec {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.SynthesisCalls
+}
+
+// SynthesisLatency re-exports the synthesis latency histogram from the Metrics registry.
+// Returns nil when Metrics is nil (safe for tests).
+func (o *Obs) SynthesisLatency() *prometheus.HistogramVec {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.SynthesisLatency
+}
+
+// SynthesisCost re-exports the synthesis cost counter from the Metrics registry.
+// Returns nil when Metrics is nil (safe for tests).
+func (o *Obs) SynthesisCost() prometheus.Counter {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.SynthesisCost
+}
+
+// TokenizerCalls re-exports the tokenizer calls counter from the Metrics registry.
+// Returns nil when Metrics is nil (safe for tests).
+func (o *Obs) TokenizerCalls() *prometheus.CounterVec {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.TokenizerCalls
+}
+
+// TokenizerLatency re-exports the tokenizer latency histogram from the Metrics registry.
+// Returns nil when Metrics is nil (safe for tests).
+func (o *Obs) TokenizerLatency() *prometheus.HistogramVec {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.TokenizerLatency
+}
+
+// IndexShardWrites re-exports the shard write counter from the Metrics registry.
+// Returns nil when Metrics is nil (safe for tests).
+func (o *Obs) IndexShardWrites() *prometheus.CounterVec {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.IndexShardWrites
+}
+
+// SynthesisFaithfulnessOutcomes re-exports the faithfulness outcomes CounterVec
+// from the Metrics registry. Returns nil when Metrics is nil (safe for tests).
+// SPEC-SYN-002 §2.1(h).
+func (o *Obs) SynthesisFaithfulnessOutcomes() *prometheus.CounterVec {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.SynthesisFaithfulnessOutcomes
+}
+
+// SynthesisFaithfulnessRetries re-exports the faithfulness retries Counter
+// from the Metrics registry. Returns nil when Metrics is nil (safe for tests).
+// SPEC-SYN-002 §2.1(h).
+func (o *Obs) SynthesisFaithfulnessRetries() prometheus.Counter {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.SynthesisFaithfulnessRetries
+}
+
+// StreamSynthOutcomes re-exports the stream synthesis outcomes CounterVec
+// from the Metrics registry. Returns nil when Metrics is nil (safe for tests).
+// SPEC-SYN-004 REQ-SYN4-002/004/005/006.
+func (o *Obs) StreamSynthOutcomes() *prometheus.CounterVec {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.StreamSynthOutcomes
+}
+
+// StreamSynthSentencesEmitted re-exports the stream synthesis sentences emitted
+// histogram from the Metrics registry. Returns nil when Metrics is nil.
+// SPEC-SYN-004 REQ-SYN4-002.
+func (o *Obs) StreamSynthSentencesEmitted() prometheus.Histogram {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.StreamSynthSentencesEmitted
+}
+
+// SynthClusterOutcomes re-exports the synthcluster outcomes CounterVec from
+// the Metrics registry. Returns nil when Metrics is nil (safe for tests).
+// SPEC-SYN-003 §2.1(f): mode-exclusive counter per cluster.
+func (o *Obs) SynthClusterOutcomes() *prometheus.CounterVec {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.SynthClusterOutcomes
+}
+
+// SynthClusterMembers re-exports the synthcluster member-size histogram from
+// the Metrics registry. Returns nil when Metrics is nil (safe for tests).
+// SPEC-SYN-003 §2.1(f): cluster-size distribution.
+func (o *Obs) SynthClusterMembers() prometheus.Histogram {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.SynthClusterMembers
+}
+
+// DeepReportOutcomes re-exports the deep report outcomes CounterVec
+// from the Metrics registry. Returns nil when Metrics is nil (safe for tests).
+// SPEC-DEEP-001 M6: usearch_deep_outcomes_total{outcome}.
+func (o *Obs) DeepReportOutcomes() *prometheus.CounterVec {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.DeepReportOutcomes
+}
+
+// DeepReportLatency re-exports the deep report latency histogram from
+// the Metrics registry. Returns nil when Metrics is nil (safe for tests).
+// SPEC-DEEP-001 M6: usearch_deep_latency_seconds.
+func (o *Obs) DeepReportLatency() prometheus.Histogram {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.DeepReportLatency
 }

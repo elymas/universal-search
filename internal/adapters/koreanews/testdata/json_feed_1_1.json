@@ -1,0 +1,24 @@
+{
+  "version": "https://jsonfeed.org/version/1.1",
+  "title": "한국 블로그 피드",
+  "home_page_url": "https://blog.example.kr",
+  "feed_url": "https://blog.example.kr/feed.json",
+  "items": [
+    {
+      "id": "https://blog.example.kr/post/1",
+      "url": "https://blog.example.kr/post/1",
+      "title": "한국어 프로그래밍 튜토리얼",
+      "content_text": "오늘은 Go 언어를 사용한 웹 서버 구축 방법에 대해 알아보겠습니다.",
+      "date_published": "2026-05-01T10:00:00+09:00",
+      "authors": [{"name": "개발자 김씨"}]
+    },
+    {
+      "id": "https://blog.example.kr/post/2",
+      "url": "https://blog.example.kr/post/2",
+      "title": "머신러닝 기초 강좌",
+      "content_text": "머신러닝의 기본 개념과 파이썬을 활용한 실습 예제를 소개합니다.",
+      "date_published": "2026-04-30T14:00:00+09:00",
+      "authors": [{"name": "AI 연구자"}]
+    }
+  ]
+}

@@ -54,6 +54,49 @@ type Registry struct {
 	RouterClassifications        *prometheus.CounterVec
 	RouterClassificationDuration *prometheus.HistogramVec
 
+	// Synthesis metrics (SPEC-SYN-001). Reuse the existing `outcome` label;
+	// SynthesisCost has no labels (no new cardinality introduced).
+	SynthesisCalls   *prometheus.CounterVec
+	SynthesisLatency *prometheus.HistogramVec
+	SynthesisCost    prometheus.Counter
+
+	// Faithfulness metrics (SPEC-SYN-002 §2.1(f,g)). `outcome` label reuses
+	// existing allowlist entry; no new label name is added (NFR-OBS-002).
+	SynthesisFaithfulnessOutcomes *prometheus.CounterVec
+	SynthesisFaithfulnessRetries  prometheus.Counter
+
+	// Embedder metrics (SPEC-IDX-002). New label `mode` added to allowlist.
+	EmbedderCalls     *prometheus.CounterVec
+	EmbedderLatency   *prometheus.HistogramVec
+	EmbedderCacheHits prometheus.Counter
+
+	// Index layer metrics (SPEC-IDX-001 REQ-IDX-011).
+	IndexOps            *prometheus.CounterVec
+	IndexOpDuration     *prometheus.HistogramVec
+	IndexFusionDuration prometheus.Histogram
+
+	// Tokenizer sidecar metrics (SPEC-IDX-003).
+	// New label "shard" ∈ {"ko", "default"} added to cardinality allowlist.
+	TokenizerCalls   *prometheus.CounterVec
+	TokenizerLatency *prometheus.HistogramVec
+	IndexShardWrites *prometheus.CounterVec
+
+	// Stream synthesis metrics (SPEC-SYN-004).
+	// outcome label allowlist: streamed_complete, client_disconnect, write_timeout,
+	// error_upstream, accept_fallback_to_json (5 pre-declared values).
+	StreamSynthOutcomes         *prometheus.CounterVec
+	StreamSynthSentencesEmitted prometheus.Histogram
+
+	// SynthCluster metrics (SPEC-SYN-003). New label "mode" with three
+	// pre-declared values added to cardinality allowlist per SPEC-OBS-001.
+	SynthClusterOutcomes *prometheus.CounterVec
+	SynthClusterMembers  prometheus.Histogram
+
+	// Deep report metrics (SPEC-DEEP-001 M6). Reuses existing `outcome` label;
+	// no new label name is added (NFR-OBS-002).
+	DeepReportOutcomes *prometheus.CounterVec
+	DeepReportLatency  prometheus.Histogram
+
 	// labelNames tracks all registered label names for cardinality validation.
 	labelNames []string
 }
@@ -141,6 +184,27 @@ func NewRegistry() *Registry {
 	// Register Intent Router metrics (SPEC-IR-001).
 	router := registerRouter(pr)
 
+	// Register Synthesis metrics (SPEC-SYN-001).
+	synth := registerSynthesis(pr)
+
+	// Register Embedder metrics (SPEC-IDX-002).
+	embedder := registerEmbedder(pr)
+
+	// Register Index layer metrics (SPEC-IDX-001).
+	idx := registerIndex(pr)
+
+	// Register Tokenizer sidecar metrics (SPEC-IDX-003).
+	tok := registerTokenizer(pr)
+
+	// Register Stream synthesis metrics (SPEC-SYN-004).
+	streamSynth := registerStreamSynth(pr)
+
+	// Register SynthCluster metrics (SPEC-SYN-003).
+	synthCluster := registerSynthCluster(pr)
+
+	// Register Deep report metrics (SPEC-DEEP-001 M6).
+	deepReport := registerDeepReport(pr)
+
 	return &Registry{
 		Prometheus:                   pr,
 		HTTPRequests:                 httpRequests,
@@ -154,6 +218,26 @@ func NewRegistry() *Registry {
 		LLMLatency:                   llm.latency,
 		RouterClassifications:        router.classifications,
 		RouterClassificationDuration: router.duration,
+		SynthesisCalls:                synth.calls,
+		SynthesisLatency:              synth.latency,
+		SynthesisCost:                 synth.cost,
+		SynthesisFaithfulnessOutcomes: synth.faithfulnessOutcomes,
+		SynthesisFaithfulnessRetries:  synth.faithfulnessRetries,
+		EmbedderCalls:                embedder.calls,
+		EmbedderLatency:              embedder.latency,
+		EmbedderCacheHits:            embedder.cacheHits,
+		IndexOps:                     idx.ops,
+		IndexOpDuration:              idx.opDuration,
+		IndexFusionDuration:          idx.fusionDuration,
+		TokenizerCalls:               tok.calls,
+		TokenizerLatency:             tok.latency,
+		IndexShardWrites:             tok.shardWrites,
+		StreamSynthOutcomes:          streamSynth.outcomes,
+		StreamSynthSentencesEmitted:  streamSynth.sentencesEmitted,
+		SynthClusterOutcomes:         synthCluster.outcomes,
+		SynthClusterMembers:          synthCluster.members,
+		DeepReportOutcomes:           deepReport.outcomes,
+		DeepReportLatency:            deepReport.latency,
 		labelNames: []string{
 			"method", "route", "status_class",
 			"adapter_class",
@@ -161,6 +245,12 @@ func NewRegistry() *Registry {
 			"version", "commit", "go_version",
 			// LLM labels (SPEC-LLM-001 REQ-LLM-007)
 			"provider", "model",
+			// Embedder labels (SPEC-IDX-002) — `mode` is the new label name
+			"mode",
+			// Index layer labels (SPEC-IDX-001 REQ-IDX-011)
+			"store", "op",
+			// Tokenizer sidecar labels (SPEC-IDX-003)
+			"shard",
 		},
 	}
 }

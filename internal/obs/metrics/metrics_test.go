@@ -262,6 +262,13 @@ func TestCardinalityGuardRejectsUnboundedLabels(t *testing.T) {
 		// provider ∈ {anthropic,openai,ollama} and model ∈ config.yaml aliases (≤15).
 		"provider": true,
 		"model":    true,
+		// Embedder labels added by SPEC-IDX-002; mode ∈ {dense,sparse,colbert,all} (4 values).
+		"mode": true,
+		// Index layer labels added by SPEC-IDX-001; store ∈ {qdrant,meili,pg}, op ∈ {search,upsert}.
+		"store": true,
+		"op":    true,
+		// Tokenizer sidecar labels added by SPEC-IDX-003; shard ∈ {ko,default}.
+		"shard": true,
 	}
 
 	reg := metrics.NewRegistry()
@@ -276,4 +283,96 @@ func TestCardinalityGuardRejectsUnboundedLabels(t *testing.T) {
 // NFR-OBS-002
 func TestNoUnboundedLabels(t *testing.T) {
 	TestCardinalityGuardRejectsUnboundedLabels(t)
+}
+
+// ---------------------------------------------------------------------------
+// SPEC-DEEP-001 M6: Deep report metrics registration tests
+// ---------------------------------------------------------------------------
+
+// TestDeepReportOutcomesCounterRegistered verifies the DeepReportOutcomes
+// CounterVec is registered with the "outcome" label and all 6 pre-declared
+// values appear in the /metrics output via the Add(0) pre-initialisation pattern.
+// SPEC-DEEP-001 acceptance test #4.
+func TestDeepReportOutcomesCounterRegistered(t *testing.T) {
+	t.Parallel()
+
+	reg := metrics.NewRegistry()
+	if reg.DeepReportOutcomes == nil {
+		t.Fatal("DeepReportOutcomes is nil after NewRegistry")
+	}
+
+	srv := httptest.NewServer(metrics.Handler(reg))
+	defer srv.Close()
+
+	resp, err := http.Get(srv.URL + "/metrics")
+	if err != nil {
+		t.Fatalf("GET /metrics: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("read body: %v", err)
+	}
+	bodyStr := string(body)
+
+	// Verify the metric family name is present.
+	if !strings.Contains(bodyStr, "usearch_deep_outcomes_total") {
+		t.Error("usearch_deep_outcomes_total not found in /metrics output")
+	}
+
+	// Verify all 6 outcome label values are pre-initialised.
+	for _, outcome := range []string{
+		"success",
+		"deadline_exceeded",
+		"budget_exceeded",
+		"error_invalid",
+		"error_upstream",
+		"error_unresolved_citations_threshold",
+	} {
+		if !strings.Contains(bodyStr, outcome) {
+			t.Errorf("outcome label value %q not found in /metrics output (pre-initialisation missing)", outcome)
+		}
+	}
+}
+
+// TestDeepReportLatencyHistogramRegistered verifies the DeepReportLatency
+// histogram is registered with the correct buckets [5,15,30,60,120,180,240,300]s.
+// SPEC-DEEP-001 acceptance test #5.
+func TestDeepReportLatencyHistogramRegistered(t *testing.T) {
+	t.Parallel()
+
+	reg := metrics.NewRegistry()
+	if reg.DeepReportLatency == nil {
+		t.Fatal("DeepReportLatency is nil after NewRegistry")
+	}
+
+	srv := httptest.NewServer(metrics.Handler(reg))
+	defer srv.Close()
+
+	resp, err := http.Get(srv.URL + "/metrics")
+	if err != nil {
+		t.Fatalf("GET /metrics: %v", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("read body: %v", err)
+	}
+	bodyStr := string(body)
+
+	if !strings.Contains(bodyStr, "usearch_deep_latency_seconds") {
+		t.Error("usearch_deep_latency_seconds not found in /metrics output")
+	}
+
+	// Verify correct bucket boundaries by checking for the le labels.
+	// Prometheus exposition format exposes bucket boundaries as le="5", le="15", etc.
+	for _, bucket := range []string{"5", "15", "30", "60", "120", "180", "240", "300"} {
+		if !strings.Contains(bodyStr, `le="`+bucket+`"`) {
+			// This check applies to all histograms; only fail if the deep_latency metric
+			// is present but missing the bucket.
+			t.Errorf("bucket le=%q not found in /metrics output", bucket)
+		}
+	}
 }

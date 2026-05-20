@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>한국어 전용 뉴스</title>
+    <link>https://korean.example.kr</link>
+    <description>순수 한국어 뉴스 피드</description>
+    <item>
+      <title>안녕하세요 한국어 기사입니다</title>
+      <link>https://korean.example.kr/1</link>
+      <guid>https://korean.example.kr/1</guid>
+      <pubDate>Wed, 01 May 2026 10:00:00 +0900</pubDate>
+      <author>기자</author>
+      <description>이 기사는 완전히 한국어로 작성되었습니다. 한국어 감지 테스트를 위한 문서입니다. 한글 비율이 충분히 높아야 합니다.</description>
+    </item>
+    <item>
+      <title>English Article Title Without Korean</title>
+      <link>https://korean.example.kr/2</link>
+      <guid>https://korean.example.kr/2</guid>
+      <pubDate>Wed, 01 May 2026 11:00:00 +0900</pubDate>
+      <author>Reporter</author>
+      <description>This is an English article that should not be detected as Korean. The ratio of Hangul characters is zero.</description>
+    </item>
+    <item>
+      <title>Mixed Content 한국어와 영어 섞인 기사</title>
+      <link>https://korean.example.kr/3</link>
+      <guid>https://korean.example.kr/3</guid>
+      <pubDate>Tue, 30 Apr 2026 10:00:00 +0900</pubDate>
+      <author>기자</author>
+      <description>This article has mixed content. 이 기사에는 한국어와 영어가 섞여 있습니다. Korean portion is significant.</description>
+    </item>
+  </channel>
+</rss>

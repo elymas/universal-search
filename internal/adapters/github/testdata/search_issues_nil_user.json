@@ -1,0 +1,7 @@
+{
+  "total_count": 1,
+  "incomplete_results": false,
+  "items": [
+    {"id": 6001, "number": 6001, "html_url": "https://github.com/golang/go/issues/6001", "title": "Issue from deleted user", "body": "This issue was created by a user who has since deleted their account.", "state": "open", "user": null, "created_at": "2026-03-01T10:00:00Z", "updated_at": "2026-03-05T12:00:00Z", "comments": 3, "labels": [], "repository_url": "https://api.github.com/repos/golang/go"}
+  ]
+}

@@ -3,13 +3,14 @@ id: SPEC-CLI-001
 title: usearch query Subcommand v0
 version: 0.1.0
 milestone: M2 — First end-to-end slice
-status: draft
+status: implemented
 priority: P0
 owner: expert-backend
 methodology: tdd
 coverage_target: 80
 created: 2026-04-28
-updated: 2026-04-28
+updated: 2026-05-04
+implemented_at: 2026-05-04
 author: limbowl
 issue_number: null
 depends_on: [SPEC-IR-001, SPEC-ADP-001, SPEC-ADP-002, SPEC-SYN-001]
@@ -22,6 +23,9 @@ blocks: [SPEC-CLI-002, SPEC-MCP-001]
 
 - 2026-04-28 (initial draft v0.1, limbowl via manager-spec):
   First user-facing CLI subcommand. Wires SPEC-IR-001 Intent Router + SPEC-ADP-001 Reddit adapter + SPEC-ADP-002 HN adapter (forward-looking, both still draft) + SPEC-SYN-001 synthesis client (forward-looking) into an end-to-end query response. Replaces the placeholder `"usearch: no command given"` stderr message at `cmd/usearch/main.go:73-74` with a real subcommand dispatcher. Decision-locked for v0: stdlib `flag` package only (no cobra/urfave/kong), per research.md §2.5; basic CLI-internal fanout (SPEC-FAN-001 owns full fanout in M3); soft-fail to exit code 3 when synthesis is unavailable; stdout for answer payload, stderr for progress/logs; `--format text` (default) and `--format json` only. 11 EARS REQs (8 × P0 + 3 × P1) + 4 NFRs covering subcommand parsing, source/format/timeout flags, exit codes, stdout/stderr separation, observability wiring, and binary size discipline. Research artifact at `.moai/specs/SPEC-CLI-001/research.md` captures the CLI library survey, integration surfaces, and 6 open questions. Ready for plan-auditor review and annotation cycle.
+
+- 2026-05-04 (implemented v0.1, manager-tdd via TDD RED-GREEN-REFACTOR):
+  All 11 EARS REQs + 4 NFRs implemented. Forward dependencies SPEC-ADP-002 (HN adapter) and SPEC-SYN-001 (synthesis client) confirmed implemented before this run phase. Key reconciliation: synthesis client wired via `synthClientIface` interface with `nopSynthClient` as the degradation path (REQ-CLI-009) — real synthesis.Client deferred to a future SPEC when production credentials are configured. Key files delivered: `cmd/usearch/query.go` (Execute, runFanout, parseQueryFlags), `cmd/usearch/exitcode.go` (exit code constants), `cmd/usearch/progress.go` (progressEmitter interface), `cmd/usearch/output_text.go`, `cmd/usearch/output_json.go`, `cmd/usearch/query_response.go`, `cmd/usearch/coverage_supplement_test.go`. Coverage: 80.1% (target: 80%). MX tags applied: `@MX:ANCHOR` on Execute(), `@MX:WARN` on runFanout(), `@MX:NOTE` on progressEmitter interface.
 
 ---
 

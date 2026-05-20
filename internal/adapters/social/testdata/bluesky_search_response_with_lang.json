@@ -1,0 +1,64 @@
+{
+  "hitsTotal": 3,
+  "posts": [
+    {
+      "uri": "at://did:plc:kouser001/app.bsky.feed.post/3ko00000001aa",
+      "cid": "bafyreikopost001",
+      "author": {
+        "did": "did:plc:kouser001",
+        "handle": "korean.bsky.social",
+        "displayName": "Korean User"
+      },
+      "record": {
+        "$type": "app.bsky.feed.post",
+        "text": "고 언어로 개발하는 것은 정말 즐겁습니다.",
+        "createdAt": "2026-04-15T10:00:00Z",
+        "langs": ["ko"]
+      },
+      "replyCount": 2,
+      "repostCount": 3,
+      "likeCount": 15,
+      "quoteCount": 0,
+      "indexedAt": "2026-04-15T10:00:03Z"
+    },
+    {
+      "uri": "at://did:plc:enuser001/app.bsky.feed.post/3en00000001bb",
+      "cid": "bafyreiEnpost001",
+      "author": {
+        "did": "did:plc:enuser001",
+        "handle": "english.bsky.social",
+        "displayName": "English User"
+      },
+      "record": {
+        "$type": "app.bsky.feed.post",
+        "text": "Go programming is great for building scalable systems.",
+        "createdAt": "2026-04-15T11:00:00Z",
+        "langs": ["en"]
+      },
+      "replyCount": 1,
+      "repostCount": 4,
+      "likeCount": 22,
+      "quoteCount": 1,
+      "indexedAt": "2026-04-15T11:00:04Z"
+    },
+    {
+      "uri": "at://did:plc:nolanguser/app.bsky.feed.post/3nl00000001cc",
+      "cid": "bafyreiNolangpost",
+      "author": {
+        "did": "did:plc:nolanguser",
+        "handle": "nolang.bsky.social",
+        "displayName": "No Lang User"
+      },
+      "record": {
+        "$type": "app.bsky.feed.post",
+        "text": "Post with no language set.",
+        "createdAt": "2026-04-15T12:00:00Z"
+      },
+      "replyCount": 0,
+      "repostCount": 0,
+      "likeCount": 3,
+      "quoteCount": 0,
+      "indexedAt": "2026-04-15T12:00:01Z"
+    }
+  ]
+}

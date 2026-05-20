@@ -1,0 +1,131 @@
+{
+  "query": "rust ownership",
+  "number_of_results": 10,
+  "results": [
+    {
+      "url": "https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html",
+      "title": "What Is Ownership? - The Rust Programming Language",
+      "content": "Rust's ownership is a set of rules that govern how a Rust program manages memory.",
+      "engine": "google",
+      "engines": ["google"],
+      "category": "general",
+      "score": 1.2,
+      "template": "default.html",
+      "positions": [1],
+      "publishedDate": ""
+    },
+    {
+      "url": "https://doc.rust-lang.org/book/ch04-02-references-and-borrowing.html",
+      "title": "References and Borrowing - The Rust Programming Language",
+      "content": "A reference is like a pointer in that it is an address we can follow to access the data stored at that address.",
+      "engine": "bing",
+      "engines": ["bing", "google"],
+      "category": "general",
+      "score": 0.95,
+      "template": "default.html",
+      "positions": [2, 1],
+      "publishedDate": "2026-04-15T08:30:00Z"
+    },
+    {
+      "url": "https://blog.rust-lang.org/2015/04/10/Fearless-Concurrency.html",
+      "title": "Fearless Concurrency with Rust",
+      "content": "One of Rust's most compelling features for systems programmers is fearless concurrency.",
+      "engine": "duckduckgo",
+      "engines": ["duckduckgo"],
+      "category": "general",
+      "score": 0.85,
+      "template": "default.html",
+      "positions": [3],
+      "publishedDate": ""
+    },
+    {
+      "url": "https://stackoverflow.com/questions/57750671/rust-ownership-model",
+      "title": "Rust ownership model - Stack Overflow",
+      "content": "I am trying to understand the Rust ownership model and how it compares to other languages.",
+      "engine": "google",
+      "engines": ["google"],
+      "category": "general",
+      "score": 0.75,
+      "template": "default.html",
+      "positions": [4],
+      "publishedDate": ""
+    },
+    {
+      "url": "https://medium.com/@jhoo/rust-ownership-explained-6a4b2c3d4e5f",
+      "title": "Rust Ownership Explained",
+      "content": "In this article we will explore Rust ownership from the basics.",
+      "engine": "bing",
+      "engines": ["bing"],
+      "category": "general",
+      "score": 0.65,
+      "template": "default.html",
+      "positions": [2],
+      "publishedDate": ""
+    },
+    {
+      "url": "https://news.ycombinator.com/item?id=12345678",
+      "title": "Ask HN: Understanding Rust ownership",
+      "content": "I have been learning Rust and want to understand ownership better.",
+      "engine": "duckduckgo",
+      "engines": ["duckduckgo"],
+      "category": "general",
+      "score": 0.55,
+      "template": "default.html",
+      "positions": [5],
+      "publishedDate": ""
+    },
+    {
+      "url": "https://reddit.com/r/rust/comments/abc123/rust_ownership",
+      "title": "Rust ownership - how does it work?",
+      "content": "I've been reading about Rust ownership and have some questions.",
+      "engine": "google",
+      "engines": ["google", "bing"],
+      "category": "general",
+      "score": 0.45,
+      "template": "default.html",
+      "positions": [5, 3],
+      "publishedDate": ""
+    },
+    {
+      "url": "https://github.com/rust-lang/rust/issues/12345",
+      "title": "Ownership semantics discussion",
+      "content": "Discussion about ownership semantics in Rust.",
+      "engine": "bing",
+      "engines": ["bing"],
+      "category": "general",
+      "score": 0.35,
+      "template": "default.html",
+      "positions": [4],
+      "publishedDate": ""
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=abcdefghijk",
+      "title": "Rust Ownership Tutorial",
+      "content": "A comprehensive tutorial on Rust ownership.",
+      "engine": "duckduckgo",
+      "engines": ["duckduckgo"],
+      "category": "general",
+      "score": 0.25,
+      "template": "default.html",
+      "positions": [6],
+      "publishedDate": ""
+    },
+    {
+      "url": "https://www.geeksforgeeks.org/rust-ownership/",
+      "title": "Rust Ownership - GeeksforGeeks",
+      "content": "Rust uses a unique ownership model to manage memory.",
+      "engine": "google",
+      "engines": ["google"],
+      "category": "general",
+      "score": 0.15,
+      "template": "default.html",
+      "positions": [7],
+      "publishedDate": ""
+    }
+  ],
+  "suggestions": ["rust borrow checker", "rust lifetime"],
+  "corrections": [],
+  "answers": [],
+  "infoboxes": [],
+  "unresponsive_engines": []
+}

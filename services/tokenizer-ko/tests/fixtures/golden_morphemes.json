@@ -1,0 +1,152 @@
+[
+  {
+    "input": "ChatGPT 사용법",
+    "must_contain": ["ChatGPT", "사용", "법"],
+    "description": "Mixed Korean-English: ChatGPT usage guide"
+  },
+  {
+    "input": "안녕하세요",
+    "must_contain": ["안녕", "하세요"],
+    "description": "Basic Korean greeting"
+  },
+  {
+    "input": "서울 날씨",
+    "must_contain": ["서울", "날씨"],
+    "description": "Seoul weather query"
+  },
+  {
+    "input": "AI 추천",
+    "must_contain": ["AI", "추천"],
+    "description": "AI recommendation"
+  },
+  {
+    "input": "네이버 블로그",
+    "must_contain": ["네이버", "블로그"],
+    "description": "Naver blog"
+  },
+  {
+    "input": "한국어 형태소 분석",
+    "must_contain": ["한국어", "형태소", "분석"],
+    "description": "Korean morpheme analysis"
+  },
+  {
+    "input": "데이터베이스 최적화",
+    "must_contain": ["데이터베이스", "최적화"],
+    "description": "Database optimization"
+  },
+  {
+    "input": "머신러닝 모델 학습",
+    "must_contain": ["머신러닝", "모델", "학습"],
+    "description": "Machine learning model training"
+  },
+  {
+    "input": "오늘 점심 뭐 먹을까",
+    "must_contain": ["오늘", "점심", "먹"],
+    "description": "Today's lunch choice"
+  },
+  {
+    "input": "뉴스 기사 요약",
+    "must_contain": ["뉴스", "기사", "요약"],
+    "description": "News article summary"
+  },
+  {
+    "input": "쇼핑몰 상품 검색",
+    "must_contain": ["쇼핑몰", "상품", "검색"],
+    "description": "Shopping mall product search"
+  },
+  {
+    "input": "파이썬 프로그래밍",
+    "must_contain": ["파이썬", "프로그래밍"],
+    "description": "Python programming"
+  },
+  {
+    "input": "인공지능 기술",
+    "must_contain": ["인공지능", "기술"],
+    "description": "Artificial intelligence technology"
+  },
+  {
+    "input": "클라우드 서비스",
+    "must_contain": ["클라우드", "서비스"],
+    "description": "Cloud service"
+  },
+  {
+    "input": "자연어 처리",
+    "must_contain": ["자연어", "처리"],
+    "description": "Natural language processing"
+  },
+  {
+    "input": "딥러닝 연구",
+    "must_contain": ["딥러닝", "연구"],
+    "description": "Deep learning research"
+  },
+  {
+    "input": "모바일 앱 개발",
+    "must_contain": ["모바일", "앱", "개발"],
+    "description": "Mobile app development"
+  },
+  {
+    "input": "웹 서비스 보안",
+    "must_contain": ["웹", "서비스", "보안"],
+    "description": "Web service security"
+  },
+  {
+    "input": "블록체인 기술",
+    "must_contain": ["블록체인", "기술"],
+    "description": "Blockchain technology"
+  },
+  {
+    "input": "스타트업 창업",
+    "must_contain": ["스타트업", "창업"],
+    "description": "Startup founding"
+  },
+  {
+    "input": "대학교 입학 전형",
+    "must_contain": ["대학교", "입학", "전형"],
+    "description": "University admission process"
+  },
+  {
+    "input": "건강 식단 관리",
+    "must_contain": ["건강", "식단", "관리"],
+    "description": "Healthy diet management"
+  },
+  {
+    "input": "여행 추천 코스",
+    "must_contain": ["여행", "추천"],
+    "description": "Travel recommendation course"
+  },
+  {
+    "input": "독서 목록 추천",
+    "must_contain": ["독서", "목록", "추천"],
+    "description": "Reading list recommendation"
+  },
+  {
+    "input": "주식 투자 방법",
+    "must_contain": ["주식", "투자", "방법"],
+    "description": "Stock investment method"
+  },
+  {
+    "input": "영어 공부 방법",
+    "must_contain": ["영어", "공부", "방법"],
+    "description": "English study method"
+  },
+  {
+    "input": "맛집 리뷰",
+    "must_contain": ["맛집", "리뷰"],
+    "description": "Restaurant review"
+  },
+  {
+    "input": "부동산 시장 분석",
+    "must_contain": ["부동산", "시장", "분석"],
+    "description": "Real estate market analysis"
+  },
+  {
+    "input": "환경 오염 문제",
+    "must_contain": ["환경", "오염", "문제"],
+    "description": "Environmental pollution problem"
+  },
+  {
+    "input": "스마트폰 비교 리뷰",
+    "must_contain": ["스마트폰", "비교", "리뷰"],
+    "description": "Smartphone comparison review"
+  }
+]

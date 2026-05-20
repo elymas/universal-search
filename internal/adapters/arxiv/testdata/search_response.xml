@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"
+      xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"
+      xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <link href="http://arxiv.org/api/query?search_query=transformer&amp;start=0&amp;max_results=25" rel="self" type="application/atom+xml"/>
+  <title>ArXiv Query: search_query=transformer</title>
+  <id>http://arxiv.org/api/abc123</id>
+  <updated>2024-03-15T00:00:00-04:00</updated>
+  <opensearch:totalResults>1000</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <opensearch:itemsPerPage>25</opensearch:itemsPerPage>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00001v1</id>
+    <published>2024-03-01T00:00:00-05:00</published>
+    <updated>2024-03-01T00:00:00-05:00</updated>
+    <title>Attention Is All You Need: A Comprehensive Survey</title>
+    <summary>We propose a new simple network architecture, the Transformer,
+based solely on attention mechanisms. The Transformer model has
+achieved state-of-the-art results on machine translation tasks.</summary>
+    <author><name>Alice Smith</name></author>
+    <author><name>Bob Jones</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <arxiv:doi xmlns:arxiv="http://arxiv.org/schemas/atom">10.1234/test.2024.001</arxiv:doi>
+    <arxiv:journal_ref xmlns:arxiv="http://arxiv.org/schemas/atom">ICML 2024</arxiv:journal_ref>
+    <arxiv:comment xmlns:arxiv="http://arxiv.org/schemas/atom">15 pages, 8 figures</arxiv:comment>
+    <link href="http://arxiv.org/abs/2403.00001v1" rel="alternate" type="text/html"/>
+    <link href="http://arxiv.org/pdf/2403.00001v1" title="pdf" type="application/pdf"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00002v2</id>
+    <published>2024-03-02T00:00:00-05:00</published>
+    <updated>2024-03-10T00:00:00-05:00</updated>
+    <title>BERT: Pre-training of Deep Bidirectional Transformers</title>
+    <summary>We introduce a new language representation model called BERT which stands for Bidirectional Encoder Representations from Transformers.</summary>
+    <author><name>Carol White</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00002v2" rel="alternate" type="text/html"/>
+    <link href="http://arxiv.org/pdf/2403.00002v2" title="pdf" type="application/pdf"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00003v1</id>
+    <published>2024-03-03T00:00:00-05:00</published>
+    <updated>2024-03-03T00:00:00-05:00</updated>
+    <title>GPT-4 Technical Report</title>
+    <summary>We report the development of GPT-4, a large-scale multimodal model which can accept image and text inputs and produce text outputs.</summary>
+    <author><name>David Brown</name></author>
+    <author><name>Eve Wilson</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00003v1" rel="alternate" type="text/html"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00004v1</id>
+    <published>2024-03-04T00:00:00-05:00</published>
+    <updated>2024-03-04T00:00:00-05:00</updated>
+    <title>Transformer Architecture for Vision</title>
+    <summary>Vision Transformer (ViT) applies the Transformer architecture to image recognition tasks achieving competitive results on image classification benchmarks.</summary>
+    <author><name>Frank Green</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00004v1" rel="alternate" type="text/html"/>
+    <link href="http://arxiv.org/pdf/2403.00004v1" title="pdf" type="application/pdf"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00005v3</id>
+    <published>2024-03-05T00:00:00-05:00</published>
+    <updated>2024-03-12T00:00:00-05:00</updated>
+    <title>Large Language Models Survey</title>
+    <summary>This survey provides a comprehensive review of large language models from the perspective of transformer architectures and training techniques.</summary>
+    <author><name>Grace Lee</name></author>
+    <author><name>Henry Kim</name></author>
+    <author><name>Iris Chen</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00005v3" rel="alternate" type="text/html"/>
+    <link href="http://arxiv.org/pdf/2403.00005v3" title="pdf" type="application/pdf"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00006v1</id>
+    <published>2024-03-06T00:00:00-05:00</published>
+    <updated>2024-03-06T00:00:00-05:00</updated>
+    <title>Diffusion Models and Transformers</title>
+    <summary>We study the intersection of diffusion probabilistic models and transformer architectures for image generation tasks.</summary>
+    <author><name>Jack Davis</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00006v1" rel="alternate" type="text/html"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00007v1</id>
+    <published>2024-03-07T00:00:00-05:00</published>
+    <updated>2024-03-07T00:00:00-05:00</updated>
+    <title>Efficient Transformers: A Survey</title>
+    <summary>We survey efficient transformer models that reduce computational complexity while maintaining performance.</summary>
+    <author><name>Katie Martin</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00007v1" rel="alternate" type="text/html"/>
+    <link href="http://arxiv.org/pdf/2403.00007v1" title="pdf" type="application/pdf"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00008v2</id>
+    <published>2024-03-08T00:00:00-05:00</published>
+    <updated>2024-03-14T00:00:00-05:00</updated>
+    <title>Scaling Laws for Neural Language Models</title>
+    <summary>We study empirical scaling laws for language model performance on the cross-entropy loss using transformer architectures.</summary>
+    <author><name>Liam Taylor</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00008v2" rel="alternate" type="text/html"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00009v1</id>
+    <published>2024-03-09T00:00:00-05:00</published>
+    <updated>2024-03-09T00:00:00-05:00</updated>
+    <title>Reinforcement Learning from Human Feedback</title>
+    <summary>We present RLHF, a technique for training language models using reinforcement learning from human feedback applied to transformer models.</summary>
+    <author><name>Mary Johnson</name></author>
+    <author><name>Nathan Williams</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00009v1" rel="alternate" type="text/html"/>
+    <link href="http://arxiv.org/pdf/2403.00009v1" title="pdf" type="application/pdf"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00010v1</id>
+    <published>2024-03-10T00:00:00-05:00</published>
+    <updated>2024-03-10T00:00:00-05:00</updated>
+    <title>Chain of Thought Prompting</title>
+    <summary>We explore chain-of-thought prompting as a method to elicit reasoning capabilities from large language models based on transformers.</summary>
+    <author><name>Oliver Brown</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00010v1" rel="alternate" type="text/html"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00011v1</id>
+    <published>2024-03-11T00:00:00-05:00</published>
+    <updated>2024-03-11T00:00:00-05:00</updated>
+    <title>In-Context Learning with Transformers</title>
+    <summary>We study in-context learning capabilities of transformer models across diverse tasks.</summary>
+    <author><name>Patricia Moore</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00011v1" rel="alternate" type="text/html"/>
+    <link href="http://arxiv.org/pdf/2403.00011v1" title="pdf" type="application/pdf"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00012v1</id>
+    <published>2024-03-12T00:00:00-05:00</published>
+    <updated>2024-03-12T00:00:00-05:00</updated>
+    <title>Multimodal Transformers for Video Understanding</title>
+    <summary>We present a multimodal transformer architecture for joint understanding of video and text content.</summary>
+    <author><name>Quinn Anderson</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CV" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00012v1" rel="alternate" type="text/html"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00013v1</id>
+    <published>2024-03-13T00:00:00-05:00</published>
+    <updated>2024-03-13T00:00:00-05:00</updated>
+    <title>Code Generation with Transformers</title>
+    <summary>We study code generation capabilities of transformer-based language models for software engineering tasks.</summary>
+    <author><name>Rachel Clark</name></author>
+    <author><name>Samuel Lewis</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.SE" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.PL" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00013v1" rel="alternate" type="text/html"/>
+    <link href="http://arxiv.org/pdf/2403.00013v1" title="pdf" type="application/pdf"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00014v1</id>
+    <published>2024-03-14T00:00:00-05:00</published>
+    <updated>2024-03-14T00:00:00-05:00</updated>
+    <title>Sparse Attention in Transformers</title>
+    <summary>We propose sparse attention mechanisms to improve the efficiency of transformer models on long sequences.</summary>
+    <author><name>Thomas Martinez</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00014v1" rel="alternate" type="text/html"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00015v1</id>
+    <published>2024-03-15T00:00:00-04:00</published>
+    <updated>2024-03-15T00:00:00-04:00</updated>
+    <title>Transformers in Protein Structure Prediction</title>
+    <summary>We apply transformer architectures to the problem of protein structure prediction achieving high accuracy results.</summary>
+    <author><name>Ursula Robinson</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="q-bio.BM" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="q-bio.BM" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00015v1" rel="alternate" type="text/html"/>
+    <link href="http://arxiv.org/pdf/2403.00015v1" title="pdf" type="application/pdf"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00016v1</id>
+    <published>2024-03-01T00:00:00-05:00</published>
+    <updated>2024-03-01T00:00:00-05:00</updated>
+    <title>Graph Transformer Networks</title>
+    <summary>Graph Transformer Networks apply self-attention to graph structured data for node classification and graph classification.</summary>
+    <author><name>Victor Thompson</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00016v1" rel="alternate" type="text/html"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00017v1</id>
+    <published>2024-03-02T00:00:00-05:00</published>
+    <updated>2024-03-02T00:00:00-05:00</updated>
+    <title>Parameter Efficient Fine-Tuning</title>
+    <summary>We survey parameter efficient fine-tuning methods for large transformer models including LoRA and prefix tuning approaches.</summary>
+    <author><name>Wendy Garcia</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00017v1" rel="alternate" type="text/html"/>
+    <link href="http://arxiv.org/pdf/2403.00017v1" title="pdf" type="application/pdf"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00018v1</id>
+    <published>2024-03-03T00:00:00-05:00</published>
+    <updated>2024-03-03T00:00:00-05:00</updated>
+    <title>Mixture of Experts with Transformers</title>
+    <summary>We study mixture of experts architectures combined with transformers for scaling language models efficiently.</summary>
+    <author><name>Xavier Hall</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00018v1" rel="alternate" type="text/html"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00019v1</id>
+    <published>2024-03-04T00:00:00-05:00</published>
+    <updated>2024-03-04T00:00:00-05:00</updated>
+    <title>Cross-Modal Transformers</title>
+    <summary>Cross-modal transformers learn joint representations across different modalities including text, images and audio.</summary>
+    <author><name>Yvonne Young</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00019v1" rel="alternate" type="text/html"/>
+    <link href="http://arxiv.org/pdf/2403.00019v1" title="pdf" type="application/pdf"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00020v1</id>
+    <published>2024-03-05T00:00:00-05:00</published>
+    <updated>2024-03-05T00:00:00-05:00</updated>
+    <title>Tokenization for Transformers</title>
+    <summary>We study different tokenization strategies and their effects on transformer language model performance.</summary>
+    <author><name>Zachary Allen</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.CL" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00020v1" rel="alternate" type="text/html"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00021v1</id>
+    <published>2024-03-06T00:00:00-05:00</published>
+    <updated>2024-03-06T00:00:00-05:00</updated>
+    <title>Retrieval Augmented Generation</title>
+    <summary>Retrieval augmented generation combines transformer language models with retrieval systems to ground generations in factual information.</summary>
+    <author><name>Alex Baker</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00021v1" rel="alternate" type="text/html"/>
+    <link href="http://arxiv.org/pdf/2403.00021v1" title="pdf" type="application/pdf"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00022v1</id>
+    <published>2024-03-07T00:00:00-05:00</published>
+    <updated>2024-03-07T00:00:00-05:00</updated>
+    <title>Constitutional AI</title>
+    <summary>Constitutional AI trains transformer models to be helpful and harmless using AI feedback from a set of principles.</summary>
+    <author><name>Blake Carter</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00022v1" rel="alternate" type="text/html"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00023v1</id>
+    <published>2024-03-08T00:00:00-05:00</published>
+    <updated>2024-03-08T00:00:00-05:00</updated>
+    <title>Flash Attention for Transformers</title>
+    <summary>Flash Attention is an IO-aware exact attention algorithm that computes exact attention with a constant number of memory passes.</summary>
+    <author><name>Casey Edwards</name></author>
+    <author><name>Dana Flynn</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00023v1" rel="alternate" type="text/html"/>
+    <link href="http://arxiv.org/pdf/2403.00023v1" title="pdf" type="application/pdf"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00024v1</id>
+    <published>2024-03-09T00:00:00-05:00</published>
+    <updated>2024-03-09T00:00:00-05:00</updated>
+    <title>Transformer Models for Time Series</title>
+    <summary>We apply transformer architectures to time series forecasting tasks demonstrating competitive performance.</summary>
+    <author><name>Evan Gray</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00024v1" rel="alternate" type="text/html"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2403.00025v1</id>
+    <published>2024-03-10T00:00:00-05:00</published>
+    <updated>2024-03-10T00:00:00-05:00</updated>
+    <title>Transformers for Molecular Property Prediction</title>
+    <summary>We apply transformer architectures to molecular property prediction tasks in computational chemistry and drug discovery.</summary>
+    <author><name>Fiona Harris</name></author>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="physics.chem-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="physics.chem-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <link href="http://arxiv.org/abs/2403.00025v1" rel="alternate" type="text/html"/>
+    <link href="http://arxiv.org/pdf/2403.00025v1" title="pdf" type="application/pdf"/>
+  </entry>
+</feed>

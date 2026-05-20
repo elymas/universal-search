@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Pagination fixture: start=0, totalResults=100, itemsPerPage=5, returns 5 entries -->
+<feed xmlns="http://www.w3.org/2005/Atom"
+      xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"
+      xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <title>ArXiv Query: search_query=ti:pagination&amp;start=0&amp;max_results=5</title>
+  <id>http://arxiv.org/api/query?search_query=ti:pagination&amp;start=0&amp;max_results=5</id>
+  <opensearch:totalResults>100</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <opensearch:itemsPerPage>5</opensearch:itemsPerPage>
+  <entry>
+    <id>http://arxiv.org/abs/2401.00001v1</id>
+    <updated>2024-01-10T12:00:00Z</updated>
+    <published>2024-01-10T12:00:00Z</published>
+    <title>Pagination Test Paper 1</title>
+    <summary>Abstract for pagination test paper 1.</summary>
+    <author><name>Alice Pager</name></author>
+    <link href="http://arxiv.org/abs/2401.00001v1" rel="alternate" type="text/html"/>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2401.00002v1</id>
+    <updated>2024-01-11T12:00:00Z</updated>
+    <published>2024-01-11T12:00:00Z</published>
+    <title>Pagination Test Paper 2</title>
+    <summary>Abstract for pagination test paper 2.</summary>
+    <author><name>Bob Cursor</name></author>
+    <link href="http://arxiv.org/abs/2401.00002v1" rel="alternate" type="text/html"/>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.IR" scheme="http://arxiv.org/schemas/atom"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2401.00003v1</id>
+    <updated>2024-01-12T12:00:00Z</updated>
+    <published>2024-01-12T12:00:00Z</published>
+    <title>Pagination Test Paper 3</title>
+    <summary>Abstract for pagination test paper 3.</summary>
+    <author><name>Carol Next</name></author>
+    <link href="http://arxiv.org/abs/2401.00003v1" rel="alternate" type="text/html"/>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2401.00004v1</id>
+    <updated>2024-01-13T12:00:00Z</updated>
+    <published>2024-01-13T12:00:00Z</published>
+    <title>Pagination Test Paper 4</title>
+    <summary>Abstract for pagination test paper 4.</summary>
+    <author><name>Dave Page</name></author>
+    <link href="http://arxiv.org/abs/2401.00004v1" rel="alternate" type="text/html"/>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2401.00005v1</id>
+    <updated>2024-01-14T12:00:00Z</updated>
+    <published>2024-01-14T12:00:00Z</published>
+    <title>Pagination Test Paper 5</title>
+    <summary>Abstract for pagination test paper 5.</summary>
+    <author><name>Eve Scroll</name></author>
+    <link href="http://arxiv.org/abs/2401.00005v1" rel="alternate" type="text/html"/>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.AI" scheme="http://arxiv.org/schemas/atom"/>
+  </entry>
+</feed>

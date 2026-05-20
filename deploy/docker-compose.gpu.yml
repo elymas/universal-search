@@ -1,0 +1,20 @@
+# GPU overlay for the embedder service (SPEC-IDX-002).
+# Usage: docker compose -f docker-compose.yml -f docker-compose.gpu.yml up embedder
+#
+# Requirements:
+#   - NVIDIA GPU with CUDA 12.x drivers
+#   - nvidia-container-toolkit installed on host
+#   - NVIDIA Docker runtime configured (nvidia-ctk runtime configure --runtime=docker)
+
+services:
+  embedder:
+    environment:
+      EMBEDDER_DEVICE: "cuda"
+      EMBEDDER_USE_FP16: "true"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

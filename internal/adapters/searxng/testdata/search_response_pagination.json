@@ -1,0 +1,131 @@
+{
+  "query": "rust ownership",
+  "number_of_results": 20,
+  "results": [
+    {
+      "url": "https://doc.rust-lang.org/book/page2-result1.html",
+      "title": "Rust Ownership Page 2 Result 1",
+      "content": "Ownership in Rust page 2.",
+      "engine": "google",
+      "engines": ["google"],
+      "category": "general",
+      "score": 0.9,
+      "template": "default.html",
+      "positions": [1],
+      "publishedDate": ""
+    },
+    {
+      "url": "https://doc.rust-lang.org/book/page2-result2.html",
+      "title": "Rust Ownership Page 2 Result 2",
+      "content": "More content about Rust ownership.",
+      "engine": "bing",
+      "engines": ["bing"],
+      "category": "general",
+      "score": 0.8,
+      "template": "default.html",
+      "positions": [2],
+      "publishedDate": ""
+    },
+    {
+      "url": "https://doc.rust-lang.org/book/page2-result3.html",
+      "title": "Rust Ownership Page 2 Result 3",
+      "content": "Advanced Rust ownership patterns.",
+      "engine": "duckduckgo",
+      "engines": ["duckduckgo"],
+      "category": "general",
+      "score": 0.7,
+      "template": "default.html",
+      "positions": [3],
+      "publishedDate": ""
+    },
+    {
+      "url": "https://doc.rust-lang.org/book/page2-result4.html",
+      "title": "Rust Ownership Page 2 Result 4",
+      "content": "Understanding lifetimes in Rust.",
+      "engine": "google",
+      "engines": ["google"],
+      "category": "general",
+      "score": 0.6,
+      "template": "default.html",
+      "positions": [4],
+      "publishedDate": ""
+    },
+    {
+      "url": "https://doc.rust-lang.org/book/page2-result5.html",
+      "title": "Rust Ownership Page 2 Result 5",
+      "content": "Borrow checker explained.",
+      "engine": "bing",
+      "engines": ["bing"],
+      "category": "general",
+      "score": 0.5,
+      "template": "default.html",
+      "positions": [5],
+      "publishedDate": ""
+    },
+    {
+      "url": "https://doc.rust-lang.org/book/page2-result6.html",
+      "title": "Rust Ownership Page 2 Result 6",
+      "content": "Move semantics in Rust.",
+      "engine": "duckduckgo",
+      "engines": ["duckduckgo"],
+      "category": "general",
+      "score": 0.4,
+      "template": "default.html",
+      "positions": [6],
+      "publishedDate": ""
+    },
+    {
+      "url": "https://doc.rust-lang.org/book/page2-result7.html",
+      "title": "Rust Ownership Page 2 Result 7",
+      "content": "Copy types in Rust.",
+      "engine": "google",
+      "engines": ["google"],
+      "category": "general",
+      "score": 0.3,
+      "template": "default.html",
+      "positions": [7],
+      "publishedDate": ""
+    },
+    {
+      "url": "https://doc.rust-lang.org/book/page2-result8.html",
+      "title": "Rust Ownership Page 2 Result 8",
+      "content": "Smart pointers in Rust.",
+      "engine": "bing",
+      "engines": ["bing"],
+      "category": "general",
+      "score": 0.2,
+      "template": "default.html",
+      "positions": [8],
+      "publishedDate": ""
+    },
+    {
+      "url": "https://doc.rust-lang.org/book/page2-result9.html",
+      "title": "Rust Ownership Page 2 Result 9",
+      "content": "Box and heap allocation in Rust.",
+      "engine": "duckduckgo",
+      "engines": ["duckduckgo"],
+      "category": "general",
+      "score": 0.1,
+      "template": "default.html",
+      "positions": [9],
+      "publishedDate": ""
+    },
+    {
+      "url": "https://doc.rust-lang.org/book/page2-result10.html",
+      "title": "Rust Ownership Page 2 Result 10",
+      "content": "Rc and RefCell in Rust.",
+      "engine": "google",
+      "engines": ["google"],
+      "category": "general",
+      "score": 0.05,
+      "template": "default.html",
+      "positions": [10],
+      "publishedDate": ""
+    }
+  ],
+  "suggestions": [],
+  "corrections": [],
+  "answers": [],
+  "infoboxes": [],
+  "unresponsive_engines": []
+}

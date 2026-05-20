@@ -1,0 +1,25 @@
+{
+  "hitsTotal": 1,
+  "posts": [
+    {
+      "uri": "at://did:plc:viraluser/app.bsky.feed.post/3viral00001aa",
+      "cid": "bafyreiviralpost001",
+      "author": {
+        "did": "did:plc:viraluser",
+        "handle": "viral.bsky.social",
+        "displayName": "Viral User"
+      },
+      "record": {
+        "$type": "app.bsky.feed.post",
+        "text": "This post went completely viral! Go is the best programming language ever created and here is why everyone should switch to it immediately.",
+        "createdAt": "2026-04-15T10:00:00Z",
+        "langs": ["en"]
+      },
+      "replyCount": 250,
+      "repostCount": 500,
+      "likeCount": 1000,
+      "quoteCount": 150,
+      "indexedAt": "2026-04-15T10:00:10Z"
+    }
+  ]
+}

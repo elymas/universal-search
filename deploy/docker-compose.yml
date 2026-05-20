@@ -25,6 +25,7 @@ volumes:
   pg_data: {}
   redis_data: {}
   prometheus_data: {}
+  embedder_models: {}
 
 services:
   # ── Qdrant vector database ──────────────────────────────────────────────────
@@ -161,6 +162,58 @@ services:
     networks:
       - app
 
+  # ── Researcher synthesis sidecar (SPEC-SYN-001) ────────────────────────────
+  researcher:
+    build:
+      context: ../services/researcher
+    ports:
+      - "${RESEARCHER_PORT:-8081}:8081"
+    environment:
+      LITELLM_BASE_URL: http://litellm:4000
+      LITELLM_API_KEY: ${LITELLM_MASTER_KEY}
+      RESEARCHER_PORT: "8081"
+      RESEARCHER_MODEL_DEFAULT: claude-haiku-4-5
+      RESEARCHER_TIMEOUT_SECONDS: "8"
+      RESEARCHER_LOG_LEVEL: INFO
+    depends_on:
+      litellm:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - app
+
+  # ── BGE-M3 embedding sidecar (SPEC-IDX-002) ────────────────────────────────
+  # CPU-only by default. For GPU, overlay deploy/docker-compose.gpu.yml.
+  embedder:
+    build:
+      context: ../services/embedder
+    ports:
+      - "${EMBEDDER_PORT:-8082}:8082"
+    environment:
+      EMBEDDER_PORT: "8082"
+      EMBEDDER_MODEL_NAME: ${EMBEDDER_MODEL_NAME:-BAAI/bge-m3}
+      EMBEDDER_DEVICE: ${EMBEDDER_DEVICE:-cpu}
+      EMBEDDER_USE_FP16: ${EMBEDDER_USE_FP16:-false}
+      EMBEDDER_CACHE_MAX_ENTRIES: ${EMBEDDER_CACHE_MAX_ENTRIES:-1024}
+      EMBEDDER_LOG_LEVEL: ${EMBEDDER_LOG_LEVEL:-INFO}
+    volumes:
+      - embedder_models:/root/.cache/huggingface
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; r=urllib.request.urlopen('http://localhost:8082/health'); sys.exit(0 if r.status==200 else 1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 120s
+    restart: unless-stopped
+    networks:
+      - app
+
   # ── Prometheus metrics scraper ───────────────────────────────────────────────
   # REQ-OBS-004: Scrapes usearch admin server /metrics.
   # host.docker.internal resolves to the Docker host (macOS/Windows).
@@ -185,6 +238,27 @@ services:
       timeout: 5s
       retries: 5
       start_period: 15s
+    restart: unless-stopped
+    networks:
+      - app
+
+  # ── Korean tokenizer sidecar ─────────────────────────────────────────────────
+  # SPEC-IDX-003: mecab-ko FastAPI sidecar on port 8083.
+  # Go services reach it via TOKENIZER_KO_BASE_URL=http://tokenizer-ko:8083.
+  tokenizer-ko:
+    build:
+      context: ../services/tokenizer-ko
+      dockerfile: Dockerfile
+    ports:
+      - "${TOKENIZER_KO_PORT:-8083}:8083"
+    environment:
+      TOKENIZER_KO_PORT: "8083"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8083/health')\" || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     restart: unless-stopped
     networks:
       - app

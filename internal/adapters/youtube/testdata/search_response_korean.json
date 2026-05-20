@@ -1,0 +1,26 @@
+{
+  "items": [
+    {
+      "id": "korean001",
+      "url": "https://www.youtube.com/watch?v=korean001",
+      "title": "한국어 강의 - Go 프로그래밍 입문",
+      "description": "Go 언어의 기초부터 고급까지 배우는 한국어 강의입니다.",
+      "channel": "코딩채널",
+      "channel_id": "UCkorean001",
+      "channel_url": "https://www.youtube.com/@CodingChannel",
+      "uploader": "코딩채널",
+      "uploader_id": "CodingChannelKR",
+      "duration_seconds": 3600,
+      "view_count": 50000,
+      "like_count": 2500,
+      "upload_date": "2023-06-01",
+      "thumbnail_url": "https://i.ytimg.com/vi/korean001/hqdefault.jpg",
+      "tags": ["Go", "golang", "한국어", "프로그래밍"],
+      "available_transcript_langs": ["ko", "en"],
+      "transcript_snippet": "안녕하세요. 오늘은 Go 언어에 대해 알아보겠습니다.",
+      "transcript_lang": "ko",
+      "transcript_is_auto": false
+    }
+  ],
+  "has_more": false
+}

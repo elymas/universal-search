@@ -1,0 +1,11 @@
+{
+  "lastBuildDate": "Wed, 07 May 2026 10:00:00 +0900",
+  "total": 3,
+  "start": 1,
+  "display": 3,
+  "items": [
+    {"title": "정상 postdate", "link": "https://blog.naver.com/datetest/post1", "description": "정상적인 날짜입니다.", "bloggername": "datetest", "bloggerlink": "https://blog.naver.com/datetest", "postdate": "20260507"},
+    {"title": "빈 postdate", "link": "https://blog.naver.com/datetest/post2", "description": "postdate가 빈 문자열입니다.", "bloggername": "datetest", "bloggerlink": "https://blog.naver.com/datetest", "postdate": ""},
+    {"title": "잘못된 postdate", "link": "https://blog.naver.com/datetest/post3", "description": "postdate 형식이 잘못되었습니다.", "bloggername": "datetest", "bloggerlink": "https://blog.naver.com/datetest", "postdate": "not-a-date"}
+  ]
+}

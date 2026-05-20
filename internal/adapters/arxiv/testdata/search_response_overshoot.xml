@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Empty feed returned when start >= totalResults (cursor overshoot) -->
+<feed xmlns="http://www.w3.org/2005/Atom"
+      xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/"
+      xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <title>ArXiv Query: search_query=ti:overshoot&amp;start=1000&amp;max_results=10</title>
+  <id>http://arxiv.org/api/query?search_query=ti:overshoot&amp;start=1000&amp;max_results=10</id>
+  <opensearch:totalResults>50</opensearch:totalResults>
+  <opensearch:startIndex>1000</opensearch:startIndex>
+  <opensearch:itemsPerPage>10</opensearch:itemsPerPage>
+</feed>
