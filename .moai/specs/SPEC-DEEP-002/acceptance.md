@@ -1,6 +1,6 @@
 ---
 id: SPEC-DEEP-002
-version: 0.1.1
+version: 0.1.2
 created: 2026-05-21
 author: limbowl (via manager-spec)
 companion_to: spec.md
@@ -35,7 +35,7 @@ SPEC-DEEP-002는 다음 항목이 모두 충족될 때 **DONE** 상태로 전이
 - [ ] `internal/obs/metrics/metrics.go` `registerDeepAgent` 추가
 - [ ] `internal/obs/obs.go` re-export 추가
 - [ ] `.env.example` `DEEP_AGENT_*` 8개 env-var 문서화
-- [ ] 모든 13개 EARS REQ (REQ-DEEP2-001 ~ 008, 009a, 009b, 010 ~ 012) 에 대응하는 GREEN 테스트 존재
+- [ ] 모든 15개 EARS REQ (REQ-DEEP2-001 ~ 008, 009a-SSE, 009a-Buffered, 009b-SSE, 009b-Buffered, 010 ~ 012) 에 대응하는 GREEN 테스트 존재
 - [ ] 4개 NFR (NFR-DEEP2-001 ~ 004) 검증 테스트 존재
 - [ ] `go test -race ./internal/deepagent/... ./internal/synthesis/...
       ./internal/streamsynth/... ./internal/obs/metrics/...
@@ -53,6 +53,12 @@ SPEC-DEEP-002는 다음 항목이 모두 충족될 때 **DONE** 상태로 전이
       pipeline` references this SPEC ID
 - [ ] Pre-submission self-review confirms no simpler approach achieves
       the same result
+- [ ] **Prod-latency smoke test executed during /moai sync** (NFR-DEEP2-001
+      budget (b), P-M2): end-to-end p95 ≤ 60 s measured on staging
+      deployment against a corpus of 20–50 fanout docs with Verifier
+      passing first or second attempt. Pass threshold: p95 ≤ 60 s
+      across at least 20 sample requests. Fail threshold: p95 > 60 s
+      triggers SPEC re-evaluation (NOT a unit test — operational gate)
 
 ---
 
@@ -138,10 +144,15 @@ SPEC-DEEP-002는 다음 항목이 모두 충족될 때 **DONE** 상태로 전이
   `TestRetriesCounterIncrementsExactlyOncePerRetry`,
   `TestSSEEmitsRetryStartedBeforeWriterRetry`
 
-### Scenario 3 — Max-retry exhaustion: HTTP 503 + pipeline_failed
+### Scenario 3 — Max-retry exhaustion (split: SSE vs Buffered per P-B2)
+
+본 시나리오는 stream state에 따라 두 갈래로 분리된다.
+
+#### Scenario 3-SSE — SSE 활성 상태에서 max-retry exhaustion (REQ-DEEP2-009a-SSE)
 
 **Given**
-- 동일 설정
+- 동일 설정 (Accept: text/event-stream — SSE 활성, response headers
+  이미 flushed)
 - Mocked `POST /faithfulness_check`이 모든 3회 호출에서
   `{uncited_sentences_count: 2, outcome_ok: false}` 반환
 
@@ -152,22 +163,45 @@ SPEC-DEEP-002는 다음 항목이 모두 충족될 때 **DONE** 상태로 전이
 - Writer가 정확히 3회 호출됨 (초기 1 + 재시도 2)
 - Verifier가 정확히 3회 호출됨
 - SSE 이벤트 마지막은 `pipeline_failed{failed_agent: "writer",
-  reason: "verifier_rejection_exhausted", attempts: 3, uncited_count: 2}`
-- HTTP 상태: 응답이 SSE인 경우 핸들러는 stream 종료 후 응답 종료
-  (SSE는 stream 중 status를 변경할 수 없으므로 already-200; 그러나
-  `?stream=false` 또는 SSE 미사용 시 HTTP 503)
-- SSE 케이스: SSE 종료 후 connection close; client는 마지막 이벤트로
-  failure 인지
-- 본문이 JSON인 경우 HTTP 503 body:
-  `{"error": "pipeline_failed", "detail": "Writer exhausted 3
-  attempts; Verifier still rejected", "uncited_count": 2,
-  "attempts": 3}`
+  reason: "verifier_rejection_exhausted", attempts: 3, uncited_count: 2,
+  retry_count: 2}`
+- HTTP 상태는 **200으로 유지** (response headers 이미 flushed;
+  SSE 프로토콜이 retroactive status code change 금지). 핸들러는
+  retroactive status change 시도 없이 stream 종료 후 connection close
+- Client는 마지막 SSE 이벤트로 failure 인지
 - Counter `usearch_deep_agent_retries_total{agent="writer"}` += 2
-  (재시도 횟수만; 초기 호출은 retry가 아님)
 - Counter `usearch_deep_agent_verifier_gate_results_total{result="fail_uncited"}` += 3
 - Counter `usearch_deep_outcomes_total{outcome="error_pipeline_failed"}` += 1
-- Tests: `TestMaxRetryExhaustionReturns503`,
-  `TestMaxRetryExhaustionEmitsPipelineFailedSSE`,
+- Tests: `TestSSEMaxRetryEmitsTerminalEvent`,
+  `TestSSEMaxRetryHttpStatusStays200`,
+  `TestErrorOutcomeCounterIncrementsExactlyOnce`
+
+#### Scenario 3-Buffered — Buffered 응답에서 max-retry exhaustion (REQ-DEEP2-009a-Buffered)
+
+**Given**
+- 동일 설정 단 `?stream=false` 또는 `Accept`이 text/event-stream을
+  명시하지 않음 (response headers 아직 flushed 되지 않은 상태)
+- 동일하게 `POST /faithfulness_check`이 3회 모두 fail 반환
+
+**When**
+- 핸들러가 요청을 처리
+
+**Then**
+- Writer 3회, Verifier 3회 호출 (3-SSE와 동일)
+- HTTP **503** with `Content-Type: application/json` body:
+  ```json
+  {
+    "error": "pipeline_failed",
+    "detail": "Writer exhausted 3 attempts; Verifier still rejected",
+    "uncited_count": 2,
+    "attempts": 3,
+    "retry_count": 2
+  }
+  ```
+- SSE writer/heartbeat goroutine constructor 호출 카운트: 0
+- Counter 증감은 3-SSE와 동일
+- Tests: `TestBufferedMaxRetryReturns503`,
+  `TestBufferedMaxRetryJsonBodyShape`,
   `TestErrorOutcomeCounterIncrementsExactlyOnce`
 
 ### Scenario 4 — Context cancellation mid-pipeline
@@ -183,7 +217,9 @@ SPEC-DEEP-002는 다음 항목이 모두 충족될 때 **DONE** 상태로 전이
 **Then**
 - Writer/Verifier 미호출
 - SSE 마지막 이벤트는 `pipeline_cancelled{at_agent: "writer"}`
-  (다음에 호출되었을 agent 명시)
+  (P-M1 semantics: Reviewer 완료 직후 inter-agent boundary에서 cancel
+  감지 시 next-would-be agent = writer; 만약 cancel이 어떤 agent의
+  LLM mid-flight 시점에 감지되면 in-progress agent 이름 사용)
 - 응답 connection은 이미 client side에서 close; server는 stream 종료
 - Counter `usearch_deep_outcomes_total` 증가 없음 (cancel은 zero-or-one,
   SYN-004의 `usearch_syn004_outcomes_total{outcome="client_disconnect"}` += 1)
@@ -207,8 +243,11 @@ SPEC-DEEP-002는 다음 항목이 모두 충족될 때 **DONE** 상태로 전이
 **Then**
 - Routing이 DEEP-001 path (`internal/deepreport`) 로 분기
 - DEEP-002 코드 (`internal/deepagent/`) 미호출
-- 응답이 DEEP-001 spec.md의 SSE sequence와 byte-identical
-  (modulo `request_id`)
+- 응답이 DEEP-001 spec.md의 SSE sequence와 **schema-identical AND
+  semantically equivalent** (P-M6): same event types in same order,
+  same field names per event, same field types. Non-deterministic
+  fields (`request_id`, timestamps, `duration_ms`, `latency_ms`,
+  `cost_usd`) MAY differ in value across runs
 - DEEP-001 acceptance suite Scenario 1 (Happy path: structured report
   with 3 sections, 12 sentences, 14 cited sources)가 100% green 상태로
   재실행 가능
@@ -221,7 +260,8 @@ SPEC-DEEP-002는 다음 항목이 모두 충족될 때 **DONE** 상태로 전이
 - Tests: `TestDeepHandlerStormModeUnchanged`,
   `TestDeepHandlerModeAbsentDefaultsToStorm`,
   `TestDeepHandlerNoSharedMutableStateBetweenModes`,
-  `TestDeep001AcceptanceSuiteRemainsGreen`
+  `TestDeep001AcceptanceSuiteRemainsGreen`,
+  `TestStormModeResponseSchemaIdenticalPrePostDeep002`
 
 ### Scenario 6 — Buffered fallback: `?stream=false`
 
@@ -274,10 +314,12 @@ SPEC-DEEP-002는 다음 항목이 모두 충족될 때 **DONE** 상태로 전이
 - 핸들러가 요청을 처리
 
 **Then**
-- Researcher가 fanout 결과를 확인, `ResearcherOutput{IsEmpty: true}` 반환
+- Researcher가 fanout 결과를 확인 — empty 시 자체 LLM 호출을 **SKIP**하고
+  (P-M3: 추출할 claim 없음 + 비용/지연 절감), `ResearcherOutput{IsEmpty:
+  true}` 즉시 반환
 - Orchestrator가 Reviewer/Writer/Verifier 미호출 (short-circuit)
 - LLM Client mock의 호출 카운트: 0 (Researcher LLM도 호출하지 않음 —
-  empty corpus이므로 추출할 claim 없음)
+  REQ-DEEP2-012 P-M3에 의해 명시적으로 SKIP)
 - HTTP 200 응답 본문 (JSON, `?stream=false` or SSE both):
   ```
   {
@@ -295,12 +337,18 @@ SPEC-DEEP-002는 다음 항목이 모두 충족될 때 **DONE** 상태로 전이
   아닌 degenerate but non-error outcome)
 - Counter `usearch_deep_outcomes_total{outcome="empty_corpus"}` += 1
 - Counter `usearch_deep_agent_duration_seconds{agent="researcher",
-  outcome="success"}` += 1 (researcher 자체는 정상 종료)
+  outcome="success"}` += 1 (researcher 자체는 정상 종료 — histogram
+  outcome 라벨은 bounded enum `{success, error}`에 한정되므로
+  `empty_corpus`가 아닌 `success`. P-M3 clarification: Prometheus
+  label vs SSE JSON field는 별개 시스템 — SSE의 `agent_completed.outcome`
+  필드가 `"empty_corpus"` 값을 가지더라도 histogram 라벨은 `success` 유지)
 - 다른 agent의 counter 증가 없음
 - Tests: `TestEmptyFanoutShortCircuitsPipeline`,
   `TestEmptyFanoutResponseShape`,
-  `TestEmptyFanoutOutconeCounterIncrements`,
-  `TestEmptyFanoutSSEEventSequence`
+  `TestEmptyFanoutOutcomeCounterIncrements`,
+  `TestEmptyFanoutSSEEventSequence`,
+  `TestEmptyFanoutResearcherSkipsLLMInvocation`,
+  `TestEmptyFanoutHistogramOutcomeIsSuccess`
 
 ### Scenario 8 — Researcher error aborts pipeline (non-Verifier failure)
 
@@ -315,18 +363,21 @@ SPEC-DEEP-002는 다음 항목이 모두 충족될 때 **DONE** 상태로 전이
 
 **Then**
 - Orchestrator가 Researcher error를 catch
-- Reviewer/Writer/Verifier 미호출 (REQ-DEEP2-009b: non-Verifier
-  errors do not trigger retry)
-- HTTP 503 응답:
-  `{"error": "pipeline_failed", "detail": "researcher failed: upstream
-  LLM error", "failed_agent": "researcher"}`
-- SSE 케이스: 마지막 이벤트는 `pipeline_failed{failed_agent:
-  "researcher", reason: "upstream_llm_error"}`
+- Reviewer/Writer/Verifier 미호출 (REQ-DEEP2-009b-SSE / REQ-DEEP2-009b-Buffered:
+  non-Verifier errors do not trigger retry)
+- Stream state에 따라 두 갈래:
+  - SSE 활성 시: terminal `pipeline_failed{failed_agent: "researcher",
+    reason: "upstream_llm_error"}` SSE event, HTTP 200 stays
+    (REQ-DEEP2-009b-SSE)
+  - Buffered 시: HTTP 503 응답 `{"error": "pipeline_failed",
+    "detail": "researcher failed: upstream LLM error", "failed_agent":
+    "researcher"}` (REQ-DEEP2-009b-Buffered)
 - Counter `usearch_deep_agent_duration_seconds{agent="researcher",
   outcome="error"}` += 1
 - Counter `usearch_deep_agent_retries_total{agent="writer"}` 변화 없음
 - Counter `usearch_deep_outcomes_total{outcome="error_pipeline_failed"}` += 1
-- Tests: `TestResearcherErrorAbortsAndReturns503`,
+- Tests: `TestSSEResearcherErrorEmitsTerminalEvent`,
+  `TestBufferedResearcherErrorReturns503`,
   `TestNonVerifierErrorsDoNotTriggerRetry`
 
 ---
@@ -340,11 +391,15 @@ SPEC-DEEP-002는 다음 항목이 모두 충족될 때 **DONE** 상태로 전이
 - Mocked `llm.Client.Complete()` for Reviewer가 transient 5xx 반환
 
 **Then**
-- Writer/Verifier 미호출 (Reviewer 자체에 retry 없음, REQ-DEEP2-009b)
-- HTTP 503 + `pipeline_failed{failed_agent: "reviewer"}` SSE
+- Writer/Verifier 미호출 (Reviewer 자체에 retry 없음, REQ-DEEP2-009b-SSE / REQ-DEEP2-009b-Buffered)
+- Stream state에 따라 두 갈래:
+  - SSE 활성 시: terminal `pipeline_failed{failed_agent:"reviewer"}` SSE event, HTTP 200 stays (REQ-DEEP2-009b-SSE)
+  - Buffered 시: HTTP 503 + JSON body (REQ-DEEP2-009b-Buffered)
 - Counter `usearch_deep_agent_duration_seconds{agent="reviewer",
   outcome="error"}` += 1
-- Test: `TestNonVerifierErrorsDoNotTriggerRetry` (parameterized over
+- Test: `TestSSEReviewerErrorEmitsTerminalEvent`,
+  `TestBufferedReviewerErrorReturns503`,
+  `TestNonVerifierErrorsDoNotTriggerRetry` (parameterized over
   researcher/reviewer/verifier)
 
 ### Edge Case 2 — Verifier 자체 error (faithfulness endpoint 5xx)는 Writer retry 트리거 없이 abort
@@ -352,16 +407,23 @@ SPEC-DEEP-002는 다음 항목이 모두 충족될 때 **DONE** 상태로 전이
 **Given**
 - Writer 정상 완료, draft 생성
 - Mocked `POST /faithfulness_check`이 HTTP 503 반환 (사이드카 자체
-  에러; faithfulness verdict는 아님)
+  에러; faithfulness verdict는 아님). 본 케이스는 timeout이 아닌 일반
+  5xx infra error 임에 유의 — P-B1으로 인해 metric 라벨 이름이 변경됨.
 
 **Then**
 - Writer 재시도 미발생 (Verifier rejection이 아닌 Verifier infra error)
-- HTTP 503 + `pipeline_failed{failed_agent: "verifier", reason:
-  "faithfulness_endpoint_unavailable"}`
-- Counter `usearch_deep_agent_verifier_gate_results_total{result="fail_timeout"}`
-  += 1 (timeout은 LLM/네트워크 측 일반 error의 라벨로 사용)
+- Stream state에 따라 두 갈래 분기:
+  - SSE 활성 시 (REQ-DEEP2-009b-SSE): terminal `pipeline_failed{
+    failed_agent: "verifier", reason: "faithfulness_endpoint_unavailable"}`
+    SSE event, HTTP 200 stays
+  - Buffered 시 (REQ-DEEP2-009b-Buffered): HTTP 503 + JSON body
+- Counter `usearch_deep_agent_verifier_gate_results_total{result="fail_error"}`
+  += 1 (P-B1: `fail_error` covers all Verifier infra failures —
+  timeouts, 5xx, transport errors, wrapper errors — distinct from
+  the verdict `fail_uncited`)
 - Counter `usearch_deep_outcomes_total{outcome="error_pipeline_failed"}` += 1
-- Test: `TestVerifierErrorAbortsAndReturns503`,
+- Test: `TestSSEVerifierErrorEmitsTerminalEvent`,
+  `TestBufferedVerifierErrorReturns503`,
   `TestCheckFaithfulnessWrapperHandlesSidecar5xx`
 
 ### Edge Case 3 — Env-var 부재 시 model alias 기본값 적용
@@ -426,7 +488,7 @@ SPEC-DEEP-002는 다음 항목이 모두 충족될 때 **DONE** 상태로 전이
       coverage ≥ 85% (faithfulness.go에 한정)
 - [ ] `pytest --cov=researcher services/researcher/tests/test_faithfulness_endpoint.py`
       coverage ≥ 85%
-- [ ] 모든 57개 RED-phase test (plan.md §3 catalog) GREEN
+- [ ] 모든 66개 RED-phase test (plan.md §3 catalog) GREEN
 - [ ] Race tests (`go test -race`) GREEN for orchestrator concurrency
 - [ ] Goroutine leak test (`go.uber.org/goleak`) GREEN on cancellation paths
 
@@ -440,14 +502,22 @@ SPEC-DEEP-002는 다음 항목이 모두 충족될 때 **DONE** 상태로 전이
 - [ ] SPEC-SYN-004 acceptance suite remains 100% green (SSE 기존 이벤트
       타입 호환)
 - [ ] SPEC-FAN-001, SPEC-LLM-001, SPEC-CORE-001 acceptance suites remain 100% green
-- [ ] `/deep?mode=storm` HTTP 응답 byte-identical pre/post-DEEP-002
-      (modulo `request_id`)
+- [ ] `/deep?mode=storm` HTTP 응답 **schema-identical AND semantically
+      equivalent** pre/post-DEEP-002 (P-M6): same event types in same
+      order, same field names per event, same field types per field;
+      non-deterministic fields (request_id, timestamps, durations, costs)
+      MAY differ in value
 
-### 4.4 Performance (NFR-DEEP2-001)
+### 4.4 Performance (NFR-DEEP2-001 — split budgets per P-M2)
 
-- [ ] `TestE2ELatencyP95Under60Seconds` (mocked-LM 50 iterations) GREEN
-- [ ] Mocked 환경에서의 측정이므로 LLM 자체 latency는 mock으로 시뮬레이션;
-      실제 prod latency는 /moai sync 단계의 smoke test에서 검증
+- [ ] **NFR-DEEP2-001 budget (a)** — Go-side orchestration overhead
+      p95 ≤ 1s with mocked LLM + faithfulness sidecar:
+      `TestE2ELatencyP95Under1SecondMocked` (50 iterations) GREEN
+- [ ] **NFR-DEEP2-001 budget (b)** — end-to-end prod p95 ≤ 60s on
+      staging corpus 20-50 docs, Verifier passes on 1st or 2nd attempt:
+      verified via /moai sync staging smoke test (≥ 20 sample requests).
+      Pass: p95 ≤ 60s. Fail: p95 > 60s triggers SPEC re-evaluation.
+      Operational gate (NOT a unit test)
 - [ ] Heartbeat goroutine CPU overhead < 1% (inherited SYN-004 NFR;
       재검증)
 
@@ -473,7 +543,7 @@ SPEC-DEEP-002는 다음 항목이 모두 충족될 때 **DONE** 상태로 전이
       content는 JSON log에 echo하지 않음)
 - [ ] `LITELLM_MASTER_KEY` 절대로 log/span attribute/error message에
       등장하지 않음 (SPEC-LLM-001 REQ-LLM-005)
-- [ ] HTTP 503 응답 본문에 LLM partial output 누출 없음 (REQ-DEEP2-009a, REQ-DEEP2-009b)
+- [ ] HTTP 503 응답 본문에 LLM partial output 누출 없음 (REQ-DEEP2-009a-Buffered, REQ-DEEP2-009b-Buffered)
 - [ ] Researcher가 받는 fanout 결과는 모두 `NormalizedDoc.Validate()`
       통과 (`pkg/types/normalized_doc.go`)
 - [ ] 신규 `POST /faithfulness_check` endpoint는 Pydantic validation

@@ -1,7 +1,7 @@
 ---
 id: SPEC-DEEP-003
-version: 0.1.1
-status: draft
+version: 0.1.2
+status: planned
 created: 2026-05-21
 updated: 2026-05-21
 author: limbowl
@@ -20,6 +20,68 @@ blocks: [SPEC-DEEP-004]
 
 ## HISTORY
 
+- 2026-05-21: OQ-1 RESOLVED — golang-migrate/migrate pinned with sequence `0002` (`0002_deep_runs.up.sql` + `0002_deep_runs.down.sql`). T-D-009 unblocked. spec.md §8, plan.md D3, tasks.md T-D-009/Verification synchronized.
+- 2026-05-21: status draft → planned. tasks.md generated (44 tasks across Phases A-D + Python sidecar + Observability — Phase A 7, Phase B 14, Phase C 6, Phase D 10, Phase E 9). Full REQ/NFR coverage matrix attached; 6 concurrency-sensitive tasks tagged for `go test -race`.
+- 2026-05-21 (v0.1.2 audit patches iter-2, limbowl via manager-spec):
+  plan-auditor iter-2 review identified 3 BLOCKER + 4 MAJOR + 3 MINOR
+  findings remaining after v0.1.1. This revision applies all BLOCKER
+  fixes, all MAJOR fixes, and 3 selected MINOR fixes. Status remains
+  `draft` pending re-audit.
+  - P-B1 (Budget pre-check concurrency race): REQ-DEEP3-006 +
+    REQ-DEEP3-007 + NFR-DEEP3-003 hardened with reservation lock
+    semantics. Pre-check now holds exclusive mutex on
+    `tree.TotalTokensUsed` during (read + decision + reservation) and
+    atomically reserves `estimated_next_cost`. Added `Node.ReservedTokens`
+    field. Post-LLM accumulation releases reservation atomically in the
+    same critical section. New acceptance §5.3 sub-scenario verifies
+    `final_total ≤ budget_cap` under worst-case parallel breadth race.
+  - P-B2 (REQ-005 fallback wire contract mutation): REQ-DEEP3-005
+    rewritten to emit fallback signal via HTTP response header
+    `X-Deep-Tree-Fallback: breadth_zero | depth_zero | disabled`
+    (out-of-band side channel). Response SSE/JSON body remains
+    byte-identical to DEEP-002 contract. Acceptance §5.6 sub-scenarios
+    updated to verify header presence + body unchanged (new
+    `TestFallbackHeaderEmittedAndBodyUnchanged`).
+  - P-B3 (REQ-011 EARS structure broken): REQ-DEEP3-011 split into
+    011a (State-Driven, expansion-phase flush) + 011b (Event-Driven,
+    reload-phase reclassify). Numbering of REQ-012 preserved.
+    Acceptance §5.5 split mapping into 011a (flush) and 011b
+    (reclassify) assertions.
+  - P-M1 (Per-node cost cap exclusion firmness): §4 Exclusions
+    Per-node cost cap entry hedged — drops firm "input" assertion to
+    mirror §6.2 hedge language. DEEP-004 interface binding deferred to
+    DEEP-004 implementation stage by both SPEC authors jointly.
+  - P-M2 (Cost calculation): New REQ-DEEP3-013 added — per-node
+    `Node.CostUSD = node.TokensUsed * model_price_per_token` computed
+    on expand completion, lookup via `.moai/config/sections/deep.yaml`
+    `pricing.{model}` map. `Node.CostUSD` added to plan.md A1 type
+    list. REQ-DEEP3-011a updated — `total_cost_usd` is derived from
+    summed `node.CostUSD` for the Postgres summary row.
+  - P-M3 (NFR-007 size bound ambiguity): NFR-DEEP3-007 closing
+    sentence rewritten — 200 KB ceiling is inherently bounded by
+    NFR-004 + NFR-003. Removed "violation 시 expand 중단" runtime
+    check (overshoot signals an upstream budget enforcement defect, not
+    a separate size gate).
+  - P-M4 (Memory bound on in-memory tree): New NFR-DEEP3-009 added —
+    single-tree in-memory state (`Node[]` + `Citations` + `Claims`)
+    SHALL NOT exceed 100 MB at worst-case (`breadth=8, depth=5`).
+    Measured at each depth-level join; overshoot triggers frontier
+    truncation. Acceptance §4.X gate added.
+  - P-N1 (REQ-009 split): REQ-DEEP3-009 split into 009a (prompt
+    context flow) + 009b (citation slice disjointness). Preserves
+    semantic content of v0.1.1 unification; clarifies test boundary.
+  - P-N3 (Plan B3 explicitness): plan.md Phase B3 explicit —
+    "ExpandTree creates a fresh `errgroup` per depth level, joining
+    before advancing to depth N+1."
+  - P-N5 (Stale issue_number): §4 Exclusions last bullet
+    `issue_number: 0` reference replaced with `issue_number: 19`
+    (matches frontmatter; v0.1.1 already patched header but missed
+    body callout).
+  - Deferred from iter-2: MINOR/NIT items not listed in iter-2
+    findings (rationale: low-priority editorial cleanups).
+  Companion artifact updates: plan.md, acceptance.md, spec-compact.md
+  all synced. spec-compact.md priorities updated. Review report:
+  `.moai/reports/plan-audit/SPEC-DEEP-003-review-2.md`.
 - 2026-05-21 (v0.1.1 audit patches, limbowl via manager-spec):
   plan-auditor iter-1 (`.moai/reports/plan-audit/SPEC-DEEP-003-review-1.md`)
   반환 verdict FAIL (overall 0.66). 3 BLOCKER + 4 MAJOR + 5 MINOR +
@@ -217,17 +279,21 @@ Verifier의 contract는 변경하지 않는다.
 
 ## 2. Functional Requirements
 
-본 SPEC은 12개 functional requirement를 5개 모듈로 분류한다:
+본 SPEC은 15개 functional requirement(REQ-001..012 + 009a/b split +
+011a/b split + 013)를 6개 모듈로 분류한다:
 
 - **Tree Initialization** (REQ-001, 002): 트리 root 생성, mode dispatch
 - **Node Expansion** (REQ-003, 004, 005): BFS expand loop, parallel
   concurrency, sub-query generation
-- **Budget Enforcement** (REQ-006, 007, 008): 3-dimension cap, partial
-  return
-- **Citation Lineage** (REQ-009, 010): leaf-to-root 추적, Writer 소비
-  contract
-- **Persistence & Observability** (REQ-011, 012): JSON sidecar, Postgres
-  row, Prometheus metrics, OTel spans
+- **Budget Enforcement** (REQ-006, 007, 008): 3-dimension cap with
+  reservation lock semantics, partial return
+- **Citation Lineage** (REQ-009a, 009b, 010): prompt context flow,
+  citation slice disjointness, Writer 소비 contract
+- **Persistence & Observability** (REQ-011a, 011b, 012): JSON sidecar
+  flush + reload-mode reclassify, Postgres row, Prometheus metrics, OTel
+  spans
+- **Cost Accounting** (REQ-013): per-node CostUSD, tree-wide
+  TotalCostUSD derivation
 
 ### 2.1 Tree Initialization Module
 
@@ -284,33 +350,51 @@ IF 사용자가 deep.yaml 또는 request body에서 `breadth=0` OR `depth=0`을
 지정한 경우, 트리 익스플로러는 트리 모드를 disable하고 SPEC-DEEP-002
 REQ-005의 single-shot Researcher 동작으로 SHALL fallback한다. 두 입력
 모두 invalid-range가 아닌 명시적 fallback signal로 해석된다(REQ-DEEP3-002
-범위 검증의 대상이 아님). 이 fallback은 HTTP 200 응답에 `{tree:
-{disabled: true, mode: "single-shot-fallback", reason: "breadth_zero" |
-"depth_zero"}}` metadata를 SHALL 포함하며, 사용자는 트리 결과 대신
-single-shot fanout 결과를 받는다. `breadth=0` AND `depth=0`이 동시
-지정된 경우 `reason: "breadth_zero"`가 우선 emit된다.
+범위 검증의 대상이 아님). 이 fallback signal은 HTTP 응답 헤더
+`X-Deep-Tree-Fallback: breadth_zero | depth_zero | disabled`를 통해
+out-of-band side channel로 SHALL emit된다. 응답 SSE/JSON body는
+DEEP-002 single-shot contract와 byte-identical하게 유지 SHALL 되며,
+본 SPEC은 DEEP-002 응답 body 구조를 mutate하지 않는다. `breadth=0`
+AND `depth=0`이 동시 지정된 경우 `X-Deep-Tree-Fallback: breadth_zero`가
+우선 emit된다. 사용자는 트리 결과 대신 single-shot fanout 결과를
+DEEP-002 contract 그대로 받는다.
 (Acceptance §5.6 edge)
 
 ### 2.3 Budget Enforcement Module
 
 **REQ-DEEP3-006** (Event-Driven):
 WHEN 다음 노드 expand 직전 budget pre-check가 수행되는 시점에, 트리
-익스플로러는 (a) `sum(visited_nodes.TokensUsed) + estimated_next_cost >
-DEEP_TREE_TOKEN_BUDGET`인 경우, OR (b) `len(visited_nodes) >= 1 +
-sum(breadth^i for i in 1..depth)`인 경우, 해당 노드와 그 frontier descendants
-를 `NodeStatusBudgetExceeded`로 SHALL 표시하고 expand를 중단한다.
-`estimated_next_cost`는 conservative estimate로 `parent.TokensUsed *
-breadth * 1.25`로 산정 SHALL 한다. Root node의 경우 `parent.TokensUsed`가
-존재하지 않으므로, pre-check는 `DEEP_TREE_ROOT_TOKEN_ESTIMATE`(default
-5000 tokens, `.moai/config/sections/deep.yaml`에서 override 가능)
-seed 값으로 시뮬레이션 SHALL 한다. 이 seed는 typical research query
-expansion의 root cost를 근사한다.
+익스플로러는 (a) `tree.TotalTokensUsed + tree.TotalReservedTokens +
+estimated_next_cost > DEEP_TREE_TOKEN_BUDGET`인 경우, OR (b)
+`len(visited_nodes) >= 1 + sum(breadth^i for i in 1..depth)`인 경우, 해당
+노드와 그 frontier descendants를 `NodeStatusBudgetExceeded`로 SHALL 표시
+하고 expand를 중단한다. Pre-check는 `tree.TotalTokensUsed`에 대해 exclusive
+mutex(reservation lock)을 hold하는 동안 (read + decision + reservation)을
+SHALL atomic하게 수행한다. Pre-check가 success로 판정되면 트리 익스플로러
+는 동일 critical section 내에서 `estimated_next_cost`를 `Node.ReservedTokens`
+필드에 SHALL 기록하고 `tree.TotalReservedTokens`를 atomic하게 increment
+한다. 노드 완료 시 reservation은 REQ-DEEP3-007의 release 시퀀스로 reconcile
+된다(`released = ReservedTokens - actual_TokensUsed`). 동일 depth level
+의 sibling 노드들의 pre-check는 본 reservation lock에서 SHALL serialize
+된다(`breadth=8` 동시 dispatch 하에서도 race-free). `estimated_next_cost`
+는 conservative estimate로 `parent.TokensUsed * breadth * 1.25`로 산정
+SHALL 한다. Root node의 경우 `parent.TokensUsed`가 존재하지 않으므로,
+pre-check는 `DEEP_TREE_ROOT_TOKEN_ESTIMATE`(default 5000 tokens,
+`.moai/config/sections/deep.yaml`에서 override 가능) seed 값으로 시뮬레이션
+SHALL 한다. 이 seed는 typical research query expansion의 root cost를
+근사한다.
 (Acceptance §5.3)
 
 **REQ-DEEP3-007** (State-Driven):
 WHILE 노드의 expand가 진행 중인 동안, 트리 익스플로러는 각 LLM 호출
-직전과 직후에 `node.TokensUsed`를 accumulate SHALL 하고,
-`tree.TotalTokensUsed` 카운터를 atomic하게 increment SHALL 한다.
+직전과 직후에 `node.TokensUsed`를 accumulate SHALL 한다. Post-LLM-call
+accumulation은 reservation lock(REQ-DEEP3-006과 동일 mutex)을 hold하는
+single critical section 내에서 (a) `tree.TotalTokensUsed`를 `node.TokensUsed`
+delta만큼 atomic하게 increment SHALL 하고, 동시에 (b) 노드 완료 시점에
+`released = Node.ReservedTokens - node.TokensUsed`를 산정하여
+`tree.TotalReservedTokens`를 `released`만큼 atomic하게 decrement SHALL
+한다. 즉, "actual 가산 + reservation 해제"는 단일 atomic section에서
+수행되어 다른 sibling의 pre-check에 budget 변화가 일관되게 노출된다.
 `fanout.Dispatch()` 호출의 cost(외부 adapter cost 포함)는 본 카운터에
 SHALL 포함되지 않는다(token cap은 LLM cost만 추적, fanout adapter
 overhead는 별도 SPEC-FAN-001 가시화).
@@ -328,18 +412,21 @@ total_nodes_completed: <C>, total_nodes_skipped: <S>}` metadata를 SHALL
 
 ### 2.4 Citation Lineage Module
 
-**REQ-DEEP3-009** (Ubiquitous):
+**REQ-DEEP3-009a** (Ubiquitous):
 트리 익스플로러는 모든 노드 expand 시 부모 노드의 query 컨텍스트를 자식
 노드 prompt에 SHALL 포함한다(`{root_query, parent_query,
 parent_evidence_summary}` 세 필드를 `/decompose_query` request에 전달).
-이로써 sub-query 생성 시 LLM이 root context를 잃지 않는다. 또한 각
-`Node.Citations`는 해당 노드 자신의 `fanout.Dispatch` 호출이 반환한
+이로써 sub-query 생성 시 LLM이 root context를 잃지 않는다.
+(Acceptance §5.4 prompt context flow)
+
+**REQ-DEEP3-009b** (Ubiquitous):
+각 `Node.Citations`는 해당 노드 자신의 `fanout.Dispatch` 호출이 반환한
 doc_id 만 포함 SHALL 한다. 서로 다른 노드의 독립 fanout 결과가 동일
 doc_id를 우연히 포함하는 것은 허용된다(popular doc은 여러 sub-query에서
 공통으로 검색될 수 있음). 금지되는 것은 *타 노드의 Citations 슬라이스를
 직접 reference하거나 inherit하는* 행위뿐이다 — 각 노드의 Citations는
-disjointly owned이다.
-(Acceptance §5.4)
+disjointly owned 슬라이스이다.
+(Acceptance §5.4 citation disjointness invariant)
 
 **REQ-DEEP3-010** (Ubiquitous):
 트리 expand 완료 후, 트리 익스플로러는 `TreeResult` struct(`{root_query,
@@ -354,20 +441,30 @@ SHALL 이다(예: `["root: 양자컴퓨터 응용", "depth1: 양자컴퓨터 의
 
 ### 2.5 Persistence & Observability Module
 
-**REQ-DEEP3-011** (State-Driven):
-WHILE 트리 expansion이 진행 중인 동안, persistence layer는 매 노드 완료
-시점(`Status` transition to one of `{Complete, Failed, BudgetExceeded}`)
-에 `.moai/runs/{run_id}/tree.json` snapshot을 SHALL atomic flush한다
-(write to `.tmp` + rename pattern). 트리 expand 완료 후, persistence
-layer는 Postgres `deep_runs` 테이블에 단일 summary row `{run_id, query,
-breadth, depth, total_nodes, total_tokens, total_cost_usd, status,
-started_at, completed_at}`을 SHALL insert한다. Schema migration은
+**REQ-DEEP3-011a** (State-Driven):
+WHILE 트리 expansion이 진행 중인 동안, persistence layer는 매 depth-level
+join 직후 완료된 노드들의 상태를 `.moai/runs/{run_id}/tree.json`
+snapshot으로 SHALL atomic flush한다(write to `.tmp` + rename pattern).
+매 노드 완료 시점(`Status` transition to one of `{Complete, Failed,
+BudgetExceeded}`)의 변화도 동일 atomic flush 경로를 통해 disk로
+durably 반영 SHALL 된다. 트리 expand 완료 후, persistence layer는
+Postgres `deep_runs` 테이블에 단일 summary row `{run_id, query, breadth,
+depth, total_nodes, total_tokens, total_cost_usd, status, started_at,
+completed_at}`을 SHALL insert한다. `total_cost_usd`는 REQ-DEEP3-013의
+per-node `Node.CostUSD` 합산으로 derive SHALL 된다. Schema migration은
 `deploy/postgres/migrations/`(repo 표준 디렉토리; 다음 시퀀스 번호와
-도구 선택은 §8 Open Questions 참조)에 SHALL 제공된다. 또한 persistence
-layer는 reload 경로(SPEC-DEEP-004 audit 기능에서 invoke)에서 `Status ∈
-{Pending, Expanding}` 노드를 `Failed`로 SHALL reclassify하고 트리를
-read-only로 반환한다(in-memory 변환 — flush된 tree.json 원본은 불변).
-(Acceptance §5.5)
+도구 선택은 §8 Open Questions 참조)에 SHALL 제공된다.
+(Acceptance §5.5 flush flow)
+
+**REQ-DEEP3-011b** (Event-Driven):
+WHEN persistence layer가 reload mode로 invoke되는 경우(entry point:
+SPEC-DEEP-004 audit 기능), persistence layer는 `Status ∈ {Pending,
+Expanding}` 노드를 in-memory에서 `Failed`로 SHALL reclassify하고 트리를
+read-only로 반환한다. Reclassify는 in-memory 변환에 한정 SHALL 되며,
+disk의 flush된 `tree.json` 원본 파일은 audit 무결성을 위해 불변으로
+유지 SHALL 된다(overwrite 금지). Reload된 트리에 대한 추가 expand 시도
+는 차단 SHALL 된다.
+(Acceptance §5.5 reclassify flow)
 
 **REQ-DEEP3-012** (Optional):
 WHERE OpenTelemetry tracing이 활성화된 경우(SPEC-OBS-001 NFR-OBS-003),
@@ -381,6 +478,21 @@ histogram `usearch_deep_tree_node_expand_seconds{depth, outcome}`
 budget_exceeded}`, cardinality 2)를 SHALL emit한다.
 (Acceptance §5.1)
 
+### 2.6 Cost Accounting Module
+
+**REQ-DEEP3-013** (Ubiquitous):
+트리 익스플로러는 매 노드 expand 완료 시 `Node.CostUSD = Node.TokensUsed *
+model_price_per_token(DEEP_TREE_DECOMPOSE_MODEL)`을 SHALL 계산하여
+`Node.CostUSD float64` 필드에 기록한다. `model_price_per_token`은
+`.moai/config/sections/deep.yaml`의 `pricing.{model}` map에서 SHALL
+조회한다(미등록 모델인 경우 `0.0`을 기록하고 warning log emit). 트리
+전체 비용은 `tree.TotalCostUSD = sum(node.CostUSD for node in tree.nodes
+if node.Status == NodeStatusComplete)`로 derive SHALL 된다.
+`tree.TotalCostUSD`는 REQ-DEEP3-011a의 Postgres summary row
+`total_cost_usd` 컬럼의 source이다. 본 REQ는 본 SPEC이 노출하는
+하류(SPEC-DEEP-004) consumer 인터페이스의 cost dimension을 형성한다.
+(Acceptance §5.1 cost coverage)
+
 ---
 
 ## 3. Non-Functional Requirements
@@ -389,12 +501,13 @@ budget_exceeded}`, cardinality 2)를 SHALL emit한다.
 |----|------|-------------|
 | NFR-DEEP3-001 | Per-node latency p95 | 단일 노드의 expand 시간(LLM decompose call + fanout dispatch + persistence flush)은 **p95 ≤ 30 s** SHALL 이다. 측정은 `internal/deepagent/tree_test.go`의 50-iteration mock 테스트로 검증. 본 NFR은 `DEEP_TREE_NODE_TIMEOUT_MS=30000`의 ceiling과 일치한다. |
 | NFR-DEEP3-002 | Tree end-to-end p95 latency | 트리 전체 expansion(root + 모든 depth)의 wall-clock 시간은 default config(`breadth=4, depth=3`) 하에서 **p95 ≤ 4 min**(240 s) SHALL 이다. M5 milestone exit criterion(5 min)을 안전 마진으로 충족한다. 측정은 `internal/deepagent/tree_test.go`의 50-iteration end-to-end mock으로 검증(NFR-DEEP3-001과 정합한 통계적 검출력). |
-| NFR-DEEP3-003 | Token budget enforcement | 트리 전체에서 소비된 LLM 토큰 합(`sum(node.TokensUsed) for completed nodes`)은 `DEEP_TREE_TOKEN_BUDGET`(default 60000)을 **SHALL NOT** 초과한다. Pre-check는 conservative estimate로 over-shoot 가능성을 25% headroom으로 흡수하지만, 실제 측정값은 cap을 violation 하지 않는다(over-shoot 발생 시 frontier truncation으로 즉시 cap 이하로 복원). |
+| NFR-DEEP3-003 | Token budget enforcement | 트리 전체에서 소비된 LLM 토큰 합(`sum(node.TokensUsed) for completed nodes`)은 `DEEP_TREE_TOKEN_BUDGET`(default 60000)을 **SHALL NOT** 초과한다. REQ-DEEP3-006의 reservation lock semantics이 본 invariant를 보장한다 — pre-check + reservation은 단일 atomic critical section 내에서 수행되어, sibling 노드들이 `breadth=8`로 동시 dispatch되어도 `tree.TotalTokensUsed + tree.TotalReservedTokens`가 budget cap을 초과하지 못한다. Pre-check는 conservative estimate(25% headroom)로 over-reserve 가능성을 흡수하며, 실측 `node.TokensUsed`가 reservation보다 작은 경우 REQ-DEEP3-007의 atomic release로 잉여분이 즉시 budget pool에 반환된다. |
 | NFR-DEEP3-004 | Structural cap | 트리의 노드 수는 `1 + sum(breadth^i for i in 1..depth)`을 **SHALL NOT** 초과한다. Default(`breadth=4, depth=3`) 하에서 최대 85 노드(1+4+16+64), 최악 운영 환경(`breadth=8, depth=5`) 하에서 최대 37449 노드 — 이 경우 NFR-DEEP3-003 token budget이 먼저 enforcement된다. |
 | NFR-DEEP3-005 | Observability — Prometheus histogram | `usearch_deep_tree_node_expand_seconds{depth, outcome}` histogram이 매 노드 완료 시 정확히 한 번 observation을 SHALL 기록한다. Cardinality는 NFR-OBS-002 enumerable label set을 준수 — `depth ∈ {0, 1, 2, 3, 4, 5}`, `outcome ∈ {success, failed, budget_exceeded}`로 컴파일 타임 bound. |
 | NFR-DEEP3-006 | Observability — OTel span linkage | OTel tracing 활성 시, 매 노드 expand 동안 child span이 parent node의 span을 `parent_span_id` attribute로 SHALL 참조한다. Trace tree depth는 트리 expansion depth와 일치 SHALL 한다. |
-| NFR-DEEP3-007 | Persistence size bound | `.moai/runs/{run_id}/tree.json` 파일은 gzip 압축 후 **SHALL NOT** 200 KB를 초과한다. NFR-DEEP3-004의 노드 수 cap과 NFR-DEEP3-003의 token budget이 size를 inherently bound — 평균 노드 당 ~2 KB(citations + claims) × 85 nodes = ~170 KB raw, gzip 압축 시 ~50 KB 예상. 200 KB violation 시 트리 expand 중단 + `NodeStatusBudgetExceeded` 전이. |
+| NFR-DEEP3-007 | Persistence size bound | `.moai/runs/{run_id}/tree.json` 파일은 gzip 압축 후 **SHALL NOT** 200 KB를 초과한다. NFR-DEEP3-004 + NFR-DEEP3-003이 inherently bound한다 — 평균 노드 당 ~2 KB(citations + claims) × 85 nodes = ~170 KB raw, gzip 압축 시 ~50 KB 예상. 200 KB 초과는 budget enforcement 결함(상류 NFR-003/NFR-004 위반)을 의미하며 별도 runtime size check를 두지 않는다. |
 | NFR-DEEP3-008 | Crash recovery | Sidecar crash 시 partial tree.json은 readable SHALL 이다. Reload 로직(SPEC-DEEP-004의 audit 기능에서 사용)이 `Status != NodeStatusComplete` 노드를 `NodeStatusFailed`로 reclassify SHALL 한다. Resume 기능은 본 SPEC 범위 밖(§4 Exclusions). |
+| NFR-DEEP3-009 | In-memory tree size bound | 단일 트리의 in-memory state(`Node[]` + `Citations` + `Claims` 합산)는 worst-case config(`breadth=8, depth=5`)에서 **SHALL NOT** 100 MB를 초과한다. 측정은 매 depth-level 완료 시점(REQ-DEEP3-011a의 atomic flush 직전)에 수행 SHALL 되며, 100 MB 초과 감지 시 frontier 노드를 truncation(`NodeStatusBudgetExceeded`로 mark)하여 복원 SHALL 한다. 본 NFR은 NFR-DEEP3-003의 token budget이 헐겁게 설정된 케이스에서 in-memory representation overhead가 OOM trigger 되지 않도록 last-resort guard 역할을 한다. |
 
 ---
 
@@ -417,10 +530,12 @@ budget_exceeded}`, cardinality 2)를 SHALL emit한다.
   reclassify되어 audit 목적만 served된다. 새로운 `/deep` 요청은 fresh
   run_id로 처음부터 expand 시작.
 - **Per-node cost cap** — 본 SPEC은 tree-wide token budget만 enforce
-  한다. Per-node cost cap, per-user/per-day cost cap, prompt-cache reuse
-  는 SPEC-DEEP-004의 책임. 본 SPEC이 노출하는 `Node.TokensUsed`,
-  `Node.CostUSD`, `usearch_deep_tree_total_tokens` 메트릭이 DEEP-004의
-  input.
+  한다. Per-node/per-user/per-day cost cap, prompt-cache reuse는
+  SPEC-DEEP-004의 책임. 본 SPEC은 노드/트리 token consumption(
+  `Node.TokensUsed`, `Node.CostUSD`, `usearch_deep_tree_total_tokens`)을
+  하류 consumer가 가용한 형태로 노출하나, DEEP-004와의 구속력 있는
+  인터페이스 합의는 §6.2의 hedge에 따라 DEEP-004 구현 단계에서 양 SPEC
+  저자가 공동 확정한다.
 - **Cross-tree query deduplication** — 동일 사용자가 유사 쿼리를 연속
   으로 expand할 때 이전 트리의 노드를 재사용하는 cache는 본 SPEC 범위
   밖. M6의 SPEC-IDX-005(Team-shared answer reuse)의 책임.
@@ -436,8 +551,10 @@ budget_exceeded}`, cardinality 2)를 SHALL emit한다.
   자체를 prompt context로 받지 않는다. 평탄화된 `FlattenedClaim`(REQ-010
   참조)만 받으며 트리 lineage는 `lineage_path` string array로 표현된다.
   Hierarchical prompt experimentation은 본 SPEC 범위 밖.
-- **GitHub Issue tracking on this SPEC** (`issue_number: 0`) — Plan-auditor
-  통과 후 patch.
+- **GitHub Issue tracking on this SPEC** (`issue_number: 19`) — 본
+  SPEC은 frontmatter에 issue_number 19를 보유하고 있으며, GitHub Issue
+  19의 운영 관리(예: 자동 close, label 동기화 자동화)는 본 SPEC의 책임
+  범위 밖이다.
 
 ---
 
@@ -459,7 +576,7 @@ fanout adapter 4개 등록, 각 노드 평균 LLM 응답 시간 5초.
 Prometheus `usearch_deep_tree_node_expand_seconds` histogram이 85회
 observation 기록. OTel trace tree depth = 3.
 
-Coverage: REQ-001, 003, 004, 011, 012; NFR-DEEP3-001, 002, 005, 006.
+Coverage: REQ-001, 003, 004, 011a, 012, 013; NFR-DEEP3-001, 002, 005, 006.
 
 ### Scenario 5.2 — 구조적 cap 초과로 expand 거부
 
@@ -474,22 +591,25 @@ Coverage: REQ-001, 003, 004, 011, 012; NFR-DEEP3-001, 002, 005, 006.
 
 Coverage: REQ-002.
 
-### Scenario 5.3 — 토큰 budget 소진 mid-tree → 부분 트리 반환 + Writer 가용
+### Scenario 5.3 — 토큰 budget 소진 mid-tree → 부분 트리 반환 + Writer 가용 + 동시 race-free
 
 **Given** 사용자가 `breadth=4, depth=3`로 요청. `DEEP_TREE_TOKEN_BUDGET=
 20000` (default 60000보다 낮은 환경 설정). 각 노드 평균 2000 토큰 소비
-가정(85 nodes × 2000 = 170K 토큰, budget 8.5x 초과).
+가정(85 nodes × 2000 = 170K 토큰, budget 8.5x 초과). Sibling 노드들은
+errgroup으로 동시 dispatch.
 
 **When** 트리 익스플로러가 depth=2까지 expand를 진행하다 budget
-exhaustion 발생.
+exhaustion 발생. REQ-DEEP3-006 reservation lock + REQ-DEEP3-007
+atomic release semantics가 동시 sibling pre-check를 serialize.
 
-**Then** 응답 HTTP 200(degraded success), body `{tree: {root_query: ...,
-total_nodes_completed: ~10, total_nodes_skipped: ~75, status: "budget_exceeded"},
-usage: {budget_exceeded: true, total_tokens: ~19000, ...}, ...}`. Writer
-가 부분 트리에서 `FlattenedClaim`을 받아 답변 생성. Prometheus
+**Then** 응답 HTTP 200(degraded success), body의 부분 트리. Writer가
+부분 트리에서 `FlattenedClaim`을 받아 답변 생성. Prometheus
 `usearch_deep_tree_total_tokens{outcome="budget_exceeded"}` += 1.
+**Critical invariant**: `final_total = sum(node.TokensUsed for completed
+nodes) ≤ DEEP_TREE_TOKEN_BUDGET = 20000` — 동시 sibling race 하에서도
+overshoot 0(reservation lock으로 atomic enforcement).
 
-Coverage: REQ-006, 007, 008, 010.
+Coverage: REQ-006, 007, 008, 010; NFR-003.
 
 ### Scenario 5.4 — 인용 lineage가 모든 leaf claim에서 root까지 추적 가능
 
@@ -503,7 +623,7 @@ k+1`, (c) `source_node_id`로 트리를 reverse-traverse하면 root에 도달
 가능. Property test(hypothesis-go)가 100개 random tree generation에
 대해 invariant 검증.
 
-Coverage: REQ-009, 010.
+Coverage: REQ-009a (prompt context), REQ-009b (citation disjointness), 010.
 
 ### Scenario 5.5 — Sidecar 크래시 시 tree.json 부분 복원
 
@@ -516,14 +636,17 @@ Coverage: REQ-009, 010.
 `NodeStatusFailed`로 reclassify된 상태로 readable. Postgres `deep_runs`
 row는 `status="failed", completed_at=<crash_time>`로 finalize.
 
-Coverage: REQ-011; NFR-DEEP3-008.
+Coverage: REQ-011a (flush), REQ-011b (reclassify); NFR-DEEP3-008.
 
 ### Edge Cases
 
 - **Scenario 5.6 (edge): breadth=0 OR depth=0 fallback** — `breadth=0`
   또는 `depth=0` 지정 시 single-shot mode fallback (REQ-005). 두 입력
   모두 invalid-range가 아닌 fallback signal로 해석되어 HTTP 200 응답을
-  받는다. 각각의 sub-scenario 검증.
+  받는다. Fallback signal은 응답 헤더 `X-Deep-Tree-Fallback`을 통해
+  out-of-band emit; response body는 DEEP-002 single-shot contract와
+  byte-identical하게 유지(`TestFallbackHeaderEmittedAndBodyUnchanged`로
+  검증). 각각의 sub-scenario(breadth=0, depth=0, 두 값 동시) 검증.
 - **Scenario 5.7 (edge): depth=1 single-level tree** — `depth=1` 지정
   시 root + breadth개 leaf만 존재하는 평탄 트리 — 정상 처리, lineage
   depth=1.
@@ -578,9 +701,9 @@ Coverage: REQ-011; NFR-DEEP3-008.
 | [NEW] | `tests/integration/deep_tree_test.go` | End-to-end integration test via `httptest` + stubbed sidecar |
 | [NEW] | `services/researcher/src/researcher/deep_tree.py` | `POST /decompose_query` endpoint(thin LLM wrapper, LiteLLM gateway reuse) |
 | [NEW] | `services/researcher/tests/test_deep_tree.py` | Python endpoint unit tests |
-| [NEW] | `.moai/config/sections/deep.yaml` | Tree mode config(`tree.enabled`, `tree.breadth`, `tree.depth`, budget defaults) |
-| [NEW] | `deploy/postgres/migrations/{NN}_deep_runs.up.sql` | Postgres `deep_runs` 테이블 schema (repo 표준 디렉토리; `{NN}` sequence 번호와 migration 도구 핀은 §8 Open Questions 참조) |
-| [NEW] | `deploy/postgres/migrations/{NN}_deep_runs.down.sql` | Rollback migration |
+| [NEW] | `.moai/config/sections/deep.yaml` | Tree mode config(`tree.enabled`, `tree.breadth`, `tree.depth`, budget defaults, `pricing.{model}` map for REQ-DEEP3-013 cost lookup) |
+| [NEW] | `deploy/postgres/migrations/0002_deep_runs.up.sql` | Postgres `deep_runs` 테이블 schema (golang-migrate format; §8 OQ-1 RESOLVED 참조) |
+| [NEW] | `deploy/postgres/migrations/0002_deep_runs.down.sql` | Rollback migration (DROP TABLE deep_runs) |
 | [MODIFY] | `internal/deepagent/agents.go` (DEEP-002) | Researcher 에이전트가 tree mode flag 평가하여 `tree.go` 호출 분기 추가 |
 | [MODIFY] | `internal/deepagent/config.go` (DEEP-002) | `DEEP_TREE_*` env-var loader 추가 |
 | [MODIFY] | `internal/obs/metrics/metrics.go` | `registerDeepTree(pr)` helper 등록 |
@@ -595,13 +718,15 @@ Coverage: REQ-011; NFR-DEEP3-008.
 
 ## 8. Open Questions
 
-- **OQ-1 (Migration tooling)**: Repo 표준 마이그레이션 디렉토리는
-  `deploy/postgres/migrations/`로 확정(기존 `0001_create_docs.sql`
-  precedent). 그러나 (a) 다음 sequence 번호(`0002` vs `0NN` 이상의 어떤
-  값)와 (b) migration 실행 도구(golang-migrate, goose, sqlx-migrate
-  등) 선택은 본 SPEC 단독 결정 대상이 아닌 프로젝트 전체 인프라
-  결정이다. 본 SPEC은 해당 결정을 inherit한다. Run phase 진입 전 별도
-  SPEC-INFRA-* 또는 운영자 결정으로 핀 필요.
+- **OQ-1 (Migration tooling) — RESOLVED 2026-05-21**: Repo 표준 마이그레이션
+  디렉토리는 `deploy/postgres/migrations/`(기존 `0001_create_docs.sql`
+  precedent). 결정 사항:
+  - Tool: **`golang-migrate/migrate`** (CLI + Go embed, file pair `*.up.sql`/`*.down.sql`)
+  - Sequence: **`0002`** (next after existing `0001_create_docs.sql`)
+  - File pair: `0002_deep_runs.up.sql` + `0002_deep_runs.down.sql`
+  - 기존 `0001_create_docs.sql` adoption (rename to `0001_create_docs.up.sql` + create
+    matching `down.sql`)은 별도 운영 task로 분리하며 본 SPEC 범위 밖. T-D-009는 신규
+    `0002_*` 파일만 작성하면 unblock.
 
 ---
 
@@ -616,7 +741,7 @@ Coverage: REQ-011; NFR-DEEP3-008.
 | `DEEP_TREE_ROOT_TOKEN_ESTIMATE` | `5000` | Root node pre-check seed (parent.TokensUsed가 없는 root 케이스에서 사용) | REQ-DEEP3-006 |
 | `DEEP_TREE_NODE_TIMEOUT_MS` | `30000` | Per-node expand timeout | REQ-DEEP3-004; NFR-DEEP3-001 |
 | `DEEP_TREE_DECOMPOSE_MODEL` | `claude-3-5-haiku-20241022` | LiteLLM model alias for sub-query generation | REQ-DEEP3-003 |
-| `DEEP_TREE_PERSISTENCE_DIR` | `.moai/runs` | tree.json output directory | REQ-DEEP3-011 |
+| `DEEP_TREE_PERSISTENCE_DIR` | `.moai/runs` | tree.json output directory | REQ-DEEP3-011a |
 
 ---
 

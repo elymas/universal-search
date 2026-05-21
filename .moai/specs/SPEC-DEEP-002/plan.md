@@ -1,6 +1,6 @@
 ---
 id: SPEC-DEEP-002
-version: 0.1.1
+version: 0.1.2
 created: 2026-05-21
 author: limbowl (via manager-spec)
 companion_to: spec.md
@@ -74,8 +74,11 @@ Acceptance:
   llmClient, research ResearcherOutput) (ReviewerCritique, error)`
 - Researcher 동작:
   1. `fanoutFn(ctx, query, registry, router)` 호출 (1회만, REQ-DEEP2-005)
-  2. Empty `Result.Docs` 시 `ResearcherOutput{IsEmpty: true}` 반환
-     (REQ-DEEP2-012의 short-circuit 입력)
+  2. Empty `Result.Docs` 시 LLM 호출을 **SKIP**하고
+     `ResearcherOutput{IsEmpty: true}` 즉시 반환 (REQ-DEEP2-012의
+     short-circuit 입력). 추출할 claim이 없으므로 LLM 호출은 의미가 없으며
+     비용/지연만 발생한다. Histogram outcome 라벨은 `success` (bounded
+     enum set 준수 — NFR-DEEP2-002).
   3. Non-empty 시 LLM (Haiku) 호출하여 docs에서 핵심 claim 추출
   4. 출력: `{Claims []Claim, Evidence []NormalizedDocPayload, IsEmpty bool}`
 - Reviewer 동작:
@@ -106,9 +109,20 @@ Acceptance:
      draft 생성
   4. 출력: `WriterDraft{Sections []Section, Citations []Citation,
      CostUSD float64, Model, Provider string}`
-- Draft assembly: Writer 출력을 `streamsynth`가 walk 가능한
-  `deepreport.Report`-compatible 구조로 변환 (단, `deepreport`
-  패키지는 import하지 않음 — NFR-DEEP2-003 격리 보장)
+- Draft assembly: Writer 출력 (`WriterDraft`)이 `streamsynth`의 신규
+  interface `LongFormSource`를 구현하도록 한다. 동일 interface를
+  `deepreport.Report` (DEEP-001)도 구현하도록 추가 — 이로써 streamsynth는
+  두 concrete type을 알 필요가 없게 되고, NFR-DEEP2-003의 import 격리
+  (`internal/deepagent`이 `internal/deepreport`를 import하지 않음)가
+  자연스럽게 보장된다. Interface 정의:
+  ```go
+  type LongFormSource interface {
+      SectionCount() int
+      Section(i int) Section
+      Citations() []Citation
+      Metadata() ReportMetadata
+  }
+  ```
 - Test count: 8-10 tests (writer: fanout 미호출, retry hint 적용,
   draft 구조 well-formedness, citation marker 1-indexed)
 
@@ -141,21 +155,31 @@ Acceptance:
   - 초기 Writer 호출 1회 + 재시도 최대 2회 (총 3회 상한;
     `cfg.MaxRetries + 1`)
   - Verifier rejection 시 `retry_started` SSE 이벤트 emit + 재시도
-  - Max-retry exhaustion 시 `REQ-DEEP2-009` path (HTTP 503 +
-    `pipeline_failed` SSE)
+  - Max-retry exhaustion 시 두 갈래 path:
+    - SSE 스트림 활성 (headers already flushed) → REQ-DEEP2-009a-SSE
+      (terminal `pipeline_failed` SSE event, HTTP 200 stays on wire)
+    - Buffered 응답 (`?stream=false` or non-SSE Accept) →
+      REQ-DEEP2-009a-Buffered (HTTP 503 + JSON body)
 - Test count: 12-15 tests (verifier: PASS/FAIL 분기, 사이드카 호출,
   orchestrator: retry count, max-retry exhaustion, non-verifier error 처리)
 
 Acceptance:
 - `TestVerifierPassWhenUncitedCountZero` GREEN
 - `TestOrchestratorRetriesWriterOnVerifierReject` GREEN
-- `TestMaxRetryExhaustionReturns503` GREEN (REQ-DEEP2-009a)
-- `TestNonVerifierErrorsDoNotTriggerRetry` GREEN (REQ-DEEP2-009b)
-- `TestResearcherErrorAbortsAndReturns503`, `TestReviewerErrorAbortsAndReturns503`, `TestVerifierErrorAbortsAndReturns503` GREEN (REQ-DEEP2-009b)
-- REQ-DEEP2-003, 006, 009a, 009b covered
+- `TestSSEMaxRetryEmitsTerminalEvent` GREEN (REQ-DEEP2-009a-SSE)
+- `TestBufferedMaxRetryReturns503` GREEN (REQ-DEEP2-009a-Buffered)
+- `TestNonVerifierErrorsDoNotTriggerRetry` GREEN (REQ-DEEP2-009b-SSE/Buffered)
+- `TestSSEResearcherErrorEmitsTerminalEvent`, `TestSSEReviewerErrorEmitsTerminalEvent`, `TestSSEVerifierErrorEmitsTerminalEvent` GREEN (REQ-DEEP2-009b-SSE)
+- `TestBufferedResearcherErrorReturns503`, `TestBufferedReviewerErrorReturns503`, `TestBufferedVerifierErrorReturns503` GREEN (REQ-DEEP2-009b-Buffered)
+- REQ-DEEP2-003, 006, 009a-SSE, 009a-Buffered, 009b-SSE, 009b-Buffered covered
 
 ### M5 — SSE Event Extension + Handler Integration  [Priority High]
 
+- `internal/streamsynth/longform_source.go` — NEW interface
+  `LongFormSource` (SectionCount, Section, Citations, Metadata).
+  `deepreport.Report` (DEEP-001) and `deepagent.WriterDraft` (DEEP-002)
+  both implement this interface — streamsynth no longer references
+  concrete types.
 - `internal/streamsynth/agent_events.go` — payload structs:
   `AgentStartedPayload`, `AgentCompletedPayload`,
   `RetryStartedPayload`, `VerifierResultPayload`,
@@ -165,8 +189,14 @@ Acceptance:
   round-trip
 - `internal/deepagent/sse.go` — `EmitAgentEvent(w *sse.Writer, event
   AgentEvent) error` helper. orchestrator가 매 단계에서 호출
-- `internal/streamsynth/longform.go` — 신규 public 함수 `StreamFinalReport(ctx, w, draft WriterDraft, agentLog []AgentLogEntry)` 추가
-  (Verifier PASS 후 호출, section/sentence/done 이벤트 emit)
+- `internal/streamsynth/longform.go` — 신규 public 함수 `StreamFinalReport(ctx, w, source LongFormSource, agentLog []AgentLogEntry)` 추가
+  (Verifier PASS 후 호출, section/sentence/done 이벤트 emit). `source` 파라미터는
+  새로 정의된 `LongFormSource` interface 타입으로, `WriterDraft` 및
+  `deepreport.Report` 모두 만족한다. concrete type 미참조.
+- `internal/deepagent/types.go` — `WriterDraft`에 `LongFormSource`
+  interface methods 구현 추가
+- `internal/deepreport/types.go` — `Report`에 `LongFormSource`
+  interface methods 구현 추가 (DEEP-001 path도 동일 interface 사용)
 - `cmd/usearch-api/handlers/synthesis.go` — `?mode=` 쿼리 파싱:
   - absent or `storm` → 기존 DEEP-001 path (변경 없음, REQ-DEEP2-011)
   - `agents` → 신규 `deep_agents_handler` 호출
@@ -196,7 +226,7 @@ Acceptance:
   - `DeepAgentRetries *prometheus.CounterVec{agent}` (agent="writer"
     pre-declared only)
   - `DeepAgentVerifierGateResults *prometheus.CounterVec{result}`
-    (result ∈ {pass, fail_uncited, fail_timeout} pre-declared)
+    (result ∈ {pass, fail_uncited, fail_error} pre-declared)
 - 라벨 값 pre-declaration via `.WithLabelValues(value).Add(0)` 패턴
   per SYN-004 `streamsynth.go:48-56`
 - 기존 `usearch_deep_outcomes_total{outcome}` 확장: 신규 값 `empty_corpus`,
@@ -261,7 +291,7 @@ exhaustive catalog다. Go test 명명 규약(`TestXxx`)을 따른다.
 8. `TestDeepHandlerNoSharedMutableStateBetweenModes` — package-level
    var grep + mode-switching race test
 
-### 3.2 Pipeline Module (REQ-002, 003, 005, 009a, 009b, 012)
+### 3.2 Pipeline Module (REQ-002, 003, 005, 009a-SSE, 009a-Buffered, 009b-SSE, 009b-Buffered, 012)
 
 9. `TestOrchestratorRunsAgentsInOrder` — Researcher → Reviewer →
    Writer → Verifier 호출 순서 (mock spy로 검증)
@@ -277,98 +307,134 @@ exhaustive catalog다. Go test 명명 규약(`TestXxx`)을 따른다.
 15. `TestRetriesCounterIncrementsExactlyOncePerRetry` — Prometheus
     counter 증가량 검증
 16. `TestNonVerifierErrorsDoNotTriggerRetry` — Researcher mock이
-    에러 반환 → orchestrator immediate abort, Writer 미호출 (REQ-DEEP2-009b)
+    에러 반환 → orchestrator immediate abort, Writer 미호출
+    (REQ-DEEP2-009b-SSE / REQ-DEEP2-009b-Buffered)
 17. `TestResearcherCallsFanoutDispatchExactlyOnce` — mock spy
 18. `TestResearcherUsesNoOtherRetrievalSource` — `internal/deepagent`
     패키지 grep로 retrieval 관련 import 부재 검증 (`http.Client`,
     `internal/adapters/*` 등)
 19. `TestResearcherDocsAreImmutableInDownstream` — Researcher 출력의
     slice가 downstream에서 mutate되지 않음 (race test)
-20. `TestMaxRetryExhaustionReturns503` — 3회 Writer 호출 모두 fail →
-    HTTP 503 (REQ-DEEP2-009a)
-21. `TestMaxRetryExhaustionEmitsPipelineFailedSSE` — terminal 이벤트
-    (REQ-DEEP2-009a)
-22. `TestResearcherErrorAbortsAndReturns503` — Researcher mock error
-    (REQ-DEEP2-009b)
-23. `TestVerifierErrorAbortsAndReturns503` — Verifier 자체 error
-    (faithfulness endpoint 5xx) (REQ-DEEP2-009b)
-23a. `TestReviewerErrorAbortsAndReturns503` — Reviewer mock error
-    (REQ-DEEP2-009b)
-24. `TestErrorOutcomeCounterIncrementsExactlyOnce` —
+20. `TestSSEMaxRetryEmitsTerminalEvent` — 3회 Writer 호출 모두 fail
+    AND SSE 활성 → terminal `pipeline_failed` SSE event, HTTP 200
+    stays (REQ-DEEP2-009a-SSE)
+21. `TestSSEMaxRetryHttpStatusStays200` — SSE 활성 케이스에서 retroactive
+    status code change 시도 없음을 검증 (REQ-DEEP2-009a-SSE)
+22. `TestBufferedMaxRetryReturns503` — `?stream=false`일 때 max-retry
+    exhaustion → HTTP 503 + JSON body (REQ-DEEP2-009a-Buffered)
+23. `TestBufferedMaxRetryJsonBodyShape` — 503 응답 본문 구조 검증
+    (REQ-DEEP2-009a-Buffered)
+24. `TestSSEResearcherErrorEmitsTerminalEvent` — Researcher mock error +
+    SSE 활성 → terminal `pipeline_failed{failed_agent:"researcher"}`
+    (REQ-DEEP2-009b-SSE)
+25. `TestSSEReviewerErrorEmitsTerminalEvent` — Reviewer mock error +
+    SSE 활성 (REQ-DEEP2-009b-SSE)
+26. `TestSSEVerifierErrorEmitsTerminalEvent` — Verifier infra error
+    (faithfulness endpoint 5xx) + SSE 활성 (REQ-DEEP2-009b-SSE)
+27. `TestBufferedResearcherErrorReturns503` — Researcher mock error +
+    buffered → HTTP 503 (REQ-DEEP2-009b-Buffered)
+28. `TestBufferedReviewerErrorReturns503` — Reviewer error + buffered
+    (REQ-DEEP2-009b-Buffered)
+29. `TestBufferedVerifierErrorReturns503` — Verifier infra error +
+    buffered (REQ-DEEP2-009b-Buffered)
+30. `TestErrorOutcomeCounterIncrementsExactlyOnce` —
     `usearch_deep_outcomes_total{outcome="error_pipeline_failed"}`
-    (REQ-DEEP2-009a/009b 공유 collector)
-25. `TestEmptyFanoutShortCircuitsPipeline` — `Result.Docs == []` 시
+    (REQ-DEEP2-009a-SSE/Buffered + 009b-SSE/Buffered 공유 collector)
+31. `TestEmptyFanoutShortCircuitsPipeline` — `Result.Docs == []` 시
     Reviewer/Writer/Verifier 미호출
-26. `TestEmptyFanoutResponseShape` — JSON body 구조
-27. `TestEmptyFanoutOutcomeCounterIncrements` —
+32. `TestEmptyFanoutResponseShape` — JSON body 구조
+33. `TestEmptyFanoutOutcomeCounterIncrements` —
     `usearch_deep_outcomes_total{outcome="empty_corpus"}` += 1
-28. `TestEmptyFanoutSSEEventSequence` — `agent_started{researcher}` →
+34. `TestEmptyFanoutSSEEventSequence` — `agent_started{researcher}` →
     `agent_completed{researcher, empty_corpus}` → `done{total_sections: 0}`
+35. `TestEmptyFanoutResearcherSkipsLLMInvocation` — Empty fanout 시
+    Researcher가 LLM mock을 호출하지 않음을 검증 (REQ-DEEP2-012, P-M3)
+36. `TestEmptyFanoutHistogramOutcomeIsSuccess` — Empty fanout 시
+    `usearch_deep_agent_duration_seconds{agent="researcher", outcome="success"}`
+    += 1 (label vs SSE field 분리 검증, REQ-DEEP2-012, P-M3)
 
 ### 3.3 LLM Routing Module (REQ-004)
 
-29. `TestConfigLoadsAllFourModelAliasesFromEnv` — 4개 env-var 설정 후
+37. `TestConfigLoadsAllFourModelAliasesFromEnv` — 4개 env-var 설정 후
     Config 검증
-30. `TestConfigFallsBackToDefaultsWhenEnvAbsent` — env-var unset 시
+38. `TestConfigFallsBackToDefaultsWhenEnvAbsent` — env-var unset 시
     기본값 적용
-31. `TestAgentsReceiveResolvedModelFromOrchestrator` — orchestrator가
+39. `TestAgentsReceiveResolvedModelFromOrchestrator` — orchestrator가
     각 agent 호출 시 `cfg.<RoleModel>` 전달
-32. `TestNoDirectOsGetenvInAgentsPackage` — `internal/deepagent/`
+40. `TestNoDirectOsGetenvInAgentsPackage` — `internal/deepagent/`
     packages grep로 `os.Getenv` 호출 부재 검증 (`config.go` 제외)
-33. `TestAllAgentsCallSingletonLLMClient` — `llm.Client` mock spy로
+41. `TestAllAgentsCallSingletonLLMClient` — `llm.Client` mock spy로
     호출 검증
 
 ### 3.4 Verifier Gate Module (REQ-006)
 
-34. `TestVerifierCallsCheckFaithfulnessExactlyOnce` — mock spy
-35. `TestVerifierPassWhenUncitedCountZero` — return `Pass: true`
-36. `TestVerifierFailWhenUncitedCountPositive` — return `Pass: false`
+42. `TestVerifierCallsCheckFaithfulnessExactlyOnce` — mock spy
+43. `TestVerifierPassWhenUncitedCountZero` — return `Pass: true`
+44. `TestVerifierFailWhenUncitedCountPositive` — return `Pass: false`
     with feedback
-37. `TestVerifierDoesNotPerformAdditionalScoring` — coverage/coherence
+45. `TestVerifierDoesNotPerformAdditionalScoring` — coverage/coherence
     LLM 호출 부재 (LLM mock 호출 횟수 == 1, faithfulness 전용)
-38. `TestFaithfulnessEndpointReusesExistingSYN002Logic` — Python-side
+46. `TestFaithfulnessEndpointReusesExistingSYN002Logic` — Python-side
     pytest: 신규 endpoint가 기존 `enforce_faithfulness` 함수 호출
-39. `TestCheckFaithfulnessWrapperHandlesSidecar5xx` — Go wrapper
-    error mapping
-40. `TestVerifierGateResultsCounterIncrementsOncePerInvocation` —
+47. `TestCheckFaithfulnessWrapperHandlesSidecar5xx` — Go wrapper
+    error mapping; gate counter increments with `result="fail_error"`
+    (P-B1 semantics: `fail_error` covers any Verifier infra failure,
+    not only timeouts)
+48. `TestVerifierGateResultsCounterIncrementsOncePerInvocation` —
     Prometheus counter
 
 ### 3.5 Streaming & Observability Module (REQ-007, 008)
 
-41. `TestSSEEmitsAgentStartedAndCompletedForEachAgent` — 8 events
+49. `TestSSEEmitsAgentStartedAndCompletedForEachAgent` — 8 events
     minimum (4 agent × {started, completed})
-42. `TestSSEEmitsRetryStartedBeforeWriterRetry` — 이벤트 순서
-43. `TestSSEEmitsVerifierResultPerVerifierInvocation` — Verifier 호출
+50. `TestSSEEmitsRetryStartedBeforeWriterRetry` — 이벤트 순서
+51. `TestSSEEmitsVerifierResultPerVerifierInvocation` — Verifier 호출
     횟수 == `verifier_result` 이벤트 개수
-44. `TestSSEEmitsPipelineFailedOnExhaustion` — REQ-009 terminal event
-45. `TestSSEEmitsPipelineCancelledOnContextCancel` — REQ-002 path
-46. `TestSSESectionEventsOnlyAfterVerifierPass` — section_start 이벤트
+52. `TestSSEEmitsPipelineFailedOnExhaustion` — REQ-DEEP2-009a-SSE
+    terminal event
+53. `TestSSEEmitsPipelineCancelledOnContextCancel` — REQ-002 path;
+    `at_agent` payload semantics per P-M1
+54. `TestSSESectionEventsOnlyAfterVerifierPass` — section_start 이벤트
     timestamp > 모든 agent_completed{verifier} 이벤트 timestamp
-47. `TestSSEHeartbeatContinuesDuringAgentPhases` — handler 진입 ~
+55. `TestSSEHeartbeatContinuesDuringAgentPhases` — handler 진입 ~
     종료 동안 `: ping` 이벤트 ≥ 1 (시간 mock으로 fast-forward)
-48. `TestAllNewEventPayloadsCarrySchemaVersionAndRequestId` — 모든
+56. `TestAllNewEventPayloadsCarrySchemaVersionAndRequestId` — 모든
     신규 payload 검증
-49. `TestThreeNewCollectorsRegisteredAtStartup` — `registerDeepAgent`
+57. `TestThreeNewCollectorsRegisteredAtStartup` — `registerDeepAgent`
     호출 후 prometheus registry 검증
-50. `TestAllAgentLabelValuesPreDeclaredAtRegistration` — pre-declare
-    pattern 검증
-51. `TestNoLabelValueDerivedFromUserInput` — grep `WithLabelValues`
+58. `TestAllAgentLabelValuesPreDeclaredAtRegistration` — pre-declare
+    pattern 검증 (label values include `pass`, `fail_uncited`, `fail_error`)
+59. `TestNoLabelValueDerivedFromUserInput` — grep `WithLabelValues`
     호출에 외부 input 변수 부재
-52. `TestDeepOutcomesExtendedWithEmptyCorpusAndPipelineFailed` —
+60. `TestDeepOutcomesExtendedWithEmptyCorpusAndPipelineFailed` —
     기존 collector에 신규 라벨 값 등록 확인
-53. `TestCardinalityGuardRemainsGreen` —
+61. `TestCardinalityGuardRemainsGreen` —
     `metrics_test.go::TestNoUnboundedLabels` 통과
 
 ### 3.6 End-to-End / Property Tests (NFR-DEEP2-001, 003)
 
-54. `TestE2EHappyPathReturns200WithCompleteStream` (httptest)
-55. `TestE2ERetryPathRecordsCorrectMetricsAndEvents`
-56. `TestE2ELatencyP95Under60Seconds` (mocked-LM 50 iterations)
-57. `TestDeep001AcceptanceSuiteRemainsGreen` (regression umbrella —
+62. `TestE2EHappyPathReturns200WithCompleteStream` (httptest)
+63. `TestE2ERetryPathRecordsCorrectMetricsAndEvents`
+64. `TestE2ELatencyP95Under1SecondMocked` — Go-side orchestration
+    overhead p95 ≤ 1s with mocked LLM + faithfulness (NFR-DEEP2-001
+    budget (a), 50 iterations). Prod end-to-end p95 ≤ 60s (budget (b))
+    is verified via /moai sync staging smoke test, not unit test.
+65. `TestDeep001AcceptanceSuiteRemainsGreen` (regression umbrella —
     DEEP-001 test suite 호출)
+66. `TestStormModeResponseSchemaIdenticalPrePostDeep002` — REQ-DEEP2-011
+    schema/semantic equivalence (P-M6): same event types in same order,
+    same field names per event, same field types; values may differ for
+    non-deterministic fields (request_id, timestamps, durations, costs).
 
-총 테스트 카운트 추정: **57개** (TDD RED phase에서 모두 fail
-상태로 작성).
+총 테스트 카운트 추정: **66개** (TDD RED phase에서 모두 fail
+상태로 작성). v0.1.1 대비 v0.1.2에서 9개 추가:
+- 4 × REQ-DEEP2-009a/009b split tests (SSE vs Buffered for max-retry +
+  per-agent error paths replaced the older bundled tests)
+- 2 × REQ-DEEP2-012 empty fanout extension (P-M3)
+- 1 × P-M6 schema equivalence (StormModeResponseSchemaIdenticalPrePostDeep002)
+- NFR-DEEP2-001 budget (a) Go-side mocked p95 test
+- Numbering shifted globally (P-M5: 23a → 24 + downstream +9 to absorb
+  new tests)
 
 ---
 
@@ -382,13 +448,13 @@ spec.md §1.3 Resolved Design Choices (RDC-1 ~ RDC-10) 와 일대일
 |--------|------|------------|------------|
 | R1 | Verifier SYN-002 Go-side wrapper 미존재 | (a) Resolved in REQ-DEEP2-006 | 신규 Go 함수 `internal/synthesis.CheckFaithfulness` + Python 사이드카 신규 endpoint `POST /faithfulness_check`; 기존 `faithfulness.py` 로직 재사용으로 single source of truth 보존 |
 | R2 | Reviewer 역할 정의 부족 | (a) Resolved in REQ-DEEP2-002, RDC-2 | Reviewer는 critique-only, fanout 미호출, Researcher evidence 한정; 테스트 #11이 enforce |
-| R3 | Context deadline propagation 불명확 | (a) Resolved in REQ-DEEP2-002, RDC-3 | Orchestrator가 매 agent 호출 직전 `ctx.Err()` 확인, `pipeline_cancelled` SSE 이벤트 후 종료; 부분 결과 응답 누출 금지 |
-| R4 | Writer retry semantics off-by-one 위험 | (a) Resolved in REQ-DEEP2-003, RDC-4 | "max 2 retries" = 초기 1 + 재시도 2 = 총 3회 상한; `cfg.MaxRetries = 2`로 hardcoded; 테스트 #13, #20이 enforce |
-| R5 | Model alias resolution 분산 | (a) Resolved in REQ-DEEP2-004, RDC-5 | `internal/deepagent/config.go`에서 중앙집중식 로딩, agent별 `os.Getenv` 직접 호출 금지 (테스트 #32) |
-| R6 | Streaming retry semantics (섹션 재emit) | (a) Resolved in REQ-DEEP2-007, RDC-6 | Writer/Verifier 루프 사전버퍼링 — section/sentence 이벤트는 Verifier PASS 후에만 emit; 같은 section_index 중복 콘텐츠 불가능; 테스트 #46 enforce |
+| R3 | Context deadline propagation 불명확 | (a) Resolved in REQ-DEEP2-002, RDC-3 | Orchestrator가 매 agent 호출 직전 `ctx.Err()` 확인, `pipeline_cancelled` SSE 이벤트 후 종료 (at_agent semantics per P-M1); 부분 결과 응답 누출 금지 |
+| R4 | Writer retry semantics off-by-one 위험 | (a) Resolved in REQ-DEEP2-003, RDC-4 | "max 2 retries" = 초기 1 + 재시도 2 = 총 3회 상한; `cfg.MaxRetries = 2`로 hardcoded; 테스트 #13, #20-#21이 enforce |
+| R5 | Model alias resolution 분산 | (a) Resolved in REQ-DEEP2-004, RDC-5 | `internal/deepagent/config.go`에서 중앙집중식 로딩, agent별 `os.Getenv` 직접 호출 금지 (테스트 #40) |
+| R6 | Streaming retry semantics (섹션 재emit) | (a) Resolved in REQ-DEEP2-007, RDC-6 | Writer/Verifier 루프 사전버퍼링 — section/sentence 이벤트는 Verifier PASS 후에만 emit; 같은 section_index 중복 콘텐츠 불가능; 테스트 #54 enforce |
 | R7 | 글로벌 per-request 비용 cap 부재 | (c) Deferred to SPEC-DEEP-004 | 본 SPEC은 cost 메트릭 가시화만 수행 (NFR-DEEP2-004); 명시적 cap enforcement는 spec.md §8 Exclusions에 deferral 명시 |
 | R8 | 메트릭 카디널리티 unbounded 위험 | (a) Resolved in NFR-DEEP2-002, RDC-8 | Go enum-like type으로 컴파일 타임 enforcement; pre-declaration; `metrics_test.go::TestNoUnboundedLabels` 회귀 게이트 |
-| R9 | Error propagation 정책 불명확 | (a) Resolved in REQ-DEEP2-003, REQ-DEEP2-009a, REQ-DEEP2-009b, RDC-9 | Verifier rejection만 Writer 재시도 트리거 (max-retry exhaustion은 REQ-009a path); 다른 모든 agent 에러는 즉시 abort + 503 (REQ-009b path); 테스트 #16, #22, #23, #23a enforce |
+| R9 | Error propagation 정책 불명확 | (a) Resolved in REQ-DEEP2-003, REQ-DEEP2-009a-SSE/Buffered, REQ-DEEP2-009b-SSE/Buffered, RDC-9 | Verifier rejection만 Writer 재시도 트리거 (max-retry exhaustion은 SSE 활성 시 terminal SSE event REQ-009a-SSE, buffered 시 HTTP 503 REQ-009a-Buffered); 다른 모든 agent 에러는 즉시 abort (REQ-009b-SSE / REQ-009b-Buffered); 테스트 #16, #20-#29 enforce |
 | R10 | Heartbeat 시작 타이밍 | (b) Acceptable runtime decision | Handler 진입 시점 시작이 권장; 정확한 타이밍은 구현 단계에서 결정. 테스트 #47이 "agent 단계 중 heartbeat 발생" 만 검증, 정확한 횟수는 미강제 |
 
 추가 구현-단계 리스크 (research.md에 없음, 본 plan에서 식별):
@@ -397,7 +463,7 @@ spec.md §1.3 Resolved Design Choices (RDC-1 ~ RDC-10) 와 일대일
 |------|------------|
 | Writer prompt regression으로 인한 retry 폭증 | NFR-DEEP2-004의 `usearch_deep_agent_retries_total{agent="writer"}` 메트릭으로 모니터링; 운영 단계에서 retry 비율 5% 초과 시 alert (본 SPEC 범위 외, runbook 책임) |
 | Faithfulness endpoint timeout 회귀 | `DEEP_AGENT_VERIFIER_TIMEOUT_MS=30000` 기본값; SYN-002 enforcement 자체 latency가 30s 초과하지 않음을 SYN-002 본 spec에서 보장 |
-| DEEP-001 코드 변경에 의한 회귀 | REQ-DEEP2-011 + NFR-DEEP2-003 + 테스트 #6, #57이 회귀 방지; `cmd/usearch-api/handlers/synthesis.go`의 mode dispatch만 add-only로 수정 |
+| DEEP-001 코드 변경에 의한 회귀 | REQ-DEEP2-011 + NFR-DEEP2-003 + 테스트 #6, #65, #66이 회귀 방지; `cmd/usearch-api/handlers/synthesis.go`의 mode dispatch만 add-only로 수정 |
 
 ---
 

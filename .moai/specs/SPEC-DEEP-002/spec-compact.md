@@ -1,7 +1,7 @@
 # SPEC-DEEP-002 Compact Summary
 
-Version: 0.1.1
-Status: draft
+Version: 0.1.2
+Status: planned
 
 One-page distillation of `.moai/specs/SPEC-DEEP-002/spec.md` for
 loading-into-context efficiency.
@@ -12,7 +12,7 @@ loading-into-context efficiency.
 
 - **ID**: SPEC-DEEP-002
 - **Title**: Multi-agent /deep pipeline (Researcher/Reviewer/Writer/Verifier)
-- **Status**: draft
+- **Status**: planned
 - **Priority**: P0
 - **Milestone**: M5 — /deep multi-agent
 - **Methodology**: TDD (RED-GREEN-REFACTOR), coverage ≥85%
@@ -25,7 +25,7 @@ loading-into-context efficiency.
 
 ---
 
-## EARS Requirements (13)
+## EARS Requirements (15)
 
 ### Endpoint Module
 
@@ -38,8 +38,11 @@ loading-into-context efficiency.
   `Accept`이 `text/event-stream`을 advertise하지 않을 때, 핸들러는
   buffered JSON 응답으로 fallback. SSE writer/heartbeat 미인스턴스화.
 - **REQ-DEEP2-011** (Ubiquitous): `mode=storm` 경로는 SPEC-DEEP-001
-  동작을 byte-identically 보존. 두 모드 간 mutable global state 없음.
-  `?mode=` absent → default `storm` (backward compat).
+  동작을 **schema-identically AND semantically equivalently** 보존
+  (P-M6: same event types/order, same field names/types; non-deterministic
+  fields like request_id/timestamps/durations/costs MAY differ in value).
+  두 모드 간 mutable global state 없음. `?mode=` absent → default `storm`
+  (backward compat).
 
 ### Pipeline Module
 
@@ -52,27 +55,42 @@ loading-into-context efficiency.
   orchestrator가 Writer를 재호출하며 `retry_started` SSE emit.
   `usearch_deep_agent_retries_total{agent="writer"}` += 1 per retry.
   ONLY Verifier rejection만 Writer retry 트리거 — 다른 agent의 에러는
-  REQ-DEEP2-009b로 surface.
+  REQ-DEEP2-009b-SSE / REQ-DEEP2-009b-Buffered로 surface.
 - **REQ-DEEP2-005** (Ubiquitous): Researcher는 `fanout.Dispatch()`를
   파이프라인당 정확히 1회 호출, `Result.Docs []NormalizedDoc`를
   downstream으로 전달. 다른 retrieval 메커니즘 사용 금지.
-- **REQ-DEEP2-009a** (Unwanted): IF Writer가 max 3회 호출됨 AND Verifier가
-  최종 시도에서도 reject, THEN orchestrator abort + HTTP 503 +
-  `pipeline_failed` SSE event. `usearch_deep_agent_verifier_gate_results_total{result="fail_uncited"}`
+- **REQ-DEEP2-009a-SSE** (Unwanted): IF Writer가 max 3회 호출됨 AND
+  Verifier가 최종 시도에서도 reject AND SSE 활성 (headers already
+  flushed), THEN handler emits terminal `pipeline_failed{
+  failed_agent:"writer", reason:"verifier_rejection_exhausted",
+  attempts, uncited_count, retry_count}` SSE event. HTTP 200 stays
+  on wire (SSE forbids retroactive status change).
+  `usearch_deep_agent_verifier_gate_results_total{result="fail_uncited"}`
   은 매 rejection마다 증가, `usearch_deep_outcomes_total{outcome="error_pipeline_failed"}`
   은 정확히 1회 증가.
-- **REQ-DEEP2-009b** (Unwanted): IF Researcher/Reviewer/Verifier
-  자체가 비복구성 에러 (LLM 업스트림 실패, timeout, panic) 반환, THEN
-  orchestrator abort + HTTP 503 with `{error: "pipeline_failed",
-  failed_agent: <name>, ...}` + `pipeline_failed` SSE terminal event.
-  Writer retry 트리거 금지 (Writer retry는 REQ-DEEP2-003 Verifier
-  rejection 전용). `usearch_deep_outcomes_total{outcome="error_pipeline_failed"}`
-  은 abort당 정확히 1회 증가.
+- **REQ-DEEP2-009a-Buffered** (Unwanted): IF Writer max-retry exhaustion
+  AND response is buffered (headers NOT yet flushed), THEN handler
+  returns HTTP 503 + JSON body `{error: "pipeline_failed", detail,
+  uncited_count, attempts, retry_count}`. 동일 Prometheus counter 증감.
+- **REQ-DEEP2-009b-SSE** (Unwanted): IF Researcher/Reviewer/Verifier
+  자체가 비복구성 에러 (LLM 업스트림 실패, timeout, panic) 반환 AND
+  SSE 활성, THEN handler emits terminal `pipeline_failed{failed_agent,
+  reason}` SSE event. HTTP 200 stays. Writer retry 트리거 금지.
+  `usearch_deep_outcomes_total{outcome="error_pipeline_failed"}` += 1.
+- **REQ-DEEP2-009b-Buffered** (Unwanted): IF agent (non-Verifier-verdict)
+  error AND response is buffered, THEN HTTP 503 + JSON body `{error:
+  "pipeline_failed", failed_agent: <name>, detail}`. Writer retry 금지.
+  동일 Prometheus counter 증감.
 - **REQ-DEEP2-012** (Unwanted): IF `fanout.Dispatch()`가 빈
-  `Result.Docs` 반환, THEN Reviewer/Writer/Verifier 미호출, HTTP 200
-  with `{final: {sections: [], citations: []}, agent_log:
-  [{agent: "researcher", outcome: "empty_corpus"}]}`,
-  `usearch_deep_outcomes_total{outcome="empty_corpus"}` += 1.
+  `Result.Docs` 반환, THEN Researcher가 자체 LLM 호출을 **SKIP**하고
+  `IsEmpty:true` 즉시 반환 (P-M3: extract할 claim 없음 — 비용/지연
+  절감). Reviewer/Writer/Verifier 미호출, HTTP 200 with `{final:
+  {sections: [], citations: []}, agent_log: [{agent: "researcher",
+  outcome: "empty_corpus"}]}`. `usearch_deep_outcomes_total{outcome="empty_corpus"}`
+  += 1. **Histogram label vs SSE field naming clarification**: histogram
+  outcome label은 bounded enum `{success, error}`이므로 `success`로
+  관찰됨; SSE `agent_completed.outcome` JSON field는 cardinality 제약
+  없으므로 `"empty_corpus"` 값 사용.
 
 ### LLM Routing Module
 
@@ -90,7 +108,10 @@ loading-into-context efficiency.
   /faithfulness_check`에 POST. Python endpoint는 기존 SYN-002
   `enforce_faithfulness` 로직 재사용. Verifier는 `UncitedSentencesCount
   == 0`일 때만 PASS (binary gate). 추가 차원 (coverage, coherence)
-  점수화 없음.
+  점수화 없음. `usearch_deep_agent_verifier_gate_results_total{result}`
+  counter는 invocation 당 1회 증가 (`pass`, `fail_uncited`, `fail_error`
+  중 하나). `fail_error`는 모든 Verifier infra 실패 (timeout, sidecar
+  5xx, transport error, wrapper error)를 cover.
 
 ### Streaming & Observability Module
 
@@ -108,7 +129,7 @@ loading-into-context efficiency.
   (outcome ∈ {success, error}, cardinality 4×2=8 — per-attempt
   histogram, retry 추적은 별도 counter), `usearch_deep_agent_retries_total{agent="writer"}`
   (cardinality 1 — retry 귀속 단일 source), `usearch_deep_agent_verifier_gate_results_total{result}`
-  (cardinality 3, result ∈ {pass, fail_uncited, fail_timeout}). 모든
+  (cardinality 3, result ∈ {pass, fail_uncited, fail_error}). 모든
   라벨 값은 startup 시 pre-declared. 기존 `usearch_deep_outcomes_total{outcome}`에
   `empty_corpus`, `error_pipeline_failed` 추가.
 
@@ -116,19 +137,25 @@ loading-into-context efficiency.
 
 ## Non-Functional Requirements (4)
 
-- **NFR-DEEP2-001 Performance**: end-to-end p95 ≤ 60 s for 20-50 doc
-  corpus (Verifier passes 1st or 2nd attempt, default model tiers).
+- **NFR-DEEP2-001 Performance**: 두 갈래 budget (P-M2): **(a) Go-side
+  orchestration overhead p95 ≤ 1s** with mocked LLM + faithfulness
+  (50-iteration statistical test in `internal/deepagent/orchestrator_test.go`);
+  **(b) end-to-end prod p95 ≤ 60s** for 20-50 doc corpus on staging
+  (Verifier passes 1st or 2nd attempt, default model tiers, verified
+  via /moai sync smoke test — operational gate, not unit test).
   Max-retry exhaustion은 budget violation으로 간주하지 않음.
 - **NFR-DEEP2-002 Cardinality Safety**: 모든 label 값은 bounded enum
   집합에서만 (`agent ∈ {researcher, reviewer, writer, verifier}`,
   `outcome ∈ {success, error}`, `result ∈ {pass, fail_uncited,
-  fail_timeout}`), startup 시 pre-declared. Go enum-like type
+  fail_error}`), startup 시 pre-declared. Go enum-like type
   (`type Agent string` + `const`)로 컴파일 타임 enforce. User-derived
   string은 label position에 등장 금지.
 - **NFR-DEEP2-003 Backward Compatibility**: DEEP-001 acceptance suite
-  100% green 유지. `/deep?mode=storm` 응답 byte-identical pre/post-DEEP-002.
-  `?mode=` absent → default `storm`. 두 path 간 mutable global state 없음.
-  `internal/deepagent` 가 `internal/deepreport` 미import.
+  100% green 유지. `/deep?mode=storm` 응답 **schema-identical AND
+  semantically equivalent** pre/post-DEEP-002 (P-M6: same event types/order,
+  same field names/types per event; non-deterministic fields may differ
+  in value). `?mode=` absent → default `storm`. 두 path 간 mutable
+  global state 없음. `internal/deepagent` 가 `internal/deepreport` 미import.
 - **NFR-DEEP2-004 Cost Visibility**: `usearch_deep_agent_duration_seconds`
   은 agent 라벨로 쿼리 가능. `usearch_deep_agent_retries_total`로 retry
   anomaly 탐지. `cost_usd` 필드는 모든 `agent_completed` payload에 포함.
@@ -142,14 +169,15 @@ loading-into-context efficiency.
 |----------|----------|
 | 1. Happy path: Verifier PASS first attempt | REQ-001, 002, 005, 006, 007, 008 |
 | 2. Retry path: reject iter 1, PASS iter 2 | REQ-003, 007, 008 |
-| 3. Max-retry exhaustion (3 attempts all fail) → 503 | REQ-009a, 007, 008 |
+| 3-SSE. Max-retry exhaustion + SSE active → terminal SSE, HTTP 200 stays | REQ-009a-SSE, 007, 008 |
+| 3-Buffered. Max-retry exhaustion + buffered → HTTP 503 + JSON | REQ-009a-Buffered, 008 |
 | 4. Context cancellation mid-pipeline | REQ-002, 007 |
 | 5. Mode coexistence: `?mode=storm` unchanged | REQ-011 |
 | 6. Buffered fallback (`?stream=false`) | REQ-010 |
 | 7. Empty fanout corpus short-circuit | REQ-012 |
-| 8. Researcher error aborts (non-Verifier failure) | REQ-009b |
-| Edge 1. Reviewer error no retry, abort | REQ-009b |
-| Edge 2. Verifier endpoint 5xx no retry, abort | REQ-009b |
+| 8. Researcher error aborts (non-Verifier failure) | REQ-009b-SSE, 009b-Buffered |
+| Edge 1. Reviewer error no retry, abort | REQ-009b-SSE, 009b-Buffered |
+| Edge 2. Verifier infra 5xx (fail_error) no retry, abort | REQ-009b-SSE, 009b-Buffered |
 | Edge 3. Env-var absent → model defaults | REQ-004 |
 | Edge 4. Concurrent `storm` + `agents` requests isolated | REQ-011, NFR-DEEP2-003 |
 
@@ -165,6 +193,9 @@ loading-into-context efficiency.
   prompts.go, config.go, metrics.go, sse.go + 3 test files
 - `internal/synthesis/faithfulness.go` + test
 - `internal/streamsynth/agent_events.go` + test
+- `internal/streamsynth/longform_source.go` — NEW `LongFormSource`
+  interface (P-M7); both `deepreport.Report` and `deepagent.WriterDraft`
+  implement it
 - `cmd/usearch-api/handlers/deep_agents_handler.go` + test
 - `internal/obs/metrics/deepagent.go` + test
 
@@ -210,7 +241,8 @@ loading-into-context efficiency.
   `final_token` 이벤트 미emit (research.md §1/§6에 잘못된 암시 있었으나
   본 SPEC에서 제외; §1.1 footnote [¹] 참조)
 - **Multi-agent retry coordination beyond Writer** — 다른 agent transient
-  error는 즉시 abort + 503 (REQ-DEEP2-009b)
+  error는 즉시 abort: SSE 활성 시 terminal SSE event (REQ-DEEP2-009b-SSE),
+  buffered 시 HTTP 503 (REQ-DEEP2-009b-Buffered)
 - **`usearch deep --mode agents` CLI surface** → SPEC-CLI-002 (M7)
 - **Non-LiteLLM LLM access** — 직접 vendor SDK 호출 금지
   (SPEC-LLM-001)

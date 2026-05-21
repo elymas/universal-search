@@ -1,6 +1,6 @@
 ---
 id: SPEC-DEEP-003
-version: 0.1.1
+version: 0.1.2
 status: draft
 created: 2026-05-21
 updated: 2026-05-21
@@ -19,8 +19,8 @@ test_deep_tree.py`의 단일 테스트 함수로 검증 가능해야 한다.
 
 ## Scenario 5.1 — 정상 트리 확장 (default config: breadth=4, depth=3)
 
-**REQ Coverage**: REQ-DEEP3-001, 003, 004, 011, 012; NFR-DEEP3-001, 002,
-005, 006
+**REQ Coverage**: REQ-DEEP3-001, 003, 004, 011a, 012, 013; NFR-DEEP3-001,
+002, 005, 006
 
 ### Given
 
@@ -61,11 +61,18 @@ test_deep_tree.py`의 단일 테스트 함수로 검증 가능해야 한다.
   `Status=NodeStatusComplete`.
 - Postgres `deep_runs` 테이블에 단일 row insert: `{run_id="test-run-001",
   query="양자컴퓨터의 신약 개발 응용 현황", breadth=4, depth=3,
-  total_nodes=85, total_tokens=<actual>, status="success", ...}`.
+  total_nodes=85, total_tokens=<actual>, total_cost_usd=<derived>,
+  status="success", ...}`.
+- 모든 완료 노드는 `Node.CostUSD` 필드를 가지며,
+  `Node.CostUSD == Node.TokensUsed * pricing.{DEEP_TREE_DECOMPOSE_MODEL}`
+  관계가 성립한다(REQ-DEEP3-013). 트리 수준 `TotalCostUSD`는
+  `sum(node.CostUSD for node where Status == NodeStatusComplete)`로
+  derive되며 Postgres `total_cost_usd` 컬럼과 일치한다.
 
 **Test functions**: `TestExpandTreeHappyPath`, `TestExpandTreeLatencyP95`,
-`TestExpandTreeMetricsObserved` (`internal/deepagent/tree_test.go`,
-`tree_metrics_test.go`).
+`TestExpandTreeMetricsObserved`, `TestNodeCostUSDComputedOnComplete`,
+`TestTreeTotalCostUSDSumsCompletedNodes`
+(`internal/deepagent/tree_test.go`, `tree_metrics_test.go`).
 
 ---
 
@@ -114,9 +121,10 @@ test_deep_tree.py`의 단일 테스트 함수로 검증 가능해야 한다.
 
 ---
 
-## Scenario 5.3 — 토큰 budget 소진 mid-tree → 부분 트리 반환
+## Scenario 5.3 — 토큰 budget 소진 mid-tree → 부분 트리 반환 + reservation lock race-free
 
-**REQ Coverage**: REQ-DEEP3-006, 007, 008, 010
+**REQ Coverage**: REQ-DEEP3-006 (reservation lock), 007 (atomic release),
+008, 010; NFR-DEEP3-003 (race-free budget enforcement)
 
 ### Given
 
@@ -131,30 +139,36 @@ test_deep_tree.py`의 단일 테스트 함수로 검증 가능해야 한다.
 - `DEEP_TREE_TOKEN_BUDGET=20000` (default 60K보다 낮음).
 - 각 노드 평균 2000 tokens 소비(85 노드 × 2000 = 170K, budget 8.5x
   초과).
+- 모든 sibling 노드는 동일 depth에서 `errgroup.WithContext`로 동시
+  dispatch(REQ-DEEP3-004).
 
 ### When
 
-- 트리 익스플로러가 depth=2까지 expand를 진행하다 budget exhaustion
-  발생(예: 10번째 노드 직전 pre-check fail).
-- 잔여 frontier 노드(약 75개)를 `NodeStatusBudgetExceeded`로 mark.
+- 트리 익스플로러가 BFS expand를 진행. REQ-DEEP3-006의 reservation lock
+  semantics에 따라 매 노드 dispatch 직전 pre-check가 (read +
+  decision + reservation)을 atomic하게 수행하며, REQ-DEEP3-007의 atomic
+  release semantics가 노드 완료 시점에 reservation/actual delta를 동시에
+  반영한다.
+- Budget exhaustion이 발생하면 잔여 frontier 노드를
+  `NodeStatusBudgetExceeded`로 mark.
 
-### Then
+### Then (deterministic bounds)
 
 - 응답 HTTP 200 (degraded success, 5xx error 아님).
-- 응답 body의 `tree.status == "budget_exceeded"`,
-  `tree.total_nodes_completed` ≈ 10,
-  `tree.total_nodes_skipped` ≈ 75.
-- 응답 body의 `usage` 필드:
-  ```json
-  {
-    "budget_exceeded": true,
-    "total_tokens": ~19000,
-    "total_nodes_completed": ~10,
-    "total_nodes_skipped": ~75
-  }
-  ```
-- Writer가 `TreeResult.flattened_claims`(약 10개 노드의 claims)에서
-  답변 생성 — empty corpus가 아니므로 정상 답변.
+- 응답 body의 `tree.status == "budget_exceeded"`.
+- **Hard invariant (NFR-DEEP3-003)**: `final_total_tokens =
+  sum(node.TokensUsed for completed nodes) ≤ DEEP_TREE_TOKEN_BUDGET =
+  20000`. 본 invariant는 sibling 동시 race 조건 하에서도 SHALL 보존된다
+  (reservation lock이 race window 자체를 제거).
+- **Completed nodes bound**: `total_nodes_completed ≤
+  floor(DEEP_TREE_TOKEN_BUDGET / average_node_tokens) = floor(20000 /
+  2000) = 10`. Reservation overhead로 인해 실제 값은 더 작을 수 있다
+  (lower bound는 1 — 최소 root는 항상 complete; root estimate 5000 +
+  budget 20000 충분).
+- **Skipped nodes**: `total_nodes_skipped = 85 -
+  total_nodes_completed`.
+- Writer가 `TreeResult.flattened_claims`(완료된 노드들의 claims)에서
+  답변 생성 — empty corpus가 아니므로 정상 답변(root은 항상 complete).
 - Prometheus `usearch_deep_tree_total_tokens{outcome="budget_exceeded"}`
   += 1.
 - `tree.json`에 모든 85 노드가 기록 — 일부는 `NodeStatusComplete`,
@@ -168,15 +182,43 @@ test_deep_tree.py`의 단일 테스트 함수로 검증 가능해야 한다.
 {budget_exceeded: true, total_nodes_completed: 0, ...}`. 본 sub-scenario
 는 REQ-DEEP3-006의 root seed clause를 검증한다.
 
+### Concurrent breadth race sub-scenario (B1 verification)
+
+추가로 `breadth=8, depth=2, DEEP_TREE_TOKEN_BUDGET=60000` 설정 하에서
+worst-case 동시 race를 검증한다:
+
+- root(actual=2000, reserved=5000 → release 3000 후 reserved=0,
+  cumulative=2000) 완료 후 8개 depth-1 sibling이 errgroup.WithContext로
+  동시 dispatch.
+- 각 sibling의 `estimated_next_cost = parent.TokensUsed * breadth *
+  1.25 = 2000 * 8 * 1.25 = 20000`.
+- Pre-check 순서(reservation lock으로 serialize): cumulative=2000,
+  reserved=0. Sibling 1 통과 → reserved=20000. Sibling 2 시점 cumulative
+  + reserved + 20000 = 42000 < 60000 → reserved=40000. Sibling 3 시점
+  42000+20000=62000 > 60000 → BudgetExceeded. Sibling 4~8 동일.
+- 결과: depth-1에서 최대 2 sibling이 complete 가능(actual 사용량은 약
+  4000 tokens 추가). 잔여 6 sibling은 BudgetExceeded.
+- **Critical assertion**: `final_total = sum(node.TokensUsed for
+  completed) ≤ 60000` 성립(reservation lock으로 overshoot 0).
+- Test: `TestExpandTreeConcurrentBreadthBudgetRaceFree`는 본 시나리오를
+  100회 반복 실행하여 매 iteration `final_total ≤ budget_cap`을 assertion
+  한다.
+
 **Test functions**: `TestExpandTreeBudgetExceeded`,
-`TestExpandTreePartialReturn`, `TestExpandTreeRootSeedTriggersImmediateBudgetFail`
-(`internal/deepagent/tree_test.go`).
+`TestExpandTreePartialReturn`,
+`TestExpandTreeRootSeedTriggersImmediateBudgetFail`,
+`TestExpandTreeConcurrentBreadthBudgetRaceFree`
+(`internal/deepagent/tree_test.go`),
+`TestBudgetReservationLockSerializesSiblings`,
+`TestBudgetReservationReleaseOnComplete`
+(`internal/deepagent/budget_test.go`).
 
 ---
 
 ## Scenario 5.4 — 인용 lineage가 모든 leaf claim에서 root까지 추적 가능
 
-**REQ Coverage**: REQ-DEEP3-009, 010
+**REQ Coverage**: REQ-DEEP3-009a (prompt context flow), REQ-DEEP3-009b
+(citation slice disjointness), REQ-DEEP3-010
 
 ### Given
 
@@ -203,16 +245,24 @@ test_deep_tree.py`의 단일 테스트 함수로 검증 가능해야 한다.
   - 모든 leaf claim의 `lineage_path[0]`이 root query.
   - lineage_path 길이가 source node의 depth와 일치.
 - 어떤 `FlattenedClaim`도 `lineage_path == []` (empty)인 경우가 없다.
+- **REQ-DEEP3-009b citation disjointness invariant**: 각 노드의
+  `Node.Citations` 슬라이스는 다른 노드의 Citations 슬라이스를 reference
+  로 inherit하지 않는다(독립 `fanout.Dispatch` 결과만 보유). 두 노드의
+  Citations에 동일 doc_id가 우연히 등장하는 것은 허용되나, 슬라이스
+  identity는 disjoint해야 한다. Test: 모든 노드 쌍 (a, b)에 대해
+  `&a.Citations[0]`이 b.Citations 슬라이스에 속하지 않음을 검증.
 
 **Test functions**: `TestFlattenedClaimLineageInvariant`,
-`TestFlattenedClaimLineageProperty` (`internal/deepagent/tree_test.go`,
+`TestFlattenedClaimLineageProperty`,
+`TestCitationsDisjointlyOwned` (`internal/deepagent/tree_test.go`,
 `tree_types_test.go`).
 
 ---
 
 ## Scenario 5.5 — Sidecar 크래시 시 tree.json 부분 복원
 
-**REQ Coverage**: REQ-DEEP3-011; NFR-DEEP3-008
+**REQ Coverage**: REQ-DEEP3-011a (atomic flush per depth-level join),
+REQ-DEEP3-011b (reload-mode reclassify); NFR-DEEP3-008
 
 ### Given
 
@@ -222,40 +272,57 @@ test_deep_tree.py`의 단일 테스트 함수로 검증 가능해야 한다.
   `NodeStatusExpanding`).
 - 운영자가 server에 SIGTERM 전송.
 
-### When
+### When (REQ-DEEP3-011a — expansion-phase atomic flush)
 
 - Server가 graceful shutdown sequence를 수행한다.
 - 진행 중이던 expand는 context cancellation으로 중단.
-- 이후 audit script가 `.moai/runs/<run_id>/tree.json` 파일을 load.
+- 매 depth-level join 직후 + 노드 transition 시점에 atomic flush가
+  수행되었으므로(REQ-DEEP3-011a), 디스크의 `.moai/runs/<run_id>/tree.json`
+  은 완료된 노드들의 상태를 partial하게 보유한다.
 
-### Then
+### Then (REQ-DEEP3-011a — flush invariant)
 
 - `tree.json` 파일은 valid JSON 구조 — flush된 디스크 원본은 불변.
-- 로드 직후 reload 로직(REQ-DEEP3-011 reload-and-reclassify clause)이
-  in-memory 변환을 수행:
+- depth=1 노드들은 모두 `NodeStatusComplete`로 flush된 상태(SIGTERM
+  이전에 depth-1 join 완료).
+- depth=2의 5개 `NodeStatusExpanding` 노드는 SIGTERM 시점의 상태로
+  disk에 부분 flush된 상태이거나, 가장 가까운 atomic flush 이전 상태로
+  보존된다 — 어느 경우든 valid JSON parse가 가능하다.
+
+### When + Then (REQ-DEEP3-011b — reload-mode reclassify)
+
+- 이후 audit script(SPEC-DEEP-004 audit 기능)가 persistence layer를
+  reload mode로 invoke한다.
+- 로드 직후 reload 로직(REQ-DEEP3-011b)이 in-memory 변환을 수행:
   - `Status == NodeStatusComplete` 노드는 그대로 유지.
   - `Status ∈ {NodeStatusExpanding, NodeStatusPending}` 노드를
     `NodeStatusFailed`로 reclassify.
-  - reload된 트리는 read-only로 반환 — 추가 expand 시도 차단.
+  - reload된 트리는 read-only로 반환 — 추가 expand 시도는 차단되고
+    expand attempt는 panic 또는 error로 reject.
+- 디스크 tree.json은 reclassify 결과로 overwrite되지 않는다 — audit
+  무결성 보장(in-memory 변환에 한정).
 - Postgres `deep_runs` row의 `status` 필드가 `"failed"` 또는
   `"partial"`로 finalize. `completed_at` 필드가 SIGTERM 시점 ± 5초.
 - Resume 시도 불가 — 새 `/deep` 요청은 fresh run_id로 처음부터 expand
   (resume은 §4 Exclusions).
-- 디스크 tree.json은 reclassify 결과로 overwrite되지 않는다 — audit
-  무결성 보장.
 
-**Test functions**: `TestPersistenceReclassifyOnReload`,
-`TestPersistenceCrashFinalizesPostgresRow` (`internal/deepagent/
-persistence_test.go`).
+**Test functions**:
+- REQ-011a: `TestPersistenceAtomicFlushOnDepthJoin`,
+  `TestPersistenceCrashFinalizesPostgresRow`
+- REQ-011b: `TestPersistenceReclassifyOnReload`,
+  `TestPersistenceReloadTreeRejectsExpandAttempt`
+  (`internal/deepagent/persistence_test.go`).
 
 ---
 
 ## Edge Cases
 
-### Scenario 5.6 (edge) — breadth=0 OR depth=0 fallback to single-shot
+### Scenario 5.6 (edge) — breadth=0 OR depth=0 fallback to single-shot (header-based signal)
 
 **REQ Coverage**: REQ-DEEP3-005 (단일 정책: `breadth=0` OR `depth=0` →
-single-shot fallback, HTTP 200, REQ-DEEP3-002 invalid-range와 별도)
+single-shot fallback, HTTP 200, fallback signal은 HTTP 응답 header
+`X-Deep-Tree-Fallback`을 통해 emit; response body는 DEEP-002 single-shot
+contract와 byte-identical 유지)
 
 #### Sub-scenario 5.6a — breadth=0
 
@@ -272,8 +339,11 @@ single-shot fallback, HTTP 200, REQ-DEEP3-002 invalid-range와 별도)
 - 응답 HTTP 200(`breadth=0`은 invalid가 아닌 fallback signal).
 - DEEP-002 REQ-005의 single-shot Researcher 동작이 수행됨 — 단일
   `fanout.Dispatch` 호출 후 결과를 Writer로 전달.
-- 응답 body에 `{tree: {disabled: true, mode: "single-shot-fallback",
-  reason: "breadth_zero"}}` metadata 포함.
+- **응답 header**: `X-Deep-Tree-Fallback: breadth_zero` SHALL emit.
+- **응답 body**: DEEP-002 single-shot contract와 byte-identical
+  (본 SPEC은 body 구조를 mutate하지 않는다). 즉 SSE/JSON body에
+  `tree.disabled`/`tree.mode`/`tree.reason` 같은 신규 필드가 존재 SHALL
+  NOT 한다.
 - `tree.json` 파일이 생성되지 않는다(트리 모드가 아닌 single-shot).
 
 #### Sub-scenario 5.6b — depth=0
@@ -290,8 +360,8 @@ single-shot fallback, HTTP 200, REQ-DEEP3-002 invalid-range와 별도)
 
 - 응답 HTTP 200(`depth=0`도 invalid가 아닌 fallback signal).
 - DEEP-002 REQ-005의 single-shot Researcher 동작이 수행됨.
-- 응답 body에 `{tree: {disabled: true, mode: "single-shot-fallback",
-  reason: "depth_zero"}}` metadata 포함.
+- **응답 header**: `X-Deep-Tree-Fallback: depth_zero` SHALL emit.
+- **응답 body**: DEEP-002 single-shot contract와 byte-identical.
 - `tree.json` 파일이 생성되지 않는다.
 
 #### Sub-scenario 5.6c — breadth=0 AND depth=0 동시 지정
@@ -307,12 +377,65 @@ single-shot fallback, HTTP 200, REQ-DEEP3-002 invalid-range와 별도)
 ##### Then
 
 - 응답 HTTP 200, single-shot fallback 수행.
-- 응답 body의 `reason: "breadth_zero"`가 우선 emit(REQ-DEEP3-005 본문
-  명시).
+- **응답 header**: `X-Deep-Tree-Fallback: breadth_zero` 우선 emit
+  (REQ-DEEP3-005 본문 명시).
+- **응답 body**: DEEP-002 single-shot contract와 byte-identical.
+
+#### Sub-scenario 5.6d — header + body invariant regression (B2)
+
+##### Given
+
+- DEEP-002 acceptance test suite의 single-shot 응답 fixture가 hash로
+  capture되어 있음(byte-level reference).
+
+##### When
+
+- 본 SPEC의 fallback path가 트리거된 응답을 hash 비교한다(header 제외,
+  body만 비교).
+
+##### Then
+
+- Body hash가 DEEP-002 reference fixture와 일치 SHALL — 본 SPEC이
+  body를 mutate하지 않음을 회귀 검증.
+- `X-Deep-Tree-Fallback` header는 별도로 존재 SHALL.
 
 **Test functions**: `TestExpandTreeBreadthZeroFallback`,
-`TestExpandTreeDepthZeroFallback`, `TestExpandTreeBreadthAndDepthZeroFallback`
+`TestExpandTreeDepthZeroFallback`,
+`TestExpandTreeBreadthAndDepthZeroFallback`
+(`internal/deepagent/tree_test.go`),
+`TestFallbackHeaderEmittedAndBodyUnchanged`
+(`tests/integration/deep_tree_test.go`).
+
+### Scenario 5.8 (NFR gate) — in-memory tree memory bound (NFR-DEEP3-009)
+
+**REQ Coverage**: NFR-DEEP3-009
+
+#### Given
+
+- 트리 익스플로러가 worst-case config(`breadth=8, depth=5`)로 expand
+  실행 중. 각 노드의 평균 in-memory footprint(Node header + Citations
+  + Claims)는 ~4 KB로 측정된 baseline.
+
+#### When
+
+- 매 depth-level join 직후(REQ-DEEP3-011a flush 직전), persistence
+  layer가 트리 in-memory state 합산 크기를 측정한다.
+
+#### Then
+
+- 모든 depth-level 측정 시점에서 `sizeof(Node[]) + sizeof(Citations) +
+  sizeof(Claims) ≤ 100 MB` SHALL.
+- 만약 100 MB 초과가 감지되면, 트리 익스플로러는 frontier 노드를
+  truncation(`NodeStatusBudgetExceeded`로 mark)하여 다음 depth-level
+  전 100 MB 이하로 복원 SHALL 한다.
+- `usearch_deep_tree_total_tokens{outcome="budget_exceeded"}` += 1
+  emitted (memory bound도 budget_exceeded outcome으로 분류 — 별도
+  outcome label 신설하지 않음).
+
+**Test functions**: `TestTreeMemoryFootprintUnder100MBWorstCase`
 (`internal/deepagent/tree_test.go`).
+
+---
 
 ### Scenario 5.7 (edge) — depth=1 single-level tree
 
@@ -348,11 +471,12 @@ single-shot fallback, HTTP 200, REQ-DEEP3-002 invalid-range와 별도)
 본 SPEC의 구현이 "complete" 상태로 전이하려면 다음 모든 항목을 만족해야
 한다:
 
-- [ ] 모든 acceptance scenario(5.1 ~ 5.7) 테스트 함수가 작성 및 PASS.
-- [ ] 모든 REQ-DEEP3-001..012가 적어도 한 테스트 함수로 cover됨(REQ-to-
-  test traceability matrix).
-- [ ] 모든 NFR-DEEP3-001..008이 quantitative assertion(latency
-  percentile, cardinality bound, size bound 등)으로 검증됨.
+- [ ] 모든 acceptance scenario(5.1 ~ 5.8) 테스트 함수가 작성 및 PASS.
+- [ ] 모든 REQ-DEEP3-001..013(+009a/009b/011a/011b split 포함)이 적어도
+  한 테스트 함수로 cover됨(REQ-to-test traceability matrix).
+- [ ] 모든 NFR-DEEP3-001..009가 quantitative assertion(latency
+  percentile, cardinality bound, size bound, race-free budget invariant,
+  in-memory footprint 등)으로 검증됨.
 - [ ] Coverage report ≥ 85% (per quality.yaml coverage_target).
 - [ ] `go test -race ./internal/deepagent/...` 통과(race condition
   없음).
