@@ -97,6 +97,12 @@ type Registry struct {
 	DeepReportOutcomes *prometheus.CounterVec
 	DeepReportLatency  prometheus.Histogram
 
+	// Deep agent metrics (SPEC-DEEP-002 M6). New labels: agent, result.
+	// NFR-DEEP2-002: bounded enum pre-declaration.
+	DeepAgentDuration             *prometheus.HistogramVec
+	DeepAgentRetries              *prometheus.CounterVec
+	DeepAgentVerifierGateResults  *prometheus.CounterVec
+
 	// labelNames tracks all registered label names for cardinality validation.
 	labelNames []string
 }
@@ -205,6 +211,11 @@ func NewRegistry() *Registry {
 	// Register Deep report metrics (SPEC-DEEP-001 M6).
 	deepReport := registerDeepReport(pr)
 
+	// Register Deep agent metrics (SPEC-DEEP-002 M6).
+	// Pass the existing DeepReportOutcomes collector so registerDeepAgent can
+	// extend it with empty_corpus and error_pipeline_failed label values.
+	deepAgent := registerDeepAgent(pr, deepReport.outcomes)
+
 	return &Registry{
 		Prometheus:                   pr,
 		HTTPRequests:                 httpRequests,
@@ -238,6 +249,9 @@ func NewRegistry() *Registry {
 		SynthClusterMembers:          synthCluster.members,
 		DeepReportOutcomes:           deepReport.outcomes,
 		DeepReportLatency:            deepReport.latency,
+		DeepAgentDuration:            deepAgent.duration,
+		DeepAgentRetries:             deepAgent.retries,
+		DeepAgentVerifierGateResults: deepAgent.verifierGate,
 		labelNames: []string{
 			"method", "route", "status_class",
 			"adapter_class",
@@ -251,6 +265,11 @@ func NewRegistry() *Registry {
 			"store", "op",
 			// Tokenizer sidecar labels (SPEC-IDX-003)
 			"shard",
+			// Deep agent labels (SPEC-DEEP-002 NFR-DEEP2-002)
+			// agent in {researcher, reviewer, writer, verifier} (4 values)
+			"agent",
+			// result in {pass, fail_uncited, fail_error} (3 values)
+			"result",
 		},
 	}
 }

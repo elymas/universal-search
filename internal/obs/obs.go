@@ -286,3 +286,33 @@ func (o *Obs) DeepReportLatency() prometheus.Histogram {
 	}
 	return o.Metrics.DeepReportLatency
 }
+
+// DeepAgentDuration re-exports the deep agent duration histogram from
+// the Metrics registry. Returns nil when Metrics is nil (safe for tests).
+// SPEC-DEEP-002 M6: usearch_deep_agent_duration_seconds{agent, outcome}.
+func (o *Obs) DeepAgentDuration() *prometheus.HistogramVec {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.DeepAgentDuration
+}
+
+// DeepAgentRetries re-exports the deep agent retries counter from
+// the Metrics registry. Returns nil when Metrics is nil (safe for tests).
+// SPEC-DEEP-002 M6: usearch_deep_agent_retries_total{agent}.
+func (o *Obs) DeepAgentRetries() *prometheus.CounterVec {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.DeepAgentRetries
+}
+
+// DeepAgentVerifierGateResults re-exports the verifier gate results counter
+// from the Metrics registry. Returns nil when Metrics is nil (safe for tests).
+// SPEC-DEEP-002 M6: usearch_deep_agent_verifier_gate_results_total{result}.
+func (o *Obs) DeepAgentVerifierGateResults() *prometheus.CounterVec {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.DeepAgentVerifierGateResults
+}

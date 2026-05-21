@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/elymas/universal-search/internal/deepreport"
 	"github.com/elymas/universal-search/internal/sse"
 )
 
@@ -47,10 +46,10 @@ type LongFormSentencePayload struct {
 
 // SectionDonePayload is the JSON payload for an `event: section_done` SSE event.
 type SectionDonePayload struct {
-	RequestID       string `json:"request_id"`
-	SectionIndex    int    `json:"section_index"`
-	SentencesEmitted int   `json:"sentences_emitted"`
-	SchemaVersion   int    `json:"schema_version"`
+	RequestID        string `json:"request_id"`
+	SectionIndex     int    `json:"section_index"`
+	SentencesEmitted int    `json:"sentences_emitted"`
+	SchemaVersion    int    `json:"schema_version"`
 }
 
 // LongFormDonePayload is the JSON payload for the terminal `event: done` SSE event
@@ -67,11 +66,11 @@ type LongFormDonePayload struct {
 	SchemaVersion  int     `json:"schema_version"`
 }
 
-// StreamLongFormReport walks report.Sections and emits section-aware SSE events.
+// StreamLongFormReport streams section-aware SSE events from any LongFormSource.
 // Per section: section_start -> sentence xN -> section_done.
 // Terminal: done with totals.
 //
-// Sentences whose citation markers do not resolve to report.Citations are skipped,
+// Sentences whose citation markers do not resolve to source citations are skipped,
 // preserving the SYN-001c citation invariant.
 //
 // The caller is responsible for:
@@ -81,7 +80,7 @@ type LongFormDonePayload struct {
 //
 // @MX:WARN: [AUTO] Context check per section — must respect cancellation
 // @MX:REASON: client disconnect must stop emission; ctx checked at section and sentence boundaries
-func StreamLongFormReport(ctx context.Context, w *sse.Writer, report deepreport.Report) (StreamStats, error) {
+func StreamLongFormReport(ctx context.Context, w *sse.Writer, requestID string, src LongFormSource) (StreamStats, error) {
 	start := time.Now()
 
 	// measureLatency returns elapsed time in milliseconds with nanosecond precision.
@@ -89,11 +88,15 @@ func StreamLongFormReport(ctx context.Context, w *sse.Writer, report deepreport.
 		return float64(time.Since(start).Nanoseconds()) / 1e6
 	}
 
-	citationMap := buildDeepCitationMap(report.Citations)
+	sections := src.SourceSections()
+	citations := src.SourceCitations()
+	meta := src.SourceMetadata()
+
+	citationMap := buildSourceCitationMap(citations)
 
 	var totalSentences int
 
-	for _, section := range report.Sections {
+	for _, section := range sections {
 		// Check context before each section.
 		select {
 		case <-ctx.Done():
@@ -103,7 +106,7 @@ func StreamLongFormReport(ctx context.Context, w *sse.Writer, report deepreport.
 
 		// Emit section_start.
 		startPayload := SectionStartPayload{
-			RequestID:     report.RequestID,
+			RequestID:     requestID,
 			SectionIndex:  section.SectionIndex,
 			Heading:       section.Heading,
 			Level:         section.Level,
@@ -122,13 +125,13 @@ func StreamLongFormReport(ctx context.Context, w *sse.Writer, report deepreport.
 			default:
 			}
 
-			refs := resolveDeepCitations(sentence.Markers, citationMap)
+			refs := resolveSourceCitations(sentence.Markers, citationMap)
 			if len(refs) == 0 {
 				continue
 			}
 
 			sentencePayload := LongFormSentencePayload{
-				RequestID:     report.RequestID,
+				RequestID:     requestID,
 				SectionIndex:  section.SectionIndex,
 				SentenceIndex: sentence.SentenceIndex,
 				Text:          sentence.Text,
@@ -144,10 +147,10 @@ func StreamLongFormReport(ctx context.Context, w *sse.Writer, report deepreport.
 
 		// Emit section_done.
 		donePayload := SectionDonePayload{
-			RequestID:       report.RequestID,
-			SectionIndex:    section.SectionIndex,
+			RequestID:        requestID,
+			SectionIndex:     section.SectionIndex,
 			SentencesEmitted: sentencesEmitted,
-			SchemaVersion:   1,
+			SchemaVersion:    1,
 		}
 		if err := writeAndFlush(w, "section_done", donePayload); err != nil {
 			return StreamStats{SentencesEmitted: totalSentences}, err
@@ -156,13 +159,13 @@ func StreamLongFormReport(ctx context.Context, w *sse.Writer, report deepreport.
 
 	// Emit terminal done event.
 	terminalPayload := LongFormDonePayload{
-		RequestID:      report.RequestID,
-		TotalSections:  len(report.Sections),
+		RequestID:      requestID,
+		TotalSections:  len(sections),
 		TotalSentences: totalSentences,
 		LatencyMs:      measureLatency(),
-		Model:          report.Model,
-		Provider:       report.Provider,
-		CostUSD:        report.CostUSD,
+		Model:          meta.Model,
+		Provider:       meta.Provider,
+		CostUSD:        meta.CostUSD,
 		SchemaVersion:  1,
 	}
 	if err := writeAndFlush(w, "done", terminalPayload); err != nil {
@@ -187,18 +190,17 @@ func writeAndFlush(w *sse.Writer, eventType string, payload any) error {
 	return w.Flush()
 }
 
-// buildDeepCitationMap indexes deepreport.Citation by marker number for O(1) lookup.
-func buildDeepCitationMap(citations []deepreport.Citation) map[int]deepreport.Citation {
-	m := make(map[int]deepreport.Citation, len(citations))
+// buildSourceCitationMap indexes SourceCitation by marker number for O(1) lookup.
+func buildSourceCitationMap(citations []SourceCitation) map[int]SourceCitation {
+	m := make(map[int]SourceCitation, len(citations))
 	for _, c := range citations {
 		m[c.Marker] = c
 	}
 	return m
 }
 
-// resolveDeepCitations maps marker numbers to CitationRef slices. Returns nil if
-// no markers resolve (caller should skip the sentence — citation invariant).
-func resolveDeepCitations(markers []int, citationMap map[int]deepreport.Citation) []CitationRef {
+// resolveSourceCitations maps marker numbers to CitationRef slices.
+func resolveSourceCitations(markers []int, citationMap map[int]SourceCitation) []CitationRef {
 	if len(markers) == 0 {
 		return nil
 	}

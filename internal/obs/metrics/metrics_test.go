@@ -269,6 +269,11 @@ func TestCardinalityGuardRejectsUnboundedLabels(t *testing.T) {
 		"op":    true,
 		// Tokenizer sidecar labels added by SPEC-IDX-003; shard ∈ {ko,default}.
 		"shard": true,
+		// Deep agent labels added by SPEC-DEEP-002 (NFR-DEEP2-002).
+		// agent ∈ {researcher, reviewer, writer, verifier} (4 values, bounded enum).
+		"agent": true,
+		// result ∈ {pass, fail_uncited, fail_error} (3 values, bounded enum).
+		"result": true,
 	}
 
 	reg := metrics.NewRegistry()
