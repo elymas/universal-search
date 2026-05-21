@@ -149,5 +149,48 @@ func cacheConfig() CacheConfig {
 	}
 }
 
+// TestCostguardMetricsNoUnboundedLabels verifies that all costguard metric
+// labels are in the cardinality allowlist.
+// NFR-DEEP4-007: No PII / unbounded values in metric labels.
+func TestCostguardMetricsNoUnboundedLabels(t *testing.T) {
+	t.Parallel()
+
+	allowlist := map[string]bool{
+		// tenant: bounded by allowed_tenants whitelist, collapses to "unknown"
+		"tenant": true,
+		// status: bounded enum {allowed, capped, degraded, rejected_by_screen, suggested_basic, error}
+		"status": true,
+		// tier: bounded enum {haiku_screen, researcher, reviewer, writer, verifier}
+		"tier": true,
+		// state: bounded enum {closed, half_open, open}
+		"state": true,
+		// model: bounded by LiteLLM config aliases (<=15)
+		"model": true,
+	}
+
+	reg := prometheus.NewRegistry()
+	m := RegisterMetrics(reg)
+
+	// Gather all registered metrics and check their labels.
+	mfs, err := reg.Gather()
+	if err != nil {
+		t.Fatalf("Gather: %v", err)
+	}
+
+	for _, mf := range mfs {
+		for _, metric := range mf.GetMetric() {
+			for _, label := range metric.GetLabel() {
+				name := label.GetName()
+				if !allowlist[name] {
+					t.Errorf("label %q in metric %q is not in the costguard cardinality allowlist (NFR-DEEP4-007)", name, mf.GetName())
+				}
+			}
+		}
+	}
+
+	// Suppress unused warning.
+	_ = m
+}
+
 // ensure strings is used (referenced by tests above).
 var _ = strings.TrimSpace
