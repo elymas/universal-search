@@ -207,12 +207,7 @@ func resolveSourceCitations(markers []int, citationMap map[int]SourceCitation) [
 	var refs []CitationRef
 	for _, marker := range markers {
 		if c, ok := citationMap[marker]; ok {
-			refs = append(refs, CitationRef{
-				Marker: c.Marker,
-				DocID:  c.DocID,
-				URL:    c.URL,
-				Title:  c.Title,
-			})
+			refs = append(refs, CitationRef(c))
 		}
 	}
 	return refs

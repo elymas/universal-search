@@ -22,17 +22,17 @@ const (
 // Node represents a single node in the /deep tree exploration.
 // Each node corresponds to a sub-query at a specific depth and breadth position.
 type Node struct {
-	ID             string       `json:"id"`
-	Depth          int          `json:"depth"`
-	ParentID       string       `json:"parent_id"`
-	BreadthIndex   int          `json:"breadth_index"`
-	Query          string       `json:"query"`
-	Status         NodeStatus   `json:"status"`
+	ID             string         `json:"id"`
+	Depth          int            `json:"depth"`
+	ParentID       string         `json:"parent_id"`
+	BreadthIndex   int            `json:"breadth_index"`
+	Query          string         `json:"query"`
+	Status         NodeStatus     `json:"status"`
 	Citations      []NodeCitation `json:"citations"`
-	Claims         []NodeClaim  `json:"claims"`
-	TokensUsed     int64        `json:"tokens_used"`
-	ReservedTokens int64        `json:"reserved_tokens"`
-	CostUSD        float64      `json:"cost_usd"`
+	Claims         []NodeClaim    `json:"claims"`
+	TokensUsed     int64          `json:"tokens_used"`
+	ReservedTokens int64          `json:"reserved_tokens"`
+	CostUSD        float64        `json:"cost_usd"`
 }
 
 // NodeCitation represents a source document cited by a node.

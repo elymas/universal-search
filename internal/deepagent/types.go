@@ -83,18 +83,18 @@ type ReviewerCritique struct {
 
 // WriterDraft is the output of the Writer agent.
 type WriterDraft struct {
-	Sections   []DraftSection
-	Citations  []DraftCitation
-	CostUSD    float64
-	Model      string
-	Provider   string
+	Sections  []DraftSection
+	Citations []DraftCitation
+	CostUSD   float64
+	Model     string
+	Provider  string
 }
 
 // DraftSection is a single section in the WriterDraft.
 type DraftSection struct {
-	SectionIndex int
-	Heading      string
-	Text         string
+	SectionIndex    int
+	Heading         string
+	Text            string
 	CitationMarkers []int // 1-indexed citation markers in this section
 }
 

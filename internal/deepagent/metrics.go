@@ -14,8 +14,8 @@ import (
 // REQ-DEEP2-008: All label values are bounded enums from types.go Agent constants.
 // NFR-DEEP2-002: No user-derived strings in label positions.
 type MetricsRecorder struct {
-	duration    *prometheus.HistogramVec
-	retries     *prometheus.CounterVec
+	duration     *prometheus.HistogramVec
+	retries      *prometheus.CounterVec
 	verifierGate *prometheus.CounterVec
 }
 

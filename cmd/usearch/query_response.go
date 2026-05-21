@@ -27,12 +27,12 @@ type queryStats struct {
 // queryResponse is the internal representation of a completed pipeline result.
 // It is the input to both formatText and formatJSON.
 type queryResponse struct {
-	Query     string           `json:"query"`
-	Category  string           `json:"category"`
-	Lang      string           `json:"lang"`
-	Adapters  []string         `json:"adapters"`
-	Summary   string           `json:"summary"`
-	Citations []queryCitation  `json:"citations"`
-	Stats     queryStats       `json:"stats"`
+	Query     string                `json:"query"`
+	Category  string                `json:"category"`
+	Lang      string                `json:"lang"`
+	Adapters  []string              `json:"adapters"`
+	Summary   string                `json:"summary"`
+	Citations []queryCitation       `json:"citations"`
+	Stats     queryStats            `json:"stats"`
 	Docs      []types.NormalizedDoc `json:"-"` // used for degraded text output
 }

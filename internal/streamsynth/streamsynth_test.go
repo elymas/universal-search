@@ -25,7 +25,7 @@ func newFakeRW() *fakeResponseWriter {
 	return &fakeResponseWriter{buf: &bytes.Buffer{}, header: make(http.Header)}
 }
 
-func (f *fakeResponseWriter) Header() http.Header        { return f.header }
+func (f *fakeResponseWriter) Header() http.Header         { return f.header }
 func (f *fakeResponseWriter) WriteHeader(_ int)           {}
 func (f *fakeResponseWriter) Write(b []byte) (int, error) { return f.buf.Write(b) }
 func (f *fakeResponseWriter) Flush()                      {}
@@ -366,7 +366,7 @@ type blockingWriter struct {
 }
 
 func (b *blockingWriter) Header() http.Header { return b.header }
-func (b *blockingWriter) WriteHeader(_ int)    {}
+func (b *blockingWriter) WriteHeader(_ int)   {}
 func (b *blockingWriter) Write(data []byte) (int, error) {
 	<-b.block
 	return b.buf.Write(data)

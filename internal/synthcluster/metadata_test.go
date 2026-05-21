@@ -141,7 +141,7 @@ func TestMetadataSimhashField(t *testing.T) {
 		t.Errorf("simhash field length = %d, want 16 hex chars (got %q)", len(sh), sh)
 	}
 	for _, c := range sh {
-		if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')) {
+		if (c < '0' || c > '9') && (c < 'a' || c > 'f') {
 			t.Errorf("simhash field contains non-hex character %q in %q", c, sh)
 			break
 		}
@@ -178,8 +178,9 @@ func TestNoMetadataNamespaceCollision(t *testing.T) {
 
 	for _, r := range reps {
 		if r.Metadata != nil {
-			if _, ok := r.Metadata["my_adapter_key"]; !ok && r.ID == "nc1" {
+			if _, ok := r.Metadata["my_adapter_key"]; ok || r.ID != "nc1" {
 				// Acceptable: representatives may have their own Metadata passed through.
+				continue
 			}
 		}
 	}

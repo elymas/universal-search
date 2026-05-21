@@ -38,7 +38,7 @@ var treeNodeExpandBuckets = []float64{0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60}
 // REQ-DEEP3-012: usearch_deep_tree_total_tokens{outcome} counter
 // NFR-DEEP3-005: All label values are pre-declared constants.
 type TreeMetricsRecorder struct {
-	nodeExpand *prometheus.HistogramVec
+	nodeExpand  *prometheus.HistogramVec
 	totalTokens *prometheus.CounterVec
 }
 
@@ -80,7 +80,7 @@ func NewTreeMetricsRecorder(pr *prometheus.Registry) *TreeMetricsRecorder {
 	}
 
 	return &TreeMetricsRecorder{
-		nodeExpand: nodeExpand,
+		nodeExpand:  nodeExpand,
 		totalTokens: totalTokens,
 	}
 }

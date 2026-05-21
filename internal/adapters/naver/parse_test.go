@@ -517,10 +517,10 @@ func TestClampDisplay(t *testing.T) {
 		input int
 		want  int
 	}{
-		{0, 25},   // default
-		{1, 1},    // min
-		{-1, 1},   // below min
-		{50, 50},  // within range
+		{0, 25},    // default
+		{1, 1},     // min
+		{-1, 1},    // below min
+		{50, 50},   // within range
 		{100, 100}, // max
 		{101, 100}, // above max
 	}

@@ -86,7 +86,7 @@ func (c *Client) doRequest(ctx context.Context, body []byte) (*Result, error) {
 	if err != nil {
 		return nil, fmt.Errorf("tokenizer: http do: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	switch resp.StatusCode {
 	case http.StatusOK:

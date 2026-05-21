@@ -97,7 +97,6 @@ func TestUnknownSubcommandExits2Process(t *testing.T) {
 	}
 }
 
-
 // TestQuerySubcommandHelp verifies that 'usearch query --help' exits cleanly.
 func TestQuerySubcommandHelp(t *testing.T) {
 	t.Helper()

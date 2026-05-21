@@ -316,3 +316,23 @@ func (o *Obs) DeepAgentVerifierGateResults() *prometheus.CounterVec {
 	}
 	return o.Metrics.DeepAgentVerifierGateResults
 }
+
+// DeepTreeNodeExpand re-exports the deep tree node expand histogram from
+// the Metrics registry. Returns nil when Metrics is nil (safe for tests).
+// SPEC-DEEP-003 Phase E: usearch_deep_tree_node_expand_seconds{depth, outcome}.
+func (o *Obs) DeepTreeNodeExpand() *prometheus.HistogramVec {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.DeepTreeNodeExpand
+}
+
+// DeepTreeTotalTokens re-exports the deep tree total tokens counter from
+// the Metrics registry. Returns nil when Metrics is nil (safe for tests).
+// SPEC-DEEP-003 Phase E: usearch_deep_tree_total_tokens{outcome}.
+func (o *Obs) DeepTreeTotalTokens() *prometheus.CounterVec {
+	if o == nil || o.Metrics == nil {
+		return nil
+	}
+	return o.Metrics.DeepTreeTotalTokens
+}

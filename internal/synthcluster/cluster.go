@@ -318,4 +318,3 @@ func betterRep(candidate, current types.NormalizedDoc) bool {
 	// REQ-SYN3-004: when all else ties, input-order-first ≈ lexicographic-first.
 	return candidate.ID < current.ID
 }
-

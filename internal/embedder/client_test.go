@@ -25,16 +25,16 @@ func cannedResponse(t *testing.T, requestID string, n int, cacheHits, cacheMisse
 		dense[i] = make([]float64, 1024)
 	}
 	resp := map[string]interface{}{
-		"request_id":   requestID,
-		"dense":        dense,
-		"sparse":       nil,
-		"colbert":      nil,
-		"model":        "BAAI/bge-m3",
+		"request_id":    requestID,
+		"dense":         dense,
+		"sparse":        nil,
+		"colbert":       nil,
+		"model":         "BAAI/bge-m3",
 		"model_version": "latest",
-		"device":       "cpu",
-		"latency_ms":   10.0,
-		"cache_hits":   cacheHits,
-		"cache_misses": cacheMisses,
+		"device":        "cpu",
+		"latency_ms":    10.0,
+		"cache_hits":    cacheHits,
+		"cache_misses":  cacheMisses,
 	}
 	b, err := json.Marshal(resp)
 	require.NoError(t, err)
@@ -264,9 +264,9 @@ func TestClientEmitsCacheHitCounter(t *testing.T) {
 func TestClientModeLabelDerivation(t *testing.T) {
 	t.Parallel()
 	cases := []struct {
-		name    string
-		req     embedder.Request
-		want    string
+		name string
+		req  embedder.Request
+		want string
 	}{
 		{"dense only", embedder.Request{ReturnDense: true}, "dense"},
 		{"sparse only", embedder.Request{ReturnSparse: true}, "sparse"},
@@ -347,9 +347,8 @@ func TestClientEmbedRetriesOnConnReset(t *testing.T) {
 				conn.Close()
 			} else {
 				// Serve a proper HTTP response.
-				resp := "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 200\r\n\r\n"
 				body := string(cannedResponse(t, "req-001", 1, 0, 1))
-				resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: " +
+				resp := "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: " +
 					string(rune('0'+len(body)/100)) + string(rune('0'+(len(body)/10)%10)) + string(rune('0'+len(body)%10)) +
 					"\r\n\r\n" + body
 				conn.Write([]byte(resp))

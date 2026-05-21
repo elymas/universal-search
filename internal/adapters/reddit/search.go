@@ -78,7 +78,7 @@ func (a *Adapter) Search(ctx context.Context, q types.Query) ([]types.Normalized
 		// Network-level error (dial failure, TLS, ctx cancel, etc.)
 		return nil, categorizeStatus(0, 0, err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Non-200 response handling.
 	if resp.StatusCode != http.StatusOK {

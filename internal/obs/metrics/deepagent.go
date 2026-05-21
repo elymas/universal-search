@@ -18,9 +18,9 @@ import "github.com/prometheus/client_golang/prometheus"
 
 // deepAgentCollectors bundles the deep agent metric vectors.
 type deepAgentCollectors struct {
-	duration         *prometheus.HistogramVec
-	retries          *prometheus.CounterVec
-	verifierGate     *prometheus.CounterVec
+	duration     *prometheus.HistogramVec
+	retries      *prometheus.CounterVec
+	verifierGate *prometheus.CounterVec
 }
 
 // deepAgentDurationBuckets covers realistic agent call durations.

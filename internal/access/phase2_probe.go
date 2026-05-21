@@ -85,7 +85,7 @@ func doHEADProbe(ctx context.Context, rawURL, userAgent string) (*FetchedContent
 		// Transient network error → escalate to Phase 3.
 		return nil, &FetchError{Category: CategoryUnavailable, Reason: "HEAD probe failed", Cause: err}
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	headers := map[string]string{}
 	if cc := resp.Header.Get("Cache-Control"); cc != "" {

@@ -174,9 +174,9 @@ func TestOrchestratorRetriesWriterOnVerifierReject(t *testing.T) {
 	// LLM responses: Researcher claims, Reviewer critique, Writer draft, Writer retry draft.
 	llmClient := &multiMockLLM{
 		responses: []string{
-			`{"claims": [{"id": "c1", "text": "claim", "sources": ["a"]}]}`,           // Researcher
-			`{"notes": []}`,                                                             // Reviewer
-			`{"sections": [{"section_index":0,"heading":"T","text":"Body [1]","citation_markers":[1]}], "citations": [{"marker":1,"doc_id":"a","url":"u","title":"T"}]}`, // Writer 1st
+			`{"claims": [{"id": "c1", "text": "claim", "sources": ["a"]}]}`, // Researcher
+			`{"notes": []}`, // Reviewer
+			`{"sections": [{"section_index":0,"heading":"T","text":"Body [1]","citation_markers":[1]}], "citations": [{"marker":1,"doc_id":"a","url":"u","title":"T"}]}`,  // Writer 1st
 			`{"sections": [{"section_index":0,"heading":"T","text":"Fixed [1]","citation_markers":[1]}], "citations": [{"marker":1,"doc_id":"a","url":"u","title":"T"}]}`, // Writer 2nd (retry)
 		},
 	}

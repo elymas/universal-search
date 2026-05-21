@@ -19,11 +19,11 @@ func TestNormalizeScoreTable(t *testing.T) {
 	}{
 		{-1000, 0.5 + 0.5*math.Tanh(-1000.0/100.0)}, // saturated low
 		{-10, 0.5 + 0.5*math.Tanh(-10.0/100.0)},
-		{0, 0.5},   // neutral: exactly 0.5
+		{0, 0.5}, // neutral: exactly 0.5
 		{10, 0.5 + 0.5*math.Tanh(10.0/100.0)},
-		{100, 0.5 + 0.5*math.Tanh(100.0/100.0)},  // ~0.881
+		{100, 0.5 + 0.5*math.Tanh(1.0)},           // ~0.881
 		{1000, 0.5 + 0.5*math.Tanh(1000.0/100.0)}, // saturated high
-		{10000, 1.0}, // expected clamp to 1.0
+		{10000, 1.0},                              // expected clamp to 1.0
 	}
 
 	const tol = 0.001

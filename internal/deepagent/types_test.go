@@ -100,11 +100,11 @@ func TestReviewerCritiqueFields(t *testing.T) {
 
 func TestWriterDraftFields(t *testing.T) {
 	draft := WriterDraft{
-		Sections:   []DraftSection{{Heading: "Intro", Text: "body"}},
-		Citations:  []DraftCitation{{Marker: 1, DocID: "d1"}},
-		CostUSD:    0.01,
-		Model:      "sonnet",
-		Provider:   "openai",
+		Sections:  []DraftSection{{Heading: "Intro", Text: "body"}},
+		Citations: []DraftCitation{{Marker: 1, DocID: "d1"}},
+		CostUSD:   0.01,
+		Model:     "sonnet",
+		Provider:  "openai",
 	}
 	if len(draft.Sections) != 1 {
 		t.Errorf("len(Sections) = %d, want 1", len(draft.Sections))

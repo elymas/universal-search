@@ -80,9 +80,9 @@ func ExpandTree(ctx context.Context, cfg TreeConfig, rootQuery string, researche
 
 	// Initialize budget tracker.
 	budgetCfg := BudgetConfig{
-		TokenBudget:      cfg.TokenBudget,
-		DefaultBreadth:   cfg.Breadth,
-		DefaultDepth:     cfg.Depth,
+		TokenBudget:       cfg.TokenBudget,
+		DefaultBreadth:    cfg.Breadth,
+		DefaultDepth:      cfg.Depth,
 		RootTokenEstimate: cfg.RootTokenEstimate,
 	}
 	tracker := &BudgetTracker{}

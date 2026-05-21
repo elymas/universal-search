@@ -76,15 +76,15 @@ func TestTreeTypesJSONRoundTrip(t *testing.T) {
 	t.Run("TreeResult", func(t *testing.T) {
 		t.Parallel()
 		original := TreeResult{
-			RootQuery:          "main topic",
-			TotalNodes:         5,
-			MaxDepthReached:    3,
-			Status:             "complete",
-			FlattenedClaims:    []FlattenedClaim{{Text: "c1", Markers: []string{"M1"}, LineagePath: []string{"root", "node-001"}, SourceNodeID: "node-001"}},
-			Citations:          []NodeCitation{{DocID: "d1", Title: "Doc 1", URL: "https://example.com", Snippet: "s"}},
-			TotalTokensUsed:    5000,
+			RootQuery:           "main topic",
+			TotalNodes:          5,
+			MaxDepthReached:     3,
+			Status:              "complete",
+			FlattenedClaims:     []FlattenedClaim{{Text: "c1", Markers: []string{"M1"}, LineagePath: []string{"root", "node-001"}, SourceNodeID: "node-001"}},
+			Citations:           []NodeCitation{{DocID: "d1", Title: "Doc 1", URL: "https://example.com", Snippet: "s"}},
+			TotalTokensUsed:     5000,
 			TotalReservedTokens: 1000,
-			TotalCostUSD:       0.05,
+			TotalCostUSD:        0.05,
 		}
 
 		data, err := json.Marshal(original)

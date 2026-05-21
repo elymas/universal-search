@@ -117,25 +117,25 @@ func Execute(ctx context.Context, args []string, stdout, stderr io.Writer, opts 
 	// Parse flags.
 	flags, prompt, err := parseQueryFlags(args)
 	if err != nil {
-		fmt.Fprintln(stderr, err)
+		_, _ = fmt.Fprintln(stderr, err)
 		return ExitUserError
 	}
 
 	// Validate prompt (REQ-CLI-007).
 	if strings.TrimFunc(prompt, unicode.IsSpace) == "" {
-		fmt.Fprintln(stderr, "usearch query: prompt argument required")
+		_, _ = fmt.Fprintln(stderr, "usearch query: prompt argument required")
 		return ExitUserError
 	}
 
 	// Validate format (REQ-CLI-004).
 	if flags.Format != "text" && flags.Format != "json" {
-		fmt.Fprintf(stderr, "usearch query: unsupported format %q; valid: text, json\n", flags.Format)
+		_, _ = fmt.Fprintf(stderr, "usearch query: unsupported format %q; valid: text, json\n", flags.Format)
 		return ExitUserError
 	}
 
 	// Validate timeout (REQ-CLI-005).
 	if flags.Timeout > maxTimeout {
-		fmt.Fprintf(stderr, "usearch query: --timeout exceeds maximum %s\n", maxTimeout)
+		_, _ = fmt.Fprintf(stderr, "usearch query: --timeout exceeds maximum %s\n", maxTimeout)
 		return ExitUserError
 	}
 
@@ -169,7 +169,7 @@ func Execute(ctx context.Context, args []string, stdout, stderr io.Writer, opts 
 	if len(flags.Source) > 0 {
 		for _, src := range flags.Source {
 			if _, ok := reg.Get(src); !ok {
-				fmt.Fprintf(stderr, "usearch query: unknown adapter %q\n", src)
+				_, _ = fmt.Fprintf(stderr, "usearch query: unknown adapter %q\n", src)
 				return ExitUserError
 			}
 		}
@@ -178,7 +178,7 @@ func Execute(ctx context.Context, args []string, stdout, stderr io.Writer, opts 
 	// Build router.
 	rtr, routerErr := buildRouter(reg)
 	if routerErr != nil {
-		fmt.Fprintf(stderr, "usearch query: router init failed: %v\n", routerErr)
+		_, _ = fmt.Fprintf(stderr, "usearch query: router init failed: %v\n", routerErr)
 		return ExitSystemError
 	}
 
@@ -187,7 +187,7 @@ func Execute(ctx context.Context, args []string, stdout, stderr io.Writer, opts 
 		Query: types.Query{Text: prompt},
 	})
 	if classifyErr != nil {
-		fmt.Fprintf(stderr, "usearch query: classify failed: %v\n", classifyErr)
+		_, _ = fmt.Fprintf(stderr, "usearch query: classify failed: %v\n", classifyErr)
 		return ExitUserError
 	}
 
@@ -196,10 +196,10 @@ func Execute(ctx context.Context, args []string, stdout, stderr io.Writer, opts 
 	if len(effectiveSet) == 0 {
 		if len(flags.Source) > 0 {
 			// Source was specified but router produced empty intersection.
-			fmt.Fprintln(stderr, "usearch query: no adapters matched the source filter and routing decision")
+			_, _ = fmt.Fprintln(stderr, "usearch query: no adapters matched the source filter and routing decision")
 			return ExitSystemError
 		}
-		fmt.Fprintln(stderr, "usearch query: no adapters matched for this query")
+		_, _ = fmt.Fprintln(stderr, "usearch query: no adapters matched for this query")
 		return ExitSystemError
 	}
 
@@ -219,7 +219,7 @@ func Execute(ctx context.Context, args []string, stdout, stderr io.Writer, opts 
 	}
 	f, fanoutInitErr := fanout.New(fanout.Options{Registry: reg})
 	if fanoutInitErr != nil {
-		fmt.Fprintf(stderr, "usearch query: fanout init failed: %v\n", fanoutInitErr)
+		_, _ = fmt.Fprintf(stderr, "usearch query: fanout init failed: %v\n", fanoutInitErr)
 		return ExitSystemError
 	}
 
@@ -231,19 +231,19 @@ func Execute(ctx context.Context, args []string, stdout, stderr io.Writer, opts 
 
 	// Emit adapter error warnings (REQ-CLI-006).
 	for name, aerr := range adapterErrs {
-		fmt.Fprintf(stderr, "usearch query: adapter %q error: %v\n", name, aerr)
+		_, _ = fmt.Fprintf(stderr, "usearch query: adapter %q error: %v\n", name, aerr)
 	}
 
 	// Check for context timeout (REQ-CLI-005).
 	if spanCtx.Err() != nil {
-		fmt.Fprintln(stderr, "usearch query: timeout: fanout stage — pipeline deadline exceeded")
+		_, _ = fmt.Fprintln(stderr, "usearch query: timeout: fanout stage — pipeline deadline exceeded")
 		span.SetAttributes(attribute.Int("cli.exit_code", ExitSystemError))
 		return ExitSystemError
 	}
 
 	// Check for all-adapters-failed (REQ-CLI-008).
 	if len(docs) == 0 && len(adapterErrs) > 0 {
-		fmt.Fprintln(stderr, "usearch query: all adapters failed")
+		_, _ = fmt.Fprintln(stderr, "usearch query: all adapters failed")
 		span.SetAttributes(attribute.Int("cli.exit_code", ExitSystemError))
 		return ExitSystemError
 	}
@@ -265,9 +265,9 @@ func Execute(ctx context.Context, args []string, stdout, stderr io.Writer, opts 
 
 	// Emit synthesis warning on nop client (REQ-CLI-009).
 	if errors.Is(synthErr, errSynthUnavailable) {
-		fmt.Fprintln(stderr, "[synthesis: unavailable]")
+		_, _ = fmt.Fprintln(stderr, "[synthesis: unavailable]")
 	} else if synthErr != nil {
-		fmt.Fprintf(stderr, "usearch query: synthesis failed: %v\n", synthErr)
+		_, _ = fmt.Fprintf(stderr, "usearch query: synthesis failed: %v\n", synthErr)
 	}
 
 	// Format and write output to stdout (REQ-CLI-006).
@@ -278,7 +278,7 @@ func Execute(ctx context.Context, args []string, stdout, stderr io.Writer, opts 
 		fmtErr = formatText(stdout, resp)
 	}
 	if fmtErr != nil {
-		fmt.Fprintf(stderr, "usearch query: format output error: %v\n", fmtErr)
+		_, _ = fmt.Fprintf(stderr, "usearch query: format output error: %v\n", fmtErr)
 		return ExitSystemError
 	}
 
@@ -445,6 +445,7 @@ func determineExitCode(
 //   - GITHUB_TOKEN: PAT for GitHub adapter (omit to skip registration)
 //   - YOUTUBE_BASE_URL: redirects YouTube adapter to a stub HTTP server
 //   - USEARCH_SEARXNG_URL: SearXNG instance URL (default http://searxng:8080)
+//
 // Empty values fall back to the adapter's compiled-in defaults.
 //
 // @MX:NOTE: [AUTO] Production adapter wiring per SPEC-CLI-001 §2.1(m).

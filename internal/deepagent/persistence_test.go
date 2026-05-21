@@ -181,11 +181,11 @@ func TestPersistencePerNodeTransitionFlush(t *testing.T) {
 
 	for i, status := range transitions {
 		node := &Node{
-			ID:        fmt.Sprintf("node-%d", i),
-			Depth:     0,
-			ParentID:  "",
-			Query:     fmt.Sprintf("query-%d", i),
-			Status:    status,
+			ID:         fmt.Sprintf("node-%d", i),
+			Depth:      0,
+			ParentID:   "",
+			Query:      fmt.Sprintf("query-%d", i),
+			Status:     status,
 			TokensUsed: 100,
 		}
 
@@ -295,16 +295,16 @@ func TestPersistencePostgresInsert(t *testing.T) {
 	// Expect INSERT with the required columns
 	mock.ExpectExec(`INSERT INTO deep_runs`).
 		WithArgs(
-			runID,                       // run_id
-			tree.RootQuery,              // query
-			4,                           // breadth (default)
-			3,                           // depth (default)
-			tree.TotalNodes,             // total_nodes
-			tree.TotalTokensUsed,        // total_tokens
-			tree.TotalCostUSD,           // total_cost_usd
-			tree.Status,                 // status
-			sqlmock.AnyArg(),            // started_at
-			sqlmock.AnyArg(),            // completed_at
+			runID,                // run_id
+			tree.RootQuery,       // query
+			4,                    // breadth (default)
+			3,                    // depth (default)
+			tree.TotalNodes,      // total_nodes
+			tree.TotalTokensUsed, // total_tokens
+			tree.TotalCostUSD,    // total_cost_usd
+			tree.Status,          // status
+			sqlmock.AnyArg(),     // started_at
+			sqlmock.AnyArg(),     // completed_at
 		).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
@@ -340,9 +340,9 @@ func TestPersistenceCrashFinalizesPostgresRow(t *testing.T) {
 	// Expect UPDATE to finalize the crashed row
 	mock.ExpectExec(`UPDATE deep_runs`).
 		WithArgs(
-			"failed",                    // status should be "failed"
-			sqlmock.AnyArg(),            // completed_at (within +-5s of now)
-			runID,                       // run_id
+			"failed",         // status should be "failed"
+			sqlmock.AnyArg(), // completed_at (within +-5s of now)
+			runID,            // run_id
 		).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
@@ -515,7 +515,7 @@ func TestPersistenceJSONGzipSizeBound(t *testing.T) {
 		tree.FlattenedClaims[i] = FlattenedClaim{
 			Text:         fmt.Sprintf("Claim %d: A substantive research claim about topic %d with sufficient detail to simulate real data", i, i),
 			Markers:      []string{"M1", "M2"},
-			LineagePath:  []string{fmt.Sprintf("node-root"), fmt.Sprintf("node-d1-%d", i%4), fmt.Sprintf("node-d2-%d", i%16), fmt.Sprintf("node-d3-%d", i)},
+			LineagePath:  []string{"node-root", fmt.Sprintf("node-d1-%d", i%4), fmt.Sprintf("node-d2-%d", i%16), fmt.Sprintf("node-d3-%d", i)},
 			SourceNodeID: fmt.Sprintf("node-d3-%d", i),
 		}
 		tree.Citations[i] = NodeCitation{

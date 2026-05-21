@@ -149,4 +149,3 @@ func TestParseDatalabResponse_MalformedJSON(t *testing.T) {
 		t.Error("parseDatalabResponse() returned non-nil docs on error")
 	}
 }
-

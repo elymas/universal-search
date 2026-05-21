@@ -45,8 +45,8 @@ func Researcher(ctx context.Context, cfg Config, llmClient llm.Client, req Pipel
 
 	userMsg := fmt.Sprintf("Query: %s\n\nDocuments:\n%s", req.Query, string(docsJSON))
 	llmResp, err := llmClient.Complete(ctx, llm.Request{
-		Class:   "rag",
-		System:  ResearcherSystemPrompt(),
+		Class:    "rag",
+		System:   ResearcherSystemPrompt(),
 		Override: cfg.ResearcherModel,
 		Messages: []llm.Message{
 			{Role: "user", Content: userMsg},

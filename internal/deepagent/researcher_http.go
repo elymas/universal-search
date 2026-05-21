@@ -62,12 +62,7 @@ func NewResearcherHTTPClient() *ResearcherHTTPClient {
 //
 // REQ-DEEP3-009a: Prompt context fields are propagated in the request body.
 func (c *ResearcherHTTPClient) Decompose(ctx context.Context, req DecomposeRequest) ([]string, error) {
-	payload := decomposeRequestPayload{
-		RootQuery:             req.RootQuery,
-		ParentQuery:           req.ParentQuery,
-		ParentEvidenceSummary: req.ParentEvidenceSummary,
-		Breadth:               req.Breadth,
-	}
+	payload := decomposeRequestPayload(req)
 
 	body, err := json.Marshal(payload)
 	if err != nil {
@@ -85,7 +80,7 @@ func (c *ResearcherHTTPClient) Decompose(ctx context.Context, req DecomposeReque
 	if err != nil {
 		return nil, fmt.Errorf("decompose HTTP call: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		respBody, _ := io.ReadAll(resp.Body)

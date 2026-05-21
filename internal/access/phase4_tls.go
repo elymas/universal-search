@@ -22,9 +22,9 @@ const browserUserAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) " +
 
 // jsChallengePatterns are body substrings that indicate a JS challenge page.
 var jsChallengePatterns = []string{
-	"cf-please-stand-by",  // Cloudflare "Checking your browser"
-	"<noscript>",          // Generic JS-required page
-	"captcha-bypass",      // Generic captcha challenge
+	"cf-please-stand-by", // Cloudflare "Checking your browser"
+	"<noscript>",         // Generic JS-required page
+	"captcha-bypass",     // Generic captcha challenge
 	"checking if the site connection is secure", // Cloudflare
 }
 
@@ -91,7 +91,7 @@ func phase4TLS(
 		attempt.Outcome = "failure"
 		return nil, attempt, &FetchError{Category: CategoryUnavailable, Reason: "TLS GET failed", Cause: err}
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	maxBytes := opts.MaxBodyBytes
 	if maxBytes == 0 {

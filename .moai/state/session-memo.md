@@ -2,7 +2,7 @@
 
 ## P1: Session Context
 
-session_id: bb620078-9f5b-4fb1-b98b-a2407f4534c3
-cwd: /Users/masterp/Projects/superwork/univesal-search
+session_id: 4ef41f2f-4c41-403b-a485-e369cb76a7e1
+cwd: /Users/masterp/Projects/superwork/universal-search
 event: PreCompact
 

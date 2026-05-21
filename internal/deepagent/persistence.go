@@ -205,7 +205,7 @@ func (p *TreePersistence) GzipCompressedSize(tree *TreeResult) (int, error) {
 	if _, err := gw.Write(data); err != nil {
 		return 0, fmt.Errorf("gzip write: %w", err)
 	}
-	gw.Close()
+	_ = gw.Close()
 
 	return buf.Len(), nil
 }

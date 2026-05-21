@@ -27,13 +27,13 @@ type mockResearcher struct {
 	FanoutFn func(ctx context.Context, query string) ([]NodeCitation, []NodeClaim, int64, error)
 
 	// Track calls for ordering/parallelism assertions.
-	mu              sync.Mutex
-	decomposeCalls  []decomposeCall
-	fanoutCalls     []fanoutCall
-	concurrentPeak  atomic.Int64 // tracks max concurrent goroutines in Fanout
-	currentActive   atomic.Int64
-	goroutineIDs    map[int]bool // tracks unique goroutine IDs during Fanout
-	goroutineIDMu   sync.Mutex
+	mu             sync.Mutex
+	decomposeCalls []decomposeCall
+	fanoutCalls    []fanoutCall
+	concurrentPeak atomic.Int64 // tracks max concurrent goroutines in Fanout
+	currentActive  atomic.Int64
+	goroutineIDs   map[int]bool // tracks unique goroutine IDs during Fanout
+	goroutineIDMu  sync.Mutex
 }
 
 type decomposeCall struct {
@@ -364,13 +364,13 @@ func TestExpandTreeConcurrentBreadthBudgetRaceFree(t *testing.T) {
 		func() {
 			ctx := context.Background()
 			cfg := TreeConfig{
-				Breadth:           8,
-				Depth:             2,
-				TokenBudget:       budget,
-				NodeTimeoutMs:     5000,
-				RootTokenEstimate: 5000,
+				Breadth:            8,
+				Depth:              2,
+				TokenBudget:        budget,
+				NodeTimeoutMs:      5000,
+				RootTokenEstimate:  5000,
 				ModelPricePerToken: 0.000003,
-				RunID:             fmt.Sprintf("race-test-%d", iter),
+				RunID:              fmt.Sprintf("race-test-%d", iter),
 			}
 			mock := &mockResearcher{}
 
@@ -397,13 +397,13 @@ func TestExpandTreeBudgetExceeded(t *testing.T) {
 
 	ctx := context.Background()
 	cfg := TreeConfig{
-		Breadth:           4,
-		Depth:             3,
-		TokenBudget:       20000, // Low budget
-		NodeTimeoutMs:     5000,
-		RootTokenEstimate: 5000,
+		Breadth:            4,
+		Depth:              3,
+		TokenBudget:        20000, // Low budget
+		NodeTimeoutMs:      5000,
+		RootTokenEstimate:  5000,
 		ModelPricePerToken: 0.000003,
-		RunID:             "budget-exhaust-test",
+		RunID:              "budget-exhaust-test",
 	}
 	mock := &mockResearcher{}
 
@@ -427,13 +427,13 @@ func TestExpandTreePartialReturn(t *testing.T) {
 
 	ctx := context.Background()
 	cfg := TreeConfig{
-		Breadth:           4,
-		Depth:             3,
-		TokenBudget:       20000,
-		NodeTimeoutMs:     5000,
-		RootTokenEstimate: 5000,
+		Breadth:            4,
+		Depth:              3,
+		TokenBudget:        20000,
+		NodeTimeoutMs:      5000,
+		RootTokenEstimate:  5000,
 		ModelPricePerToken: 0.000003,
-		RunID:             "partial-test",
+		RunID:              "partial-test",
 	}
 	mock := &mockResearcher{}
 
@@ -469,13 +469,13 @@ func TestExpandTreeLatencyP95(t *testing.T) {
 	for i := range iterations {
 		ctx := context.Background()
 		cfg := TreeConfig{
-			Breadth:           2,
-			Depth:             2,
-			TokenBudget:       60000,
-			NodeTimeoutMs:     5000,
-			RootTokenEstimate: 5000,
+			Breadth:            2,
+			Depth:              2,
+			TokenBudget:        60000,
+			NodeTimeoutMs:      5000,
+			RootTokenEstimate:  5000,
 			ModelPricePerToken: 0.000003,
-			RunID:             fmt.Sprintf("latency-test-%d", i),
+			RunID:              fmt.Sprintf("latency-test-%d", i),
 		}
 
 		mock := &mockResearcher{
@@ -524,13 +524,13 @@ func TestExpandTreeEndToEndLatencyP95(t *testing.T) {
 	for i := range iterations {
 		ctx := context.Background()
 		cfg := TreeConfig{
-			Breadth:           2,
-			Depth:             2,
-			TokenBudget:       60000,
-			NodeTimeoutMs:     5000,
-			RootTokenEstimate: 5000,
+			Breadth:            2,
+			Depth:              2,
+			TokenBudget:        60000,
+			NodeTimeoutMs:      5000,
+			RootTokenEstimate:  5000,
 			ModelPricePerToken: 0.000003,
-			RunID:             fmt.Sprintf("e2e-latency-%d", i),
+			RunID:              fmt.Sprintf("e2e-latency-%d", i),
 		}
 
 		mock := &mockResearcher{
@@ -655,13 +655,13 @@ func TestFlattenedClaimLineageProperty(t *testing.T) {
 
 		ctx := context.Background()
 		cfg := TreeConfig{
-			Breadth:           breadth,
-			Depth:             depth,
-			TokenBudget:       60000,
-			NodeTimeoutMs:     5000,
-			RootTokenEstimate: 5000,
+			Breadth:            breadth,
+			Depth:              depth,
+			TokenBudget:        60000,
+			NodeTimeoutMs:      5000,
+			RootTokenEstimate:  5000,
 			ModelPricePerToken: 0.000003,
-			RunID:             fmt.Sprintf("prop-test-%d", i),
+			RunID:              fmt.Sprintf("prop-test-%d", i),
 		}
 		mock := &mockResearcher{}
 
@@ -777,13 +777,13 @@ func TestTreeMemoryFootprintUnder100MBWorstCase(t *testing.T) {
 
 	ctx := context.Background()
 	cfg := TreeConfig{
-		Breadth:           8,
-		Depth:             5,
-		TokenBudget:       60000, // Low budget to limit actual expansion
-		NodeTimeoutMs:     5000,
-		RootTokenEstimate: 5000,
+		Breadth:            8,
+		Depth:              5,
+		TokenBudget:        60000, // Low budget to limit actual expansion
+		NodeTimeoutMs:      5000,
+		RootTokenEstimate:  5000,
 		ModelPricePerToken: 0.000003,
-		RunID:             "memory-test",
+		RunID:              "memory-test",
 	}
 
 	mock := &mockResearcher{

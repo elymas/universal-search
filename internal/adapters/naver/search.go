@@ -71,7 +71,7 @@ func (a *Adapter) Search(ctx context.Context, q types.Query) ([]types.Normalized
 	if err != nil {
 		return nil, categorizeStatus(0, 0, err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		var retryAfter time.Duration

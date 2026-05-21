@@ -167,11 +167,11 @@ func TestPipelineCancelledPayloadJSONRoundTrip(t *testing.T) {
 func TestAllPayloadsHaveSchemaVersion1(t *testing.T) {
 	// Verify all payload types include schema_version:1 in JSON.
 	payloads := map[string]any{
-		"agent_started":    AgentStartedPayload{RequestID: "t", SchemaVersion: 1},
-		"agent_completed":  AgentCompletedPayload{RequestID: "t", SchemaVersion: 1},
-		"retry_started":    RetryStartedPayload{RequestID: "t", SchemaVersion: 1},
-		"verifier_result":  VerifierResultPayload{RequestID: "t", SchemaVersion: 1},
-		"pipeline_failed":  PipelineFailedPayload{RequestID: "t", SchemaVersion: 1},
+		"agent_started":      AgentStartedPayload{RequestID: "t", SchemaVersion: 1},
+		"agent_completed":    AgentCompletedPayload{RequestID: "t", SchemaVersion: 1},
+		"retry_started":      RetryStartedPayload{RequestID: "t", SchemaVersion: 1},
+		"verifier_result":    VerifierResultPayload{RequestID: "t", SchemaVersion: 1},
+		"pipeline_failed":    PipelineFailedPayload{RequestID: "t", SchemaVersion: 1},
 		"pipeline_cancelled": PipelineCancelledPayload{RequestID: "t", SchemaVersion: 1},
 	}
 

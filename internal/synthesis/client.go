@@ -144,7 +144,7 @@ func (c *Client) doOnce(ctx context.Context, body []byte, result *Result) error 
 		}
 		return fmt.Errorf("synthesis: http: %w", ErrSidecarUnreachable)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// 4xx → ErrInvalidRequest (no retry).
 	if resp.StatusCode >= 400 && resp.StatusCode < 500 {

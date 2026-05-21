@@ -12,9 +12,9 @@ import (
 // FaithfulnessRequest is the JSON payload sent to the Python sidecar
 // POST /faithfulness_check endpoint.
 type FaithfulnessRequest struct {
-	Text       string   `json:"text"`
-	Citations  []string `json:"citations"`
-	Docs       []string `json:"docs"`
+	Text      string   `json:"text"`
+	Citations []string `json:"citations"`
+	Docs      []string `json:"docs"`
 }
 
 // FaithfulnessResponse is the JSON response from the sidecar.
@@ -26,9 +26,9 @@ type FaithfulnessResponse struct {
 // FaithfulnessResult is the Go-level result returned to callers.
 // REQ-DEEP2-006: PASS iff uncited_count == 0.
 type FaithfulnessResult struct {
-	Pass              bool
-	UncitedCount      int
-	UncitedSentences  []string
+	Pass             bool
+	UncitedCount     int
+	UncitedSentences []string
 }
 
 // @MX:ANCHOR: [AUTO] Single chokepoint for SYN-002 faithfulness gate invocation from Go side
@@ -59,7 +59,7 @@ func CheckFaithfulness(ctx context.Context, client *http.Client, url string, tex
 	if err != nil {
 		return FaithfulnessResult{}, fmt.Errorf("faithfulness: http call: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode >= 500 {
 		respBody, _ := io.ReadAll(resp.Body)

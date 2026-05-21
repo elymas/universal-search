@@ -17,24 +17,6 @@ import (
 // REQ-DEEP2-001: POST /deep?mode=agents routes to multi-agent pipeline.
 // REQ-DEEP2-011: /deep?mode=storm unchanged. Default = storm.
 
-// mockDeepPipelineFn captures calls for handler testing.
-type mockDeepPipelineFn struct {
-	called bool
-	result deepagent.PipelineResult
-	err    error
-}
-
-func (m *mockDeepPipelineFn) RunPipeline(ctx context.Context, cfg deepagent.Config, llmClient interface{}, req deepagent.PipelineRequest, fanoutFn interface{}) (deepagent.PipelineResult, error) {
-	m.called = true
-	return m.result, m.err
-}
-
-// mockStormClient returns a canned deepreport.Report.
-type mockStormClient struct {
-	report deepreport.Report
-	err    error
-}
-
 func TestDeepEndpointModeAgentsSSE(t *testing.T) {
 	// POST /deep?mode=agents with Accept: text/event-stream should produce SSE events.
 	draft := deepagent.WriterDraft{
@@ -97,7 +79,7 @@ func TestDeepEndpointModeStormDefault(t *testing.T) {
 	}
 
 	handler := &DeepHandler{
-		pipelineFn: nil, // agents mode should not be called
+		pipelineFn:  nil, // agents mode should not be called
 		stormClient: &mockStormReportFn{report: report},
 	}
 

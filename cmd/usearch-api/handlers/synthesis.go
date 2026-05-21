@@ -8,7 +8,6 @@
 package handlers
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -23,15 +22,6 @@ import (
 type SynthesisClient interface {
 	// Synthesize is called with a context and a synthesis.Request and returns a result.
 	Synthesize(ctx interface{}, req synthesis.Request) (synthesis.Result, error)
-}
-
-// realClient adapts synthesis.Client to SynthesisClient by ignoring the ctx
-// type assertion (synthesis.Client.Synthesize takes context.Context + explicit
-// params). We use a wrapper to keep the handler agnostic of the concrete client.
-type realClientAdapter struct {
-	c       *synthesis.Client
-	query   string
-	lang    string
 }
 
 // Config holds configuration for the SynthesisHandler.
@@ -65,9 +55,9 @@ func NewSynthesisHandler(client SynthesisClient, cfg Config) *SynthesisHandler {
 func (h *SynthesisHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Decode request body.
 	var body struct {
-		Query string             `json:"query"`
-		Lang  string             `json:"lang"`
-		Docs  []synthesis.Doc    `json:"docs"`
+		Query string          `json:"query"`
+		Lang  string          `json:"lang"`
+		Docs  []synthesis.Doc `json:"docs"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
@@ -113,9 +103,9 @@ func (h *SynthesisHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	result, err := h.client.Synthesize(ctx, req)
 	if err != nil {
 		errPayload := streamsynth.ErrorPayload{
-			RequestID:    req.RequestID,
-			ErrorCode:    "upstream_error",
-			ErrorMessage: err.Error(),
+			RequestID:     req.RequestID,
+			ErrorCode:     "upstream_error",
+			ErrorMessage:  err.Error(),
 			SchemaVersion: 1,
 		}
 		data, _ := json.Marshal(errPayload)
@@ -134,19 +124,3 @@ func (h *SynthesisHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // Ensure SynthesisHandler implements http.Handler.
 var _ http.Handler = (*SynthesisHandler)(nil)
-
-// Compile-time check: fakeClient in test must satisfy SynthesisClient.
-// We verify the interface shape with a local adapter below.
-
-// contextSynthesisClient wraps the real synthesis.Client to satisfy SynthesisClient.
-// The Synthesize interface here uses interface{} for ctx to avoid circular imports.
-type contextSynthesisClient struct {
-	inner func(ctx context.Context, req synthesis.Request) (synthesis.Result, error)
-}
-
-func (c *contextSynthesisClient) Synthesize(ctx interface{}, req synthesis.Request) (synthesis.Result, error) {
-	if cc, ok := ctx.(context.Context); ok {
-		return c.inner(cc, req)
-	}
-	return c.inner(context.Background(), req)
-}

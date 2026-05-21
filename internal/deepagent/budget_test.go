@@ -16,10 +16,10 @@ func TestBudgetPreCheckTokenExceeded(t *testing.T) {
 	// Total budget is 10000 tokens, and 9500 already used.
 	// A new node requesting ~1875 tokens (1500 * 1.25) should be denied.
 	tracker := &BudgetTracker{
-		TotalTokensUsed:    9500,
+		TotalTokensUsed:     9500,
 		TotalReservedTokens: 0,
-		TotalCostUSD:       0.0,
-		TotalNodes:         5,
+		TotalCostUSD:        0.0,
+		TotalNodes:          5,
 	}
 
 	parent := &Node{
@@ -51,10 +51,10 @@ func TestBudgetPreCheckStructuralCap(t *testing.T) {
 	// With breadth=3, depth=3: max nodes = 1 + 3 + 9 + 27 = 40.
 	// If we already have 40 nodes, any new expansion should be denied.
 	tracker := &BudgetTracker{
-		TotalTokensUsed:    1000,
+		TotalTokensUsed:     1000,
 		TotalReservedTokens: 0,
-		TotalCostUSD:       0.01,
-		TotalNodes:         40,
+		TotalCostUSD:        0.01,
+		TotalNodes:          40,
 	}
 
 	parent := &Node{
@@ -88,10 +88,10 @@ func TestBudgetPreCheckHeadroomConservative(t *testing.T) {
 	// Budget = 5000, already used 1000, reserved 0 → remaining = 4000
 	// 3750 <= 4000 → should be allowed.
 	tracker := &BudgetTracker{
-		TotalTokensUsed:    1000,
+		TotalTokensUsed:     1000,
 		TotalReservedTokens: 0,
-		TotalCostUSD:       0.01,
-		TotalNodes:         2,
+		TotalCostUSD:        0.01,
+		TotalNodes:          2,
 	}
 
 	parent := &Node{
@@ -132,10 +132,10 @@ func TestBudgetReservationLockSerializesSiblings(t *testing.T) {
 	// Total if all allowed: 8 * 1875 = 15000. Budget remaining = 30000 - 5000 = 25000.
 	// All should be allowed, and TotalReservedTokens must be exactly 8 * 1875 = 15000.
 	tracker := &BudgetTracker{
-		TotalTokensUsed:    5000,
+		TotalTokensUsed:     5000,
 		TotalReservedTokens: 0,
-		TotalCostUSD:       0.05,
-		TotalNodes:         5,
+		TotalCostUSD:        0.05,
+		TotalNodes:          5,
 	}
 
 	parent := &Node{
@@ -188,10 +188,10 @@ func TestBudgetReservationReleaseOnComplete(t *testing.T) {
 
 	// Initial state: 1000 used, 3750 reserved.
 	tracker := &BudgetTracker{
-		TotalTokensUsed:    1000,
+		TotalTokensUsed:     1000,
 		TotalReservedTokens: 3750,
-		TotalCostUSD:       0.01,
-		TotalNodes:         3,
+		TotalCostUSD:        0.01,
+		TotalNodes:          3,
 	}
 
 	node := &Node{
@@ -226,10 +226,10 @@ func TestBudgetRootSeedEstimate(t *testing.T) {
 
 	// Root node (parent is nil or depth=0) uses RootTokenEstimate instead of parent.TokensUsed.
 	tracker := &BudgetTracker{
-		TotalTokensUsed:    0,
+		TotalTokensUsed:     0,
 		TotalReservedTokens: 0,
-		TotalCostUSD:       0.0,
-		TotalNodes:         0,
+		TotalCostUSD:        0.0,
+		TotalNodes:          0,
 	}
 
 	// Root node — no parent, depth 0.
@@ -263,10 +263,10 @@ func TestBudgetRootSeedTriggersImmediateBudgetFail(t *testing.T) {
 
 	// Budget = 4000, root estimate = 5000 → immediate deny.
 	tracker := &BudgetTracker{
-		TotalTokensUsed:    0,
+		TotalTokensUsed:     0,
 		TotalReservedTokens: 0,
-		TotalCostUSD:       0.0,
-		TotalNodes:         0,
+		TotalCostUSD:        0.0,
+		TotalNodes:          0,
 	}
 
 	rootNode := &Node{

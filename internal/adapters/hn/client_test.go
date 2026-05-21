@@ -22,7 +22,7 @@ func TestCategorizeStatusTable(t *testing.T) {
 		status           int
 		expectedCategory types.Category
 	}{
-		{200, types.CategoryUnknown},    // unexpected in normal flow (Search drains 200)
+		{200, types.CategoryUnknown}, // unexpected in normal flow (Search drains 200)
 		{401, types.CategoryPermanent},
 		{403, types.CategoryPermanent},
 		{404, types.CategoryPermanent},

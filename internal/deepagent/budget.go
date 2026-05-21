@@ -34,11 +34,11 @@ type BudgetDecision struct {
 // REQ-DEEP3-006: Budget cap enforcement.
 // REQ-DEEP3-007: Atomic read+decision+reservation under mutex.
 type BudgetTracker struct {
-	mu                 sync.Mutex
-	TotalTokensUsed    int64
+	mu                  sync.Mutex
+	TotalTokensUsed     int64
 	TotalReservedTokens int64
-	TotalCostUSD       float64
-	TotalNodes         int
+	TotalCostUSD        float64
+	TotalNodes          int
 }
 
 // PreCheck determines whether a node expansion is allowed within budget.

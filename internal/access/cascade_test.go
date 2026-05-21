@@ -41,7 +41,6 @@ func newTestFetcher(t *testing.T, extra ...func(*Options)) *Fetcher {
 	return f
 }
 
-
 // --- REQ-CACHE-016: Invalid URL rejection ---
 
 func TestFetch_EmptyURL_ReturnsInvalidURL(t *testing.T) {

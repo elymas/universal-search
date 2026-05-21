@@ -106,7 +106,7 @@ type fakeResponseWriter struct {
 	status int
 }
 
-func (f *fakeResponseWriter) Header() http.Header        { return f.header }
-func (f *fakeResponseWriter) WriteHeader(code int)       { f.status = code }
+func (f *fakeResponseWriter) Header() http.Header         { return f.header }
+func (f *fakeResponseWriter) WriteHeader(code int)        { f.status = code }
 func (f *fakeResponseWriter) Write(b []byte) (int, error) { return f.buf.Write(b) }
 func (f *fakeResponseWriter) Flush()                      {} // implements http.Flusher

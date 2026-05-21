@@ -22,17 +22,17 @@ import (
 // buildTestReport creates a deepreport.Report with the given sections and citations.
 func buildTestReport(requestID string, sections []deepreport.Section, citations []deepreport.Citation) deepreport.Report {
 	return deepreport.Report{
-		RequestID:     requestID,
-		Title:         "Test Report",
-		Sections:      sections,
-		Citations:     citations,
-		Model:         "test-model",
-		Provider:      "test-provider",
-		CostUSD:       0.05,
-		PromptTokens:  100,
+		RequestID:        requestID,
+		Title:            "Test Report",
+		Sections:         sections,
+		Citations:        citations,
+		Model:            "test-model",
+		Provider:         "test-provider",
+		CostUSD:          0.05,
+		PromptTokens:     100,
 		CompletionTokens: 200,
-		LatencyMS:     5000,
-		SchemaVersion: 1,
+		LatencyMS:        5000,
+		SchemaVersion:    1,
 	}
 }
 
@@ -764,7 +764,7 @@ type blockingLongFormWriter struct {
 }
 
 func (b *blockingLongFormWriter) Header() http.Header { return b.header }
-func (b *blockingLongFormWriter) WriteHeader(_ int)           {}
+func (b *blockingLongFormWriter) WriteHeader(_ int)   {}
 func (b *blockingLongFormWriter) Write(data []byte) (int, error) {
 	<-b.block
 	return len(data), nil
