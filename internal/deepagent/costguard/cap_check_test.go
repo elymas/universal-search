@@ -265,3 +265,51 @@ func TestCapCheckConcurrent100RequestsNoRace(t *testing.T) {
 		t.Errorf("rejected: got %d, want exactly 80", r)
 	}
 }
+
+// TestToFloatCoversAllBranches exercises toFloat with all type branches.
+func TestToFloatCoversAllBranches(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		val  interface{}
+		want float64
+	}{
+		{"float64", float64(3.14), 3.14},
+		{"int64", int64(42), 42.0},
+		{"string_valid", "2.5", 2.5},
+		{"string_invalid", "notanumber", 0},
+		{"nil", nil, 0},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := toFloat(tc.val)
+			if got != tc.want {
+				t.Errorf("toFloat(%v): got %f, want %f", tc.val, got, tc.want)
+			}
+		})
+	}
+}
+
+// TestParseFloatValid verifies parseFloat with a valid numeric string.
+func TestParseFloatValid(t *testing.T) {
+	t.Parallel()
+
+	f, err := parseFloat("7.25")
+	if err != nil {
+		t.Fatalf("parseFloat: %v", err)
+	}
+	if f != 7.25 {
+		t.Errorf("parseFloat: got %f, want 7.25", f)
+	}
+}
+
+// TestParseFloatInvalid verifies parseFloat returns error on bad input.
+func TestParseFloatInvalid(t *testing.T) {
+	t.Parallel()
+
+	_, err := parseFloat("abc")
+	if err == nil {
+		t.Error("parseFloat: expected error for invalid input, got nil")
+	}
+}

@@ -192,5 +192,16 @@ func TestCostguardMetricsNoUnboundedLabels(t *testing.T) {
 	_ = m
 }
 
+// TestCacheKeyPrefixFormat verifies CacheKeyPrefix returns the expected "cg:{tenant}:{intent}" format.
+func TestCacheKeyPrefixFormat(t *testing.T) {
+	t.Parallel()
+
+	prefix := CacheKeyPrefix("tenant-x", "research_long")
+	want := "cg:tenant-x:research_long"
+	if prefix != want {
+		t.Errorf("CacheKeyPrefix: got %q, want %q", prefix, want)
+	}
+}
+
 // ensure strings is used (referenced by tests above).
 var _ = strings.TrimSpace

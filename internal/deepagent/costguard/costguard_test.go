@@ -161,3 +161,41 @@ func (tc *reconcileTestCase) RunReconcile() ReconcileResult {
 		DriftPercent:  driftPct,
 	}
 }
+
+// TestNotImplementedErrorMessage verifies notImplementedError.Error() returns expected string.
+func TestNotImplementedErrorMessage(t *testing.T) {
+	t.Parallel()
+
+	var err error = errNotImplemented
+	if got := err.Error(); got != "not implemented" {
+		t.Errorf("Error(): got %q, want %q", got, "not implemented")
+	}
+}
+
+// TestWriteLedgerEntryReturnsNil verifies WriteLedgerEntry stub returns nil.
+func TestWriteLedgerEntryReturnsNil(t *testing.T) {
+	t.Parallel()
+
+	entry := LedgerEntry{
+		UserID:     "alice",
+		TenantID:   "default",
+		RequestID:  "req-001",
+		Model:      "claude-haiku-4-5",
+		USDCost:    0.01,
+		CacheHit:   false,
+		Outcome:    OutcomeSuccess,
+	}
+	if err := WriteLedgerEntry(entry); err != nil {
+		t.Errorf("WriteLedgerEntry: got err %v, want nil", err)
+	}
+}
+
+// TestNewReconcileJobReturnsNonNil verifies NewReconcileJob constructor.
+func TestNewReconcileJobReturnsNonNil(t *testing.T) {
+	t.Parallel()
+
+	job := NewReconcileJob()
+	if job == nil {
+		t.Error("NewReconcileJob: got nil, want non-nil *ReconcileJob")
+	}
+}

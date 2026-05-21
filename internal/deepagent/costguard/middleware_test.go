@@ -305,3 +305,33 @@ func (b *brokenRedisClient) Eval(_ context.Context, _ string, _ []string, _ ...i
 	cmd.SetErr(fmt.Errorf("redis: connection refused"))
 	return cmd
 }
+
+// TestRequestIDFromContextExtractsValue verifies RequestIDFromContext reads the request ID.
+func TestRequestIDFromContextExtractsValue(t *testing.T) {
+	t.Parallel()
+
+	mw := NewMiddleware(DefaultConfig(), nil, nil, nil)
+
+	var gotRequestID string
+	handler := mw.IdentityMiddleware(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		gotRequestID = RequestIDFromContext(r.Context())
+	}))
+
+	req := httptest.NewRequest(http.MethodPost, "/deep", nil)
+	req.Header.Set("X-Request-Id", "req-xyz-789")
+	handler.ServeHTTP(httptest.NewRecorder(), req)
+
+	if gotRequestID != "req-xyz-789" {
+		t.Errorf("request_id: got %q, want %q", gotRequestID, "req-xyz-789")
+	}
+}
+
+// TestRequestIDFromContextEmpty verifies RequestIDFromContext returns empty when not set.
+func TestRequestIDFromContextEmpty(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	if got := RequestIDFromContext(ctx); got != "" {
+		t.Errorf("RequestIDFromContext(empty ctx): got %q, want empty", got)
+	}
+}
