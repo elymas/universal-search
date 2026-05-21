@@ -272,3 +272,55 @@ func VerifierWithChecker(ctx context.Context, cfg Config, draft WriterDraft, doc
 
 	return checkFn(ctx, text, citations, docTexts)
 }
+
+// DeepTreeMode determines the execution mode for a /deep request.
+// It checks tree configuration and request parameters to decide whether
+// to use tree-mode expansion or fall back to DEEP-002 single-shot.
+//
+// REQ-DEEP3-005: Tree mode requires cfg.Enabled AND valid breadth/depth.
+// Fallback: breadth=0 or depth=0 → single-shot with X-Deep-Tree-Fallback header.
+//
+// @MX:NOTE: [AUTO] Tree-mode routing logic; agents.go is the HTTP handler boundary
+type DeepTreeMode int
+
+const (
+	// DeepTreeModeNone indicates tree mode is not active (DEEP-002 single-shot).
+	DeepTreeModeNone DeepTreeMode = iota
+	// DeepTreeModeActive indicates tree-mode expansion should proceed.
+	DeepTreeModeActive
+	// DeepTreeModeFallbackBreadthZero indicates breadth=0 fallback to single-shot.
+	DeepTreeModeFallbackBreadthZero
+	// DeepTreeModeFallbackDepthZero indicates depth=0 fallback to single-shot.
+	DeepTreeModeFallbackDepthZero
+)
+
+// DetermineTreeMode returns the execution mode based on tree config and request parameters.
+// REQ-DEEP3-005: Returns fallback mode when breadth or depth is zero.
+func DetermineTreeMode(treeCfg TreeConfigExtra, requestBreadth, requestDepth int) DeepTreeMode {
+	if !treeCfg.Enabled {
+		return DeepTreeModeNone
+	}
+
+	// Check fallback conditions (REQ-DEEP3-005).
+	if requestBreadth == 0 {
+		return DeepTreeModeFallbackBreadthZero
+	}
+	if requestDepth == 0 {
+		return DeepTreeModeFallbackDepthZero
+	}
+
+	return DeepTreeModeActive
+}
+
+// FallbackHeaderValue returns the HTTP header value for the given tree mode.
+// Returns empty string when no fallback applies.
+func FallbackHeaderValue(mode DeepTreeMode) string {
+	switch mode {
+	case DeepTreeModeFallbackBreadthZero:
+		return "breadth_zero"
+	case DeepTreeModeFallbackDepthZero:
+		return "depth_zero"
+	default:
+		return ""
+	}
+}
