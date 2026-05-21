@@ -7,12 +7,12 @@ import "errors"
 
 // Request is the Go representation of the Python sidecar's EmbedRequest.
 type Request struct {
-	RequestID      string   `json:"request_id"`
-	Texts          []string `json:"texts"`
-	ReturnDense    bool     `json:"return_dense"`
-	ReturnSparse   bool     `json:"return_sparse"`
-	ReturnColbert  bool     `json:"return_colbert_vecs"`
-	BatchSize      int      `json:"batch_size"`
+	RequestID     string   `json:"request_id"`
+	Texts         []string `json:"texts"`
+	ReturnDense   bool     `json:"return_dense"`
+	ReturnSparse  bool     `json:"return_sparse"`
+	ReturnColbert bool     `json:"return_colbert_vecs"`
+	BatchSize     int      `json:"batch_size"`
 }
 
 // Response is the Go representation of the Python sidecar's EmbedResponse.

@@ -14,6 +14,8 @@ from typing import Any, AsyncGenerator
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
+from researcher.deep_tree import router as deep_tree_router
+from researcher.faithfulness_endpoint import router as faithfulness_router
 from researcher.gateway import Gateway
 from researcher.models import SynthesizeRequest, SynthesizeResponse
 from researcher.obs import log_synthesis, setup_logging
@@ -34,6 +36,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 app = FastAPI(title="researcher", version=__version__, lifespan=lifespan)
+
+# SPEC-DEEP-002 REQ-DEEP2-006: Faithfulness check endpoint.
+app.include_router(faithfulness_router)
+
+# SPEC-DEEP-003 Phase C: Tree decomposition endpoint.
+app.include_router(deep_tree_router)
 
 
 @app.get("/health")

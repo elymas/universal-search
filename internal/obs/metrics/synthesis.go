@@ -25,9 +25,9 @@ var synthesisCallBuckets = []float64{0.05, 0.1, 0.5, 1, 2.5, 5, 8, 10, 15, 30}
 // Stored as Registry.SynthesisCalls / SynthesisLatency / SynthesisCost /
 // SynthesisFaithfulnessOutcomes / SynthesisFaithfulnessRetries fields.
 type synthesisCollectors struct {
-	calls               *prometheus.CounterVec
-	latency             *prometheus.HistogramVec
-	cost                prometheus.Counter
+	calls                *prometheus.CounterVec
+	latency              *prometheus.HistogramVec
+	cost                 prometheus.Counter
 	faithfulnessOutcomes *prometheus.CounterVec
 	faithfulnessRetries  prometheus.Counter
 }

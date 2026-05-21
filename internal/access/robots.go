@@ -123,7 +123,7 @@ func fetchRobotsTxt(ctx context.Context, scheme, host string) (*robotstxt.Robots
 		// Network error → disallow all per RFC 9309 §2.3.1.
 		return disallowAll(), nil
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	switch {
 	case resp.StatusCode >= 400 && resp.StatusCode < 500 && resp.StatusCode != 429:

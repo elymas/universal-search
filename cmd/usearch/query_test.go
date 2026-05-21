@@ -26,20 +26,20 @@ func TestMain(m *testing.M) {
 
 // mockAdapter is a test double for types.Adapter that returns fixed results.
 type mockAdapter struct {
-	name    string
-	docs    []types.NormalizedDoc
-	err     error
-	delay   time.Duration
+	name  string
+	docs  []types.NormalizedDoc
+	err   error
+	delay time.Duration
 }
 
-func (m *mockAdapter) Name() string { return m.name }
+func (m *mockAdapter) Name() string                        { return m.name }
 func (m *mockAdapter) Healthcheck(_ context.Context) error { return nil }
 func (m *mockAdapter) Capabilities() types.Capabilities {
 	return types.Capabilities{
-		SourceID:       m.name,
-		DisplayName:    m.name,
-		DocTypes:       []types.DocType{types.DocTypePost},
-		SupportedLangs: []string{},
+		SourceID:          m.name,
+		DisplayName:       m.name,
+		DocTypes:          []types.DocType{types.DocTypePost},
+		SupportedLangs:    []string{},
 		DefaultMaxResults: 10,
 	}
 }

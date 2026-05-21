@@ -1,0 +1,24 @@
+## SPEC-DEEP-004 Progress
+
+- Started: 2026-05-22
+- Phase 0.9 complete: Go project detected → moai-lang-go
+- Phase 0.95 complete: Standard Mode (19 files, 1 domain backend, TDD)
+- Harness: standard (evaluator=final-pass, effort=high)
+- UltraThink: active
+- SPEC status: draft → proceeding with explicit user intent
+- Phase 1 complete: manager-strategy validated plan (APPROVED, 14/14 REQs, 10/10 NFRs)
+- Phase 1.5 complete: tasks.md generated (6 phases, T-001 through T-006)
+- Phase 1.6 complete: acceptance criteria registered as TaskList
+- Phase 1.7 complete: file stubs created in internal/deepagent/costguard/
+- Phase 2 complete: TDD implementation across 6 phases (A-F), 5 atomic commits
+  - Phase A+B: cost ledger + cap-check (commit 1e33106)
+  - Phase C: Haiku pre-screen + circuit breaker (commit ac94d47)
+  - Phase D: cache key + metrics (commit 3099b67)
+  - Phase E: middleware + chi wiring (commit 887fb7b)
+  - Phase F: decision log + observability + hot-reload (commit 55f06da)
+- Phase 2.5 complete: quality validation
+  - Coverage: 90.3% (target 85%) — PASS
+  - go vet: zero errors — PASS
+  - go test -race: 27+ tests PASS, no races — PASS
+  - Existing deepagent/obs tests: all PASS — no regression
+- Phase 2.75 complete: pre-review quality gate — PASS

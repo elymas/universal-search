@@ -13,6 +13,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	oteltrace "go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 )
 
 // ObsAdapter is the minimal observability interface the access package needs.
@@ -44,9 +45,9 @@ type AccessCollectors struct {
 // noopObs is the nil-safe fallback used when Options.Obs is nil.
 type noopObs struct{}
 
-func (noopObs) Tracer(_ string) oteltrace.Tracer { return oteltrace.NewNoopTracerProvider().Tracer("") }
+func (noopObs) Tracer(_ string) oteltrace.Tracer { return noop.NewTracerProvider().Tracer("") }
 func (noopObs) SlogLogger() *slog.Logger         { return nil }
-func (noopObs) AccessMetrics() *AccessCollectors  { return nil }
+func (noopObs) AccessMetrics() *AccessCollectors { return nil }
 
 // emitPhaseAttempt records one counter + one histogram observation for a
 // completed phase attempt.

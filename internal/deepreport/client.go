@@ -135,7 +135,7 @@ func (c *Client) doOnce(ctx context.Context, body []byte, report *Report) error 
 		}
 		return fmt.Errorf("deepreport: http: %w", ErrSidecarUnreachable)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Map status codes to error sentinels per REQ-DEEP1-004.
 	switch resp.StatusCode {
@@ -214,4 +214,3 @@ func backoff(attempt int) time.Duration {
 	}
 	return delay
 }
-

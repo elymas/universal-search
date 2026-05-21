@@ -97,6 +97,17 @@ type Registry struct {
 	DeepReportOutcomes *prometheus.CounterVec
 	DeepReportLatency  prometheus.Histogram
 
+	// Deep agent metrics (SPEC-DEEP-002 M6). New labels: agent, result.
+	// NFR-DEEP2-002: bounded enum pre-declaration.
+	DeepAgentDuration            *prometheus.HistogramVec
+	DeepAgentRetries             *prometheus.CounterVec
+	DeepAgentVerifierGateResults *prometheus.CounterVec
+
+	// Deep tree metrics (SPEC-DEEP-003 Phase E). New labels: depth, outcome.
+	// NFR-DEEP3-005: bounded enum pre-declaration.
+	DeepTreeNodeExpand  *prometheus.HistogramVec
+	DeepTreeTotalTokens *prometheus.CounterVec
+
 	// labelNames tracks all registered label names for cardinality validation.
 	labelNames []string
 }
@@ -205,39 +216,52 @@ func NewRegistry() *Registry {
 	// Register Deep report metrics (SPEC-DEEP-001 M6).
 	deepReport := registerDeepReport(pr)
 
+	// Register Deep agent metrics (SPEC-DEEP-002 M6).
+	// Pass the existing DeepReportOutcomes collector so registerDeepAgent can
+	// extend it with empty_corpus and error_pipeline_failed label values.
+	deepAgent := registerDeepAgent(pr, deepReport.outcomes)
+
+	// Register Deep tree metrics (SPEC-DEEP-003 Phase E).
+	deepTree := registerDeepTree(pr)
+
 	return &Registry{
-		Prometheus:                   pr,
-		HTTPRequests:                 httpRequests,
-		HTTPRequestDuration:          httpDuration,
-		FanoutInflight:               fanoutInflight,
-		AdapterCalls:                 adapterCalls,
-		AdapterCallDuration:          adapterDuration,
-		BuildInfo:                    buildInfo,
-		LLMCalls:                     llm.calls,
-		LLMCost:                      llm.cost,
-		LLMLatency:                   llm.latency,
-		RouterClassifications:        router.classifications,
-		RouterClassificationDuration: router.duration,
+		Prometheus:                    pr,
+		HTTPRequests:                  httpRequests,
+		HTTPRequestDuration:           httpDuration,
+		FanoutInflight:                fanoutInflight,
+		AdapterCalls:                  adapterCalls,
+		AdapterCallDuration:           adapterDuration,
+		BuildInfo:                     buildInfo,
+		LLMCalls:                      llm.calls,
+		LLMCost:                       llm.cost,
+		LLMLatency:                    llm.latency,
+		RouterClassifications:         router.classifications,
+		RouterClassificationDuration:  router.duration,
 		SynthesisCalls:                synth.calls,
 		SynthesisLatency:              synth.latency,
 		SynthesisCost:                 synth.cost,
 		SynthesisFaithfulnessOutcomes: synth.faithfulnessOutcomes,
 		SynthesisFaithfulnessRetries:  synth.faithfulnessRetries,
-		EmbedderCalls:                embedder.calls,
-		EmbedderLatency:              embedder.latency,
-		EmbedderCacheHits:            embedder.cacheHits,
-		IndexOps:                     idx.ops,
-		IndexOpDuration:              idx.opDuration,
-		IndexFusionDuration:          idx.fusionDuration,
-		TokenizerCalls:               tok.calls,
-		TokenizerLatency:             tok.latency,
-		IndexShardWrites:             tok.shardWrites,
-		StreamSynthOutcomes:          streamSynth.outcomes,
-		StreamSynthSentencesEmitted:  streamSynth.sentencesEmitted,
-		SynthClusterOutcomes:         synthCluster.outcomes,
-		SynthClusterMembers:          synthCluster.members,
-		DeepReportOutcomes:           deepReport.outcomes,
-		DeepReportLatency:            deepReport.latency,
+		EmbedderCalls:                 embedder.calls,
+		EmbedderLatency:               embedder.latency,
+		EmbedderCacheHits:             embedder.cacheHits,
+		IndexOps:                      idx.ops,
+		IndexOpDuration:               idx.opDuration,
+		IndexFusionDuration:           idx.fusionDuration,
+		TokenizerCalls:                tok.calls,
+		TokenizerLatency:              tok.latency,
+		IndexShardWrites:              tok.shardWrites,
+		StreamSynthOutcomes:           streamSynth.outcomes,
+		StreamSynthSentencesEmitted:   streamSynth.sentencesEmitted,
+		SynthClusterOutcomes:          synthCluster.outcomes,
+		SynthClusterMembers:           synthCluster.members,
+		DeepReportOutcomes:            deepReport.outcomes,
+		DeepReportLatency:             deepReport.latency,
+		DeepAgentDuration:             deepAgent.duration,
+		DeepAgentRetries:              deepAgent.retries,
+		DeepAgentVerifierGateResults:  deepAgent.verifierGate,
+		DeepTreeNodeExpand:            deepTree.nodeExpand,
+		DeepTreeTotalTokens:           deepTree.totalTokens,
 		labelNames: []string{
 			"method", "route", "status_class",
 			"adapter_class",
@@ -251,6 +275,11 @@ func NewRegistry() *Registry {
 			"store", "op",
 			// Tokenizer sidecar labels (SPEC-IDX-003)
 			"shard",
+			// Deep agent labels (SPEC-DEEP-002 NFR-DEEP2-002)
+			// agent in {researcher, reviewer, writer, verifier} (4 values)
+			"agent",
+			// result in {pass, fail_uncited, fail_error} (3 values)
+			"result",
 		},
 	}
 }

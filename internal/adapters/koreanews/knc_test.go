@@ -37,11 +37,11 @@ func TestSearch_KNC_503_returnsErrKNCSidecarDown(t *testing.T) {
 	defer srv.Close()
 
 	a, err := koreanews.New(koreanews.Options{
-		RSSEnabled:  false,
-		KNCEnabled:  true,
-		KNCBaseURL:  srv.URL,
-		HTTPClient:  srv.Client(),
-		RSSFeeds:    nil,
+		RSSEnabled: false,
+		KNCEnabled: true,
+		KNCBaseURL: srv.URL,
+		HTTPClient: srv.Client(),
+		RSSFeeds:   nil,
 	})
 	if err != nil {
 		t.Fatalf("New: %v", err)

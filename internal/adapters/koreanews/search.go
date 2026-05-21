@@ -49,8 +49,8 @@ func (a *Adapter) Search(ctx context.Context, q types.Query) ([]types.Normalized
 	}
 
 	var (
-		allDocs []types.NormalizedDoc
-		firstErr error
+		allDocs    []types.NormalizedDoc
+		firstErr   error
 		anySuccess bool
 	)
 

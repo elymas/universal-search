@@ -6,7 +6,7 @@
 //
 // Entry point: (*Fetcher).Fetch(ctx, url, opts) — the ONLY public fetch method.
 //
-// SPEC-CACHE-001 | REQ-CACHE-001 | D1-D11
+// # SPEC-CACHE-001 | REQ-CACHE-001 | D1-D11
 //
 // @MX:NOTE: [AUTO] Package entry point for the 5-phase access fallback (SPEC-CACHE-001).
 // Sequential cascade — distinct from FAN-001 (parallel fan-out) and IDX-001
@@ -253,4 +253,3 @@ func resolveObs(o ObsAdapter) ObsAdapter {
 	}
 	return o
 }
-

@@ -22,7 +22,7 @@ import (
 // redirect infrastructure.
 // @MX:SPEC: SPEC-ADP-002
 var allowedRedirectHosts = map[string]struct{}{
-	"hn.algolia.com":      {},
+	"hn.algolia.com":       {},
 	"news.ycombinator.com": {},
 }
 

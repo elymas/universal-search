@@ -115,8 +115,8 @@ func TestEmitSlog_WithLogger_NonSuccess(t *testing.T) {
 	buf := &bytes.Buffer{}
 	logger := slog.New(slog.NewTextHandler(buf, &slog.HandlerOptions{Level: slog.LevelDebug}))
 	result := &FetchResult{
-		Outcome:       "failure",
-		FinalPhase:    3,
+		Outcome:        "failure",
+		FinalPhase:     3,
 		ElapsedSeconds: 0.5,
 	}
 	emitSlog(logger, t.Context(), result, "example.com")
@@ -130,8 +130,8 @@ func TestEmitSlog_WithLogger_Success(t *testing.T) {
 	buf := &bytes.Buffer{}
 	logger := slog.New(slog.NewTextHandler(buf, &slog.HandlerOptions{Level: slog.LevelDebug}))
 	result := &FetchResult{
-		Outcome:       "success",
-		FinalPhase:    3,
+		Outcome:        "success",
+		FinalPhase:     3,
 		ElapsedSeconds: 0.1,
 	}
 	emitSlog(logger, t.Context(), result, "example.com")

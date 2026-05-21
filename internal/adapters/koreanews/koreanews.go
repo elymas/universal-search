@@ -34,7 +34,7 @@ const (
 // @MX:REASON: fan_in >= 3; implements types.Adapter — all method additions break callers
 // @MX:SPEC: SPEC-ADP-009
 type Adapter struct {
-	opts      Options
+	opts       Options
 	httpClient *http.Client
 	userAgent  string
 }
@@ -119,7 +119,7 @@ func (a *Adapter) Healthcheck(ctx context.Context) error {
 			Cause:    err,
 		}
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 
 	if resp.StatusCode >= 500 {
 		return &types.SourceError{

@@ -27,7 +27,7 @@ type humanProgress struct {
 
 // Emit writes a formatted "[stage] msg\n" line to stderr.
 func (h *humanProgress) Emit(stage, msg string) {
-	fmt.Fprintf(h.w, "[%s] %s\n", stage, msg)
+	_, _ = fmt.Fprintf(h.w, "[%s] %s\n", stage, msg)
 }
 
 // jsonProgress is a no-op emitter used in --format json mode.

@@ -1,0 +1,19 @@
+# Deep Tree Mode Configuration (SPEC-DEEP-003)
+# Tree-mode /deep exploration is disabled by default.
+# Enable via DEEP_TREE_ENABLED=true environment variable.
+
+tree:
+  enabled: false
+  default_breadth: 4
+  default_depth: 3
+  token_budget: 60000
+  root_token_estimate: 5000
+  node_timeout_ms: 30000
+  decompose_model: "claude-3-5-haiku-20241022"
+  persistence_dir: ".moai/runs"
+
+# Per-model pricing for cost tracking (USD per token).
+# REQ-DEEP3-013: TotalCostUSD = sum(node.TokensUsed * price_per_token).
+pricing:
+  claude-3-5-haiku-20241022: 0.0000008
+  claude-3-5-sonnet-20241022: 0.000003

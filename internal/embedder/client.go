@@ -131,7 +131,7 @@ func (c *Client) doOnce(ctx context.Context, body []byte, out *Response) error {
 	if err != nil {
 		return fmt.Errorf("embedder: http do: %w", err)
 	}
-	defer httpResp.Body.Close()
+	defer func() { _ = httpResp.Body.Close() }()
 
 	switch {
 	case httpResp.StatusCode >= 400 && httpResp.StatusCode < 500:

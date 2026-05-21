@@ -18,11 +18,11 @@ const (
 // @MX:NOTE: [AUTO] Magic constants — per-phase timeout defaults from SPEC-CACHE-001 §6.6 D4.
 // Operators tune via .moai/config/sections/access.yaml.
 var defaultPerPhaseTimeout = map[int]time.Duration{
-	1: 100 * time.Millisecond,  // Phase 1: local index lookup
-	2: 200 * time.Millisecond,  // Phase 2: HEAD probe + robots.txt
-	3: 10 * time.Second,        // Phase 3: standard HTTP GET
-	4: 15 * time.Second,        // Phase 4: TLS-aware HTTP GET
-	5: 30 * time.Second,        // Phase 5: Playwright headless
+	1: 100 * time.Millisecond, // Phase 1: local index lookup
+	2: 200 * time.Millisecond, // Phase 2: HEAD probe + robots.txt
+	3: 10 * time.Second,       // Phase 3: standard HTTP GET
+	4: 15 * time.Second,       // Phase 4: TLS-aware HTTP GET
+	5: 30 * time.Second,       // Phase 5: Playwright headless
 }
 
 // PlaywrightConfig holds Playwright-specific construction parameters.

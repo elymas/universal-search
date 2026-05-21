@@ -107,12 +107,12 @@ func init() {
 		"10.0.0.0/8",
 		"172.16.0.0/12",
 		"192.168.0.0/16",
-		"169.254.0.0/16",  // link-local + AWS metadata endpoint
-		"fc00::/7",        // IPv6 ULA
-		"fe80::/10",       // IPv6 link-local
-		"::1/128",         // IPv6 loopback
-		"127.0.0.0/8",     // IPv4 loopback (belt-and-suspenders)
-		"100.64.0.0/10",   // Shared address space (RFC 6598)
+		"169.254.0.0/16", // link-local + AWS metadata endpoint
+		"fc00::/7",       // IPv6 ULA
+		"fe80::/10",      // IPv6 link-local
+		"::1/128",        // IPv6 loopback
+		"127.0.0.0/8",    // IPv4 loopback (belt-and-suspenders)
+		"100.64.0.0/10",  // Shared address space (RFC 6598)
 	}
 	for _, c := range cidrs {
 		_, network, err := net.ParseCIDR(c)

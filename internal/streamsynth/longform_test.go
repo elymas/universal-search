@@ -22,17 +22,17 @@ import (
 // buildTestReport creates a deepreport.Report with the given sections and citations.
 func buildTestReport(requestID string, sections []deepreport.Section, citations []deepreport.Citation) deepreport.Report {
 	return deepreport.Report{
-		RequestID:     requestID,
-		Title:         "Test Report",
-		Sections:      sections,
-		Citations:     citations,
-		Model:         "test-model",
-		Provider:      "test-provider",
-		CostUSD:       0.05,
-		PromptTokens:  100,
+		RequestID:        requestID,
+		Title:            "Test Report",
+		Sections:         sections,
+		Citations:        citations,
+		Model:            "test-model",
+		Provider:         "test-provider",
+		CostUSD:          0.05,
+		PromptTokens:     100,
 		CompletionTokens: 200,
-		LatencyMS:     5000,
-		SchemaVersion: 1,
+		LatencyMS:        5000,
+		SchemaVersion:    1,
 	}
 }
 
@@ -74,7 +74,7 @@ func TestSSEEmitsSectionStartPerSection(t *testing.T) {
 	report := buildTestReport("req-sections", sections, citations)
 
 	rw, sw := setupSSEWriter()
-	_, err := streamsynth.StreamLongFormReport(context.Background(), sw, report)
+	_, err := streamsynth.StreamLongFormReport(context.Background(), sw, report.RequestID, report)
 	if err != nil {
 		t.Fatalf("StreamLongFormReport error: %v", err)
 	}
@@ -134,7 +134,7 @@ func TestSSEEmitsSentencePerSentenceWithSectionIndex(t *testing.T) {
 	report := buildTestReport("req-sentence-idx", sections, citations)
 
 	rw, sw := setupSSEWriter()
-	_, err := streamsynth.StreamLongFormReport(context.Background(), sw, report)
+	_, err := streamsynth.StreamLongFormReport(context.Background(), sw, report.RequestID, report)
 	if err != nil {
 		t.Fatalf("StreamLongFormReport error: %v", err)
 	}
@@ -209,7 +209,7 @@ func TestSSEEmitsSectionDonePerSection(t *testing.T) {
 	report := buildTestReport("req-section-done", sections, citations)
 
 	rw, sw := setupSSEWriter()
-	_, err := streamsynth.StreamLongFormReport(context.Background(), sw, report)
+	_, err := streamsynth.StreamLongFormReport(context.Background(), sw, report.RequestID, report)
 	if err != nil {
 		t.Fatalf("StreamLongFormReport error: %v", err)
 	}
@@ -270,7 +270,7 @@ func TestSSEEmitsDoneWithTotals(t *testing.T) {
 	report := buildTestReport("req-done-totals", sections, citations)
 
 	rw, sw := setupSSEWriter()
-	stats, err := streamsynth.StreamLongFormReport(context.Background(), sw, report)
+	stats, err := streamsynth.StreamLongFormReport(context.Background(), sw, report.RequestID, report)
 	if err != nil {
 		t.Fatalf("StreamLongFormReport error: %v", err)
 	}
@@ -345,7 +345,7 @@ func TestSSEPreservesCitationInvariant(t *testing.T) {
 	report := buildTestReport("req-citation-inv", sections, citations)
 
 	rw, sw := setupSSEWriter()
-	_, err := streamsynth.StreamLongFormReport(context.Background(), sw, report)
+	_, err := streamsynth.StreamLongFormReport(context.Background(), sw, report.RequestID, report)
 	if err != nil {
 		t.Fatalf("StreamLongFormReport error: %v", err)
 	}
@@ -392,7 +392,7 @@ func TestLongFormSentenceWithoutCitationsSkipped(t *testing.T) {
 	report := buildTestReport("req-skip-uncited", sections, citations)
 
 	rw, sw := setupSSEWriter()
-	stats, err := streamsynth.StreamLongFormReport(context.Background(), sw, report)
+	stats, err := streamsynth.StreamLongFormReport(context.Background(), sw, report.RequestID, report)
 	if err != nil {
 		t.Fatalf("StreamLongFormReport error: %v", err)
 	}
@@ -433,7 +433,7 @@ func TestLongFormContextCancellation(t *testing.T) {
 	cancel() // cancel immediately
 
 	rw, sw := setupSSEWriter()
-	_, _ = streamsynth.StreamLongFormReport(ctx, sw, report)
+	_, _ = streamsynth.StreamLongFormReport(ctx, sw, report.RequestID, report)
 
 	events := parseSSEEvents(rw.buf.String())
 	sectionStartCount := 0
@@ -455,7 +455,7 @@ func TestLongFormEmptyReport(t *testing.T) {
 	report := buildTestReport("req-empty", nil, nil)
 
 	rw, sw := setupSSEWriter()
-	stats, err := streamsynth.StreamLongFormReport(context.Background(), sw, report)
+	stats, err := streamsynth.StreamLongFormReport(context.Background(), sw, report.RequestID, report)
 	if err != nil {
 		t.Fatalf("StreamLongFormReport error: %v", err)
 	}
@@ -531,7 +531,7 @@ func TestLongFormEventOrder(t *testing.T) {
 	report := buildTestReport("req-order", sections, citations)
 
 	rw, sw := setupSSEWriter()
-	_, err := streamsynth.StreamLongFormReport(context.Background(), sw, report)
+	_, err := streamsynth.StreamLongFormReport(context.Background(), sw, report.RequestID, report)
 	if err != nil {
 		t.Fatalf("StreamLongFormReport error: %v", err)
 	}
@@ -573,7 +573,7 @@ func TestLongFormLatencyMsMeasured(t *testing.T) {
 	report := buildTestReport("req-latency", sections, citations)
 
 	_, sw := setupSSEWriter()
-	stats, err := streamsynth.StreamLongFormReport(context.Background(), sw, report)
+	stats, err := streamsynth.StreamLongFormReport(context.Background(), sw, report.RequestID, report)
 	if err != nil {
 		t.Fatalf("StreamLongFormReport error: %v", err)
 	}
@@ -616,7 +616,7 @@ func TestLongFormDoneEventIsLast(t *testing.T) {
 	report := buildTestReport("req-done-last", sections, citations)
 
 	rw, sw := setupSSEWriter()
-	_, err := streamsynth.StreamLongFormReport(context.Background(), sw, report)
+	_, err := streamsynth.StreamLongFormReport(context.Background(), sw, report.RequestID, report)
 	if err != nil {
 		t.Fatalf("StreamLongFormReport error: %v", err)
 	}
@@ -668,7 +668,7 @@ func TestSSEInheritsSYN004Heartbeat(t *testing.T) {
 	// Give heartbeat a chance to fire at least once before streaming starts.
 	time.Sleep(30 * time.Millisecond)
 
-	_, err := streamsynth.StreamLongFormReport(ctx, sw, report)
+	_, err := streamsynth.StreamLongFormReport(ctx, sw, report.RequestID, report)
 	if err != nil {
 		t.Fatalf("StreamLongFormReport error: %v", err)
 	}
@@ -742,7 +742,7 @@ func TestSSEInheritsSYN004WriteTimeout(t *testing.T) {
 
 	done := make(chan error, 1)
 	go func() {
-		_, err := streamsynth.StreamLongFormReport(ctx, sw, report)
+		_, err := streamsynth.StreamLongFormReport(ctx, sw, report.RequestID, report)
 		done <- err
 	}()
 
@@ -764,7 +764,7 @@ type blockingLongFormWriter struct {
 }
 
 func (b *blockingLongFormWriter) Header() http.Header { return b.header }
-func (b *blockingLongFormWriter) WriteHeader(_ int)           {}
+func (b *blockingLongFormWriter) WriteHeader(_ int)   {}
 func (b *blockingLongFormWriter) Write(data []byte) (int, error) {
 	<-b.block
 	return len(data), nil

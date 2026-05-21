@@ -11,7 +11,7 @@ description: |
   ZH: DDD, 重构, 遗留代码, 行为保存, 特性测试, 领域驱动重构
   NOT for: greenfield development (use TDD), deployment, documentation, git operations, security audits
 tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, TodoWrite, Skill, mcp__sequential-thinking__sequentialthinking, mcp__context7__resolve-library-id, mcp__context7__get-library-docs
-model: sonnet
+model: opus
 permissionMode: bypassPermissions
 memory: project
 skills:

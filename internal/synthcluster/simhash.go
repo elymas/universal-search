@@ -100,4 +100,3 @@ func SimHashHex(h uint64) string {
 	binary.BigEndian.PutUint64(buf[:], h)
 	return hex.EncodeToString(buf[:])
 }
-

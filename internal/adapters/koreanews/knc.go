@@ -24,12 +24,12 @@ type kncSearchRequest struct {
 
 // kncArticle is one item returned by the KNC sidecar.
 type kncArticle struct {
-	URL       string `json:"url"`
-	Title     string `json:"title"`
-	Body      string `json:"body"`
-	Date      string `json:"date"` // RFC 3339 or ""; empty → zero time
-	Author    string `json:"author"`
-	Category  string `json:"category"`
+	URL      string `json:"url"`
+	Title    string `json:"title"`
+	Body     string `json:"body"`
+	Date     string `json:"date"` // RFC 3339 or ""; empty → zero time
+	Author   string `json:"author"`
+	Category string `json:"category"`
 }
 
 // kncSearchResponse is the JSON body returned by the KNC sidecar on success.
@@ -84,7 +84,7 @@ func searchKNC(
 			Cause:    fmt.Errorf("%w: %s", ErrKNCSidecarDown, err.Error()),
 		}
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode == http.StatusServiceUnavailable {
 		return nil, &types.SourceError{

@@ -57,7 +57,7 @@ func (a *Adapter) searchDataLab(ctx context.Context, q types.Query, retrievedAt 
 	if err != nil {
 		return nil, categorizeStatus(0, 0, err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		var retryAfter time.Duration
@@ -121,7 +121,7 @@ func parseDatalabResponse(body []byte, retrievedAt time.Time) ([]types.Normalize
 		doc := types.NormalizedDoc{
 			ID:          syntheticID(idSrc),
 			SourceID:    "naver",
-			URL:         fmt.Sprintf("https://datalab.naver.com/keyword/trendSearch.naver"),
+			URL:         "https://datalab.naver.com/keyword/trendSearch.naver",
 			Title:       title,
 			Body:        body,
 			Snippet:     snippet,

@@ -19,9 +19,9 @@ import (
 // wafHeaders are the response header prefixes/names that indicate a WAF
 // is active. Their presence (combined with 403/503) triggers escalation to Phase 4.
 var wafHeaders = []string{
-	"cf-ray",       // Cloudflare
-	"x-akamai-",    // Akamai
-	"x-served-by",  // Fastly
+	"cf-ray",      // Cloudflare
+	"x-akamai-",   // Akamai
+	"x-served-by", // Fastly
 }
 
 // phase3Get performs a standard HTTP GET and returns FetchedContent on success.
@@ -83,7 +83,7 @@ func phase3Get(
 		}
 		return nil, attempt, &FetchError{Category: CategoryUnavailable, Reason: "GET failed", Cause: err}
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	// Detect WAF patterns that should trigger Phase 4 escalation.
 	if isWAFResponse(resp) {

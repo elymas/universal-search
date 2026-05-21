@@ -28,46 +28,46 @@ type NormalizedDocPayload struct {
 
 // Request is the payload sent to the STORM sidecar POST /generate_report.
 type Request struct {
-	RequestID       string                   `json:"request_id"`
-	Query           string                   `json:"query"`
-	Lang            string                   `json:"lang,omitempty"`
-	Docs            []NormalizedDocPayload   `json:"docs"`
-	MaxTokens       *float64                 `json:"max_tokens,omitempty"`
-	MaxCostUSD      *float64                 `json:"max_cost_usd,omitempty"`
-	MaxPerspectives *float64                 `json:"max_perspectives,omitempty"`
-	MaxConvTurns    *float64                 `json:"max_conv_turns,omitempty"`
-	MaxLatencyMS    *float64                 `json:"max_latency_ms,omitempty"`
+	RequestID       string                 `json:"request_id"`
+	Query           string                 `json:"query"`
+	Lang            string                 `json:"lang,omitempty"`
+	Docs            []NormalizedDocPayload `json:"docs"`
+	MaxTokens       *float64               `json:"max_tokens,omitempty"`
+	MaxCostUSD      *float64               `json:"max_cost_usd,omitempty"`
+	MaxPerspectives *float64               `json:"max_perspectives,omitempty"`
+	MaxConvTurns    *float64               `json:"max_conv_turns,omitempty"`
+	MaxLatencyMS    *float64               `json:"max_latency_ms,omitempty"`
 }
 
 // Report is the parsed response from the STORM sidecar.
 type Report struct {
-	RequestID       string    `json:"request_id"`
-	Title           string    `json:"title"`
-	Sections        []Section `json:"sections"`
-	Citations       []Citation `json:"citations"`
-	Model           string    `json:"model"`
-	Provider        string    `json:"provider"`
-	CostUSD         float64   `json:"cost_usd"`
-	PromptTokens    int       `json:"prompt_tokens"`
-	CompletionTokens int      `json:"completion_tokens"`
-	LatencyMS       int64     `json:"latency_ms"`
-	Degraded        bool      `json:"degraded"`
-	Notice          string    `json:"notice"`
-	SchemaVersion   int       `json:"schema_version"`
+	RequestID        string     `json:"request_id"`
+	Title            string     `json:"title"`
+	Sections         []Section  `json:"sections"`
+	Citations        []Citation `json:"citations"`
+	Model            string     `json:"model"`
+	Provider         string     `json:"provider"`
+	CostUSD          float64    `json:"cost_usd"`
+	PromptTokens     int        `json:"prompt_tokens"`
+	CompletionTokens int        `json:"completion_tokens"`
+	LatencyMS        int64      `json:"latency_ms"`
+	Degraded         bool       `json:"degraded"`
+	Notice           string     `json:"notice"`
+	SchemaVersion    int        `json:"schema_version"`
 }
 
 // Section is a single section of the long-form report.
 type Section struct {
-	SectionIndex int       `json:"section_index"`
-	Heading      string    `json:"heading"`
-	Level        int       `json:"level"`
-	Text         string    `json:"text"`
+	SectionIndex int        `json:"section_index"`
+	Heading      string     `json:"heading"`
+	Level        int        `json:"level"`
+	Text         string     `json:"text"`
 	Sentences    []Sentence `json:"sentences"`
 }
 
 // Sentence is a single sentence within a section, with citation markers.
 type Sentence struct {
-	SentenceIndex int   `json:"sentence_index"`
+	SentenceIndex int    `json:"sentence_index"`
 	Text          string `json:"text"`
 	Markers       []int  `json:"markers"`
 }
