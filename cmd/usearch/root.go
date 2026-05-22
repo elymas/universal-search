@@ -68,6 +68,18 @@ func registerSubcommands(root *cobra.Command) {
 	// history subcommand tree — SPEC-CLI-002 REQ-CLI2-011.
 	root.AddCommand(newHistoryCmd())
 
+	// REPL subcommand — SPEC-CLI-002 REQ-CLI2-008.
+	registerREPL(root)
+
+	// deep subcommand — SPEC-CLI-002 REQ-CLI2-003.
+	root.AddCommand(newDeepCmd())
+
+	// sources subcommand tree — SPEC-CLI-002 REQ-CLI2-004.
+	root.AddCommand(newSourcesCmd())
+
+	// login subcommand tree — SPEC-CLI-002 REQ-CLI2-007.
+	root.AddCommand(newLoginCmd())
+
 	// version is handled by cobra's built-in --version flag.
 	// No need for a separate version subcommand.
 }
@@ -165,7 +177,7 @@ and LLM synthesis. Output goes to stdout; progress/errors to stderr.`,
 	}
 
 	cmd.Flags().StringVar(&source, "source", "", "comma-separated adapter names (empty = all enabled)")
-	cmd.Flags().StringVar(&format, "format", "text", "output format: text (default) or json")
+	cmd.Flags().StringVar(&format, "format", "text", "output format: text (default), json, or markdown")
 	cmd.Flags().StringVar(&timeout, "timeout", "30s", "total pipeline deadline (max 5m)")
 	cmd.Flags().BoolVar(&noLLM, "no-llm", false, "skip LLM client initialisation")
 	cmd.Flags().BoolVar(&noObs, "no-obs", false, "disable observability init (test flag)")

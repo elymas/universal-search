@@ -127,9 +127,9 @@ func Execute(ctx context.Context, args []string, stdout, stderr io.Writer, opts 
 		return ExitUserError
 	}
 
-	// Validate format (REQ-CLI-004).
-	if flags.Format != "text" && flags.Format != "json" {
-		_, _ = fmt.Fprintf(stderr, "usearch query: unsupported format %q; valid: text, json\n", flags.Format)
+	// Validate format (REQ-CLI-004, REQ-CLI2-006).
+	if flags.Format != "text" && flags.Format != "json" && flags.Format != "markdown" {
+		_, _ = fmt.Fprintf(stderr, "usearch query: unsupported format %q; valid: text, json, markdown\n", flags.Format)
 		return ExitUserError
 	}
 
@@ -270,11 +270,14 @@ func Execute(ctx context.Context, args []string, stdout, stderr io.Writer, opts 
 		_, _ = fmt.Fprintf(stderr, "usearch query: synthesis failed: %v\n", synthErr)
 	}
 
-	// Format and write output to stdout (REQ-CLI-006).
+	// Format and write output to stdout (REQ-CLI-006, REQ-CLI2-006).
 	var fmtErr error
-	if flags.Format == "json" {
+	switch flags.Format {
+	case "json":
 		fmtErr = formatJSON(stdout, resp)
-	} else {
+	case "markdown":
+		fmtErr = formatMarkdown(stdout, resp)
+	default:
 		fmtErr = formatText(stdout, resp)
 	}
 	if fmtErr != nil {
@@ -299,7 +302,7 @@ func parseQueryFlags(args []string) (queryFlags, string, error) {
 	var noObs bool
 
 	fs.StringVar(&sourceStr, "source", "", "comma-separated adapter names (empty = all enabled)")
-	fs.StringVar(&format, "format", "text", "output format: text (default) or json")
+	fs.StringVar(&format, "format", "text", "output format: text (default), json, or markdown")
 	fs.DurationVar(&timeout, "timeout", defaultTimeout, "total pipeline deadline (max 5m)")
 	fs.BoolVar(&noObs, "no-obs", false, "disable observability init (test flag)")
 
