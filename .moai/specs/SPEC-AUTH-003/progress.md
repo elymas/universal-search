@@ -1,0 +1,23 @@
+## SPEC-AUTH-003 Progress
+
+- Started: 2026-05-22
+- Phase 0.5 complete: research.md authored (10 sections, ~750 lines, 7 pinned decisions, 12 risks)
+- Phase 0.9 pending: project language detection (Go expected → moai-lang-go)
+- Phase 0.95 pending: harness routing (expected: standard mode, 22-26 files, 1 domain backend/security, TDD)
+- Harness: standard (expected evaluator=final-pass, effort=high)
+- UltraThink: pending activation in plan-auditor cycle
+- SPEC status: draft → pending plan-auditor cycle 1
+- Phase 1 pending: manager-strategy plan validation
+- Phase 1.5 pending: tasks.md decomposition into T-001 through T-006 (already drafted at tasks.md)
+- Phase 1.6 pending: acceptance criteria registration as TaskList
+- Phase 1.7 pending: file stubs creation in internal/audit/
+- Phase 2 pending: TDD implementation across 6 phases (A-F)
+  - Phase A: schema + role separation foundation (REQ-001, 008)
+  - Phase B: EmitEvent emitter + DEEP-004 tee handler (REQ-002, 009)
+  - Phase C: cost_ledger trigger + index.write hook (REQ-002)
+  - Phase D: LiteLLM reconciliation job (REQ-003)
+  - Phase E: /admin/audit/replay endpoint (REQ-004, 006)
+  - Phase F: S3 export + retention + PII + hash chain (REQ-005, 006, 007, 008)
+- Phase 2.5 pending: quality validation (coverage ≥ 85%, go vet, golangci-lint, go test -race)
+- Phase 2.75 pending: pre-review quality gate
+- Phase 3 pending: sync + PR
