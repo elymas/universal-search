@@ -139,7 +139,18 @@ func (e *Enforcer) Enforce(sub string, dom string, obj string, act string) (bool
 func (e *Enforcer) LoadPolicy() error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
-	return e.inner.LoadPolicy()
+	// Recover from panic if adapter is nil (e.g., in-memory enforcer in tests).
+	// Edge2: failure preserves existing in-memory enforcer.
+	var err error
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("rbac: load policy failed: %v", r)
+			}
+		}()
+		err = e.inner.LoadPolicy()
+	}()
+	return err
 }
 
 // GetPolicyCount returns the number of policy rows currently loaded.
@@ -172,7 +183,16 @@ func (e *Enforcer) DeleteRoleForUserInDomain(user string, role string, domain st
 func (e *Enforcer) SavePolicy() error {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
-	return e.inner.SavePolicy()
+	var err error
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("rbac: save policy failed: %v", r)
+			}
+		}()
+		err = e.inner.SavePolicy()
+	}()
+	return err
 }
 
 // GetRolesForUserInDomain returns the roles a user has in a domain.

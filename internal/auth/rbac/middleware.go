@@ -29,7 +29,13 @@ func TeamScopeMiddleware(cfg Config) func(http.Handler) http.Handler {
 			ctx := r.Context()
 
 			// Extract identity using source-priority.
-			_, teamID, roles := extractIdentity(ctx, r)
+			userID, teamID, roles := extractIdentity(ctx, r)
+
+			// Ensure costguard.UserIDKey is set for downstream consumers
+			// (e.g., costguard.UserIDFromContext, DEEP-004 cost ledger).
+			if costguard.UserIDFromContext(ctx) == "" {
+				ctx = context.WithValue(ctx, costguard.UserIDKey, userID)
+			}
 
 			// REQ-AUTH2-004: Empty team_id handling.
 			if teamID == "" {
