@@ -283,6 +283,9 @@ func NewRegistry() *Registry {
 			// Auth labels (SPEC-AUTH-001 NFR-AUTH1-006): bounded enums only.
 			"reason",
 			"trigger",
+			// RBAC labels (SPEC-AUTH-002 NFR-AUTH2-003): bounded enums only.
+			// reason_class in {policy_matched, no_policy_matched, explicit_deny, empty_team} (4 values).
+			"reason_class",
 		},
 	}
 }
