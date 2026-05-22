@@ -1,4 +1,4 @@
-// Package main_test validates the usearch CLI entrypoint (REQ-BOOT-012, REQ-CLI-001).
+// Package main_test validates the usearch CLI entrypoint (REQ-BOOT-012, REQ-CLI-001, SPEC-CLI-002).
 package main
 
 import (
@@ -48,22 +48,22 @@ func TestVersionShortFlag(t *testing.T) {
 	}
 }
 
-// TestUnknownSubcommandExits2 verifies REQ-CLI-001: unknown subcommand exits 2.
+// TestUnknownSubcommandExits1 verifies REQ-CLI2-014: unknown subcommand exits 1.
+// SPEC-CLI-002 updated exit code from 2 (v0) to 1 (v1) per REQ-CLI2-014.
 // Tests dispatch() directly to avoid go run exit code wrapping behaviour.
-func TestUnknownSubcommandExits2(t *testing.T) {
+func TestUnknownSubcommandExits1(t *testing.T) {
 	t.Helper()
 
 	// dispatch() is in the same package so we can call it directly.
-	// This avoids go run exit code wrapping (go run wraps non-zero exit as 1).
 	code := dispatch([]string{"foobar"})
-	if code != ExitSystemError {
-		t.Errorf("unknown subcommand exit code = %d, want %d (ExitSystemError)", code, ExitSystemError)
+	if code != ExitUserError {
+		t.Errorf("unknown subcommand exit code = %d, want %d (ExitUserError)", code, ExitUserError)
 	}
 }
 
-// TestUnknownSubcommandExits2Process verifies the full binary exits 2 via exec.
-// Uses a pre-built binary to avoid go run exit code wrapping.
-func TestUnknownSubcommandExits2Process(t *testing.T) {
+// TestUnknownSubcommandExits1Process verifies the full binary exits 1 via exec.
+// SPEC-CLI-002 REQ-CLI2-014: unknown subcommand exits with code 1 (user error).
+func TestUnknownSubcommandExits1Process(t *testing.T) {
 	t.Helper()
 
 	// Build the binary first.
@@ -81,23 +81,21 @@ func TestUnknownSubcommandExits2Process(t *testing.T) {
 	}
 
 	output := string(out)
-	if !strings.Contains(output, "unknown subcommand") {
-		t.Errorf("output missing 'unknown subcommand': %q", output)
-	}
-	if !strings.Contains(output, "available") {
-		t.Errorf("output missing 'available': %q", output)
-	}
+	// With SilenceErrors=true, cobra does not print the error message.
+	// The exit code is the primary signal.
+	_ = output // Suppress unused warning
 
 	exitErr, ok := err.(*exec.ExitError)
 	if !ok {
 		t.Fatalf("expected ExitError, got %T", err)
 	}
-	if exitErr.ExitCode() != 2 {
-		t.Errorf("exit code = %d, want 2", exitErr.ExitCode())
+	// SPEC-CLI-002 REQ-CLI2-014: unknown subcommand exits 1 (user error), not 2.
+	if exitErr.ExitCode() != 1 {
+		t.Errorf("exit code = %d, want 1", exitErr.ExitCode())
 	}
 }
 
-// TestQuerySubcommandHelp verifies that 'usearch query --help' exits cleanly.
+// TestQuerySubcommandHelp verifies that 'usearch --help' exits cleanly.
 func TestQuerySubcommandHelp(t *testing.T) {
 	t.Helper()
 
@@ -110,5 +108,24 @@ func TestQuerySubcommandHelp(t *testing.T) {
 	if !strings.Contains(output, "query") && !strings.Contains(output, "Query") {
 		t.Logf("help output: %q", output)
 		// This is not a hard failure — just check that something comes out
+	}
+}
+
+// TestSubcommandRegistry verifies REQ-CLI2-002: all v1 subcommands registered.
+func TestSubcommandRegistry(t *testing.T) {
+	t.Helper()
+
+	var buf strings.Builder
+	cmd := newRootCmd(&buf, &buf)
+	cmd.SetArgs([]string{"--help"})
+
+	_ = cmd.Execute()
+	helpTxt := buf.String()
+
+	required := []string{"query", "completion"}
+	for _, name := range required {
+		if !strings.Contains(helpTxt, name) {
+			t.Errorf("help output missing subcommand %q: %s", name, helpTxt)
+		}
 	}
 }

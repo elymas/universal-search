@@ -7,6 +7,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"io"
 	"strings"
 	"testing"
 
@@ -72,16 +73,21 @@ func TestAdminAddrWithPort(t *testing.T) {
 	}
 }
 
-// --- usageText ---
+// --- cobra help text ---
 
-// TestUsageTextContainsQuery verifies that usageText() mentions the query subcommand.
-func TestUsageTextContainsQuery(t *testing.T) {
-	txt := usageText()
-	if !strings.Contains(txt, "query") {
-		t.Errorf("usageText() does not mention 'query': %q", txt)
+// TestHelpTextContainsQuery verifies that cobra help mentions the query subcommand.
+func TestHelpTextContainsQuery(t *testing.T) {
+	var buf bytes.Buffer
+	cmd := newRootCmd(&buf, io.Discard)
+	cmd.SetArgs([]string{"--help"})
+	// Execute help and capture output.
+	_ = cmd.Execute()
+	helpTxt := buf.String()
+	if !strings.Contains(helpTxt, "query") {
+		t.Errorf("cobra help does not mention 'query': %q", helpTxt)
 	}
-	if !strings.Contains(txt, "--version") {
-		t.Errorf("usageText() does not mention '--version': %q", txt)
+	if !strings.Contains(helpTxt, "version") {
+		t.Errorf("cobra help does not mention 'version': %q", helpTxt)
 	}
 }
 
@@ -128,11 +134,20 @@ func TestDispatchVersionExitsSuccess(t *testing.T) {
 	}
 }
 
-// TestDispatchNoArgsExitsSystemError verifies empty args returns ExitSystemError.
-func TestDispatchNoArgsExitsSystemError(t *testing.T) {
-	code := dispatch([]string{})
-	if code != ExitSystemError {
-		t.Errorf("dispatch([]) = %d, want %d (ExitSystemError)", code, ExitSystemError)
+// TestDispatchNoArgsShowsHelp verifies empty args shows help and exits 0.
+// SPEC-CLI-002 REQ-CLI2-008: zero args + non-TTY shows help, exit 0.
+// (v0 exited 2; v1 updated to exit 0 per cobra default behavior.)
+func TestDispatchNoArgsShowsHelp(t *testing.T) {
+	var buf bytes.Buffer
+	cmd := newRootCmd(&buf, &buf)
+	cmd.SetArgs([]string{})
+	code := runCobra(cmd, []string{})
+	if code != ExitSuccess {
+		t.Errorf("dispatch([]) = %d, want %d (ExitSuccess)", code, ExitSuccess)
+	}
+	output := buf.String()
+	if !strings.Contains(output, "usearch") {
+		t.Errorf("help output does not mention 'usearch': %q", output)
 	}
 }
 
