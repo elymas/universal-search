@@ -65,6 +65,9 @@ func registerSubcommands(root *cobra.Command) {
 	// config subcommand tree — SPEC-CLI-002 REQ-CLI2-012.
 	root.AddCommand(newConfigCmd())
 
+	// history subcommand tree — SPEC-CLI-002 REQ-CLI2-011.
+	root.AddCommand(newHistoryCmd())
+
 	// version is handled by cobra's built-in --version flag.
 	// No need for a separate version subcommand.
 }
