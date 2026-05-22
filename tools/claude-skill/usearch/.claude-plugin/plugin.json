@@ -1,0 +1,25 @@
+{
+  "name": "usearch",
+  "displayName": "Universal Search",
+  "version": "0.1.0",
+  "description": "Team-scale research meta-agent for Claude Code. Search across web, social, academic, and Korean sources with cited synthesis and deep-research reports via the Universal Search MCP server.",
+  "author": {
+    "name": "limbowl",
+    "url": "https://github.com/elymas"
+  },
+  "license": "Apache-2.0",
+  "repository": "https://github.com/elymas/universal-search",
+  "homepage": "https://github.com/elymas/universal-search/tree/main/tools/claude-skill/usearch",
+  "keywords": [
+    "research",
+    "search",
+    "citations",
+    "korean",
+    "deep-research",
+    "mcp",
+    "rag",
+    "multi-source",
+    "synthesis",
+    "team-memory"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "usearch": {
+      "command": "usearch-mcp",
+      "args": ["--transport", "stdio"]
+    }
+  }
+}
