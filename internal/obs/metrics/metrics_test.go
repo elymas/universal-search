@@ -274,6 +274,9 @@ func TestCardinalityGuardRejectsUnboundedLabels(t *testing.T) {
 		"agent": true,
 		// result ∈ {pass, fail_uncited, fail_error} (3 values, bounded enum).
 		"result": true,
+		// Auth labels added by SPEC-AUTH-001 (NFR-AUTH1-006).
+		"reason": true,
+		"trigger": true,
 	}
 
 	reg := metrics.NewRegistry()

@@ -35,22 +35,40 @@ func NewMiddleware(cfg Config, checker *CapChecker, screen *HaikuScreen, metrics
 	}
 }
 
-// IdentityMiddleware reads X-User-Id and X-Tenant-Id headers, falls back to
+// IdentityMiddleware reads identity from context (JWT path) or headers (V1 path), falls back to
 // defaults, and injects into request context.
 // REQ-DEEP4-001: identity middleware reads headers, falls back to anonymous/default.
+// REQ-AUTH1-006: source-priority: (a) context UserIDKey (JWT path) > (b) X-User-Id header (DEEP-004 V1 path) > (c) "anonymous".
+// @MX:ANCHOR: [AUTO] Identity bridge between AUTH-001 and DEEP-004; callers: main.go chain, integration tests, /deep route
+// @MX:REASON: Joint invariant for REQ-AUTH1-006 + REQ-DEEP4-001. Source-priority determines cost_ledger.user_id.
 func (m *Middleware) IdentityMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userID := r.Header.Get("X-User-Id")
+		ctx := r.Context()
+
+		// Source priority (a): check if UserIDKey was already set by JWT middleware
+		existingUserID, _ := ctx.Value(UserIDKey).(string)
+		userID := existingUserID
+
+		// Source priority (b): fall back to X-User-Id header (DEEP-004 V1 path)
+		if userID == "" {
+			userID = r.Header.Get("X-User-Id")
+		}
+
+		// Source priority (c): fall back to "anonymous"
 		if userID == "" {
 			userID = "anonymous"
 		}
 
-		tenantID := r.Header.Get("X-Tenant-Id")
+		// Tenant: check context first (JWT path), then header, then default
+		existingTenantID, _ := ctx.Value(TenantIDKey).(string)
+		tenantID := existingTenantID
+		if tenantID == "" {
+			tenantID = r.Header.Get("X-Tenant-Id")
+		}
 		if tenantID == "" {
 			tenantID = m.cfg.DefaultTenantID
 		}
 
-		ctx := r.Context()
 		ctx = context.WithValue(ctx, UserIDKey, userID)
 		ctx = context.WithValue(ctx, TenantIDKey, tenantID)
 

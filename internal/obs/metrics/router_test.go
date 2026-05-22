@@ -71,7 +71,9 @@ func TestRouterCollectorsCardinality(t *testing.T) {
 			"store", "op", // Index layer labels (SPEC-IDX-001); bounded qdrant/meili/pg, search/upsert.
 			"shard",  // Tokenizer shard label (SPEC-IDX-003); bounded to ko/default.
 			"agent",  // Deep agent label (SPEC-DEEP-002); bounded to 4 values.
-			"result": // Verifier gate result label (SPEC-DEEP-002); bounded to 3 values.
+			"result", // Verifier gate result label (SPEC-DEEP-002); bounded to 3 values.
+				"reason",  // Auth failure reason (SPEC-AUTH-001); bounded to 9 values.
+				"trigger": // Auth revocation trigger (SPEC-AUTH-001); bounded to 1 value.
 			// allowlisted
 		default:
 			t.Errorf("unexpected label %q in cardinality allowlist", label)

@@ -280,6 +280,9 @@ func NewRegistry() *Registry {
 			"agent",
 			// result in {pass, fail_uncited, fail_error} (3 values)
 			"result",
+			// Auth labels (SPEC-AUTH-001 NFR-AUTH1-006): bounded enums only.
+			"reason",
+			"trigger",
 		},
 	}
 }
