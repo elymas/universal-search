@@ -1,0 +1,20 @@
+# Default RBAC policy for Universal Search V1.
+# REQ-AUTH2-001: bootstrap policy loaded when casbin_rule table is empty.
+# D4: Role hierarchy (observer < member < admin) via explicit policy row duplication.
+# @MX:NOTE: [AUTO] V1 default policy. Admin holds explicit superset of member rows.
+# V1.1 personal adapter shape example (not active in V1):
+#   p, <owner>, <team>, adapter:<name>:<owner>, read, allow
+
+# Admin role — full access to all resources and actions.
+p, role_admin, *, *, *, allow
+
+# Member role — query (basic + deep), adapter read.
+p, role_member, *, query:basic, read, allow
+p, role_member, *, query:deep, read, allow
+p, role_member, *, adapter, read, allow
+
+# Observer role — basic query only.
+p, role_observer, *, query:basic, read, allow
+
+# Catch-all deny (REQ-AUTH2-002: deny-by-default safety net).
+p, *, *, *, *, deny
