@@ -3,7 +3,7 @@ id: SPEC-IDX-004
 title: Shared index multi-tenancy
 version: 0.1.0
 milestone: M6 — Team plane
-status: draft
+status: implemented
 priority: P0
 owner: expert-backend
 methodology: tdd
