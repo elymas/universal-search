@@ -38,7 +38,7 @@ export function AuditViewer() {
   }, []);
 
   useEffect(() => {
-    loadEntries(offset, errorsOnly);
+    void loadEntries(offset, errorsOnly);
   }, [offset, errorsOnly, loadEntries]);
 
   const handleNext = () => {
