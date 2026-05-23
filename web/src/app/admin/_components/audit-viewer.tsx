@@ -38,7 +38,7 @@ export function AuditViewer() {
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/setState-in-effect -- data fetch on dependency change
+    // eslint-disable-next-line -- data fetch on dependency change triggers setState
     loadEntries(offset, errorsOnly);
   }, [offset, errorsOnly, loadEntries]);
 
