@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Search, Clock, Database, Menu, X } from "lucide-react";
+import { Search, Clock, Database, Settings, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: "/", label: "Search", icon: Search },
   { href: "/history", label: "History", icon: Clock },
   { href: "/sources", label: "Sources", icon: Database },
+  { href: "/admin", label: "Admin", icon: Settings },
 ] as const;
 
 export function SidebarNav() {

@@ -12,6 +12,8 @@ import (
 	"os"
 
 	"github.com/elymas/universal-search/cmd/usearch-api/handlers"
+	adminapi "github.com/elymas/universal-search/internal/api/admin"
+	"github.com/elymas/universal-search/internal/adapters"
 	"github.com/elymas/universal-search/internal/obs"
 )
 
@@ -39,6 +41,11 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle("/query/stream", handlers.NewSynthesisHandler(nil, handlers.DefaultConfig()))
 
+	// SPEC-UI-002 Phase A: Admin route group under /api/admin/.
+	// All admin endpoints are protected by loopback-only middleware (REQ-LH-001).
+	reg := adapters.NewRegistry(nil) // populated by SPEC-IR-001 in full implementation
+	registerAdminRoutes(mux, reg)
+
 	_ = mux // mux is registered but server.ListenAndServe is owned by SPEC-IR-001.
 
 	fmt.Fprintln(os.Stderr, "usearch-api: not implemented (see SPEC-IR-001)")
@@ -50,4 +57,25 @@ func adminAddr() string {
 		return "127.0.0.1:" + v
 	}
 	return ""
+}
+
+// registerAdminRoutes mounts all /api/admin/* endpoints on mux with loopback
+// middleware. The registry is used by handlers to read adapter state.
+//
+// @MX:NOTE: [AUTO] Admin route group. Loopback middleware is applied per-route
+// so Go's default mux pattern matching does not bypass it.
+// @MX:SPEC: SPEC-UI-002 REQ-LH-002
+func registerAdminRoutes(mux *http.ServeMux, reg *adapters.Registry) {
+	// SPEC-UI-002 Phase A: adapter listing.
+	adaptersHandler := adminapi.LoopbackOnly(adminapi.NewAdaptersHandler(reg))
+	mux.Handle("/api/admin/adapters", adaptersHandler)
+
+	// SPEC-UI-002 Phase B: adapter actions.
+	mux.Handle("POST /api/admin/adapters/{id}/resync", adminapi.LoopbackOnly(adminapi.NewResyncHandler(reg)))
+	mux.Handle("POST /api/admin/adapters/{id}/toggle", adminapi.LoopbackOnly(adminapi.NewToggleHandler(reg)))
+
+	// SPEC-UI-002 Phase B: audit queries.
+	// TODO: wire a real AuditQuerier implementation when audit store gains a
+	// QueryEntries method. Until then, the handler returns empty results.
+	mux.Handle("/api/admin/audit/queries", adminapi.LoopbackOnly(adminapi.NewAuditHandler(nil)))
 }
