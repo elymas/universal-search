@@ -11,3 +11,6 @@ node_modules/
 web/pnpm-lock.yaml
 uv.lock
 docs/licenses/
+
+# Test fixtures (intentionally malformed)
+**/testdata/

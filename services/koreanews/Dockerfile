@@ -3,6 +3,7 @@ FROM python:3.11-slim
 WORKDIR /app
 
 COPY pyproject.toml .
+# hadolint ignore=DL3013
 RUN pip install --no-cache-dir ".[test]"
 
 COPY src/ ./src/

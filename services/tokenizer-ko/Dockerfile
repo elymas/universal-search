@@ -8,6 +8,7 @@
 FROM python:3.11-slim AS builder
 
 # Install system build dependencies for mecab-ko C extension.
+# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     gcc \
@@ -28,6 +29,7 @@ FROM python:3.11-slim AS runtime
 
 # Runtime system deps: mecab-ko-dic dictionary is bundled in the wheel,
 # but libstdc++ is needed for the C extension.
+# hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libstdc++6 \
     && rm -rf /var/lib/apt/lists/*

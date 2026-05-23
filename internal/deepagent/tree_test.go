@@ -79,6 +79,10 @@ func (m *mockResearcher) Fanout(ctx context.Context, query string) ([]NodeCitati
 	m.goroutineIDs[gid] = true
 	m.goroutineIDMu.Unlock()
 
+	// Small sleep ensures goroutines remain active long enough to overlap,
+	// preventing flaky failures in concurrent-peak assertions on slow CI runners.
+	time.Sleep(50 * time.Millisecond)
+
 	defer m.currentActive.Add(-1)
 
 	m.mu.Lock()
