@@ -53,7 +53,7 @@ func (h *AuditHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(map[string]string{"error": "method not allowed"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -64,7 +64,7 @@ func (h *AuditHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err != nil || parsed < 0 {
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{
+			_ = json.NewEncoder(w).Encode(map[string]string{
 				"error":  "invalid_limit",
 				"detail": fmt.Sprintf("limit must be a non-negative integer, got %q", v),
 			})
@@ -80,7 +80,7 @@ func (h *AuditHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err != nil || parsed < 0 {
 			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 			w.WriteHeader(http.StatusBadRequest)
-			json.NewEncoder(w).Encode(map[string]string{
+			_ = json.NewEncoder(w).Encode(map[string]string{
 				"error":  "invalid_offset",
 				"detail": fmt.Sprintf("offset must be a non-negative integer, got %q", v),
 			})
@@ -100,7 +100,7 @@ func (h *AuditHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if cursor != "" && !isValidCursor(cursor) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{
+		_ = json.NewEncoder(w).Encode(map[string]string{
 			"error":  "invalid_cursor",
 			"detail": fmt.Sprintf("cursor contains invalid characters: %q", cursor),
 		})
@@ -112,7 +112,7 @@ func (h *AuditHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{
+		_ = json.NewEncoder(w).Encode(map[string]string{
 			"error":  "internal_error",
 			"detail": "failed to query audit entries",
 		})
@@ -126,7 +126,7 @@ func (h *AuditHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(entries)
+	_ = json.NewEncoder(w).Encode(entries)
 }
 
 // isValidCursor checks whether a cursor string contains only safe characters

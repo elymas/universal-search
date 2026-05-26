@@ -25,11 +25,11 @@ import (
 //
 // When summary is empty (degraded mode), raw doc snippets are listed instead.
 func formatMarkdown(w io.Writer, resp *queryResponse) error {
-	fmt.Fprintln(w, "## Answer")
-	fmt.Fprintln(w)
+	_, _ = fmt.Fprintln(w, "## Answer")
+	_, _ = fmt.Fprintln(w)
 
 	if resp.Summary != "" {
-		fmt.Fprintln(w, resp.Summary)
+		_, _ = fmt.Fprintln(w, resp.Summary)
 	} else {
 		// Degraded mode: list raw doc snippets.
 		for i, doc := range resp.Docs {
@@ -37,16 +37,16 @@ func formatMarkdown(w io.Writer, resp *queryResponse) error {
 			if snippet == "" {
 				snippet = doc.Title
 			}
-			fmt.Fprintf(w, "%d. %s\n", i+1, snippet)
+			_, _ = fmt.Fprintf(w, "%d. %s\n", i+1, snippet)
 		}
 	}
 
 	if len(resp.Citations) > 0 {
-		fmt.Fprintln(w)
-		fmt.Fprintln(w, "## Sources")
-		fmt.Fprintln(w)
+		_, _ = fmt.Fprintln(w)
+		_, _ = fmt.Fprintln(w, "## Sources")
+		_, _ = fmt.Fprintln(w)
 		for _, c := range resp.Citations {
-			fmt.Fprintf(w, "%d. [%s](%s)\n", c.Index, c.Title, c.URL)
+			_, _ = fmt.Fprintf(w, "%d. [%s](%s)\n", c.Index, c.Title, c.URL)
 		}
 	}
 

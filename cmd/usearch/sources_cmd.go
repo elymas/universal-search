@@ -55,11 +55,11 @@ func newSourcesListCmd() *cobra.Command {
 		Short: "List available sources",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			w := tabwriter.NewWriter(cmd.OutOrStdout(), 0, 0, 2, ' ', 0)
-			fmt.Fprintln(w, "NAME\tCATEGORY\tDESCRIPTION")
+			_, _ = fmt.Fprintln(w, "NAME\tCATEGORY\tDESCRIPTION")
 			for _, a := range knownAdapters {
-				fmt.Fprintf(w, "%s\t%s\t%s\n", a.name, a.category, a.desc)
+				_, _ = fmt.Fprintf(w, "%s\t%s\t%s\n", a.name, a.category, a.desc)
 			}
-			w.Flush()
+			_ = w.Flush()
 			return nil
 		},
 	}
@@ -73,10 +73,10 @@ func newSourcesStatusCmd() *cobra.Command {
 		Use:   "status",
 		Short: "Show source health status",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Fprintln(cmd.OutOrStdout(), "Source health check not yet implemented.")
-			fmt.Fprintln(cmd.OutOrStdout(), "Available sources:")
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Source health check not yet implemented.")
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Available sources:")
 			for _, a := range knownAdapters {
-				fmt.Fprintf(cmd.OutOrStdout(), "  %-12s %s\n", a.name, "unknown")
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "  %-12s %s\n", a.name, "unknown")
 			}
 			return nil
 		},
@@ -96,9 +96,9 @@ func newSourcesShowCmd() *cobra.Command {
 
 			for _, a := range knownAdapters {
 				if a.name == name {
-					fmt.Fprintf(cmd.OutOrStdout(), "Name:     %s\n", a.name)
-					fmt.Fprintf(cmd.OutOrStdout(), "Category: %s\n", a.category)
-					fmt.Fprintf(cmd.OutOrStdout(), "Description: %s\n", a.desc)
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Name:     %s\n", a.name)
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Category: %s\n", a.category)
+					_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Description: %s\n", a.desc)
 					return nil
 				}
 			}

@@ -62,7 +62,7 @@ func RevalidateCitations(ctx context.Context, citations []Citation, cfg Config) 
 				results[idx] = probeResult{index: idx, is4xx: false}
 				return
 			}
-			defer resp.Body.Close()
+			defer func() { _ = resp.Body.Close() }()
 
 			is4xx := resp.StatusCode >= 400 && resp.StatusCode < 500
 			results[idx] = probeResult{index: idx, is4xx: is4xx}

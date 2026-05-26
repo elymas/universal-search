@@ -45,7 +45,7 @@ func TeamScopeMiddleware(cfg Config) func(http.Handler) http.Handler {
 					// No default -> HTTP 400.
 					w.Header().Set("Content-Type", "application/json")
 					w.WriteHeader(http.StatusBadRequest)
-					json.NewEncoder(w).Encode(map[string]string{
+					_ = json.NewEncoder(w).Encode(map[string]string{
 						"error": "team_id_required",
 					})
 					return
@@ -136,7 +136,7 @@ func EnforceMiddleware(ef *Enforcer, resource string, action string) func(http.H
 			if err != nil || !allowed {
 				w.Header().Set("Content-Type", "application/json")
 				w.WriteHeader(http.StatusForbidden)
-				json.NewEncoder(w).Encode(map[string]string{
+				_ = json.NewEncoder(w).Encode(map[string]string{
 					"error":    "forbidden",
 					"resource": resource,
 					"action":   action,

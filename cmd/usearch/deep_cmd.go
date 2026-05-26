@@ -31,15 +31,15 @@ Shows progress for each stage. Supports cost limit via --budget flag.`,
 
 			// @MX:TODO: [AUTO] Wire to deepagent.RunPipeline when LLM client available.
 			// For now, show what would happen.
-			fmt.Fprintf(cmd.ErrOrStderr(), "Deep research: %q\n", prompt)
-			fmt.Fprintf(cmd.ErrOrStderr(), "Budget: $%.2f\n", budget)
-			fmt.Fprintln(cmd.ErrOrStderr(), "Pipeline stages:")
-			fmt.Fprintln(cmd.ErrOrStderr(), "  [1/4] Researcher  — gathering sources...")
-			fmt.Fprintln(cmd.ErrOrStderr(), "  [2/4] Reviewer    — evaluating quality...")
-			fmt.Fprintln(cmd.ErrOrStderr(), "  [3/4] Writer      — composing answer...")
-			fmt.Fprintln(cmd.ErrOrStderr(), "  [4/4] Verifier    — checking faithfulness...")
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Deep research: %q\n", prompt)
+			_, _ = fmt.Fprintf(cmd.ErrOrStderr(), "Budget: $%.2f\n", budget)
+			_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "Pipeline stages:")
+			_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "  [1/4] Researcher  — gathering sources...")
+			_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "  [2/4] Reviewer    — evaluating quality...")
+			_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "  [3/4] Writer      — composing answer...")
+			_, _ = fmt.Fprintln(cmd.ErrOrStderr(), "  [4/4] Verifier    — checking faithfulness...")
 
-			fmt.Fprintln(cmd.OutOrStdout(), "Deep research pipeline not yet wired (requires LLM client).")
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Deep research pipeline not yet wired (requires LLM client).")
 			return exitError{code: ExitSystemError}
 		},
 	}

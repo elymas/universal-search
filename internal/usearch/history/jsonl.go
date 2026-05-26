@@ -51,7 +51,7 @@ func (b *JSONLBackend) Write(entry Entry) error {
 	if err != nil {
 		return fmt.Errorf("history: open: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	data, err := json.Marshal(entry)
 	if err != nil {
@@ -161,7 +161,7 @@ func (b *JSONLBackend) readAllLocked() ([]Entry, error) {
 		}
 		return nil, fmt.Errorf("history: read: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	var entries []Entry
 	scanner := bufio.NewScanner(f)
@@ -224,7 +224,7 @@ func (b *JSONLBackend) overwriteLocked(entries []Entry) error {
 	if err != nil {
 		return fmt.Errorf("history: create: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	w := bufio.NewWriter(f)
 	for _, e := range entries {

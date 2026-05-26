@@ -22,7 +22,7 @@ func (h *AdminHandlers) ReloadHandler(w http.ResponseWriter, r *http.Request) {
 	if err := h.enforcer.LoadPolicy(); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{
+		_ = json.NewEncoder(w).Encode(map[string]string{
 			"error":  "reload_failed",
 			"reason": err.Error(),
 		})
@@ -32,7 +32,7 @@ func (h *AdminHandlers) ReloadHandler(w http.ResponseWriter, r *http.Request) {
 	count := h.enforcer.GetPolicyCount()
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"status":       "reloaded",
 		"policy_count": count,
 	})
@@ -52,7 +52,7 @@ func (h *AdminHandlers) AddMemberHandler(w http.ResponseWriter, r *http.Request)
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "invalid_body"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "invalid_body"})
 		return
 	}
 
@@ -60,27 +60,27 @@ func (h *AdminHandlers) AddMemberHandler(w http.ResponseWriter, r *http.Request)
 	if !ValidRoles[Role(req.Role)] {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "invalid_role"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "invalid_role"})
 		return
 	}
 
 	if err := h.enforcer.AddRoleForUserInDomain(req.UserID, req.Role, req.TeamID); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
 	if err := h.enforcer.SavePolicy(); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]string{
+	_ = json.NewEncoder(w).Encode(map[string]string{
 		"user_id": req.UserID,
 		"team_id": req.TeamID,
 		"role":    req.Role,
@@ -97,28 +97,28 @@ func (h *AdminHandlers) RemoveMemberHandler(w http.ResponseWriter, r *http.Reque
 	if userID == "" || teamID == "" || role == "" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "missing_parameters"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "missing_parameters"})
 		return
 	}
 
 	if !ValidRoles[Role(role)] {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "invalid_role"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "invalid_role"})
 		return
 	}
 
 	if err := h.enforcer.DeleteRoleForUserInDomain(userID, role, teamID); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
 	if err := h.enforcer.SavePolicy(); err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
 		return
 	}
 
@@ -132,7 +132,7 @@ func (h *AdminHandlers) ListMembersHandler(w http.ResponseWriter, r *http.Reques
 	if teamID == "" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "team_id_required"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "team_id_required"})
 		return
 	}
 
@@ -152,7 +152,7 @@ func (h *AdminHandlers) ListMembersHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"team_id": teamID,
 		"members": members,
 	})

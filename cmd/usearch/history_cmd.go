@@ -115,7 +115,7 @@ func newHistoryListCmd() *cobra.Command {
 			}
 
 			if len(entries) == 0 {
-				fmt.Fprintln(cmd.OutOrStdout(), "No history entries.")
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), "No history entries.")
 				return nil
 			}
 
@@ -125,9 +125,9 @@ func newHistoryListCmd() *cobra.Command {
 				if len(prompt) > 60 {
 					prompt = prompt[:57] + "..."
 				}
-				fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", e.ID, e.Timestamp.Format("2006-01-02 15:04:05"), e.Command, prompt)
+				_, _ = fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", e.ID, e.Timestamp.Format("2006-01-02 15:04:05"), e.Command, prompt)
 			}
-			w.Flush()
+			_ = w.Flush()
 			return nil
 		},
 	}
@@ -163,18 +163,18 @@ func newHistoryShowCmd() *cobra.Command {
 				if jsonErr != nil {
 					return exitError{code: ExitSystemError, err: jsonErr}
 				}
-				fmt.Fprintln(cmd.OutOrStdout(), string(data))
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), string(data))
 			default:
-				fmt.Fprintf(cmd.OutOrStdout(), "ID:       %s\n", entry.ID)
-				fmt.Fprintf(cmd.OutOrStdout(), "Time:     %s\n", entry.Timestamp.Format(time.RFC3339))
-				fmt.Fprintf(cmd.OutOrStdout(), "Command:  %s\n", entry.Command)
-				fmt.Fprintf(cmd.OutOrStdout(), "Prompt:   %s\n", entry.Prompt)
-				fmt.Fprintf(cmd.OutOrStdout(), "Category: %s\n", entry.Category)
-				fmt.Fprintf(cmd.OutOrStdout(), "Adapters: %s\n", strings.Join(entry.Adapters, ", "))
-				fmt.Fprintf(cmd.OutOrStdout(), "Summary:  %s\n", entry.Summary)
-				fmt.Fprintf(cmd.OutOrStdout(), "Latency:  %dms\n", entry.LatencyMs)
-				fmt.Fprintf(cmd.OutOrStdout(), "Cost:     $%.4f\n", entry.CostUSD)
-				fmt.Fprintf(cmd.OutOrStdout(), "Exit:     %d\n", entry.ExitCode)
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "ID:       %s\n", entry.ID)
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Time:     %s\n", entry.Timestamp.Format(time.RFC3339))
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Command:  %s\n", entry.Command)
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Prompt:   %s\n", entry.Prompt)
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Category: %s\n", entry.Category)
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Adapters: %s\n", strings.Join(entry.Adapters, ", "))
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Summary:  %s\n", entry.Summary)
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Latency:  %dms\n", entry.LatencyMs)
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Cost:     $%.4f\n", entry.CostUSD)
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Exit:     %d\n", entry.ExitCode)
 			}
 			return nil
 		},
@@ -203,7 +203,7 @@ func newHistorySearchCmd() *cobra.Command {
 			}
 
 			if len(results) == 0 {
-				fmt.Fprintln(cmd.OutOrStdout(), "No matching entries.")
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), "No matching entries.")
 				return nil
 			}
 
@@ -213,9 +213,9 @@ func newHistorySearchCmd() *cobra.Command {
 				if len(prompt) > 60 {
 					prompt = prompt[:57] + "..."
 				}
-				fmt.Fprintf(w, "%s\t%s\t%s\n", e.ID, e.Timestamp.Format("2006-01-02 15:04:05"), prompt)
+				_, _ = fmt.Fprintf(w, "%s\t%s\t%s\n", e.ID, e.Timestamp.Format("2006-01-02 15:04:05"), prompt)
 			}
-			w.Flush()
+			_ = w.Flush()
 			return nil
 		},
 	}
@@ -247,9 +247,9 @@ func newHistoryClearCmd() *cobra.Command {
 				// Interactive prompt.
 				fmt.Fprint(os.Stderr, "Are you sure you want to clear history? [y/N] ")
 				var response string
-				fmt.Scanln(&response)
+				_, _ = fmt.Scanln(&response)
 				if strings.ToLower(response) != "y" {
-					fmt.Fprintln(cmd.OutOrStdout(), "Cancelled.")
+					_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Cancelled.")
 					return nil
 				}
 			}
@@ -273,9 +273,9 @@ func newHistoryClearCmd() *cobra.Command {
 			}
 
 			if sinceTime.IsZero() {
-				fmt.Fprintln(cmd.OutOrStdout(), "History cleared.")
+				_, _ = fmt.Fprintln(cmd.OutOrStdout(), "History cleared.")
 			} else {
-				fmt.Fprintf(cmd.OutOrStdout(), "Cleared entries older than %s.\n", sinceTime.Format("2006-01-02"))
+				_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Cleared entries older than %s.\n", sinceTime.Format("2006-01-02"))
 			}
 			return nil
 		},

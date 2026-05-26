@@ -15,7 +15,7 @@ import (
 // prefix/wrapper layer, not injected into the LLM request.
 func PrefixCacheKey(tenantID, intentCategory, model, messagesJSON string) string {
 	h := sha256.New()
-	fmt.Fprintf(h, "%s|%s|%s|%s", tenantID, intentCategory, model, messagesJSON)
+	_, _ = fmt.Fprintf(h, "%s|%s|%s|%s", tenantID, intentCategory, model, messagesJSON)
 	return hex.EncodeToString(h.Sum(nil))
 }
 
