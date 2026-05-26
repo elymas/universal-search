@@ -99,7 +99,7 @@ func TestCatchAllDenyRowPresent(t *testing.T) {
 func TestCasbinLibraryImportable(t *testing.T) {
 	// This test verifies the libraries are available at compile time.
 	// The actual enforcer functionality is tested in Phase B.
-	_ = modelConf    // embedded model.conf is available
+	_ = modelConf        // embedded model.conf is available
 	_ = policyDefaultCSV // embedded policy_default.csv is available
 
 	// Verify types are usable.

@@ -78,8 +78,8 @@ func TestSnapshotForAdminAuthFields(t *testing.T) {
 	a := &stubAdapter{
 		name: "test-auth-adapter",
 		caps: types.Capabilities{
-			SourceID:    "test-auth-adapter",
-			DisplayName: "Test Auth Adapter",
+			SourceID:     "test-auth-adapter",
+			DisplayName:  "Test Auth Adapter",
 			RequiresAuth: true,
 			AuthEnvVars:  []string{envKey},
 		},
@@ -191,9 +191,9 @@ type stubAdapter struct {
 	caps types.Capabilities
 }
 
-func (s *stubAdapter) Name() string                     { return s.name }
-func (s *stubAdapter) Capabilities() types.Capabilities { return s.caps }
-func (s *stubAdapter) Healthcheck(_ context.Context) error  { return nil }
+func (s *stubAdapter) Name() string                        { return s.name }
+func (s *stubAdapter) Capabilities() types.Capabilities    { return s.caps }
+func (s *stubAdapter) Healthcheck(_ context.Context) error { return nil }
 func (s *stubAdapter) Search(_ context.Context, _ types.Query) ([]types.NormalizedDoc, error) {
 	return nil, nil
 }

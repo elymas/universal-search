@@ -402,9 +402,9 @@ type testAdapter struct {
 	caps types.Capabilities
 }
 
-func (a *testAdapter) Name() string                     { return a.name }
-func (a *testAdapter) Capabilities() types.Capabilities { return a.caps }
-func (a *testAdapter) Healthcheck(_ context.Context) error  { return nil }
+func (a *testAdapter) Name() string                        { return a.name }
+func (a *testAdapter) Capabilities() types.Capabilities    { return a.caps }
+func (a *testAdapter) Healthcheck(_ context.Context) error { return nil }
 func (a *testAdapter) Search(_ context.Context, _ types.Query) ([]types.NormalizedDoc, error) {
 	return nil, nil
 }

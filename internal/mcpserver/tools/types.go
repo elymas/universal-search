@@ -12,9 +12,9 @@ type SearchInput struct {
 
 // SearchOutput is the output schema for the search tool.
 type SearchOutput struct {
-	Summary   string         `json:"summary"`
-	Citations []Citation     `json:"citations"`
-	Stats     SearchStats    `json:"stats"`
+	Summary   string      `json:"summary"`
+	Citations []Citation  `json:"citations"`
+	Stats     SearchStats `json:"stats"`
 }
 
 // Citation represents a single citation in search results.
@@ -41,10 +41,10 @@ type DeepResearchInput struct {
 
 // DeepResearchOutput is the output schema for the deep_research tool.
 type DeepResearchOutput struct {
-	Summary   string     `json:"summary"`
-	Citations []Citation `json:"citations"`
+	Summary   string      `json:"summary"`
+	Citations []Citation  `json:"citations"`
 	Stats     SearchStats `json:"stats"`
-	Report    string     `json:"report,omitempty"`
+	Report    string      `json:"report,omitempty"`
 }
 
 // ListSourcesOutput is the output schema for the list_sources tool.

@@ -86,7 +86,9 @@ func TestEmitEventNoPanicOnNilCtx(t *testing.T) {
 		UserID:    "test",
 	}
 
-	// Should not panic.
+	// Should not panic. Passing a literal nil here is the point of the test
+	// (the emitter must defend against callers who skip context plumbing).
+	//nolint:staticcheck // SA1012: intentional nil ctx — testing graceful handling per REQ-AUTH3-002
 	err := emitter.EmitEvent(nil, evt)
 	if err != nil {
 		t.Logf("EmitEvent with nil ctx returned error (expected): %v", err)

@@ -1,6 +1,7 @@
 package audit
 
 import (
+	"context"
 	"testing"
 	"time"
 )
@@ -49,7 +50,7 @@ func TestMonthRange(t *testing.T) {
 // TestEnsureCurrentPartition_nilDB verifies graceful error on nil DB.
 func TestEnsureCurrentPartition_nilDB(t *testing.T) {
 	pm := NewPartitionManager(nil)
-	err := pm.EnsureCurrentPartition(nil)
+	err := pm.EnsureCurrentPartition(context.Background())
 	if err == nil {
 		t.Error("Expected error with nil DB, got nil")
 	}

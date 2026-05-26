@@ -7,12 +7,12 @@ import (
 // CategoryTTL maps document categories to their time-to-live in seconds.
 // REQ-IDX5-003 D2: per-category staleness TTL defaults.
 var defaultCategoryTTLs = map[string]int{
-	"web":      3600,       // 1 hour
-	"social":   1800,       // 30 minutes
-	"academic": 2592000,    // 30 days
-	"korean":   3600,       // 1 hour
-	"mixed":    7200,       // 2 hours
-	"unknown":  7200,       // 2 hours (default)
+	"web":      3600,    // 1 hour
+	"social":   1800,    // 30 minutes
+	"academic": 2592000, // 30 days
+	"korean":   3600,    // 1 hour
+	"mixed":    7200,    // 2 hours
+	"unknown":  7200,    // 2 hours (default)
 }
 
 // EvaluateStaleness determines the staleness classification of a cached answer.

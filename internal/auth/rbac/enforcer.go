@@ -41,7 +41,6 @@ func DefaultConfig() Config {
 var (
 	globalEnforcer     *casbin.Enforcer
 	globalEnforcerOnce sync.Once
-	globalEnforcerErr  error
 	globalMu           sync.RWMutex
 )
 
@@ -92,14 +91,12 @@ func MustInit(cfg Config) {
 	globalEnforcerOnce.Do(func() {
 		pgAdapter, err := NewPGAdapter(cfg.PGDSN)
 		if err != nil {
-			globalEnforcerErr = err
 			slog.Error("rbac init failed", "error", err)
 			panic(fmt.Sprintf("rbac: fatal init error: %v", err))
 		}
 
 		ef, err := NewEnforcer(pgAdapter)
 		if err != nil {
-			globalEnforcerErr = err
 			slog.Error("rbac enforcer init failed", "error", err)
 			panic(fmt.Sprintf("rbac: fatal enforcer error: %v", err))
 		}

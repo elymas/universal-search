@@ -15,16 +15,16 @@ import (
 // DecisionEvent represents a costguard decision event for audit logging.
 // SPEC-AUTH-003 compatible schema (REQ-DEEP4-010 stderr JSON line).
 type DecisionEvent struct {
-	Timestamp  string    `json:"timestamp"`
-	EventType  string    `json:"event_type"`
-	RequestID  string    `json:"request_id"`
-	TenantID   string    `json:"tenant_id"`
-	UserID     string    `json:"user_id"`
-	Decision   string    `json:"decision"`    // allow | deny | degrade
-	Dimension  string    `json:"dimension"`   // calls | usd | none
-	Remaining  Remaining `json:"remaining"`
+	Timestamp   string    `json:"timestamp"`
+	EventType   string    `json:"event_type"`
+	RequestID   string    `json:"request_id"`
+	TenantID    string    `json:"tenant_id"`
+	UserID      string    `json:"user_id"`
+	Decision    string    `json:"decision"`  // allow | deny | degrade
+	Dimension   string    `json:"dimension"` // calls | usd | none
+	Remaining   Remaining `json:"remaining"`
 	ScreenScore *int      `json:"screen_score,omitempty"`
-	CacheHit   *bool     `json:"cache_hit,omitempty"`
+	CacheHit    *bool     `json:"cache_hit,omitempty"`
 }
 
 // Remaining holds the remaining cap values.
@@ -73,11 +73,11 @@ func (l *DecisionLogger) Log(event DecisionEvent) error {
 // ConfigWatcher watches for SIGHUP to trigger config hot-reload.
 // NFR-DEEP4-008: deep.yaml hot-reload via SIGHUP.
 type ConfigWatcher struct {
-	cfg     *Config
-	path    string
-	mu      sync.RWMutex
-	reload  chan struct{}
-	onLoad  func(path string) (Config, error)
+	cfg    *Config
+	path   string
+	mu     sync.RWMutex
+	reload chan struct{}
+	onLoad func(path string) (Config, error)
 }
 
 // NewConfigWatcher creates a new config watcher.

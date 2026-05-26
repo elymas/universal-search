@@ -1,6 +1,7 @@
 package idx5
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -15,7 +16,7 @@ func TestCitationRevalidationLazyDefault(t *testing.T) {
 	}
 	cfg := Config{CitationRevalidationMode: "lazy"}
 
-	result, stripped := RevalidateCitations(nil, citations, cfg)
+	result, stripped := RevalidateCitations(context.Background(), citations, cfg)
 	if len(result) != 2 {
 		t.Errorf("lazy mode: got %d citations, want 2", len(result))
 	}
@@ -43,7 +44,7 @@ func TestCitationRevalidationEagerTopNStrips404(t *testing.T) {
 	}
 	cfg := Config{CitationRevalidationMode: "eager_top_n", EagerTopN: 3}
 
-	result, stripped := RevalidateCitations(nil, citations, cfg)
+	result, stripped := RevalidateCitations(context.Background(), citations, cfg)
 	if len(result) != 2 {
 		t.Errorf("eager_top_n: got %d citations, want 2 (1 stripped)", len(result))
 	}
@@ -69,7 +70,7 @@ func TestCitationRevalidationEagerTopNKeepsTimeout(t *testing.T) {
 	}
 	cfg := Config{CitationRevalidationMode: "eager_top_n", EagerTopN: 3}
 
-	result, stripped := RevalidateCitations(nil, citations, cfg)
+	result, stripped := RevalidateCitations(context.Background(), citations, cfg)
 	if len(result) != 1 {
 		t.Errorf("5xx: got %d citations, want 1 (5xx kept)", len(result))
 	}
@@ -95,7 +96,7 @@ func TestCitationRevalidationEagerTopNLimit(t *testing.T) {
 	cfg := Config{CitationRevalidationMode: "eager_top_n", EagerTopN: 3}
 
 	// All should be kept since they return 200
-	result, stripped := RevalidateCitations(nil, citations, cfg)
+	result, stripped := RevalidateCitations(context.Background(), citations, cfg)
 	if stripped != 0 {
 		t.Errorf("all 200: stripped %d, want 0", stripped)
 	}
@@ -106,8 +107,8 @@ func TestCitationRevalidationEagerTopNLimit(t *testing.T) {
 
 // FeedbackStore records force_stale operations for testing.
 type FeedbackStore struct {
-	mu       sync.Mutex
-	updated  map[string]bool // doc_id -> force_stale set
+	mu      sync.Mutex
+	updated map[string]bool // doc_id -> force_stale set
 }
 
 func NewFeedbackStore() *FeedbackStore {

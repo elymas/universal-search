@@ -30,7 +30,7 @@ func (h *AdaptersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(map[string]string{"error": "method not allowed"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -38,7 +38,7 @@ func (h *AdaptersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(views)
+	_ = json.NewEncoder(w).Encode(views)
 }
 
 // ResyncHandler triggers a health-check resync on a single adapter.
@@ -57,7 +57,7 @@ func (h *ResyncHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(map[string]string{"error": "method not allowed"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -65,7 +65,7 @@ func (h *ResyncHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if id == "" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "missing adapter id"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "missing adapter id"})
 		return
 	}
 
@@ -77,7 +77,7 @@ func (h *ResyncHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(view)
+	_ = json.NewEncoder(w).Encode(view)
 }
 
 // ToggleHandler toggles the enabled/disabled state of a single adapter.
@@ -96,7 +96,7 @@ func (h *ToggleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(map[string]string{"error": "method not allowed"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "method not allowed"})
 		return
 	}
 
@@ -104,7 +104,7 @@ func (h *ToggleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if id == "" {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "missing adapter id"})
+		_ = json.NewEncoder(w).Encode(map[string]string{"error": "missing adapter id"})
 		return
 	}
 
@@ -116,7 +116,7 @@ func (h *ToggleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(view)
+	_ = json.NewEncoder(w).Encode(view)
 }
 
 // writeAdapterError writes a structured JSON error response for adapter
@@ -126,7 +126,7 @@ func writeAdapterError(w http.ResponseWriter, adapterID string, err error) {
 	if errors.Is(err, adapters.ErrAdapterNotFound) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(map[string]string{
+		_ = json.NewEncoder(w).Encode(map[string]string{
 			"error":      "adapter_not_found",
 			"adapter_id": adapterID,
 		})
@@ -137,7 +137,7 @@ func writeAdapterError(w http.ResponseWriter, adapterID string, err error) {
 	if errors.As(err, &upErr) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.WriteHeader(http.StatusBadGateway)
-		json.NewEncoder(w).Encode(map[string]string{
+		_ = json.NewEncoder(w).Encode(map[string]string{
 			"error":      "upstream_adapter_error",
 			"adapter_id": adapterID,
 			"detail":     sanitizeErrorMessage(upErr.Err.Error()),
@@ -148,7 +148,7 @@ func writeAdapterError(w http.ResponseWriter, adapterID string, err error) {
 	// Generic internal error — sanitize aggressively.
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(http.StatusInternalServerError)
-	json.NewEncoder(w).Encode(map[string]string{
+	_ = json.NewEncoder(w).Encode(map[string]string{
 		"error":      "internal_error",
 		"adapter_id": adapterID,
 		"detail":     sanitizeErrorMessage(err.Error()),

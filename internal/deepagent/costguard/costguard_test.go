@@ -177,13 +177,13 @@ func TestWriteLedgerEntryReturnsNil(t *testing.T) {
 	t.Parallel()
 
 	entry := LedgerEntry{
-		UserID:     "alice",
-		TenantID:   "default",
-		RequestID:  "req-001",
-		Model:      "claude-haiku-4-5",
-		USDCost:    0.01,
-		CacheHit:   false,
-		Outcome:    OutcomeSuccess,
+		UserID:    "alice",
+		TenantID:  "default",
+		RequestID: "req-001",
+		Model:     "claude-haiku-4-5",
+		USDCost:   0.01,
+		CacheHit:  false,
+		Outcome:   OutcomeSuccess,
 	}
 	if err := WriteLedgerEntry(entry); err != nil {
 		t.Errorf("WriteLedgerEntry: got err %v, want nil", err)

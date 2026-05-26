@@ -42,11 +42,11 @@ type LedgerEntry struct {
 
 // CapResult is returned by the atomic cap-check evaluation.
 type CapResult struct {
-	Allowed  bool         `json:"allowed"`
-	Exceeded CapDimension `json:"exceeded,omitempty"`
-	RemainingCalls int    `json:"remaining_calls"`
-	RemainingUSD  float64 `json:"remaining_usd"`
-	ResetAt       string  `json:"reset_at,omitempty"`
+	Allowed        bool         `json:"allowed"`
+	Exceeded       CapDimension `json:"exceeded,omitempty"`
+	RemainingCalls int          `json:"remaining_calls"`
+	RemainingUSD   float64      `json:"remaining_usd"`
+	ResetAt        string       `json:"reset_at,omitempty"`
 }
 
 // ScreenResult is the parsed output of the Haiku pre-screen.
@@ -71,12 +71,12 @@ type UserConfig struct {
 
 // Config holds all costguard configuration (deep.yaml costguard section).
 type Config struct {
-	Enabled          bool          `json:"enabled"`
-	DefaultTenantID  string        `json:"default_tenant_id"`
-	RedisFailureMode string        `json:"redis_failure_mode"` // "fail-closed" | "fail-open"
-	Tenant           TenantConfig  `json:"tenant"`
-	User             UserConfig    `json:"user"`
-	AllowedTenants   []string      `json:"allowed_tenants"`
+	Enabled          bool         `json:"enabled"`
+	DefaultTenantID  string       `json:"default_tenant_id"`
+	RedisFailureMode string       `json:"redis_failure_mode"` // "fail-closed" | "fail-open"
+	Tenant           TenantConfig `json:"tenant"`
+	User             UserConfig   `json:"user"`
+	AllowedTenants   []string     `json:"allowed_tenants"`
 }
 
 // DefaultConfig returns production-safe defaults per SPEC-DEEP-004 §6.1.

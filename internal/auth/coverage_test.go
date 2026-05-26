@@ -17,9 +17,9 @@ import (
 
 func TestExtractBearerTokenEdgeCases(t *testing.T) {
 	tests := []struct {
-		name    string
-		header  string
-		want    string
+		name   string
+		header string
+		want   string
 	}{
 		{"empty header", "", ""},
 		{"basic auth", "Basic dXNlcjpwYXNz", ""},
@@ -266,13 +266,13 @@ func TestDiscoveryProviderWithEndSessionEndpoint(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/.well-known/openid-configuration", func(w http.ResponseWriter, r *http.Request) {
 		doc := map[string]interface{}{
-			"issuer":                 stub.Issuer(),
-			"jwks_uri":               stub.Issuer() + "/jwks",
-			"end_session_endpoint":   stub.Issuer() + "/logout",
-			"authorization_endpoint": stub.Issuer() + "/auth",
-			"token_endpoint":         stub.Issuer() + "/token",
-			"response_types_supported":         []string{"code"},
-			"subject_types_supported":          []string{"public"},
+			"issuer":                                stub.Issuer(),
+			"jwks_uri":                              stub.Issuer() + "/jwks",
+			"end_session_endpoint":                  stub.Issuer() + "/logout",
+			"authorization_endpoint":                stub.Issuer() + "/auth",
+			"token_endpoint":                        stub.Issuer() + "/token",
+			"response_types_supported":              []string{"code"},
+			"subject_types_supported":               []string{"public"},
 			"id_token_signing_alg_values_supported": []string{"RS256"},
 		}
 		json.NewEncoder(w).Encode(doc)

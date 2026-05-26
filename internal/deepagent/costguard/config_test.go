@@ -26,14 +26,14 @@ func TestCapExceededIncrementsCounterAndDecisionLog(t *testing.T) {
 	score := 7
 	cacheHit := false
 	event := DecisionEvent{
-		RequestID: "req_abc123",
-		TenantID:  "default",
-		UserID:    "anonymous",
-		Decision:  "deny",
-		Dimension: "calls",
-		Remaining: Remaining{Calls: 0, USD: 4.23},
+		RequestID:   "req_abc123",
+		TenantID:    "default",
+		UserID:      "anonymous",
+		Decision:    "deny",
+		Dimension:   "calls",
+		Remaining:   Remaining{Calls: 0, USD: 4.23},
 		ScreenScore: &score,
-		CacheHit:   &cacheHit,
+		CacheHit:    &cacheHit,
 	}
 
 	if err := logger.Log(event); err != nil {

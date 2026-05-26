@@ -43,5 +43,5 @@ func LoopbackOnly(h http.Handler) http.Handler {
 func forbidden(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusForbidden)
-	w.Write([]byte("forbidden"))
+	_, _ = w.Write([]byte("forbidden"))
 }

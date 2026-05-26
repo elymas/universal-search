@@ -87,9 +87,9 @@ func (e *Exporter) ExportPartition(ctx context.Context, partition PartitionInfo,
 		Decision:  DecisionNone,
 		Source:    SourceTrigger,
 		Payload: map[string]interface{}{
-			"s3_uri":         fmt.Sprintf("s3://%s/%s", e.cfg.S3Bucket, key),
-			"partition_name": partition.Name,
-			"row_count":      len(rows),
+			"s3_uri":           fmt.Sprintf("s3://%s/%s", e.cfg.S3Bucket, key),
+			"partition_name":   partition.Name,
+			"row_count":        len(rows),
 			"bytes_compressed": buf.Len(),
 		},
 	})

@@ -10,9 +10,9 @@ import (
 // Error codes in the JSON-RPC server-defined range -32099..-32000.
 // FROZEN per REQ-MCP-016: codes MUST NOT be renumbered or renamed within V1.x.
 const (
-	ErrCodeCapExceeded      = -32000
-	ErrCodeDeepNotWarranted = -32001
-	ErrCodeUnauthorized     = -32002
+	ErrCodeCapExceeded       = -32000
+	ErrCodeDeepNotWarranted  = -32001
+	ErrCodeUnauthorized      = -32002
 	ErrCodeNoAdaptersMatched = -32003
 	ErrCodeAllAdaptersFailed = -32004
 	ErrCodeSynthesisDegraded = -32005

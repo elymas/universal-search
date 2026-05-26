@@ -11,16 +11,18 @@ import (
 
 // stubAdapter is a minimal adapter for orchestrator tests.
 type stubAdapter struct {
-	name    string
-	caps    types.Capabilities
-	docs    []types.NormalizedDoc
+	name      string
+	caps      types.Capabilities
+	docs      []types.NormalizedDoc
 	searchErr error
 }
 
-func (s *stubAdapter) Name() string                                                { return s.name }
-func (s *stubAdapter) Search(_ context.Context, _ types.Query) ([]types.NormalizedDoc, error) { return s.docs, s.searchErr }
-func (s *stubAdapter) Healthcheck(_ context.Context) error                          { return nil }
-func (s *stubAdapter) Capabilities() types.Capabilities                             { return s.caps }
+func (s *stubAdapter) Name() string { return s.name }
+func (s *stubAdapter) Search(_ context.Context, _ types.Query) ([]types.NormalizedDoc, error) {
+	return s.docs, s.searchErr
+}
+func (s *stubAdapter) Healthcheck(_ context.Context) error { return nil }
+func (s *stubAdapter) Capabilities() types.Capabilities    { return s.caps }
 
 // stubSynth is a synthesis function that returns a fixed result.
 func stubSynth(_ context.Context, query, _ string, docs []types.NormalizedDoc) (string, []Citation, error) {
@@ -38,8 +40,8 @@ func TestSharedSearchOrchestratorHappyPath(t *testing.T) {
 	_ = reg.Register(&stubAdapter{
 		name: "test-adapter",
 		caps: types.Capabilities{
-			SourceID:  "test-adapter",
-			DocTypes:  []types.DocType{types.DocTypeArticle},
+			SourceID: "test-adapter",
+			DocTypes: []types.DocType{types.DocTypeArticle},
 		},
 		docs: []types.NormalizedDoc{
 			{ID: "d1", Title: "Doc 1", URL: "http://example.com", SourceID: "test-adapter"},

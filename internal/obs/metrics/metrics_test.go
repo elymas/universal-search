@@ -275,7 +275,7 @@ func TestCardinalityGuardRejectsUnboundedLabels(t *testing.T) {
 		// result ∈ {pass, fail_uncited, fail_error} (3 values, bounded enum).
 		"result": true,
 		// Auth labels added by SPEC-AUTH-001 (NFR-AUTH1-006).
-		"reason": true,
+		"reason":  true,
 		"trigger": true,
 		// RBAC labels added by SPEC-AUTH-002 (NFR-AUTH2-003).
 		// reason_class ∈ {policy_matched, no_policy_matched, explicit_deny, empty_team} (4 values).

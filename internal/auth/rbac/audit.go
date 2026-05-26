@@ -24,8 +24,8 @@ type AuditEntry struct {
 // AuditEmitter writes structured JSON audit entries to a writer.
 // NFR-AUTH2-004: Audit log uses isolated stderr output (not hot-path pgxpool).
 type AuditEmitter struct {
-	mu     sync.Mutex
-	w      io.Writer
+	mu      sync.Mutex
+	w       io.Writer
 	enabled bool
 }
 

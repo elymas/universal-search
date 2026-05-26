@@ -117,12 +117,12 @@ func RegisterMetrics(reg *prometheus.Registry) *Metrics {
 	breakerState.WithLabelValues("open").Set(0)
 
 	return &Metrics{
-		CacheHits:              cacheHits,
-		CacheAttempts:          cacheAttempts,
-		Calls:                  calls,
-		Cost:                   cost,
-		HaikuScreenScore:       haikuScore,
+		CacheHits:               cacheHits,
+		CacheAttempts:           cacheAttempts,
+		Calls:                   calls,
+		Cost:                    cost,
+		HaikuScreenScore:        haikuScore,
 		HaikuScreenBreakerState: breakerState,
-		CapCheckDuration:       capCheckDur,
+		CapCheckDuration:        capCheckDur,
 	}
 }

@@ -12,8 +12,8 @@ import (
 type contextKey string
 
 const (
-	UserIDKey   contextKey = "costguard.user_id"
-	TenantIDKey contextKey = "costguard.tenant_id"
+	UserIDKey    contextKey = "costguard.user_id"
+	TenantIDKey  contextKey = "costguard.tenant_id"
 	RequestIDKey contextKey = "costguard.request_id"
 )
 
@@ -106,7 +106,7 @@ func (m *Middleware) CapCheckMiddleware(next http.Handler) http.Handler {
 			}
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusServiceUnavailable)
-			json.NewEncoder(w).Encode(map[string]string{
+			_ = json.NewEncoder(w).Encode(map[string]string{
 				"error":  "costguard_unavailable",
 				"detail": "redis unreachable",
 			})
@@ -127,7 +127,7 @@ func (m *Middleware) CapCheckMiddleware(next http.Handler) http.Handler {
 			resetAt := time.Now().Add(1 * time.Hour).Format(time.RFC3339)
 			w.Header().Set("Retry-After", "3600")
 			w.WriteHeader(http.StatusTooManyRequests)
-			json.NewEncoder(w).Encode(map[string]interface{}{
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
 				"error":     "cap_exceeded",
 				"dimension": string(result.Exceeded),
 				"remaining": map[string]interface{}{

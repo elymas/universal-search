@@ -31,7 +31,7 @@ func NewPGAdapter(dsn string) (*PGAdapter, error) {
 
 	adapter, err := pgadapter.NewAdapterByDB(db)
 	if err != nil {
-		db.Close()
+		_ = db.Close()
 		return nil, fmt.Errorf("rbac: create pg adapter: %w", err)
 	}
 

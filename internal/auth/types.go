@@ -38,14 +38,14 @@ func ClaimsFromContext(ctx context.Context) *Claims {
 type FailureReason string
 
 const (
-	ReasonExpired           FailureReason = "expired"
-	ReasonInvalidSignature  FailureReason = "invalid_signature"
-	ReasonInvalidAudience   FailureReason = "invalid_aud"
-	ReasonInvalidIssuer     FailureReason = "invalid_iss"
-	ReasonInvalidNbf        FailureReason = "invalid_nbf"
-	ReasonMalformed         FailureReason = "malformed"
-	ReasonRevoked           FailureReason = "revoked"
-	ReasonMissingToken      FailureReason = "missing_token"
+	ReasonExpired               FailureReason = "expired"
+	ReasonInvalidSignature      FailureReason = "invalid_signature"
+	ReasonInvalidAudience       FailureReason = "invalid_aud"
+	ReasonInvalidIssuer         FailureReason = "invalid_iss"
+	ReasonInvalidNbf            FailureReason = "invalid_nbf"
+	ReasonMalformed             FailureReason = "malformed"
+	ReasonRevoked               FailureReason = "revoked"
+	ReasonMissingToken          FailureReason = "missing_token"
 	ReasonRevocationUnavailable FailureReason = "revocation_check_unavailable"
 )
 
@@ -62,16 +62,16 @@ const (
 type TenantMode string
 
 const (
-	TenantModeStatic  TenantMode = "static"
-	TenantModeHeader  TenantMode = "header"
-	TenantModeClaim   TenantMode = "claim"
+	TenantModeStatic TenantMode = "static"
+	TenantModeHeader TenantMode = "header"
+	TenantModeClaim  TenantMode = "claim"
 )
 
 // RevocationFailureMode controls behavior when Redis is unavailable.
 type RevocationFailureMode string
 
 const (
-	RevocationFailOpen  RevocationFailureMode = "fail-open"
+	RevocationFailOpen   RevocationFailureMode = "fail-open"
 	RevocationFailClosed RevocationFailureMode = "fail-closed"
 )
 
@@ -79,8 +79,8 @@ const (
 type JWKSRefreshOutcome string
 
 const (
-	JWKSRefreshScheduled     JWKSRefreshOutcome = "scheduled"
-	JWKSRefreshUnknownKID    JWKSRefreshOutcome = "unknown_kid_fetch"
-	JWKSRefreshParseError    JWKSRefreshOutcome = "parse_error"
-	JWKSRefreshNetworkError  JWKSRefreshOutcome = "network_error"
+	JWKSRefreshScheduled    JWKSRefreshOutcome = "scheduled"
+	JWKSRefreshUnknownKID   JWKSRefreshOutcome = "unknown_kid_fetch"
+	JWKSRefreshParseError   JWKSRefreshOutcome = "parse_error"
+	JWKSRefreshNetworkError JWKSRefreshOutcome = "network_error"
 )

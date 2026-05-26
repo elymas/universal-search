@@ -10,12 +10,12 @@ import (
 // LogoutHandler handles POST /v1/auth/logout requests.
 // REQ-AUTH1-009: RP-Initiated Logout + optional Redis revocation.
 type LogoutHandler struct {
-	middleware       *Middleware
-	revocation       *RevocationChecker
+	middleware         *Middleware
+	revocation         *RevocationChecker
 	endSessionEndpoint string
-	metrics          *AuthMetrics
-	postLogoutURI    string
-	logger           *slog.Logger
+	metrics            *AuthMetrics
+	postLogoutURI      string
+	logger             *slog.Logger
 }
 
 // NewLogoutHandler creates a new logout handler.

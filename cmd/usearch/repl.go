@@ -76,11 +76,11 @@ func dispatchWithStdin(stdin io.Reader, stdout, stderr io.Writer, args []string)
 // replLoop reads lines from stdin, executes queries or slash commands,
 // and writes output to stdout.
 func replLoop(stdin io.Reader, stdout, stderr io.Writer, _ []string) int {
-	fmt.Fprintln(stdout, "Universal Search REPL. Type /help for commands, /quit to exit.")
+	_, _ = fmt.Fprintln(stdout, "Universal Search REPL. Type /help for commands, /quit to exit.")
 
 	scanner := bufio.NewScanner(stdin)
 	for {
-		fmt.Fprint(stdout, replPrompt)
+		_, _ = fmt.Fprint(stdout, replPrompt)
 
 		if !scanner.Scan() {
 			break // EOF
@@ -101,13 +101,13 @@ func replLoop(stdin io.Reader, stdout, stderr io.Writer, _ []string) int {
 
 		// Regular query: save to history.
 		if err := saveREPLHistory(line); err != nil {
-			fmt.Fprintf(stderr, "Warning: failed to save history: %v\n", err)
+			_, _ = fmt.Fprintf(stderr, "Warning: failed to save history: %v\n", err)
 		}
 
 		// For now, delegate to query subcommand.
 		// In a full implementation, this would run the pipeline inline.
-		fmt.Fprintf(stdout, "Query: %s\n", line)
-		fmt.Fprintln(stdout, "(pipeline execution not yet wired in REPL)")
+		_, _ = fmt.Fprintf(stdout, "Query: %s\n", line)
+		_, _ = fmt.Fprintln(stdout, "(pipeline execution not yet wired in REPL)")
 	}
 
 	return ExitSuccess
@@ -120,12 +120,12 @@ func handleSlashCommand(line string, stdin io.Reader, stdout, stderr io.Writer) 
 
 	switch cmd {
 	case "/quit", "/q", "/exit":
-		fmt.Fprintln(stdout, "Goodbye!")
+		_, _ = fmt.Fprintln(stdout, "Goodbye!")
 		return true
 	case "/help", "/h", "/?":
-		fmt.Fprintln(stdout, "Available commands:")
+		_, _ = fmt.Fprintln(stdout, "Available commands:")
 		for _, c := range slashCommands {
-			fmt.Fprintf(stdout, "  %-12s %s\n", c.Name, c.Help)
+			_, _ = fmt.Fprintf(stdout, "  %-12s %s\n", c.Name, c.Help)
 		}
 	case "/sources":
 		handleSourcesCommand(stdout, stderr)
@@ -134,20 +134,20 @@ func handleSlashCommand(line string, stdin io.Reader, stdout, stderr io.Writer) 
 	case "/config":
 		handleConfigCommand(stdout, stderr)
 	default:
-		fmt.Fprintf(stdout, "Unknown command: %s. Type /help for available commands.\n", cmd)
+		_, _ = fmt.Fprintf(stdout, "Unknown command: %s. Type /help for available commands.\n", cmd)
 	}
 	return false
 }
 
 // handleSourcesCommand displays available adapters.
 func handleSourcesCommand(stdout, stderr io.Writer) {
-	fmt.Fprintln(stdout, "Sources command — adapter listing:")
-	fmt.Fprintln(stdout, "  (Use 'usearch sources list' for full details)")
+	_, _ = fmt.Fprintln(stdout, "Sources command — adapter listing:")
+	_, _ = fmt.Fprintln(stdout, "  (Use 'usearch sources list' for full details)")
 	// In a full implementation, this would read from adapters.Registry.
 	// For now, list known adapters from the codebase.
 	adapters := []string{"arxiv", "github", "hn", "koreanews", "naver", "reddit", "searxng", "youtube"}
 	for _, a := range adapters {
-		fmt.Fprintf(stdout, "  - %s\n", a)
+		_, _ = fmt.Fprintf(stdout, "  - %s\n", a)
 	}
 }
 
@@ -155,28 +155,28 @@ func handleSourcesCommand(stdout, stderr io.Writer) {
 func handleHistoryCommand(stdout, stderr io.Writer) {
 	backend, err := openHistoryBackend()
 	if err != nil {
-		fmt.Fprintf(stderr, "Error: could not open history: %v\n", err)
+		_, _ = fmt.Fprintf(stderr, "Error: could not open history: %v\n", err)
 		return
 	}
 
 	entries, err := backend.List(10)
 	if err != nil {
-		fmt.Fprintf(stderr, "Error: could not read history: %v\n", err)
+		_, _ = fmt.Fprintf(stderr, "Error: could not read history: %v\n", err)
 		return
 	}
 
 	if len(entries) == 0 {
-		fmt.Fprintln(stdout, "No history entries.")
+		_, _ = fmt.Fprintln(stdout, "No history entries.")
 		return
 	}
 
-	fmt.Fprintln(stdout, "Recent history:")
+	_, _ = fmt.Fprintln(stdout, "Recent history:")
 	for _, e := range entries {
 		prompt := e.Prompt
 		if len(prompt) > 50 {
 			prompt = prompt[:47] + "..."
 		}
-		fmt.Fprintf(stdout, "  %s  %s  %s\n", e.ID, e.Timestamp.Format("2006-01-02 15:04"), prompt)
+		_, _ = fmt.Fprintf(stdout, "  %s  %s  %s\n", e.ID, e.Timestamp.Format("2006-01-02 15:04"), prompt)
 	}
 }
 
@@ -184,15 +184,15 @@ func handleHistoryCommand(stdout, stderr io.Writer) {
 func handleConfigCommand(stdout, stderr io.Writer) {
 	cfg, err := config.Load()
 	if err != nil {
-		fmt.Fprintf(stderr, "Error: could not load config: %v\n", err)
+		_, _ = fmt.Fprintf(stderr, "Error: could not load config: %v\n", err)
 		return
 	}
 
-	fmt.Fprintln(stdout, "Current configuration:")
-	fmt.Fprintf(stdout, "  Config path: %s\n", config.ConfigPath())
-	fmt.Fprintf(stdout, "  History backend: %s\n", cfg.History.Backend)
-	fmt.Fprintf(stdout, "  Max entries: %d\n", cfg.History.MaxEntries)
-	fmt.Fprintf(stdout, "  Retention days: %d\n", cfg.History.RetentionDays)
+	_, _ = fmt.Fprintln(stdout, "Current configuration:")
+	_, _ = fmt.Fprintf(stdout, "  Config path: %s\n", config.ConfigPath())
+	_, _ = fmt.Fprintf(stdout, "  History backend: %s\n", cfg.History.Backend)
+	_, _ = fmt.Fprintf(stdout, "  Max entries: %d\n", cfg.History.MaxEntries)
+	_, _ = fmt.Fprintf(stdout, "  Retention days: %d\n", cfg.History.RetentionDays)
 }
 
 // saveREPLHistory writes a REPL query entry to the history backend.

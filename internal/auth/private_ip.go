@@ -2,8 +2,8 @@ package auth
 
 import (
 	"fmt"
-	"net/netip"
 	"net"
+	"net/netip"
 )
 
 // checkPrivateIP verifies that the hostname does not resolve to a private IP range.

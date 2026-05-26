@@ -93,9 +93,9 @@ func TestStalenessPerCategoryTTL(t *testing.T) {
 	now := time.Now()
 
 	cases := []struct {
-		category  string
-		age       time.Duration
-		want      Staleness
+		category string
+		age      time.Duration
+		want     Staleness
 	}{
 		{"web", 20 * time.Minute, Fresh},
 		{"web", 40 * time.Minute, SoftStale},
@@ -103,12 +103,12 @@ func TestStalenessPerCategoryTTL(t *testing.T) {
 		{"social", 10 * time.Minute, Fresh},
 		{"social", 20 * time.Minute, SoftStale},
 		{"social", 40 * time.Minute, HardStale},
-		{"academic", 10 * 24 * time.Hour, Fresh},      // 10 days, TTL=30d
-		{"academic", 20 * 24 * time.Hour, SoftStale},   // 20 days, 15d <= 20d < 30d
+		{"academic", 10 * 24 * time.Hour, Fresh},     // 10 days, TTL=30d
+		{"academic", 20 * 24 * time.Hour, SoftStale}, // 20 days, 15d <= 20d < 30d
 		{"korean", 20 * time.Minute, Fresh},
-		{"unknown", 30 * time.Minute, Fresh},            // TTL=2h, 30m < 1h
-		{"unknown", 90 * time.Minute, SoftStale},        // 1h <= 90m < 2h
-		{"unknown", 150 * time.Minute, HardStale},       // 150m >= 2h
+		{"unknown", 30 * time.Minute, Fresh},      // TTL=2h, 30m < 1h
+		{"unknown", 90 * time.Minute, SoftStale},  // 1h <= 90m < 2h
+		{"unknown", 150 * time.Minute, HardStale}, // 150m >= 2h
 	}
 
 	for _, tc := range cases {

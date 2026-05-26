@@ -38,8 +38,8 @@ func newLoginStatusCmd() *cobra.Command {
 		Short: "Show authentication status",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// @MX:TODO: [AUTO] Check credential file existence when SPEC-AUTH-001 lands.
-			fmt.Fprintln(cmd.OutOrStdout(), "Not authenticated.")
-			fmt.Fprintln(cmd.OutOrStdout(), "Use 'usearch login' to authenticate (coming soon).")
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Not authenticated.")
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), "Use 'usearch login' to authenticate (coming soon).")
 			return nil
 		},
 	}
@@ -54,7 +54,7 @@ func newLoginLogoutCmd() *cobra.Command {
 		Short: "Clear stored credentials",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// @MX:TODO: [AUTO] Clear credential file when SPEC-AUTH-001 lands.
-			fmt.Fprintln(cmd.OutOrStdout(), "No active session. Already logged out.")
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), "No active session. Already logged out.")
 			return nil
 		},
 	}

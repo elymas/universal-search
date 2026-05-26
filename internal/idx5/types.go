@@ -2,12 +2,12 @@
 // with configurable staleness (SPEC-IDX-005).
 //
 // Lookup Pipeline:
-//   1. Extract team_id from JWT context (IDX-004 enforcement)
-//   2. Compute query embedding via IDX-002 embedder
-//   3. Search Qdrant with team-scoped filter + DocTypeCachedAnswer
-//   4. Evaluate similarity threshold + staleness
-//   5. HIT → serve cached SynthesizeResponse with cache headers
-//   6. MISS → fall through to fanout, async write-back
+//  1. Extract team_id from JWT context (IDX-004 enforcement)
+//  2. Compute query embedding via IDX-002 embedder
+//  3. Search Qdrant with team-scoped filter + DocTypeCachedAnswer
+//  4. Evaluate similarity threshold + staleness
+//  5. HIT → serve cached SynthesizeResponse with cache headers
+//  6. MISS → fall through to fanout, async write-back
 //
 // @MX:NOTE: [AUTO] This package is the PRIMARY DRIVER of the M6 exit criterion
 // (dedup hit rate >= 30%). The middleware intercepts /query before fanout.
@@ -41,11 +41,11 @@ const (
 type LookupOutcome string
 
 const (
-	OutcomeHit        LookupOutcome = "hit"
-	OutcomeSoftHit    LookupOutcome = "soft_hit"
-	OutcomeMiss       LookupOutcome = "miss"
-	OutcomeHardStale  LookupOutcome = "hard_stale"
-	OutcomeBypassed   LookupOutcome = "bypassed"
+	OutcomeHit       LookupOutcome = "hit"
+	OutcomeSoftHit   LookupOutcome = "soft_hit"
+	OutcomeMiss      LookupOutcome = "miss"
+	OutcomeHardStale LookupOutcome = "hard_stale"
+	OutcomeBypassed  LookupOutcome = "bypassed"
 )
 
 // CachedAnswer represents a cached synthesis response stored in PG and Qdrant.

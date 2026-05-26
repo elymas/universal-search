@@ -18,7 +18,7 @@ type Config struct {
 // DefaultConfig returns the default IDX-005 configuration.
 func DefaultConfig() Config {
 	return Config{
-		SimilarityThreshold: 0.92,
+		SimilarityThreshold:    0.92,
 		TeamThresholdOverrides: make(map[string]float64),
 		CategoryTTLs: map[string]int{
 			"web":      3600,

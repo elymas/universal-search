@@ -11,15 +11,15 @@ import (
 
 // SpendLog represents a single entry from LiteLLM /spend/logs.
 type SpendLog struct {
-	RequestID       string                 `json:"request_id"`
-	CallType        string                 `json:"call_type"`
-	Model           string                 `json:"model"`
-	PromptTokens    int                    `json:"prompt_tokens"`
-	CompletionTokens int                   `json:"completion_tokens"`
-	Spend           float64                `json:"spend"`
-	Metadata        map[string]interface{} `json:"metadata,omitempty"`
-	StartTime       string                 `json:"startTime,omitempty"`
-	EndTime         string                 `json:"endTime,omitempty"`
+	RequestID        string                 `json:"request_id"`
+	CallType         string                 `json:"call_type"`
+	Model            string                 `json:"model"`
+	PromptTokens     int                    `json:"prompt_tokens"`
+	CompletionTokens int                    `json:"completion_tokens"`
+	Spend            float64                `json:"spend"`
+	Metadata         map[string]interface{} `json:"metadata,omitempty"`
+	StartTime        string                 `json:"startTime,omitempty"`
+	EndTime          string                 `json:"endTime,omitempty"`
 }
 
 // LiteLLMClient is the interface for fetching spend logs from LiteLLM.
@@ -61,7 +61,7 @@ func (c *HTTPLiteLLMClient) FetchSpendLogs(ctx context.Context, startDate, endDa
 	if err != nil {
 		return nil, fmt.Errorf("audit: litellm fetch: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)

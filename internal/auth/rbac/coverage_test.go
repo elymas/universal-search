@@ -135,16 +135,12 @@ func TestUserIDFromContextAnonymousFallback(t *testing.T) {
 	assert.Equal(t, "anonymous", uid)
 }
 
-// TestUserIDFromContextReturnsSetUserID verifies costguard.UserIDKey extraction.
+// TestUserIDFromContextReturnsSetUserID is intentionally a no-op placeholder.
+// UserIDFromContext delegates to costguard.UserIDFromContext which keys off
+// costguard.UserIDKey (an unexported typed key). The set path is exercised
+// through the middleware integration test rather than directly here.
 func TestUserIDFromContextReturnsSetUserID(t *testing.T) {
-	ctx := context.Background()
-	// Import costguard for the key.
-	// We test through the public UserIDFromContext API.
-	// costguard.UserIDKey is "costguard.user_id" — we can set it directly.
-	ctx = context.WithValue(ctx, contextKey("costguard.user_id"), "alice")
-	// This won't work because UserIDFromContext delegates to costguard.UserIDFromContext
-	// which uses costguard.UserIDKey type. Test via middleware instead.
-	// The anonymous fallback is already tested above.
+	// Covered by middleware tests; anonymous fallback is verified above.
 }
 
 // TestMustInitDisabledDoesNotSetGlobal verifies disabled init leaves globals clean.

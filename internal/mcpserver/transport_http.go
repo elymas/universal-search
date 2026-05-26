@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"net"
 	"net/http"
 	"sync"
 	"sync/atomic"
@@ -122,7 +121,7 @@ func (h *httpTransport) handlePost(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "read body", http.StatusBadRequest)
 		return
 	}
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 
 	// Parse JSON-RPC request.
 	var req map[string]any
@@ -163,7 +162,7 @@ func (h *httpTransport) handlePost(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Mcp-Session-Id", sessionID)
 
 	respBytes, _ := json.Marshal(result)
-	w.Write(respBytes)
+	_, _ = w.Write(respBytes)
 }
 
 // handleGet opens an SSE stream for the session.
@@ -191,7 +190,7 @@ func (h *httpTransport) handleGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Mcp-Session-Id", sessionID)
 
 	// Write a heartbeat event to confirm stream is open.
-	fmt.Fprintf(w, "event: heartbeat\ndata: {}\n\n")
+	_, _ = fmt.Fprintf(w, "event: heartbeat\ndata: {}\n\n")
 	if f, ok := w.(http.Flusher); ok {
 		f.Flush()
 	}
@@ -285,12 +284,4 @@ func (h *httpTransport) handleToolsList(id any) map[string]any {
 			"tools": []any{},
 		},
 	}
-}
-
-// httpTransportAdapter adapts the httpTransport to the mcp.Transport interface.
-// This is used when the MCP SDK is running in HTTP mode.
-type httpTransportAdapter struct {
-	addr     string
-	listener net.Listener
-	handler  http.Handler
 }

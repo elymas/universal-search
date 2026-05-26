@@ -48,7 +48,7 @@ func newConfigPathCmd() *cobra.Command {
 		Use:   "path",
 		Short: "Print the resolved config file path",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Fprintln(cmd.OutOrStdout(), config.ConfigPath())
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), config.ConfigPath())
 			return nil
 		},
 	}
@@ -70,7 +70,7 @@ func newConfigShowCmd() *cobra.Command {
 			if err != nil {
 				return exitError{code: ExitSystemError, err: err}
 			}
-			fmt.Fprint(cmd.OutOrStdout(), toml)
+			_, _ = fmt.Fprint(cmd.OutOrStdout(), toml)
 			return nil
 		},
 	}
@@ -112,7 +112,7 @@ func newConfigInitCmd() *cobra.Command {
 				return exitError{code: ExitSystemError, err: fmt.Errorf("write config: %w", err)}
 			}
 
-			fmt.Fprintf(cmd.OutOrStdout(), "Config file created at %s\n", cfgPath)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Config file created at %s\n", cfgPath)
 			return nil
 		},
 	}
@@ -139,7 +139,7 @@ func newConfigGetCmd() *cobra.Command {
 			if err != nil {
 				return exitError{code: ExitUserError, err: err}
 			}
-			fmt.Fprintln(cmd.OutOrStdout(), val)
+			_, _ = fmt.Fprintln(cmd.OutOrStdout(), val)
 			return nil
 		},
 	}
@@ -176,7 +176,7 @@ func newConfigSetCmd() *cobra.Command {
 				return exitError{code: ExitSystemError, err: err}
 			}
 
-			fmt.Fprintf(cmd.OutOrStdout(), "Set %s = %s\n", key, value)
+			_, _ = fmt.Fprintf(cmd.OutOrStdout(), "Set %s = %s\n", key, value)
 			return nil
 		},
 	}

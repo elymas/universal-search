@@ -44,7 +44,7 @@ func TestDeepTreeEndToEndHappyPath(t *testing.T) {
 
 	// Create researcher HTTP client pointing to stub.
 	researcher := &deepagent.ResearcherHTTPClient{
-		BaseURL: decomposeSrv.URL,
+		BaseURL:    decomposeSrv.URL,
 		HTTPClient: &http.Client{Timeout: 5 * time.Second},
 	}
 
@@ -198,10 +198,10 @@ func TestExpandTreeBreadthAndDepthZeroFallback(t *testing.T) {
 // REQ-DEEP3-005: Body should be byte-identical to DEEP-002 single-shot response.
 func TestFallbackHeaderEmitted(t *testing.T) {
 	tests := []struct {
-		name           string
-		breadth        int
-		depth          int
-		wantHeader     string
+		name       string
+		breadth    int
+		depth      int
+		wantHeader string
 	}{
 		{"breadth_zero", 0, 3, "breadth_zero"},
 		{"depth_zero", 4, 0, "depth_zero"},

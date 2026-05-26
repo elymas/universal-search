@@ -16,8 +16,8 @@ func TestSearchToolWrapsSharedOrchestrator(t *testing.T) {
 	_ = reg.Register(&stubAdapter{
 		name: "test-source",
 		caps: types.Capabilities{
-			SourceID:  "test-source",
-			DocTypes:  []types.DocType{types.DocTypeArticle},
+			SourceID: "test-source",
+			DocTypes: []types.DocType{types.DocTypeArticle},
 		},
 		docs: []types.NormalizedDoc{
 			{ID: "d1", Title: "Test Doc", URL: "http://example.com", SourceID: "test-source"},

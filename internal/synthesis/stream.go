@@ -100,7 +100,7 @@ func parseSSEField(line string) (string, string) {
 // StreamEvent represents a parsed stream event for display.
 type StreamEvent struct {
 	Type      StreamEventType
-	Text      string   // sentence text or error message
+	Text      string     // sentence text or error message
 	Citations []Citation // citations for the current sentence
 }
 

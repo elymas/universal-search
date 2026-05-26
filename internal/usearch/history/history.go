@@ -11,12 +11,12 @@ import "time"
 type Entry struct {
 	ID            string    `json:"id"`
 	Timestamp     time.Time `json:"timestamp"`
-	Command       string    `json:"command"`       // "query" or "deep"
+	Command       string    `json:"command"` // "query" or "deep"
 	Prompt        string    `json:"prompt"`
-	Category      string    `json:"category"`      // intent classification
+	Category      string    `json:"category"` // intent classification
 	Adapters      []string  `json:"adapters"`
 	Summary       string    `json:"summary"`
-	Citations     int        `json:"citations"`
+	Citations     int       `json:"citations"`
 	ExitCode      int       `json:"exit_code"`
 	LatencyMs     int64     `json:"latency_ms"`
 	CostUSD       float64   `json:"cost_usd"`

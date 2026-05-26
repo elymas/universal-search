@@ -16,10 +16,12 @@ type stubAdapter struct {
 	searchErr error
 }
 
-func (s *stubAdapter) Name() string                                                { return s.name }
-func (s *stubAdapter) Search(_ context.Context, _ types.Query) ([]types.NormalizedDoc, error) { return s.docs, s.searchErr }
-func (s *stubAdapter) Healthcheck(_ context.Context) error                          { return nil }
-func (s *stubAdapter) Capabilities() types.Capabilities                             { return s.caps }
+func (s *stubAdapter) Name() string { return s.name }
+func (s *stubAdapter) Search(_ context.Context, _ types.Query) ([]types.NormalizedDoc, error) {
+	return s.docs, s.searchErr
+}
+func (s *stubAdapter) Healthcheck(_ context.Context) error { return nil }
+func (s *stubAdapter) Capabilities() types.Capabilities    { return s.caps }
 
 // TestListSourcesReturnsRegisteredAdapters verifies that list_sources returns
 // all registered adapters with correct fields (REQ-MCP-011).
@@ -28,21 +30,21 @@ func TestListSourcesReturnsRegisteredAdapters(t *testing.T) {
 	_ = reg.Register(&stubAdapter{
 		name: "reddit",
 		caps: types.Capabilities{
-			SourceID:      "reddit",
-			DisplayName:   "Reddit",
-			DocTypes:      []types.DocType{types.DocTypePost},
+			SourceID:       "reddit",
+			DisplayName:    "Reddit",
+			DocTypes:       []types.DocType{types.DocTypePost},
 			SupportedLangs: []string{"en"},
-			RequiresAuth:  false,
+			RequiresAuth:   false,
 		},
 	})
 	_ = reg.Register(&stubAdapter{
 		name: "hackernews",
 		caps: types.Capabilities{
-			SourceID:      "hackernews",
-			DisplayName:   "Hacker News",
-			DocTypes:      []types.DocType{types.DocTypeArticle},
+			SourceID:       "hackernews",
+			DisplayName:    "Hacker News",
+			DocTypes:       []types.DocType{types.DocTypeArticle},
 			SupportedLangs: []string{"en"},
-			RequiresAuth:  false,
+			RequiresAuth:   false,
 		},
 	})
 
