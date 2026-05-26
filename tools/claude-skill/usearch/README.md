@@ -55,9 +55,9 @@ Claude should invoke the `search` tool from the Universal Search MCP server and 
 
 ## Compatibility
 
-| Plugin Version | Minimum `usearch-mcp` Version | Notes |
-|---|---|---|
-| 0.1.0 | 0.1.0-dev | Initial plugin, stdio transport only |
+| Plugin Version | Minimum `usearch-mcp` Version | Notes                                |
+| -------------- | ----------------------------- | ------------------------------------ |
+| 0.1.0          | 0.1.0-dev                     | Initial plugin, stdio transport only |
 
 Check your server version:
 
@@ -69,12 +69,12 @@ usearch-mcp --version
 
 The plugin exposes four MCP tools that Claude can invoke automatically:
 
-| Tool | When Claude Uses It |
-|---|---|
-| `search` | User asks a research question needing citations or multi-source synthesis |
-| `deep_research` | User requests a comprehensive, long-form report |
-| `list_sources` | User asks what search sources are available |
-| `get_citation` | User wants details on a specific cited source |
+| Tool            | When Claude Uses It                                                       |
+| --------------- | ------------------------------------------------------------------------- |
+| `search`        | User asks a research question needing citations or multi-source synthesis |
+| `deep_research` | User requests a comprehensive, long-form report                           |
+| `list_sources`  | User asks what search sources are available                               |
+| `get_citation`  | User wants details on a specific cited source                             |
 
 Korean-language queries are automatically routed to Korean sources (Naver, Daum, Korean RSS) -- no configuration needed.
 

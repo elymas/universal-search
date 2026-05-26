@@ -6,7 +6,6 @@ Covers REQ-IDX-003-001, REQ-IDX-003-003, REQ-IDX-003-004, REQ-IDX-003-009.
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 from unittest.mock import MagicMock, patch
 
@@ -27,6 +26,7 @@ def client():
 # ---------------------------------------------------------------------------
 # REQ-IDX-003-001 — /tokenize endpoint contract
 # ---------------------------------------------------------------------------
+
 
 class TestTokenizeEndpointContract:
     """REQ-IDX-003-001: POST /tokenize shape, strict schema, joined invariant."""
@@ -103,6 +103,7 @@ class TestTokenizeEndpointContract:
 # REQ-IDX-003-002 — concurrent tokenization safety
 # ---------------------------------------------------------------------------
 
+
 class TestConcurrentTokenizeSafe:
     """REQ-IDX-003-002: 50 concurrent requests all return 200 consistently."""
 
@@ -132,12 +133,15 @@ class TestConcurrentTokenizeSafe:
             results.append(tuple(data["tokens"]))
 
         # All should produce identical tokenization for same input
-        assert len(set(results)) == 1, "Concurrent tokenization produced inconsistent results"
+        assert len(set(results)) == 1, (
+            "Concurrent tokenization produced inconsistent results"
+        )
 
 
 # ---------------------------------------------------------------------------
 # REQ-IDX-003-003 — lifespan failure on missing dict
 # ---------------------------------------------------------------------------
+
 
 class TestLifespanFailure:
     """REQ-IDX-003-003: App raises during lifespan if Tagger fails to load."""
@@ -148,7 +152,10 @@ class TestLifespanFailure:
 
         from fastapi import FastAPI
 
-        with patch("tokenizer_ko.app.create_tagger", side_effect=RuntimeError("dict load failed")):
+        with patch(
+            "tokenizer_ko.app.create_tagger",
+            side_effect=RuntimeError("dict load failed"),
+        ):
             with pytest.raises(RuntimeError, match="dict load failed"):
                 test_app = FastAPI()
 
@@ -176,6 +183,7 @@ class TestLifespanFailure:
 # ---------------------------------------------------------------------------
 # REQ-IDX-003-004 — empty / oversize input rejection
 # ---------------------------------------------------------------------------
+
 
 class TestInputValidation:
     """REQ-IDX-003-004: Empty and oversize inputs return 400 without calling Tagger."""
@@ -216,7 +224,6 @@ class TestInputValidation:
 
     def test_invalid_input_logs_warn(self, client: TestClient) -> None:
         """Invalid input emits exactly one WARN-level log entry with request_id."""
-        import tokenizer_ko.obs as obs_module
 
         warn_calls = []
         original_warn = logging.getLogger("tokenizer_ko").warning
@@ -244,6 +251,7 @@ class TestInputValidation:
 # Additional coverage tests
 # ---------------------------------------------------------------------------
 
+
 class TestCoverageEdgeCases:
     """Edge-case tests to bring coverage to >= 85%."""
 
@@ -256,7 +264,9 @@ class TestCoverageEdgeCases:
         # dict_version is a non-empty string
         assert isinstance(data["dict_version"], str)
 
-    def test_tokenize_503_when_tagger_none_mid_request(self, client: TestClient) -> None:
+    def test_tokenize_503_when_tagger_none_mid_request(
+        self, client: TestClient
+    ) -> None:
         """503 returned when tagger is removed between startup and request (line 132)."""
         original = client.app.state.tagger
         client.app.state.tagger = None
@@ -271,7 +281,6 @@ class TestCoverageEdgeCases:
 
     def test_tokenize_internal_error_returns_500(self, client: TestClient) -> None:
         """RuntimeError inside tokenize_text returns 500 (lines 145-159)."""
-        import asyncio
         from unittest.mock import patch as _patch
 
         async def _raise(*_args, **_kwargs):
@@ -313,6 +322,7 @@ class TestCoverageEdgeCases:
 # REQ-IDX-003-009 — p50 latency (slow-marked)
 # ---------------------------------------------------------------------------
 
+
 class TestP50Latency:
     """NFR-IDX-003-002: p50 latency ≤ 5 ms for single 100-char Korean input."""
 
@@ -320,6 +330,7 @@ class TestP50Latency:
     def test_tokenize_p50_latency_under_5ms(self, client: TestClient) -> None:
         """200 sequential calls; p50 latency ≤ 5 ms."""
         import time
+
         text = "안녕하세요 저는 인공지능입니다 오늘도 좋은 하루 되세요 모두 화이팅"  # ~40 chars
         # Pad to ~100 chars
         text = (text * 3)[:100]
@@ -336,4 +347,6 @@ class TestP50Latency:
 
         durations.sort()
         p50 = durations[100]
-        assert p50 <= 0.05, f"p50={p50:.4f}s exceeds 50ms test-client threshold (not production)"
+        assert p50 <= 0.05, (
+            f"p50={p50:.4f}s exceeds 50ms test-client threshold (not production)"
+        )

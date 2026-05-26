@@ -9,8 +9,6 @@ from __future__ import annotations
 import logging
 import sys
 import time
-from contextlib import contextmanager
-from typing import Generator
 
 logger = logging.getLogger("tokenizer_ko")
 

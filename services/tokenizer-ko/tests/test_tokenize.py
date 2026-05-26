@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 import asyncio
 
 import pytest
@@ -38,7 +38,6 @@ class TestMecabKoMorphemes:
             tokenize_text("ChatGPT 사용법", tagger)
         )
         tokens = result["tokens"]
-        token_text = " ".join(tokens)
         # Must contain at least some recognizable Korean morphemes
         assert len(tokens) >= 2, f"Expected >=2 morphemes, got {tokens}"
         assert any("사용" in t or "법" in t or "ChatGPT" in t for t in tokens), (
@@ -70,7 +69,9 @@ class TestMecabKoMorphemes:
         result = asyncio.get_event_loop().run_until_complete(
             tok_module.tokenize_text("안녕하세요", mock_tagger)
         )
-        assert "EOS" not in result["tokens"], f"EOS should be excluded, got: {result['tokens']}"
+        assert "EOS" not in result["tokens"], (
+            f"EOS should be excluded, got: {result['tokens']}"
+        )
         assert "" not in result["tokens"], "Empty string should be excluded from tokens"
 
     def test_joined_equals_space_join(self) -> None:
@@ -105,8 +106,7 @@ class TestMecabKoMorphemes:
             # Accept partial: if any token contains a must_contain substring
             if not found:
                 found = any(
-                    any(expected in tok for tok in tokens)
-                    for expected in must_contain
+                    any(expected in tok for tok in tokens) for expected in must_contain
                 )
             assert found, (
                 f"Fixture '{fixture['description']}': "
@@ -120,7 +120,9 @@ class TestMecabKoMorphemes:
 
         mock_tagger = MagicMock()
         # MeCab output: surface\tfeatures format
-        mock_tagger.parse.return_value = "날씨\tNN,*,F,날씨,*,*,*,*\n가\tJX,*,F,가,*,*,*,*\nEOS\n"
+        mock_tagger.parse.return_value = (
+            "날씨\tNN,*,F,날씨,*,*,*,*\n가\tJX,*,F,가,*,*,*,*\nEOS\n"
+        )
 
         result = asyncio.get_event_loop().run_until_complete(
             tok_module.tokenize_text("날씨가", mock_tagger)
@@ -135,6 +137,7 @@ def _make_real_tagger():
     """Attempt to create a real mecab-ko Tagger. Returns None if unavailable."""
     try:
         import mecab_ko as mecab
+
         return mecab.Tagger()
     except (ImportError, RuntimeError, AttributeError):
         return None

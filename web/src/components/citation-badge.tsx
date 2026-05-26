@@ -26,13 +26,8 @@ export function CitationBadge({ citation }: CitationBadgeProps) {
             [{citation.index}]
           </Badge>
         </TooltipTrigger>
-        <TooltipContent
-          side="top"
-          className="max-w-xs p-3 space-y-2"
-        >
-          <p className="font-medium text-sm leading-tight">
-            {citation.title}
-          </p>
+        <TooltipContent side="top" className="max-w-xs p-3 space-y-2">
+          <p className="font-medium text-sm leading-tight">{citation.title}</p>
           {citation.snippet && (
             <p className="text-xs text-muted-foreground line-clamp-3">
               {citation.snippet}

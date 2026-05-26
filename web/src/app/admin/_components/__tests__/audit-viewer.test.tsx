@@ -10,10 +10,13 @@ vi.mock("@/lib/api", () => ({
 
 import { fetchAdminAudit } from "@/lib/api";
 
-function makeEntries(count: number, opts?: { allErrors?: boolean }): AuditEntry[] {
+function makeEntries(
+  count: number,
+  opts?: { allErrors?: boolean },
+): AuditEntry[] {
   return Array.from({ length: count }, (_, i) => ({
     id: `q${i}`,
-    timestamp: `2026-01-${String(i % 28 + 1).padStart(2, "0")}T12:00:00Z`,
+    timestamp: `2026-01-${String((i % 28) + 1).padStart(2, "0")}T12:00:00Z`,
     latency_ms: 100 + i,
     tokens: 50 + i,
     sources_count: 3,
@@ -91,7 +94,7 @@ describe("AuditViewer", () => {
 
     await waitFor(() => {
       expect(fetchAdminAudit).toHaveBeenLastCalledWith(
-        expect.objectContaining({ errors_only: true })
+        expect.objectContaining({ errors_only: true }),
       );
     });
   });
@@ -125,7 +128,7 @@ describe("AuditViewer", () => {
 
     await waitFor(() => {
       expect(fetchAdminAudit).toHaveBeenLastCalledWith(
-        expect.objectContaining({ offset: 20 })
+        expect.objectContaining({ offset: 20 }),
       );
     });
   });

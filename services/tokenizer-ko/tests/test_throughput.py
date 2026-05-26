@@ -51,6 +51,6 @@ class TestThroughput:
         success_count = sum(1 for r in responses if r.status_code == 200)
         assert success_count == 10000, f"Only {success_count}/10000 requests succeeded"
         assert total_seconds < 10.0, (
-            f"Throughput {success_count/total_seconds:.0f} RPS "
+            f"Throughput {success_count / total_seconds:.0f} RPS "
             f"(total {total_seconds:.2f}s) < 1000 RPS target"
         )

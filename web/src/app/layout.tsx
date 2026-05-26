@@ -18,13 +18,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} min-h-screen bg-background font-sans antialiased`}>
+      <body
+        className={`${inter.className} min-h-screen bg-background font-sans antialiased`}
+      >
         <ThemeProvider defaultTheme="dark">
           <div className="flex min-h-screen">
             <SidebarNav />
-            <main className="flex-1 overflow-auto">
-              {children}
-            </main>
+            <main className="flex-1 overflow-auto">{children}</main>
           </div>
         </ThemeProvider>
       </body>

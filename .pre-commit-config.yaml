@@ -67,7 +67,10 @@ repos:
         name: eslint (web)
         language: system
         files: ^web/.*\.(js|jsx|ts|tsx|mjs|cjs)$
-        entry: pnpm -C web exec eslint --max-warnings=0
+        # Pre-commit passes repo-root-relative paths (web/src/foo.tsx). The
+        # workspace ESLint runs inside web/ via `pnpm -C web`, so each argument
+        # must have its leading "web/" stripped before being handed to ESLint.
+        entry: scripts/run-eslint-web.sh
         pass_filenames: true
 
   # ── Dockerfile linting ───────────────────────────────────────────────────────

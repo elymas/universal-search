@@ -44,6 +44,7 @@ def create_tagger() -> Any:
     """
     try:
         import mecab_ko as mecab  # PyPI: mecab-ko
+
         return mecab.Tagger()
     except ImportError as exc:
         raise RuntimeError(
@@ -70,6 +71,7 @@ def get_dict_version(tagger: Any) -> str:
     # Fallback: use the installed package version.
     try:
         import importlib.metadata
+
         return importlib.metadata.version("mecab-ko")
     except Exception:  # noqa: BLE001
         return "unknown"
@@ -89,6 +91,7 @@ async def tokenize_text(text: str, tagger: Any) -> dict:
     lock = get_tagger_lock()
 
     import time
+
     started = time.perf_counter()
 
     async with lock:

@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Database, Globe, MessageSquare, GraduationCap, Flag } from "lucide-react";
+import {
+  Database,
+  Globe,
+  MessageSquare,
+  GraduationCap,
+  Flag,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -32,20 +38,48 @@ export default function SourcesPage() {
         const data = await fetchSources();
         setSources(data);
       } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to load sources"
-        );
+        setError(err instanceof Error ? err.message : "Failed to load sources");
         // Demo fallback: show placeholder sources
         setSources([
           { name: "Google", category: "web", enabled: true, latency_ms: 230 },
           { name: "Bing", category: "web", enabled: true, latency_ms: 180 },
-          { name: "DuckDuckGo", category: "web", enabled: true, latency_ms: 310 },
-          { name: "Twitter/X", category: "social", enabled: true, latency_ms: 420 },
-          { name: "Reddit", category: "social", enabled: true, latency_ms: 350 },
-          { name: "ArXiv", category: "academic", enabled: true, latency_ms: 540 },
-          { name: "Semantic Scholar", category: "academic", enabled: true, latency_ms: 480 },
+          {
+            name: "DuckDuckGo",
+            category: "web",
+            enabled: true,
+            latency_ms: 310,
+          },
+          {
+            name: "Twitter/X",
+            category: "social",
+            enabled: true,
+            latency_ms: 420,
+          },
+          {
+            name: "Reddit",
+            category: "social",
+            enabled: true,
+            latency_ms: 350,
+          },
+          {
+            name: "ArXiv",
+            category: "academic",
+            enabled: true,
+            latency_ms: 540,
+          },
+          {
+            name: "Semantic Scholar",
+            category: "academic",
+            enabled: true,
+            latency_ms: 480,
+          },
           { name: "Naver", category: "korean", enabled: true, latency_ms: 200 },
-          { name: "Daum/Kakao", category: "korean", enabled: true, latency_ms: 190 },
+          {
+            name: "Daum/Kakao",
+            category: "korean",
+            enabled: true,
+            latency_ms: 190,
+          },
         ]);
       } finally {
         setLoading(false);
@@ -61,7 +95,7 @@ export default function SourcesPage() {
       acc[cat].push(source);
       return acc;
     },
-    {} as Record<string, AdapterInfo[]>
+    {} as Record<string, AdapterInfo[]>,
   );
 
   return (
@@ -87,7 +121,8 @@ export default function SourcesPage() {
           <div className="space-y-8 max-w-4xl">
             {Object.entries(grouped).map(([category, adapters]) => {
               const Icon = CATEGORY_ICONS[category] ?? Globe;
-              const colorClass = CATEGORY_COLORS[category] ?? "bg-gray-500/10 text-gray-500";
+              const colorClass =
+                CATEGORY_COLORS[category] ?? "bg-gray-500/10 text-gray-500";
 
               return (
                 <section key={category}>

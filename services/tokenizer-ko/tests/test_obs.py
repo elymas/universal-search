@@ -7,8 +7,6 @@ from __future__ import annotations
 
 import json
 import logging
-from io import StringIO
-from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -60,10 +58,9 @@ class TestPythonLogShape:
 
         # Find the tokenize-result log record (has request_id)
         tokenize_records = [
-            r for r in records
-            if hasattr(r, "request_id") or (
-                "request_id" in r.getMessage()
-            )
+            r
+            for r in records
+            if hasattr(r, "request_id") or ("request_id" in r.getMessage())
         ]
         assert len(tokenize_records) >= 1, (
             f"Expected structured log record, got records: "
@@ -74,7 +71,13 @@ class TestPythonLogShape:
         rec = tokenize_records[0]
         # The log message should contain all 5 fields
         msg = rec.getMessage()
-        for attr in ("request_id", "text_len", "morpheme_count", "latency_ms", "outcome"):
+        for attr in (
+            "request_id",
+            "text_len",
+            "morpheme_count",
+            "latency_ms",
+            "outcome",
+        ):
             assert attr in msg or hasattr(rec, attr), (
                 f"Missing attribute '{attr}' in log record message: {msg}"
             )
@@ -82,7 +85,6 @@ class TestPythonLogShape:
     def test_python_log_no_pii(self, client: TestClient) -> None:
         """Log records must NOT contain the request text value."""
         sensitive_text = "개인정보보호법 위반 사례"
-        records = []
 
         def do_request():
             resp = client.post(

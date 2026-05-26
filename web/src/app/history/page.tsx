@@ -33,7 +33,7 @@ export default function HistoryPage() {
       } catch (err) {
         if (!cancelled) {
           setError(
-            err instanceof Error ? err.message : "Failed to load history"
+            err instanceof Error ? err.message : "Failed to load history",
           );
           setEntries([]);
         }
@@ -108,14 +108,15 @@ export default function HistoryPage() {
           <div className="text-center py-12 text-muted-foreground">
             <Search className="h-10 w-10 mx-auto mb-3 opacity-50" />
             <p className="text-lg">No search history yet</p>
-            <p className="text-sm mt-1">
-              Your past searches will appear here
-            </p>
+            <p className="text-sm mt-1">Your past searches will appear here</p>
           </div>
         ) : (
           <div className="space-y-2 max-w-3xl">
             {entries.map((entry, i) => (
-              <Card key={entry.id ?? i} className="hover:bg-accent/50 transition-colors">
+              <Card
+                key={entry.id ?? i}
+                className="hover:bg-accent/50 transition-colors"
+              >
                 <CardContent className="flex items-center justify-between py-3 px-4">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">

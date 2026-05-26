@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useSyncExternalStore } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
 type Theme = "dark" | "light" | "system";
 
@@ -30,7 +36,7 @@ export function ThemeProvider({
   storageKey?: string;
 }) {
   const [theme, setTheme] = useState<Theme>(() =>
-    getStoredTheme(storageKey, defaultTheme)
+    getStoredTheme(storageKey, defaultTheme),
   );
 
   useEffect(() => {

@@ -23,7 +23,9 @@ export function AdapterStatusPanel() {
         const data = await fetchAdminAdapters();
         setAdapters(data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load adapters");
+        setError(
+          err instanceof Error ? err.message : "Failed to load adapters",
+        );
       } finally {
         setLoading(false);
       }
@@ -35,9 +37,7 @@ export function AdapterStatusPanel() {
     setBusyId(id);
     try {
       const updated = await toggleAdapter(id, enabled);
-      setAdapters((prev) =>
-        prev.map((a) => (a.id === id ? updated : a))
-      );
+      setAdapters((prev) => prev.map((a) => (a.id === id ? updated : a)));
     } finally {
       setBusyId(null);
     }
@@ -47,9 +47,7 @@ export function AdapterStatusPanel() {
     setBusyId(id);
     try {
       const updated = await resyncAdapter(id);
-      setAdapters((prev) =>
-        prev.map((a) => (a.id === id ? updated : a))
-      );
+      setAdapters((prev) => prev.map((a) => (a.id === id ? updated : a)));
     } finally {
       setBusyId(null);
     }
@@ -72,14 +70,54 @@ export function AdapterStatusPanel() {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-border bg-muted/50">
-                <th scope="col" className="px-3 py-2 text-xs font-medium text-muted-foreground">Name</th>
-                <th scope="col" className="px-3 py-2 text-xs font-medium text-muted-foreground">Status</th>
-                <th scope="col" className="px-3 py-2 text-xs font-medium text-muted-foreground">Last Sync</th>
-                <th scope="col" className="px-3 py-2 text-xs font-medium text-muted-foreground">OK / Fail</th>
-                <th scope="col" className="px-3 py-2 text-xs font-medium text-muted-foreground">Last Error</th>
-                <th scope="col" className="px-3 py-2 text-xs font-medium text-muted-foreground">Secret</th>
-                <th scope="col" className="px-3 py-2 text-xs font-medium text-muted-foreground">Enabled</th>
-                <th scope="col" className="px-3 py-2 text-xs font-medium text-muted-foreground">Action</th>
+                <th
+                  scope="col"
+                  className="px-3 py-2 text-xs font-medium text-muted-foreground"
+                >
+                  Name
+                </th>
+                <th
+                  scope="col"
+                  className="px-3 py-2 text-xs font-medium text-muted-foreground"
+                >
+                  Status
+                </th>
+                <th
+                  scope="col"
+                  className="px-3 py-2 text-xs font-medium text-muted-foreground"
+                >
+                  Last Sync
+                </th>
+                <th
+                  scope="col"
+                  className="px-3 py-2 text-xs font-medium text-muted-foreground"
+                >
+                  OK / Fail
+                </th>
+                <th
+                  scope="col"
+                  className="px-3 py-2 text-xs font-medium text-muted-foreground"
+                >
+                  Last Error
+                </th>
+                <th
+                  scope="col"
+                  className="px-3 py-2 text-xs font-medium text-muted-foreground"
+                >
+                  Secret
+                </th>
+                <th
+                  scope="col"
+                  className="px-3 py-2 text-xs font-medium text-muted-foreground"
+                >
+                  Enabled
+                </th>
+                <th
+                  scope="col"
+                  className="px-3 py-2 text-xs font-medium text-muted-foreground"
+                >
+                  Action
+                </th>
               </tr>
             </thead>
             <tbody>
