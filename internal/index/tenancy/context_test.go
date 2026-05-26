@@ -20,9 +20,9 @@ func TestExtractTeamIDFromJWTContext(t *testing.T) {
 // Test 8: ExtractTeamID falls back to INDEX_DEFAULT_TEAM env var.
 // REQ-IDX4-003, NFR-IDX4-008
 func TestExtractTeamIDFallsBackToEnvVar(t *testing.T) {
-	t.Parallel()
-	os.Setenv("INDEX_DEFAULT_TEAM", "default-team")
-	defer os.Unsetenv("INDEX_DEFAULT_TEAM")
+	// Cannot use t.Parallel: tests in this file mutate the shared
+	// INDEX_DEFAULT_TEAM env var and would race on CI.
+	t.Setenv("INDEX_DEFAULT_TEAM", "default-team")
 
 	ctx := context.Background()
 	got := ExtractTeamID(ctx)
@@ -34,8 +34,12 @@ func TestExtractTeamIDFallsBackToEnvVar(t *testing.T) {
 // Test 9: ExtractTeamID returns empty when both context and env var are missing.
 // REQ-IDX4-003
 func TestExtractTeamIDReturnsEmptyOnMissingBoth(t *testing.T) {
-	t.Parallel()
-	os.Unsetenv("INDEX_DEFAULT_TEAM")
+	// Cannot use t.Parallel: depends on INDEX_DEFAULT_TEAM being unset
+	// while sibling tests mutate it.
+	if prev, ok := os.LookupEnv("INDEX_DEFAULT_TEAM"); ok {
+		os.Unsetenv("INDEX_DEFAULT_TEAM")
+		t.Cleanup(func() { os.Setenv("INDEX_DEFAULT_TEAM", prev) })
+	}
 	ctx := context.Background()
 	got := ExtractTeamID(ctx)
 	if got != "" {
@@ -45,9 +49,8 @@ func TestExtractTeamIDReturnsEmptyOnMissingBoth(t *testing.T) {
 
 // Test 10: JWT context takes precedence over env var.
 func TestExtractTeamIDJWTTakesPrecedence(t *testing.T) {
-	t.Parallel()
-	os.Setenv("INDEX_DEFAULT_TEAM", "env-team")
-	defer os.Unsetenv("INDEX_DEFAULT_TEAM")
+	// Cannot use t.Parallel: shares INDEX_DEFAULT_TEAM with sibling tests.
+	t.Setenv("INDEX_DEFAULT_TEAM", "env-team")
 
 	ctx := context.WithValue(context.Background(), TeamIDKey, "jwt-team")
 	got := ExtractTeamID(ctx)
