@@ -1,15 +1,15 @@
 ---
 id: SPEC-CLI-002
 title: usearch CLI v1 — Full Subcommand Tree, Interactive Mode, Streaming
-version: 0.1.0
+version: 1.0.0
 milestone: M7 — Surfaces
-status: draft
+status: implemented
 priority: P1
 owner: expert-backend
 methodology: tdd
 coverage_target: 85
 created: 2026-05-22
-updated: 2026-05-22
+updated: 2026-05-26
 author: limbowl
 issue_number: null
 depends_on: [SPEC-CLI-001, SPEC-SYN-004, SPEC-DEEP-001, SPEC-DEEP-004, SPEC-IR-001, SPEC-OBS-001]
