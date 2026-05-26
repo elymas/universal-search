@@ -165,5 +165,10 @@ RRF formula: `score(d) = Σ 1 / (k + rank_i(d))` with `k=60` by convention.
 | 2026-04-24 | Primary orchestration language = Go | existing MoAI stack convention, powernap LSP |
 | 2026-04-24 | SearXNG as service, not fork | AGPL boundary preserved |
 | 2026-04-24 | Korean tokenization = mecab-ko sidecar | Meili default tokenizer is weak for Korean |
+| 2026-05-22 | CLI v1 framework = Cobra (migrated from flag) | Subcommand tree, REPL mode, structured help — flag stdlib insufficient for M7 scope |
+| 2026-05-22 | MCP transport = Go MCP SDK | Native Go server avoids Python sidecar latency; tool schema covers query/deep/team-memory |
+| 2026-05-22 | Web UI stack = Next.js 16 + shadcn/ui | App Router streaming for SSE citations; shadcn for accessibility-first primitives |
+| 2026-05-23 | Admin UI loopback guard | API key view+toggle restricted to localhost requests to prevent remote credential leak |
+| 2026-05-26 | M7 surfaces shipped (MCP/CLI/Skill/UI/Admin) | All 5 M7 SPECs implemented; sync gap closed in `docs/sync-m7-milestone`; M8 Eval+polish next |
 
 Subsequent decisions append to this table, never overwrite.
