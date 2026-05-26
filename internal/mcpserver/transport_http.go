@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"net"
 	"net/http"
 	"sync"
 	"sync/atomic"
@@ -285,12 +284,4 @@ func (h *httpTransport) handleToolsList(id any) map[string]any {
 			"tools": []any{},
 		},
 	}
-}
-
-// httpTransportAdapter adapts the httpTransport to the mcp.Transport interface.
-// This is used when the MCP SDK is running in HTTP mode.
-type httpTransportAdapter struct {
-	addr     string
-	listener net.Listener
-	handler  http.Handler
 }

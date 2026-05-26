@@ -111,12 +111,9 @@ func Search(ctx context.Context, reg *adapters.Registry, params SearchParams, sy
 	}
 	fanoutResult, _ := f.Dispatch(ctx, fanoutDecision, types.Query{Text: params.Query})
 
-	// Check for all adapters failed.
+	// Check for all adapters failed. Per-adapter details are surfaced via
+	// SearchResult.AdapterErrors; callers format the breakdown as needed.
 	if len(fanoutResult.Docs) == 0 && len(fanoutResult.AdapterErrors) > 0 {
-		errs := make([]string, 0, len(fanoutResult.AdapterErrors))
-		for name, aerr := range fanoutResult.AdapterErrors {
-			errs = append(errs, name+": "+aerr.Error())
-		}
 		return &SearchResult{
 			Docs:          fanoutResult.Docs,
 			AdapterErrors: fanoutResult.AdapterErrors,

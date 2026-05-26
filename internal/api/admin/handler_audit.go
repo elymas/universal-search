@@ -134,7 +134,11 @@ func (h *AuditHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // cursor values.
 func isValidCursor(cursor string) bool {
 	for _, c := range cursor {
-		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_' || c == '.') {
+		isLower := c >= 'a' && c <= 'z'
+		isUpper := c >= 'A' && c <= 'Z'
+		isDigit := c >= '0' && c <= '9'
+		isPunct := c == '-' || c == '_' || c == '.'
+		if !isLower && !isUpper && !isDigit && !isPunct {
 			return false
 		}
 	}

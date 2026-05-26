@@ -1,6 +1,7 @@
 package idx5
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -115,7 +116,7 @@ func TestLookupEmbedderError(t *testing.T) {
 	cfg := DefaultConfig()
 	lk := NewLookup(emb, idx.Search, cfg)
 
-	result, err := lk.Lookup(nil, "test query", "team-T")
+	result, err := lk.Lookup(context.Background(), "test query", "team-T")
 	if err == nil {
 		t.Error("expected error from embedder failure")
 	}
@@ -133,7 +134,7 @@ func TestLookupSearchError(t *testing.T) {
 	cfg := DefaultConfig()
 	lk := NewLookup(emb, idx.Search, cfg)
 
-	result, err := lk.Lookup(nil, "test query", "team-T")
+	result, err := lk.Lookup(context.Background(), "test query", "team-T")
 	if err == nil {
 		t.Error("expected error from search failure")
 	}
@@ -171,7 +172,7 @@ func TestLookupHardStaleResult(t *testing.T) {
 	cfg := DefaultConfig()
 	lk := NewLookup(emb, idx.Search, cfg)
 
-	result, err := lk.Lookup(nil, "test query", "team-T")
+	result, err := lk.Lookup(context.Background(), "test query", "team-T")
 	if err != nil {
 		t.Fatalf("Lookup error: %v", err)
 	}
@@ -274,7 +275,7 @@ func TestLookupWithBypassNormal(t *testing.T) {
 	cfg := DefaultConfig()
 	lk := NewLookup(emb, idx.Search, cfg)
 
-	result, err := lk.LookupWithBypass(nil, "test query", "team-T", false)
+	result, err := lk.LookupWithBypass(context.Background(), "test query", "team-T", false)
 	if err != nil {
 		t.Fatalf("LookupWithBypass error: %v", err)
 	}

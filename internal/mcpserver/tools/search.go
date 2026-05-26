@@ -84,14 +84,14 @@ func synthFunc() orchestrator.SynthFunc {
 // mapOrchestratorError maps orchestrator errors to MCP errors per REQ-MCP-016.
 func mapOrchestratorError(err error, result *orchestrator.SearchResult) *MCPError {
 	errMsg := err.Error()
-	switch {
-	case errMsg == "orchestrator: no adapters matched":
+	switch errMsg {
+	case "orchestrator: no adapters matched":
 		cat := ""
 		if result != nil {
 			cat = result.Category
 		}
 		return NoAdaptersMatchedError(cat)
-	case errMsg == "orchestrator: all adapters failed":
+	case "orchestrator: all adapters failed":
 		errs := make([]string, 0)
 		if result != nil {
 			for name, aerr := range result.AdapterErrors {

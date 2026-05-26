@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"log/slog"
-	"sync"
 )
 
 // EventStore is the interface for persisting audit events.
@@ -23,7 +22,6 @@ type Emitter struct {
 	store   EventStore
 	cfg     Config
 	metrics *Metrics
-	mu      sync.Mutex
 }
 
 // NewEmitter creates a new audit event emitter.

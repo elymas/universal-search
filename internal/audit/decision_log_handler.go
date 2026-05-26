@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
-	"time"
 )
 
 // DecisionLogHandler is an slog.Handler that intercepts DEEP-004 decision log
@@ -98,12 +97,8 @@ func (h *DecisionLogHandler) Handle(ctx context.Context, r slog.Record) error {
 		return nil
 	}
 
-	// Map to AuditEvent.
-	ts, _ := time.Parse(time.RFC3339Nano, line.Timestamp)
-	if ts.IsZero() {
-		ts = time.Now().UTC()
-	}
-
+	// Map to AuditEvent. The emitter assigns the canonical timestamp;
+	// the JSON line's timestamp field is informational only.
 	payload := map[string]interface{}{}
 	if line.Dimension != "" {
 		payload["dimension"] = line.Dimension
