@@ -43,9 +43,7 @@ class TestFaithfulnessEndpoint:
         assert "uncited_sentences_count" in data
         assert "uncited_sentences" in data
 
-    def test_endpoint_returns_uncited_count_zero_when_all_cited(
-        self, client: TestClient
-    ) -> None:
+    def test_endpoint_returns_uncited_count_zero_when_all_cited(self, client: TestClient) -> None:
         """All-cited text returns uncited_count == 0."""
         resp = client.post(
             "/faithfulness_check",
@@ -59,9 +57,7 @@ class TestFaithfulnessEndpoint:
         data = resp.json()
         assert data["uncited_sentences_count"] == 0
 
-    def test_endpoint_returns_uncited_count_positive_when_uncited(
-        self, client: TestClient
-    ) -> None:
+    def test_endpoint_returns_uncited_count_positive_when_uncited(self, client: TestClient) -> None:
         """Text with uncited sentences returns uncited_count > 0."""
         resp = client.post(
             "/faithfulness_check",

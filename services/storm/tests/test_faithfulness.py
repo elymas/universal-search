@@ -16,7 +16,6 @@ from storm.faithfulness import (
 )
 from storm.models import Section, Sentence
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -28,10 +27,7 @@ def _make_section(
     sentences: list[tuple[str, list[int]]] | None = None,
 ) -> Section:
     """Build a Section from (text, citations) pairs."""
-    sents = [
-        Sentence(text=text, citations=cites)
-        for text, cites in (sentences or [])
-    ]
+    sents = [Sentence(text=text, citations=cites) for text, cites in (sentences or [])]
     return Section(heading=heading, level=level, sentences=sents)
 
 

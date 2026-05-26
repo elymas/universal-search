@@ -10,7 +10,6 @@ REQ-IDX-002-013: model_version / revision kwarg.
 
 from __future__ import annotations
 
-import os
 from typing import Optional
 
 # @MX:NOTE: [AUTO] BGEM3FlagModel is imported lazily in Embedder.__init__ to allow

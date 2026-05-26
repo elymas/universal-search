@@ -11,7 +11,7 @@ import os
 import sys
 import time
 from contextlib import contextmanager
-from typing import Generator, Optional
+from typing import Generator
 
 
 def _setup_json_logger(name: str, level_str: str = "INFO") -> logging.Logger:

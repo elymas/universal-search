@@ -10,7 +10,6 @@ import json
 from typing import Any
 from unittest import mock
 
-import pytest
 from fastapi.testclient import TestClient
 
 
@@ -30,7 +29,13 @@ def _mock_gateway_complete(sub_queries: list[str]) -> Any:
     """Return an async mock for Gateway.complete that returns JSON sub-queries."""
     raw = json.dumps(sub_queries)
     mock_gw = mock.AsyncMock()
-    mock_gw.complete.return_value = (raw, 0.001, {"prompt_tokens": 50, "completion_tokens": 100}, "anthropic", "claude-haiku-4-5")
+    mock_gw.complete.return_value = (
+        raw,
+        0.001,
+        {"prompt_tokens": 50, "completion_tokens": 100},
+        "anthropic",
+        "claude-haiku-4-5",
+    )
     return mock_gw
 
 
@@ -57,8 +62,10 @@ class TestDecomposeQueryReturnsBreadthSubQueries:
 
         mock_gw = _mock_gateway_complete(sub_queries)
 
-        with mock.patch.object(Gateway, "__init__", lambda self, **kw: None), \
-             mock.patch.object(Gateway, "complete", mock_gw.complete):
+        with (
+            mock.patch.object(Gateway, "__init__", lambda self, **kw: None),
+            mock.patch.object(Gateway, "complete", mock_gw.complete),
+        ):
             client = TestClient(app, raise_server_exceptions=True)
             resp = client.post("/decompose_query", json=_make_decompose_payload(breadth=4))
 
@@ -94,8 +101,10 @@ class TestDecomposeQueryTruncatesExcess:
 
         mock_gw = _mock_gateway_complete(sub_queries)
 
-        with mock.patch.object(Gateway, "__init__", lambda self, **kw: None), \
-             mock.patch.object(Gateway, "complete", mock_gw.complete):
+        with (
+            mock.patch.object(Gateway, "__init__", lambda self, **kw: None),
+            mock.patch.object(Gateway, "complete", mock_gw.complete),
+        ):
             client = TestClient(app, raise_server_exceptions=True)
             resp = client.post("/decompose_query", json=_make_decompose_payload(breadth=4))
 

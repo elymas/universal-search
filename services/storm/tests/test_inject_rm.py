@@ -9,10 +9,7 @@ Tests cover:
 
 from __future__ import annotations
 
-import pytest
-
 from storm.inject_rm import InjectedRM
-
 
 # ---------------------------------------------------------------------------
 # Happy-path: forward returns correct format
@@ -102,10 +99,7 @@ class TestInjectedRMTopK:
     """Verify top-k limiting behavior."""
 
     def test_forward_respects_k_parameter(self) -> None:
-        docs = [
-            {"url": f"https://example.com/{i}", "title": f"Doc {i}", "body": f"match {i}"}
-            for i in range(10)
-        ]
+        docs = [{"url": f"https://example.com/{i}", "title": f"Doc {i}", "body": f"match {i}"} for i in range(10)]
         rm = InjectedRM(docs=docs, top_k=3)
         result = rm.forward(query="match", k=3)
         assert len(result) <= 3
@@ -119,10 +113,7 @@ class TestInjectedRMTopK:
         assert len(result) == 1
 
     def test_forward_default_k_uses_top_k(self) -> None:
-        docs = [
-            {"url": f"https://example.com/{i}", "title": f"Doc {i}", "body": f"match {i}"}
-            for i in range(10)
-        ]
+        docs = [{"url": f"https://example.com/{i}", "title": f"Doc {i}", "body": f"match {i}"} for i in range(10)]
         rm = InjectedRM(docs=docs, top_k=5)
         result = rm.forward(query="match")
         assert len(result) == 5
@@ -142,10 +133,7 @@ class TestInjectedRMEdgeCases:
         assert result == []
 
     def test_forward_empty_query_returns_all_docs_up_to_k(self) -> None:
-        docs = [
-            {"url": f"https://example.com/{i}", "title": f"Doc {i}", "body": f"body {i}"}
-            for i in range(5)
-        ]
+        docs = [{"url": f"https://example.com/{i}", "title": f"Doc {i}", "body": f"body {i}"} for i in range(5)]
         rm = InjectedRM(docs=docs, top_k=3)
         result = rm.forward(query="")
         assert len(result) == 3

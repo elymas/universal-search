@@ -6,15 +6,13 @@ Covers REQ-SYN-006: per-call structured log records.
 from __future__ import annotations
 
 import json
-import logging
 import os
-from io import StringIO
 from typing import Any
-
 
 # ---------------------------------------------------------------------------
 # REQ-SYN-006 — Python-side observability
 # ---------------------------------------------------------------------------
+
 
 class TestLogRecordShape:
     """REQ-SYN-006: Each /synthesize call emits one structured JSON log."""
@@ -22,6 +20,7 @@ class TestLogRecordShape:
     def test_python_log_record_shape(self, capfd: Any) -> None:
         """log_synthesis emits exactly 1 JSON record with 11 documented attributes."""
         from researcher.obs import log_synthesis, setup_logging
+
         setup_logging()
 
         record = {
@@ -54,9 +53,17 @@ class TestLogRecordShape:
         assert len(json_records) >= 1, f"Expected at least 1 JSON log line, got 0. Output: {output!r}"
         rec = json_records[0]
         required_attrs = [
-            "request_id", "query_len", "docs_count", "model",
-            "provider", "cost_usd", "prompt_tokens", "completion_tokens",
-            "latency_ms", "degraded", "outcome",
+            "request_id",
+            "query_len",
+            "docs_count",
+            "model",
+            "provider",
+            "cost_usd",
+            "prompt_tokens",
+            "completion_tokens",
+            "latency_ms",
+            "degraded",
+            "outcome",
         ]
         for attr in required_attrs:
             assert attr in rec, f"Missing attribute {attr!r} in log record: {rec}"
@@ -70,6 +77,7 @@ class TestLogRecordShape:
         os.environ["LITELLM_API_KEY"] = "super-secret-key-12345"
 
         from researcher.obs import log_synthesis, setup_logging
+
         setup_logging()
 
         record = {
@@ -98,6 +106,7 @@ class TestTimerContextManager:
     def test_timer_measures_elapsed(self) -> None:
         """Timer.elapsed_ms returns elapsed time in milliseconds."""
         import time
+
         from researcher.obs import Timer
 
         with Timer() as t:

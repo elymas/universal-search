@@ -7,9 +7,8 @@ REQ-SYN-004: Empty input validation (400 on empty query or zero docs).
 from __future__ import annotations
 
 import logging
-import os
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator
+from typing import AsyncGenerator
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -18,7 +17,7 @@ from researcher.deep_tree import router as deep_tree_router
 from researcher.faithfulness_endpoint import router as faithfulness_router
 from researcher.gateway import Gateway
 from researcher.models import SynthesizeRequest, SynthesizeResponse
-from researcher.obs import log_synthesis, setup_logging
+from researcher.obs import setup_logging
 from researcher.synthesis import synthesize
 
 logger = logging.getLogger(__name__)
@@ -64,22 +63,26 @@ async def synthesize_endpoint(req: SynthesizeRequest) -> SynthesizeResponse:
     """
     # REQ-SYN-004: Validate non-empty inputs (str_strip_whitespace already applied by Pydantic)
     if not req.query:
-        logger.warning({
-            "request_id": req.request_id,
-            "error": "empty_input",
-            "detail": "query",
-        })
+        logger.warning(
+            {
+                "request_id": req.request_id,
+                "error": "empty_input",
+                "detail": "query",
+            }
+        )
         return JSONResponse(
             status_code=400,
             content={"error": "empty_input", "detail": "query"},
         )
 
     if not req.docs:
-        logger.warning({
-            "request_id": req.request_id,
-            "error": "empty_input",
-            "detail": "docs",
-        })
+        logger.warning(
+            {
+                "request_id": req.request_id,
+                "error": "empty_input",
+                "detail": "docs",
+            }
+        )
         return JSONResponse(
             status_code=400,
             content={"error": "empty_input", "detail": "docs"},

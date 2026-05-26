@@ -9,10 +9,7 @@ from __future__ import annotations
 
 import time
 
-import pytest
-
 from embedder.cache import EmbedderCache
-
 
 MODEL = "BAAI/bge-m3"
 VERSION = "abc123"

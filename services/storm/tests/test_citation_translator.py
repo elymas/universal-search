@@ -14,7 +14,6 @@ import pytest
 
 from storm.citation_translator import canonicalize_url, translate
 
-
 # ---------------------------------------------------------------------------
 # canonicalize_url — parametric over 8 protocol / query / slash combos
 # ---------------------------------------------------------------------------

@@ -9,14 +9,11 @@ REQ-IDX-002-013: model_version / revision kwarg.
 
 from __future__ import annotations
 
-import sys
 from typing import Any
-from unittest.mock import MagicMock, patch, call
 
-import numpy as np
 import pytest
 
-from embedder.embed import Embedder, EmbedValidationError, MAX_BATCH_SIZE, MAX_TOKEN_LENGTH
+from embedder.embed import MAX_BATCH_SIZE, Embedder, EmbedValidationError
 
 
 @pytest.fixture()
@@ -89,7 +86,6 @@ class TestOOMRecovery:
         mock_bgem3._oom = True
 
         # Make encode raise MemoryError.
-        original_encode = mock_bgem3.encode
 
         def oom_encode(*args: Any, **kwargs: Any) -> dict:
             raise MemoryError("out of memory")
@@ -138,13 +134,12 @@ class TestKoreanText:
 
 class TestModelVersion:
     def test_model_version_pinned(self, mock_bgem3) -> None:
-        import embedder.embed as embed_module
 
         captured_kwargs: dict = {}
-        original_init = mock_bgem3.__class__.__init__
 
         # Patch at the sys.modules level.
         import FlagEmbedding  # type: ignore[import-untyped]
+
         original_cls = FlagEmbedding.BGEM3FlagModel
 
         class CapturingModel:
@@ -157,14 +152,14 @@ class TestModelVersion:
 
         FlagEmbedding.BGEM3FlagModel = CapturingModel
         try:
-            e = Embedder(model_name="BAAI/bge-m3", model_version="abc123def")
+            Embedder(model_name="BAAI/bge-m3", model_version="abc123def")
             assert captured_kwargs.get("revision") == "abc123def"
         finally:
             FlagEmbedding.BGEM3FlagModel = original_cls
 
     def test_model_version_latest_no_revision(self, mock_bgem3) -> None:
         # When model_version is None / 'latest', no revision kwarg is passed.
-        e = Embedder(model_name="BAAI/bge-m3", model_version=None)
+        Embedder(model_name="BAAI/bge-m3", model_version=None)
         assert "revision" not in mock_bgem3.init_kwargs
 
     def test_model_version_in_embedder(self, mock_bgem3) -> None:

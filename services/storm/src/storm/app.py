@@ -136,9 +136,7 @@ def create_app() -> FastAPI:
         The pipeline builds LM configs via the LiteLLM gateway, constructs
         an InjectedRM from request docs, and runs STORMWikiRunner.
         """
-        logger.info(
-            {"message": "generate_report invoked", "request_id": req.request_id}
-        )
+        logger.info({"message": "generate_report invoked", "request_id": req.request_id})
         return run_pipeline(req)
 
     return application
