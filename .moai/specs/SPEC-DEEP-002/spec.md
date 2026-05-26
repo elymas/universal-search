@@ -1,7 +1,7 @@
 ---
 id: SPEC-DEEP-002
 version: 0.1.2
-status: completed
+status: implemented
 created: 2026-05-21
 updated: 2026-05-22
 author: limbowl
