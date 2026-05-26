@@ -93,9 +93,7 @@ class TestGenerateReportEndpoint:
     """POST /generate_report returns report via pipeline."""
 
     @pytest.mark.asyncio
-    async def test_post_generate_report_returns_200_with_structured_response(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_post_generate_report_returns_200_with_structured_response(self, client: AsyncClient) -> None:
         """SPEC T-001 AT-1: POST valid request with mocked LM; assert 200;
         response matches GenerateReportResponse schema; schema_version == 1.
         """
@@ -135,9 +133,7 @@ class TestGenerateReportEndpoint:
         assert body["schema_version"] == 1
 
     @pytest.mark.asyncio
-    async def test_response_schema_version_present(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_response_schema_version_present(self, client: AsyncClient) -> None:
         """SPEC T-001 AT-2: every successful response carries schema_version: 1."""
         from storm.models import GenerateReportResponse
 
@@ -152,9 +148,7 @@ class TestGenerateReportEndpoint:
             payload = {
                 "request_id": "sv-req-001",
                 "query": "test",
-                "docs": [
-                    {"id": "d1", "url": "https://x.com", "title": "X", "body": "b"}
-                ],
+                "docs": [{"id": "d1", "url": "https://x.com", "title": "X", "body": "b"}],
             }
             async with client as c:
                 resp = await c.post("/generate_report", json=payload)
@@ -197,9 +191,7 @@ class TestGenerateReportEndpoint:
         assert body["schema_version"] == 1
 
     @pytest.mark.asyncio
-    async def test_generate_report_preserves_request_id(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_generate_report_preserves_request_id(self, client: AsyncClient) -> None:
         """POST /generate_report echoes back the request_id."""
         from storm.models import GenerateReportResponse
 
@@ -221,9 +213,7 @@ class TestGenerateReportEndpoint:
         assert resp.json()["request_id"] == "unique-req-42"
 
     @pytest.mark.asyncio
-    async def test_generate_report_invalid_body_returns_422(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_generate_report_invalid_body_returns_422(self, client: AsyncClient) -> None:
         """POST /generate_report returns 422 for invalid request body."""
         async with client as c:
             resp = await c.post("/generate_report", json={"invalid": "data"})

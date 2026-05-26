@@ -19,9 +19,7 @@ CachedValue = tuple[
 ]
 
 
-def _mode_flags_string(
-    return_dense: bool, return_sparse: bool, return_colbert_vecs: bool
-) -> str:
+def _mode_flags_string(return_dense: bool, return_sparse: bool, return_colbert_vecs: bool) -> str:
     """Encode mode flags as a deterministic string."""
     d = 1 if return_dense else 0
     s = 1 if return_sparse else 0

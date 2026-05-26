@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import sys
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -22,6 +22,7 @@ FAKE_DENSE_DIM = 1024
 def _make_dense(n: int) -> list:
     """Return n fake 1024-dim vectors as numpy-like objects."""
     import numpy as np
+
     return np.random.rand(n, FAKE_DENSE_DIM).astype("float32")
 
 
@@ -33,6 +34,7 @@ def _make_sparse(n: int) -> list:
 def _make_colbert(n: int, tokens: int = 8) -> list:
     """Return n fake ColBERT matrices of shape [tokens, 1024]."""
     import numpy as np
+
     return [np.random.rand(tokens, FAKE_DENSE_DIM).astype("float32") for _ in range(n)]
 
 
@@ -55,14 +57,16 @@ class MockBGEM3FlagModel:
         return_colbert_vecs: bool = False,
         **kwargs: Any,
     ) -> dict:
-        self.encode_calls.append({
-            "sentences": sentences,
-            "batch_size": batch_size,
-            "max_length": max_length,
-            "return_dense": return_dense,
-            "return_sparse": return_sparse,
-            "return_colbert_vecs": return_colbert_vecs,
-        })
+        self.encode_calls.append(
+            {
+                "sentences": sentences,
+                "batch_size": batch_size,
+                "max_length": max_length,
+                "return_dense": return_dense,
+                "return_sparse": return_sparse,
+                "return_colbert_vecs": return_colbert_vecs,
+            }
+        )
         n = len(sentences)
         result: dict = {}
         if return_dense:
@@ -91,10 +95,12 @@ def client(mock_bgem3: MockBGEM3FlagModel) -> TestClient:
     """FastAPI TestClient with the real app but mocked BGEM3FlagModel."""
     # Reset app state between test runs.
     import embedder.app as app_module
+
     app_module._embedder = None
     app_module._cache = None
     app_module._model_ready = False
 
     from embedder.app import app
+
     with TestClient(app) as c:
         yield c

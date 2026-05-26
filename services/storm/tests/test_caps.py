@@ -89,9 +89,7 @@ class TestDeadlineExceeded:
     """REQ-DEEP1-004: IF latency exceeds STORM_MAX_LATENCY_MS, THEN HTTP 504."""
 
     @pytest.mark.asyncio
-    async def test_deadline_exceeded_returns_504(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_deadline_exceeded_returns_504(self, client: AsyncClient) -> None:
         """DeadlineExceededError from pipeline produces HTTP 504."""
         from storm.pipeline import DeadlineExceededError
 
@@ -103,9 +101,7 @@ class TestDeadlineExceeded:
             ),
         ):
             async with client as c:
-                resp = await c.post(
-                    "/generate_report", json=_valid_payload()
-                )
+                resp = await c.post("/generate_report", json=_valid_payload())
         assert resp.status_code == 504
         body = resp.json()
         assert body["error"] == "deadline_exceeded"
@@ -114,32 +110,29 @@ class TestDeadlineExceeded:
         assert body["partial_sections_completed"] == 2
 
     @pytest.mark.asyncio
-    async def test_deadline_exceeded_increments_counter(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_deadline_exceeded_increments_counter(self, client: AsyncClient) -> None:
         """Deadline exceeded path calls emit_outcome exactly once with correct label."""
         from storm.pipeline import DeadlineExceededError
 
-        with patch(
-            "storm.app.run_pipeline",
-            side_effect=DeadlineExceededError(
-                elapsed_ms=300_100,
-                partial_sections_completed=1,
+        with (
+            patch(
+                "storm.app.run_pipeline",
+                side_effect=DeadlineExceededError(
+                    elapsed_ms=300_100,
+                    partial_sections_completed=1,
+                ),
             ),
-        ), patch("storm.app.emit_outcome") as mock_emit:
+            patch("storm.app.emit_outcome") as mock_emit,
+        ):
             async with client as c:
-                resp = await c.post(
-                    "/generate_report", json=_valid_payload()
-                )
+                resp = await c.post("/generate_report", json=_valid_payload())
         assert resp.status_code == 504
         mock_emit.assert_called_once()
         # First positional arg is the outcome label
         assert mock_emit.call_args[0][0] == "deadline_exceeded"
 
     @pytest.mark.asyncio
-    async def test_deadline_exceeded_no_partial_text_in_response(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_deadline_exceeded_no_partial_text_in_response(self, client: AsyncClient) -> None:
         """504 response body MUST NOT contain title, sections, or citations."""
         from storm.pipeline import DeadlineExceededError
 
@@ -151,9 +144,7 @@ class TestDeadlineExceeded:
             ),
         ):
             async with client as c:
-                resp = await c.post(
-                    "/generate_report", json=_valid_payload()
-                )
+                resp = await c.post("/generate_report", json=_valid_payload())
         assert resp.status_code == 504
         body = resp.json()
         assert "title" not in body
@@ -170,9 +161,7 @@ class TestBudgetExceeded:
     """REQ-DEEP1-004: IF cost exceeds STORM_MAX_COST_USD, THEN HTTP 402."""
 
     @pytest.mark.asyncio
-    async def test_budget_exceeded_returns_402(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_budget_exceeded_returns_402(self, client: AsyncClient) -> None:
         """BudgetExceededError from pipeline produces HTTP 402."""
         from storm.pipeline import BudgetExceededError
 
@@ -184,9 +173,7 @@ class TestBudgetExceeded:
             ),
         ):
             async with client as c:
-                resp = await c.post(
-                    "/generate_report", json=_valid_payload()
-                )
+                resp = await c.post("/generate_report", json=_valid_payload())
         assert resp.status_code == 402
         body = resp.json()
         assert body["error"] == "budget_exceeded"
@@ -195,23 +182,22 @@ class TestBudgetExceeded:
         assert body["cap_usd"] == 2.50
 
     @pytest.mark.asyncio
-    async def test_budget_exceeded_increments_counter(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_budget_exceeded_increments_counter(self, client: AsyncClient) -> None:
         """Budget exceeded path calls emit_outcome exactly once with correct label."""
         from storm.pipeline import BudgetExceededError
 
-        with patch(
-            "storm.app.run_pipeline",
-            side_effect=BudgetExceededError(
-                cost_usd=3.00,
-                cap_usd=2.50,
+        with (
+            patch(
+                "storm.app.run_pipeline",
+                side_effect=BudgetExceededError(
+                    cost_usd=3.00,
+                    cap_usd=2.50,
+                ),
             ),
-        ), patch("storm.app.emit_outcome") as mock_emit:
+            patch("storm.app.emit_outcome") as mock_emit,
+        ):
             async with client as c:
-                resp = await c.post(
-                    "/generate_report", json=_valid_payload()
-                )
+                resp = await c.post("/generate_report", json=_valid_payload())
         assert resp.status_code == 402
         mock_emit.assert_called_once()
         # First positional arg is the outcome label
@@ -227,9 +213,7 @@ class TestPerCallOverrideClamping:
     """Per-call max_latency_ms is clamped to STORM_MAX_LATENCY_MS ceiling."""
 
     @pytest.mark.asyncio
-    async def test_per_call_override_clamped_to_ceiling(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_per_call_override_clamped_to_ceiling(self, client: AsyncClient) -> None:
         """When request.max_latency_ms > STORM_MAX_LATENCY_MS, use the ceiling."""
         from storm.pipeline import compute_effective_deadline_ms
 
@@ -241,9 +225,7 @@ class TestPerCallOverrideClamping:
         assert effective == 300_000
 
     @pytest.mark.asyncio
-    async def test_per_call_override_clamped_logs_warning(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_per_call_override_clamped_logs_warning(self, client: AsyncClient) -> None:
         """Clamping emits a WARN-level log with override details."""
         from storm.pipeline import compute_effective_deadline_ms
 
@@ -268,25 +250,24 @@ class TestDeadlineWarnLog:
     """REQ-DEEP1-004: deadline exceeded emits WARN-level structured log."""
 
     @pytest.mark.asyncio
-    async def test_deadline_exceeded_emits_warn_log(
-        self, client: AsyncClient
-    ) -> None:
+    async def test_deadline_exceeded_emits_warn_log(self, client: AsyncClient) -> None:
         """504 handler emits WARN log with correct attributes."""
         import logging
 
         from storm.pipeline import DeadlineExceededError
 
-        with patch(
-            "storm.app.run_pipeline",
-            side_effect=DeadlineExceededError(
-                elapsed_ms=301_000,
-                partial_sections_completed=4,
+        with (
+            patch(
+                "storm.app.run_pipeline",
+                side_effect=DeadlineExceededError(
+                    elapsed_ms=301_000,
+                    partial_sections_completed=4,
+                ),
             ),
-        ), patch.object(logging.getLogger("storm.app"), "warning") as mock_warn:
+            patch.object(logging.getLogger("storm.app"), "warning") as mock_warn,
+        ):
             async with client as c:
-                resp = await c.post(
-                    "/generate_report", json=_valid_payload()
-                )
+                resp = await c.post("/generate_report", json=_valid_payload())
         assert resp.status_code == 504
         mock_warn.assert_called_once()
         call_args = mock_warn.call_args
@@ -322,9 +303,7 @@ class TestResourceLeakOnCancel:
             ),
         ):
             async with client as c:
-                resp = await c.post(
-                    "/generate_report", json=_valid_payload()
-                )
+                resp = await c.post("/generate_report", json=_valid_payload())
         assert resp.status_code == 504
 
         after = len(threading.enumerate())

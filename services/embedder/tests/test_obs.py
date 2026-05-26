@@ -5,14 +5,11 @@ REQ-IDX-002-006: 12 documented attributes, outcome in allowed enum.
 
 from __future__ import annotations
 
-import json
 import io
+import json
 import logging
 
-import pytest
-
-from embedder.obs import log_embed, _setup_json_logger
-
+from embedder.obs import _setup_json_logger, log_embed
 
 VALID_OUTCOMES = {"success", "error_invalid", "error_oom", "error_loading", "error_internal"}
 
@@ -26,11 +23,13 @@ def _capture_log(func, *args, **kwargs) -> list[dict]:
     test_logger.handlers.clear()
     handler = logging.StreamHandler(buf)
     from embedder.obs import _JsonFormatter
+
     handler.setFormatter(_JsonFormatter())
     test_logger.addHandler(handler)
 
     # Monkey-patch the module-level logger temporarily.
     import embedder.obs as obs_module
+
     orig_logger = obs_module.logger
     obs_module.logger = test_logger
     try:
@@ -63,9 +62,18 @@ def test_log_record_has_12_attributes() -> None:
     assert len(records) == 1
     rec = records[0]
     expected_keys = {
-        "request_id", "texts_count", "return_dense", "return_sparse",
-        "return_colbert_vecs", "cache_hits", "cache_misses", "latency_ms",
-        "model", "model_version", "device", "outcome",
+        "request_id",
+        "texts_count",
+        "return_dense",
+        "return_sparse",
+        "return_colbert_vecs",
+        "cache_hits",
+        "cache_misses",
+        "latency_ms",
+        "model",
+        "model_version",
+        "device",
+        "outcome",
     }
     assert expected_keys.issubset(rec.keys())
 

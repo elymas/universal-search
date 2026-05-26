@@ -11,14 +11,9 @@ REQ-IDX-002-012: Model lifecycle.
 
 from __future__ import annotations
 
-import json
-import sys
 from typing import Any
-from unittest.mock import MagicMock, patch
 
-import pytest
 from fastapi.testclient import TestClient
-
 
 # ---------------------------------------------------------------------------
 # Happy path
@@ -61,8 +56,13 @@ class TestEmbedHappyPath:
         assert resp.status_code == 200
         data = resp.json()
         required_fields = {
-            "request_id", "model", "model_version", "device",
-            "latency_ms", "cache_hits", "cache_misses",
+            "request_id",
+            "model",
+            "model_version",
+            "device",
+            "latency_ms",
+            "cache_hits",
+            "cache_misses",
         }
         assert required_fields.issubset(data.keys())
 
@@ -89,9 +89,7 @@ class TestEmbedHappyPath:
 
 
 class TestCacheIntegration:
-    def test_embed_skipped_when_all_cached(
-        self, client: TestClient, mock_bgem3
-    ) -> None:
+    def test_embed_skipped_when_all_cached(self, client: TestClient, mock_bgem3) -> None:
         payload = {"request_id": "r1", "texts": ["cache_me"]}
         # First call: cache miss → inference
         r1 = client.post("/embed", json=payload)
@@ -105,18 +103,16 @@ class TestCacheIntegration:
         assert r2.json()["cache_hits"] == 1
         assert r2.json()["cache_misses"] == 0
 
-    def test_cache_key_includes_mode_flags(
-        self, client: TestClient, mock_bgem3
-    ) -> None:
+    def test_cache_key_includes_mode_flags(self, client: TestClient, mock_bgem3) -> None:
         text = "shared_text"
         # Dense-only request
-        r1 = client.post(
+        client.post(
             "/embed",
             json={"request_id": "r1", "texts": [text], "return_dense": True, "return_sparse": False},
         )
         initial_calls = len(mock_bgem3.encode_calls)
         # Dense+sparse request for the same text → different cache key → inference
-        r2 = client.post(
+        client.post(
             "/embed",
             json={"request_id": "r2", "texts": [text], "return_dense": True, "return_sparse": True},
         )
@@ -208,7 +204,7 @@ class TestHealthEndpoint:
 
         try:
             # Use a client WITHOUT triggering lifespan (no context manager).
-            with TestClient(app, raise_server_exceptions=False) as c:
+            with TestClient(app, raise_server_exceptions=False):
                 # Directly call health without lifespan; the app state is not-ready.
                 pass
         finally:
@@ -259,9 +255,7 @@ class TestKoreanText:
         assert resp.status_code == 200
         assert len(resp.json()["dense"][0]) == 1024
 
-    def test_korean_text_passed_verbatim_to_model(
-        self, client: TestClient, mock_bgem3
-    ) -> None:
+    def test_korean_text_passed_verbatim_to_model(self, client: TestClient, mock_bgem3) -> None:
         korean = "안녕하세요"
         client.post("/embed", json={"request_id": "r1", "texts": [korean]})
         last_call = mock_bgem3.encode_calls[-1]
@@ -323,6 +317,7 @@ class TestModelLifecycle:
             )
         # The mock class was instantiated exactly once (during lifespan startup).
         import FlagEmbedding  # type: ignore[import-untyped]
+
         assert FlagEmbedding.BGEM3FlagModel.call_count == 1
 
     def test_model_freed_at_shutdown(self, mock_bgem3) -> None:
@@ -336,9 +331,7 @@ class TestModelLifecycle:
         # After exiting the context (lifespan shutdown), model is freed.
         assert app_module._embedder is None
 
-    def test_response_order_matches_request_order(
-        self, client: TestClient, mock_bgem3
-    ) -> None:
+    def test_response_order_matches_request_order(self, client: TestClient, mock_bgem3) -> None:
         texts = ["foo", "bar", "baz"]
         resp = client.post(
             "/embed",

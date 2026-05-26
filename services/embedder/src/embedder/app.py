@@ -14,12 +14,12 @@ import time
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator, Optional
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 from .cache import EmbedderCache
 from .embed import Embedder, EmbedValidationError
-from .models import EmbedRequest, EmbedResponse, HealthResponse
+from .models import EmbedRequest, EmbedResponse
 from .obs import log_embed, logger, timer
 
 # ---------------------------------------------------------------------------

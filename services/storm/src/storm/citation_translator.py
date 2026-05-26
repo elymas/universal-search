@@ -42,6 +42,7 @@ def canonicalize_url(url: str) -> str:
 
 # @MX:TODO: [AUTO] Wire inc_unresolved_citations() into pipeline.py after M3 GREEN.
 
+
 def translate(
     text: str,
     storm_refs: list[dict],

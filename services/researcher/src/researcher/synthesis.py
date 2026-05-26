@@ -13,7 +13,6 @@ from __future__ import annotations
 import logging
 import os
 import re
-from typing import Any
 
 from researcher.gateway import Gateway
 from researcher.models import Citation, NormalizedDocPayload, SynthesizeRequest, SynthesizeResponse
@@ -129,10 +128,7 @@ def _build_degraded_response(
     """
     lines = [f"[{i + 1}] {doc.title} — {doc.url}" for i, doc in enumerate(req.docs)]
     text = "\n".join(lines)
-    citations = [
-        Citation(marker=i + 1, doc_id=doc.id, url=doc.url, title=doc.title)
-        for i, doc in enumerate(req.docs)
-    ]
+    citations = [Citation(marker=i + 1, doc_id=doc.id, url=doc.url, title=doc.title) for i, doc in enumerate(req.docs)]
     return SynthesizeResponse(
         request_id=req.request_id,
         text=text,
@@ -174,36 +170,40 @@ async def synthesize(
         except (_httpx.ConnectError, _httpx.HTTPStatusError, Exception) as exc:
             logger.warning("LiteLLM unreachable or error: %s; returning degraded response", exc)
             resp = _build_degraded_response(req, timer.elapsed_ms)
-            log_synthesis({
-                "request_id": req.request_id,
-                "query_len": len(req.query),
-                "docs_count": len(req.docs),
-                "model": "",
-                "provider": "",
-                "cost_usd": 0.0,
-                "prompt_tokens": 0,
-                "completion_tokens": 0,
-                "latency_ms": timer.elapsed_ms,
-                "degraded": True,
-                "outcome": "degraded",
-            })
+            log_synthesis(
+                {
+                    "request_id": req.request_id,
+                    "query_len": len(req.query),
+                    "docs_count": len(req.docs),
+                    "model": "",
+                    "provider": "",
+                    "cost_usd": 0.0,
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "latency_ms": timer.elapsed_ms,
+                    "degraded": True,
+                    "outcome": "degraded",
+                }
+            )
             return resp
 
     cleaned_text, citations = _process_markers(text_raw, req.docs)
 
-    log_synthesis({
-        "request_id": req.request_id,
-        "query_len": len(req.query),
-        "docs_count": len(req.docs),
-        "model": model_used,
-        "provider": provider,
-        "cost_usd": cost_usd,
-        "prompt_tokens": usage.get("prompt_tokens", 0),
-        "completion_tokens": usage.get("completion_tokens", 0),
-        "latency_ms": timer.elapsed_ms,
-        "degraded": False,
-        "outcome": "success",
-    })
+    log_synthesis(
+        {
+            "request_id": req.request_id,
+            "query_len": len(req.query),
+            "docs_count": len(req.docs),
+            "model": model_used,
+            "provider": provider,
+            "cost_usd": cost_usd,
+            "prompt_tokens": usage.get("prompt_tokens", 0),
+            "completion_tokens": usage.get("completion_tokens", 0),
+            "latency_ms": timer.elapsed_ms,
+            "degraded": False,
+            "outcome": "success",
+        }
+    )
 
     return SynthesizeResponse(
         request_id=req.request_id,

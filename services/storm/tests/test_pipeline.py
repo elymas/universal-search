@@ -16,11 +16,9 @@ import os
 import re
 import sys
 import types
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
@@ -134,7 +132,7 @@ class TestPipelineConfig:
     def test_builds_runner_args_from_env(self, mock_storm_deps: dict) -> None:
         from storm.pipeline import build_runner_args
 
-        args = build_runner_args()
+        build_runner_args()
         call_kwargs = mock_storm_deps["knowledge_storm"].STORMWikiRunnerArguments.call_args
         assert call_kwargs is not None
 
@@ -210,7 +208,7 @@ class TestPipelineRun:
                 {"url": "https://example.com/1", "title": "QC Intro", "body": "quantum bits"},
             ],
         )
-        response = run(req)
+        run(req)
         runner_cls = mock_storm_deps["knowledge_storm"].STORMWikiRunner
         runner_instance = runner_cls.return_value
         runner_instance.run.assert_called_once()
@@ -337,7 +335,7 @@ class TestPipelineOutputParsing:
         },
     )
     def test_parses_summary_into_sections(self, mock_storm_deps: dict) -> None:
-        from storm.models import GenerateReportRequest, Section
+        from storm.models import GenerateReportRequest
         from storm.pipeline import run
 
         # Configure the mock runner to return structured output
@@ -550,7 +548,7 @@ class TestRunnerArgsEnvVars:
     def test_runner_args_reads_all_env_vars(self, mock_storm_deps: dict) -> None:
         from storm.pipeline import build_runner_args
 
-        args = build_runner_args()
+        build_runner_args()
         call_kwargs = mock_storm_deps["knowledge_storm"].STORMWikiRunnerArguments.call_args
         assert call_kwargs is not None
         kwargs = call_kwargs.kwargs or call_kwargs[1]
@@ -581,7 +579,7 @@ class TestLMConfigsSlots:
     def test_lm_configs_sets_five_lm_slots(self, mock_storm_deps: dict) -> None:
         from storm.pipeline import build_lm_configs
 
-        lm_configs = build_lm_configs()
+        build_lm_configs()
         instance = mock_storm_deps["knowledge_storm"].STORMWikiLMConfigs.return_value
         # Verify all 5 setter methods were called
         instance.set_conv_simulator_lm.assert_called_once()
@@ -809,8 +807,7 @@ class TestPropertyLongForm:
                 text_markers = {int(m) for m in re.findall(r"\[(\d+)\]", sentence.text)}
                 for marker in text_markers:
                     assert marker in citation_markers, (
-                        f"Text marker [{marker}] in sentence '{sentence.text}' "
-                        f"has no matching citation."
+                        f"Text marker [{marker}] in sentence '{sentence.text}' has no matching citation."
                     )
 
     @given(response=_st_well_formed_response())
@@ -827,8 +824,7 @@ class TestPropertyLongForm:
             for sentence in section.sentences:
                 for marker in sentence.citations:
                     assert 1 <= marker <= n_citations, (
-                        f"Marker {marker} out of range [1, {n_citations}] "
-                        f"in section '{section.heading}'"
+                        f"Marker {marker} out of range [1, {n_citations}] in section '{section.heading}'"
                     )
 
     @given(response=_st_well_formed_response())
@@ -864,9 +860,7 @@ class TestPropertyLongForm:
         NFR-DEEP1-002 invariant 4: no section has zero sentences.
         """
         for section in response.sections:
-            assert len(section.sentences) > 0, (
-                f"Section '{section.heading}' has zero sentences"
-            )
+            assert len(section.sentences) > 0, f"Section '{section.heading}' has zero sentences"
 
     @given(response=_st_well_formed_response())
     @settings(max_examples=100, deadline=None)
@@ -889,9 +883,7 @@ class TestPropertyLongForm:
         markers = [c.marker for c in response.citations]
 
         # Sorted ascending.
-        assert markers == sorted(markers), (
-            f"Citations not sorted by marker: {markers}"
-        )
+        assert markers == sorted(markers), f"Citations not sorted by marker: {markers}"
 
         # 1-indexed starting from 1.
         assert markers[0] == 1, f"First marker should be 1, got {markers[0]}"

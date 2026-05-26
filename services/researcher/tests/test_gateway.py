@@ -64,6 +64,7 @@ class MockTransport(httpx.AsyncBaseTransport):
 # REQ-SYN-002 — LiteLLM routing
 # ---------------------------------------------------------------------------
 
+
 class TestLiteLLMRouting:
     """REQ-SYN-002: All LLM calls go through LITELLM_BASE_URL."""
 
@@ -75,6 +76,7 @@ class TestLiteLLMRouting:
 
         transport = MockTransport()
         from researcher.gateway import Gateway
+
         gw = Gateway(http_transport=transport)
 
         messages = [
@@ -96,6 +98,7 @@ class TestLiteLLMRouting:
 
         transport = MockTransport()
         from researcher.gateway import Gateway
+
         gw = Gateway(http_transport=transport)
 
         messages = [{"role": "user", "content": "hello"}]
@@ -110,6 +113,7 @@ class TestLiteLLMRouting:
 # NFR-SYN-004 — Cost emission
 # ---------------------------------------------------------------------------
 
+
 class TestCostEmission:
     """NFR-SYN-004: x-litellm-response-cost header → cost_usd."""
 
@@ -121,6 +125,7 @@ class TestCostEmission:
 
         transport = MockTransport(cost_header="0.0042")
         from researcher.gateway import Gateway
+
         gw = Gateway(http_transport=transport)
 
         messages = [{"role": "user", "content": "hello"}]
@@ -135,6 +140,7 @@ class TestCostEmission:
 
         transport = MockTransport(cost_header=None)
         from researcher.gateway import Gateway
+
         gw = Gateway(http_transport=transport)
 
         messages = [{"role": "user", "content": "hello"}]
@@ -150,6 +156,7 @@ class TestCostEmission:
 
         transport = MockTransport(cost_header="notanumber")
         from researcher.gateway import Gateway
+
         gw = Gateway(http_transport=transport)
 
         messages = [{"role": "user", "content": "hello"}]

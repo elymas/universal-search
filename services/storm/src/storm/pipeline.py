@@ -54,8 +54,7 @@ class DeadlineExceededError(Exception):
         self.elapsed_ms = elapsed_ms
         self.partial_sections_completed = partial_sections_completed
         super().__init__(
-            f"deadline_exceeded: elapsed_ms={elapsed_ms}, "
-            f"partial_sections_completed={partial_sections_completed}"
+            f"deadline_exceeded: elapsed_ms={elapsed_ms}, partial_sections_completed={partial_sections_completed}"
         )
 
 
@@ -73,9 +72,7 @@ class BudgetExceededError(Exception):
     ) -> None:
         self.cost_usd = cost_usd
         self.cap_usd = cap_usd
-        super().__init__(
-            f"budget_exceeded: cost_usd={cost_usd}, cap_usd={cap_usd}"
-        )
+        super().__init__(f"budget_exceeded: cost_usd={cost_usd}, cap_usd={cap_usd}")
 
 
 # ---------------------------------------------------------------------------
@@ -98,9 +95,7 @@ def compute_effective_deadline_ms(
     # @MX:NOTE: [AUTO] Per-call deadline clamping with structured warning.
     """
     if ceiling_ms is None:
-        ceiling_ms = int(
-            os.environ.get("STORM_MAX_LATENCY_MS", str(_DEFAULT_MAX_LATENCY_MS))
-        )
+        ceiling_ms = int(os.environ.get("STORM_MAX_LATENCY_MS", str(_DEFAULT_MAX_LATENCY_MS)))
 
     if request_max_ms is None:
         return ceiling_ms

@@ -80,7 +80,12 @@ class TestEmbedResponse:
         schema = EmbedResponse.model_json_schema()
         props = schema["properties"]
         required_keys = {
-            "request_id", "model", "model_version", "device",
-            "latency_ms", "cache_hits", "cache_misses",
+            "request_id",
+            "model",
+            "model_version",
+            "device",
+            "latency_ms",
+            "cache_hits",
+            "cache_misses",
         }
         assert required_keys.issubset(props.keys())

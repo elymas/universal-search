@@ -6,13 +6,11 @@ NFR-SYN-001, NFR-SYN-003.
 
 from __future__ import annotations
 
-import json
 import os
 import time
 import unittest.mock as mock
 from typing import Any
 
-import httpx
 import pytest
 from fastapi.testclient import TestClient
 
@@ -52,6 +50,7 @@ def _make_request(query: str = "hello world", lang: str = "en", docs_count: int 
 # REQ-SYN-001 — /synthesize endpoint contract
 # ---------------------------------------------------------------------------
 
+
 class TestSynthesizeEndpointContract:
     """REQ-SYN-001: POST /synthesize shape and validation."""
 
@@ -76,6 +75,7 @@ class TestSynthesizeEndpointContract:
     def test_synthesize_response_shape_matches_schema(self, client_with_mock_llm: TestClient) -> None:
         """Returned JSON validates against SynthesizeResponse schema."""
         from researcher.models import SynthesizeResponse
+
         req = _make_request()
         resp = client_with_mock_llm.post("/synthesize", json=req)
         assert resp.status_code == 200
@@ -95,6 +95,7 @@ class TestSynthesizeEndpointContract:
 # ---------------------------------------------------------------------------
 # REQ-SYN-003 — Degraded mode
 # ---------------------------------------------------------------------------
+
 
 class TestDegradedMode:
     """REQ-SYN-003: When LiteLLM is unreachable, return bullet-list payload."""
@@ -146,6 +147,7 @@ class TestDegradedMode:
 # REQ-SYN-004 — Empty input rejection
 # ---------------------------------------------------------------------------
 
+
 class TestEmptyInputRejection:
     """REQ-SYN-004: Empty query or zero docs returns 400."""
 
@@ -178,6 +180,7 @@ class TestEmptyInputRejection:
     def test_empty_input_logs_warn(self, client_with_mock_llm: TestClient, caplog: pytest.LogCaptureFixture) -> None:
         """Empty input emits exactly one WARN log with request_id and error."""
         import logging
+
         req = _make_request(query="")
         req["request_id"] = "req-warn-test"
         with caplog.at_level(logging.WARNING):
@@ -190,6 +193,7 @@ class TestEmptyInputRejection:
 # ---------------------------------------------------------------------------
 # REQ-SYN-007 — Language hint
 # ---------------------------------------------------------------------------
+
 
 class TestLanguageHint:
     """REQ-SYN-007: lang hint is passed into the LLM prompt."""
@@ -235,6 +239,7 @@ class TestLanguageHint:
 # NFR-SYN-001 — p50 latency (slow test, skipped by default)
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.slow
 class TestP50Latency:
     """NFR-SYN-001: p50 latency <= 8s with stub LiteLLM."""
@@ -258,12 +263,14 @@ class TestP50Latency:
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture()
 def client_plain() -> TestClient:
     """TestClient without any LLM mocking."""
     os.environ.setdefault("LITELLM_BASE_URL", "http://litellm-test:4000")
     os.environ.setdefault("LITELLM_API_KEY", "test-key")
     from researcher.app import app
+
     return TestClient(app)
 
 
@@ -273,8 +280,8 @@ def client_with_mock_llm(monkeypatch: pytest.MonkeyPatch) -> TestClient:
     os.environ["LITELLM_BASE_URL"] = "http://litellm-test:4000"
     os.environ["LITELLM_API_KEY"] = "test-key"
 
-    from researcher.app import app
     from researcher import models
+    from researcher.app import app
 
     async def _mock_synthesize(req: models.SynthesizeRequest, gateway: Any) -> models.SynthesizeResponse:
         citations = [
@@ -306,16 +313,15 @@ def client_degraded(monkeypatch: pytest.MonkeyPatch) -> TestClient:
     os.environ["LITELLM_BASE_URL"] = "http://litellm-test:4000"
     os.environ["LITELLM_API_KEY"] = "test-key"
 
-    from researcher.app import app
     from researcher import models
+    from researcher.app import app
 
     async def _mock_synthesize_degraded(req: models.SynthesizeRequest, gateway: Any) -> models.SynthesizeResponse:
         """Simulate degraded mode: build bullet-list without calling LLM."""
-        lines = [f"[{i+1}] {doc.title} — {doc.url}" for i, doc in enumerate(req.docs)]
+        lines = [f"[{i + 1}] {doc.title} — {doc.url}" for i, doc in enumerate(req.docs)]
         text = "\n".join(lines)
         citations = [
-            models.Citation(marker=i + 1, doc_id=doc.id, url=doc.url, title=doc.title)
-            for i, doc in enumerate(req.docs)
+            models.Citation(marker=i + 1, doc_id=doc.id, url=doc.url, title=doc.title) for i, doc in enumerate(req.docs)
         ]
         return models.SynthesizeResponse(
             request_id=req.request_id,
