@@ -30,6 +30,21 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Set up pnpm (required by eslint pre-commit hook)
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Set up Node.js (required by pnpm + eslint pre-commit hook)
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: "web/.nvmrc"
+          cache: "pnpm"
+          cache-dependency-path: "web/pnpm-lock.yaml"
+
+      - name: Install web dependencies (required so `pnpm exec eslint` resolves)
+        run: pnpm --dir web install --frozen-lockfile
+
       - name: Install hadolint binary (required by hadolint pre-commit hook)
         run: |
           sudo curl -sSL -o /usr/local/bin/hadolint \
