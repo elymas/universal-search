@@ -19,23 +19,23 @@ const (
 	EventAuthFail   EventType = "auth.fail"
 
 	// RBAC category (AUTH-002).
-	EventRBACAllow      EventType = "rbac.allow"
-	EventRBACDeny       EventType = "rbac.deny"
+	EventRBACAllow        EventType = "rbac.allow"
+	EventRBACDeny         EventType = "rbac.deny"
 	EventRBACPolicyChange EventType = "rbac.policy_change"
 
 	// Query category (synthesis handler).
-	EventQuerySubmit  EventType = "query.submit"
+	EventQuerySubmit   EventType = "query.submit"
 	EventQueryComplete EventType = "query.complete"
-	EventQueryFail    EventType = "query.fail"
+	EventQueryFail     EventType = "query.fail"
 
 	// Deep category (DEEP pipeline).
-	EventDeepStart   EventType = "deep.start"
+	EventDeepStart    EventType = "deep.start"
 	EventDeepComplete EventType = "deep.complete"
-	EventDeepFail    EventType = "deep.fail"
+	EventDeepFail     EventType = "deep.fail"
 
 	// Cost category (DEEP-004 / LiteLLM).
-	EventCapEvaluation EventType = "cap.evaluation"
-	EventCostRecorded  EventType = "cost.recorded"
+	EventCapEvaluation  EventType = "cap.evaluation"
+	EventCostRecorded   EventType = "cost.recorded"
 	EventCostReconciled EventType = "cost.reconciled"
 
 	// Index category (IDX-001).
@@ -43,11 +43,11 @@ const (
 	EventIndexDelete EventType = "index.delete"
 
 	// Admin category.
-	EventAdminReplay    EventType = "admin.replay"
+	EventAdminReplay       EventType = "admin.replay"
 	EventAdminConfigChange EventType = "admin.config_change"
 
 	// System category (audit lifecycle).
-	EventAuditExport       EventType = "audit.export"
+	EventAuditExport        EventType = "audit.export"
 	EventAuditPartitionDrop EventType = "audit.partition_drop"
 )
 
@@ -77,7 +77,7 @@ type AuditEvent struct {
 	UserID    string                 `json:"user_id"`
 	TenantID  string                 `json:"tenant_id"`
 	TeamID    string                 `json:"team_id"`
-	RequestID string                `json:"request_id"`
+	RequestID string                 `json:"request_id"`
 	Source    Source                 `json:"source"`
 	Resource  string                 `json:"resource,omitempty"`
 	Action    string                 `json:"action,omitempty"`

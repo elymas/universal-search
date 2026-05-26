@@ -10,10 +10,10 @@ import (
 
 // mockDedupChecker implements DedupChecker for testing.
 type mockDedupChecker struct {
-	costLedgerIDs  map[string]bool
-	auditEventIDs  map[string]bool
-	costErr        error
-	auditErr       error
+	costLedgerIDs map[string]bool
+	auditEventIDs map[string]bool
+	costErr       error
+	auditErr      error
 }
 
 func (m *mockDedupChecker) ExistsInCostLedger(_ context.Context, requestID string) (bool, error) {
@@ -35,12 +35,12 @@ func (m *mockDedupChecker) ExistsInAuditEvents(_ context.Context, litellmRequest
 func TestReconcileFetchesSpendLogs(t *testing.T) {
 	logs := []SpendLog{
 		{
-			RequestID:       "litellm-req-001",
-			CallType:        "acompletion",
-			Model:           "claude-haiku-4-5",
-			PromptTokens:    800,
+			RequestID:        "litellm-req-001",
+			CallType:         "acompletion",
+			Model:            "claude-haiku-4-5",
+			PromptTokens:     800,
 			CompletionTokens: 300,
-			Spend:           0.00184,
+			Spend:            0.00184,
 		},
 	}
 

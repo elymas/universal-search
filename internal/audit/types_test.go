@@ -105,17 +105,17 @@ func TestAllEventTypes_returnsKnownCount(t *testing.T) {
 // TestAuditEvent_fields verifies AuditEvent struct field mapping.
 func TestAuditEvent_fields(t *testing.T) {
 	evt := AuditEvent{
-		EventType:  EventAuthLogin,
-		Decision:   DecisionAllow,
-		UserID:     "alice@example.com",
-		TenantID:   "default",
-		TeamID:     "engineering",
-		RequestID:  "req_001",
-		Source:     SourceGo,
-		Resource:   "auth:login",
-		Action:     "login",
-		IP:         "192.168.1.1",
-		Payload:    map[string]interface{}{"method": "oidc"},
+		EventType: EventAuthLogin,
+		Decision:  DecisionAllow,
+		UserID:    "alice@example.com",
+		TenantID:  "default",
+		TeamID:    "engineering",
+		RequestID: "req_001",
+		Source:    SourceGo,
+		Resource:  "auth:login",
+		Action:    "login",
+		IP:        "192.168.1.1",
+		Payload:   map[string]interface{}{"method": "oidc"},
 	}
 
 	if evt.EventType != EventAuthLogin {
@@ -136,8 +136,8 @@ func TestAuditEvent_fields(t *testing.T) {
 // REQ-AUTH3-004: only query.submit, deep.start are replayable.
 func TestReplayableEventTypes(t *testing.T) {
 	tests := []struct {
-		name          string
-		eventType     EventType
+		name           string
+		eventType      EventType
 		wantReplayable bool
 	}{
 		{"query.submit is replayable", EventQuerySubmit, true},

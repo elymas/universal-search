@@ -56,11 +56,11 @@ func ServeBypassed(w http.ResponseWriter) {
 
 // CacheServeResult holds the result of a cache serve operation for observability.
 type CacheServeResult struct {
-	DocID     string
-	Outcome   LookupOutcome
-	Age       time.Duration
-	Score     float64
-	Latency   time.Duration
+	DocID   string
+	Outcome LookupOutcome
+	Age     time.Duration
+	Score   float64
+	Latency time.Duration
 }
 
 // MarshalJSONForResponse ensures the response body is valid JSON.

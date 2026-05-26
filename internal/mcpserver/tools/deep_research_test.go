@@ -19,11 +19,11 @@ import (
 
 // mockCapChecker records calls and returns a configurable result.
 type mockCapChecker struct {
-	mu           sync.Mutex
-	called       bool
-	calledWith   capCallArgs
-	result       costguard.CapResult
-	err          error
+	mu         sync.Mutex
+	called     bool
+	calledWith capCallArgs
+	result     costguard.CapResult
+	err        error
 }
 
 type capCallArgs struct {
@@ -63,7 +63,7 @@ func (m *mockPipelineRunner) run(ctx context.Context, req deepagent.PipelineRequ
 
 // mockNotifier captures progress notifications.
 type mockNotifier struct {
-	mu          sync.Mutex
+	mu            sync.Mutex
 	notifications []notifyEntry
 }
 

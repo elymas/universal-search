@@ -8,9 +8,9 @@ import (
 
 // ShutdownResult captures the outcome of a graceful shutdown.
 type ShutdownResult struct {
-	reason        string
-	inflight      int
-	durationMs    int64
+	reason     string
+	inflight   int
+	durationMs int64
 }
 
 // gracefulShutdown performs a graceful shutdown:

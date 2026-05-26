@@ -26,7 +26,7 @@ func (e *TokenEntry) NeedsRefresh(refreshMargin time.Duration) bool {
 // TokenCache provides in-process caching of Meili tenant tokens.
 // REQ-IDX4-009: sync.Map + per-entry expires_at + refresh worker + sync.Once per triplet.
 type TokenCache struct {
-	mu    sync.RWMutex
+	mu      sync.RWMutex
 	entries map[cacheKey]*TokenEntry
 	// onceMap ensures single issuance per (team, user, keyUID) triplet.
 	onceMap sync.Map // cacheKey -> *sync.Once
@@ -39,9 +39,9 @@ type TokenCache struct {
 }
 
 type cacheKey struct {
-	TeamID   string
-	UserID   string
-	KeyUID   string
+	TeamID string
+	UserID string
+	KeyUID string
 }
 
 // TokenCacheConfig configures the token cache.

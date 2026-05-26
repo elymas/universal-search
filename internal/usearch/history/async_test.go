@@ -43,7 +43,7 @@ func TestAsyncWriterDropOnFullBuffer(t *testing.T) {
 	// Buffer size 1 -- will drop after first write fills it.
 	writer := history.NewAsyncWriter(backend, 1, logger)
 	for i := 0; i < 5; i++ {
-		writer.Write(newTestEntry("drop-"+string(rune('0'+i))))
+		writer.Write(newTestEntry("drop-" + string(rune('0'+i))))
 	}
 	writer.Close(2 * time.Second)
 
@@ -95,7 +95,7 @@ func TestAsyncWriterConcurrentWrites(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		go func(n int) {
 			defer func() { done <- struct{}{} }()
-			writer.Write(newTestEntry("concurrent-"+string(rune('0'+n))))
+			writer.Write(newTestEntry("concurrent-" + string(rune('0'+n))))
 		}(i)
 	}
 

@@ -22,13 +22,13 @@ import (
 // for SDK upgrade and future transport plugins.
 // @MX:SPEC: SPEC-MCP-001
 type Server struct {
-	cfg       Config
-	obs       *obs.Obs
-	sdk       *mcp.Server
-	reg       *adapters.Registry
-	cache     *tools.DocCache
-	capCheck  tools.CapChecker
-	pipeline  tools.PipelineFn
+	cfg      Config
+	obs      *obs.Obs
+	sdk      *mcp.Server
+	reg      *adapters.Registry
+	cache    *tools.DocCache
+	capCheck tools.CapChecker
+	pipeline tools.PipelineFn
 }
 
 // New creates a new MCP server with the given configuration and observability bundle.
@@ -140,4 +140,3 @@ func (s *Server) logStartup() {
 		"transport", s.cfg.Transport,
 	)
 }
-

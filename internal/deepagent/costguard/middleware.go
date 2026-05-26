@@ -12,8 +12,8 @@ import (
 type contextKey string
 
 const (
-	UserIDKey   contextKey = "costguard.user_id"
-	TenantIDKey contextKey = "costguard.tenant_id"
+	UserIDKey    contextKey = "costguard.user_id"
+	TenantIDKey  contextKey = "costguard.tenant_id"
 	RequestIDKey contextKey = "costguard.request_id"
 )
 

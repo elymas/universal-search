@@ -12,8 +12,8 @@ import (
 	"os"
 
 	"github.com/elymas/universal-search/cmd/usearch-api/handlers"
-	adminapi "github.com/elymas/universal-search/internal/api/admin"
 	"github.com/elymas/universal-search/internal/adapters"
+	adminapi "github.com/elymas/universal-search/internal/api/admin"
 	"github.com/elymas/universal-search/internal/obs"
 )
 

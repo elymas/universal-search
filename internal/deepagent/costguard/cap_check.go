@@ -22,10 +22,10 @@ type RedisClient interface {
 // CapChecker performs atomic cap evaluation using a Redis Lua script.
 // REQ-DEEP4-009: single Redis call covers eval + increment + TTL refresh.
 type CapChecker struct {
-	redis   RedisClient
-	cfg     Config
-	ttl     time.Duration
-	once    sync.Once
+	redis     RedisClient
+	cfg       Config
+	ttl       time.Duration
+	once      sync.Once
 	scriptSHA string
 }
 

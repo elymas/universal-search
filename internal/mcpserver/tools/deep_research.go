@@ -53,14 +53,14 @@ func DeepResearchHandler(capCheck CapChecker, pipeline PipelineFn, notify Notify
 		// Stage 0: validate input.
 		if input.Query == "" {
 			_ = writeAuditLine(audit, auditEntry{
-				EventType:     "mcp.tool_call",
-				ToolName:      "deep_research",
-				MCPTransport:  "stdio",
-				ClientName:    "unknown",
-				Timestamp:     start.UTC().Format(time.RFC3339),
-				RequestID:     requestID,
-				Outcome:       "error_invalid",
-				DurationMs:    time.Since(start).Milliseconds(),
+				EventType:    "mcp.tool_call",
+				ToolName:     "deep_research",
+				MCPTransport: "stdio",
+				ClientName:   "unknown",
+				Timestamp:    start.UTC().Format(time.RFC3339),
+				RequestID:    requestID,
+				Outcome:      "error_invalid",
+				DurationMs:   time.Since(start).Milliseconds(),
 			})
 			return nil, DeepResearchOutput{}, InputSchemaViolationError("query", "required")
 		}
@@ -77,16 +77,16 @@ func DeepResearchHandler(capCheck CapChecker, pipeline PipelineFn, notify Notify
 
 		if !capResult.Allowed {
 			_ = writeAuditLine(audit, auditEntry{
-				EventType:     "mcp.tool_call",
-				ToolName:      "deep_research",
-				MCPTransport:  "stdio",
-				ClientName:    "unknown",
-				Timestamp:     start.UTC().Format(time.RFC3339),
-				RequestID:     requestID,
-				Outcome:       "capped",
-				DurationMs:    time.Since(start).Milliseconds(),
-				CapDimension:  string(capResult.Exceeded),
-				Remaining:     capResult.RemainingCalls,
+				EventType:    "mcp.tool_call",
+				ToolName:     "deep_research",
+				MCPTransport: "stdio",
+				ClientName:   "unknown",
+				Timestamp:    start.UTC().Format(time.RFC3339),
+				RequestID:    requestID,
+				Outcome:      "capped",
+				DurationMs:   time.Since(start).Milliseconds(),
+				CapDimension: string(capResult.Exceeded),
+				Remaining:    capResult.RemainingCalls,
 			})
 			return nil, DeepResearchOutput{}, CapExceededError(
 				string(capResult.Exceeded),
@@ -111,14 +111,14 @@ func DeepResearchHandler(capCheck CapChecker, pipeline PipelineFn, notify Notify
 		result, err := pipeline(ctx, req)
 		if err != nil {
 			_ = writeAuditLine(audit, auditEntry{
-				EventType:     "mcp.tool_call",
-				ToolName:      "deep_research",
-				MCPTransport:  "stdio",
-				ClientName:    "unknown",
-				Timestamp:     start.UTC().Format(time.RFC3339),
-				RequestID:     requestID,
-				Outcome:       "error_pipeline_failed",
-				DurationMs:    time.Since(start).Milliseconds(),
+				EventType:    "mcp.tool_call",
+				ToolName:     "deep_research",
+				MCPTransport: "stdio",
+				ClientName:   "unknown",
+				Timestamp:    start.UTC().Format(time.RFC3339),
+				RequestID:    requestID,
+				Outcome:      "error_pipeline_failed",
+				DurationMs:   time.Since(start).Milliseconds(),
 			})
 			return nil, DeepResearchOutput{}, MapError(err)
 		}
@@ -138,14 +138,14 @@ func DeepResearchHandler(capCheck CapChecker, pipeline PipelineFn, notify Notify
 			outcome = "empty_corpus"
 		}
 		_ = writeAuditLine(audit, auditEntry{
-			EventType:     "mcp.tool_call",
-			ToolName:      "deep_research",
-			MCPTransport:  "stdio",
-			ClientName:    "unknown",
-			Timestamp:     start.UTC().Format(time.RFC3339),
-			RequestID:     requestID,
-			Outcome:       outcome,
-			DurationMs:    time.Since(start).Milliseconds(),
+			EventType:    "mcp.tool_call",
+			ToolName:     "deep_research",
+			MCPTransport: "stdio",
+			ClientName:   "unknown",
+			Timestamp:    start.UTC().Format(time.RFC3339),
+			RequestID:    requestID,
+			Outcome:      outcome,
+			DurationMs:   time.Since(start).Milliseconds(),
 		})
 
 		return nil, output, nil

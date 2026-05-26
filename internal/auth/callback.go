@@ -9,11 +9,11 @@ import (
 // RateLimiter provides per-IP rate limiting using a sliding window.
 // Falls back to in-memory when Redis is unavailable.
 type RateLimiter struct {
-	mu       sync.Mutex
-	buckets  map[string]*bucket
-	limit    int
-	window   time.Duration
-	client   RedisClient
+	mu      sync.Mutex
+	buckets map[string]*bucket
+	limit   int
+	window  time.Duration
+	client  RedisClient
 }
 
 type bucket struct {

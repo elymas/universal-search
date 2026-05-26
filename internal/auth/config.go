@@ -7,33 +7,33 @@ import (
 
 // OIDCConfig holds OIDC-specific configuration.
 type OIDCConfig struct {
-	Issuer            string        `yaml:"issuer" json:"issuer"`
-	Audience          []string      `yaml:"audience" json:"audience"`
-	AllowPrivateIssuer bool         `yaml:"allow_private_issuer" json:"allow_private_issuer"`
-	DiscoveryTimeout  time.Duration `yaml:"-" json:"-"`
+	Issuer             string        `yaml:"issuer" json:"issuer"`
+	Audience           []string      `yaml:"audience" json:"audience"`
+	AllowPrivateIssuer bool          `yaml:"allow_private_issuer" json:"allow_private_issuer"`
+	DiscoveryTimeout   time.Duration `yaml:"-" json:"-"`
 }
 
 // Config holds the complete authentication configuration.
 type Config struct {
-	Mode            AuthMode             `yaml:"mode" json:"mode"`
-	OIDC            OIDCConfig           `yaml:"oidc" json:"oidc"`
-	ClockSkew       time.Duration        `yaml:"clock_skew_seconds" json:"clock_skew_seconds"`
-	Tenant          TenantConfig         `yaml:"tenant" json:"tenant"`
-	Revocation      RevocationConfig     `yaml:"revocation" json:"revocation"`
-	Callback        CallbackConfig       `yaml:"callback" json:"callback"`
-	AllowEndpoints  []string             `yaml:"allow_endpoints" json:"allow_endpoints"`
+	Mode           AuthMode         `yaml:"mode" json:"mode"`
+	OIDC           OIDCConfig       `yaml:"oidc" json:"oidc"`
+	ClockSkew      time.Duration    `yaml:"clock_skew_seconds" json:"clock_skew_seconds"`
+	Tenant         TenantConfig     `yaml:"tenant" json:"tenant"`
+	Revocation     RevocationConfig `yaml:"revocation" json:"revocation"`
+	Callback       CallbackConfig   `yaml:"callback" json:"callback"`
+	AllowEndpoints []string         `yaml:"allow_endpoints" json:"allow_endpoints"`
 }
 
 // TenantConfig holds tenant resolution configuration.
 type TenantConfig struct {
-	Mode           TenantMode `yaml:"mode" json:"mode"`
-	ClaimPath      string     `yaml:"claim_path" json:"claim_path"`
-	DefaultTenantID string    `yaml:"default_tenant_id" json:"default_tenant_id"`
+	Mode            TenantMode `yaml:"mode" json:"mode"`
+	ClaimPath       string     `yaml:"claim_path" json:"claim_path"`
+	DefaultTenantID string     `yaml:"default_tenant_id" json:"default_tenant_id"`
 }
 
 // RevocationConfig holds token revocation configuration.
 type RevocationConfig struct {
-	Enabled     bool                 `yaml:"enabled" json:"enabled"`
+	Enabled     bool                  `yaml:"enabled" json:"enabled"`
 	FailureMode RevocationFailureMode `yaml:"failure_mode" json:"failure_mode"`
 }
 

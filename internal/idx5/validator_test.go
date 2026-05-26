@@ -106,8 +106,8 @@ func TestCitationRevalidationEagerTopNLimit(t *testing.T) {
 
 // FeedbackStore records force_stale operations for testing.
 type FeedbackStore struct {
-	mu       sync.Mutex
-	updated  map[string]bool // doc_id -> force_stale set
+	mu      sync.Mutex
+	updated map[string]bool // doc_id -> force_stale set
 }
 
 func NewFeedbackStore() *FeedbackStore {

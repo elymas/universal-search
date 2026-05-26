@@ -19,8 +19,8 @@ type CircuitState int
 
 const (
 	CircuitClosed   CircuitState = iota // Normal operation
-	CircuitOpen                          // Failing, reject calls
-	CircuitHalfOpen                      // Testing recovery
+	CircuitOpen                         // Failing, reject calls
+	CircuitHalfOpen                     // Testing recovery
 )
 
 // HaikuScreen uses a Haiku-tier model to pre-screen /deep requests.
@@ -36,35 +36,35 @@ type HaikuScreen struct {
 	failOpenOnTimeout bool
 
 	// Circuit breaker state.
-	mu                sync.Mutex
-	state             CircuitState
-	consecutiveFails  int
-	maxFails          int
-	openUntil         time.Time
-	openDuration      time.Duration
+	mu               sync.Mutex
+	state            CircuitState
+	consecutiveFails int
+	maxFails         int
+	openUntil        time.Time
+	openDuration     time.Duration
 }
 
 // HaikuScreenConfig holds configuration for the Haiku pre-screen.
 type HaikuScreenConfig struct {
-	Model             string
-	ThresholdProceed  int
-	ThresholdSuggest  int
-	TimeoutMs         int
-	FailOpenOnTimeout bool
+	Model               string
+	ThresholdProceed    int
+	ThresholdSuggest    int
+	TimeoutMs           int
+	FailOpenOnTimeout   bool
 	MaxConsecutiveFails int
-	OpenDurationMs    int
+	OpenDurationMs      int
 }
 
 // DefaultHaikuScreenConfig returns defaults per SPEC-DEEP-004 §3.
 func DefaultHaikuScreenConfig() HaikuScreenConfig {
 	return HaikuScreenConfig{
-		Model:             "claude-haiku-4-5",
-		ThresholdProceed:  6,
-		ThresholdSuggest:  4,
-		TimeoutMs:         200,
-		FailOpenOnTimeout: true,
+		Model:               "claude-haiku-4-5",
+		ThresholdProceed:    6,
+		ThresholdSuggest:    4,
+		TimeoutMs:           200,
+		FailOpenOnTimeout:   true,
 		MaxConsecutiveFails: 5,
-		OpenDurationMs:    30000,
+		OpenDurationMs:      30000,
 	}
 }
 
@@ -99,17 +99,17 @@ func NewHaikuScreen(llm LLMCaller, cfg HaikuScreenConfig) *HaikuScreen {
 type ScreenOutcome int
 
 const (
-	ScreenProceed     ScreenOutcome = iota // Score >= proceed_threshold
-	ScreenSuggestBasic                     // Score >= suggest_threshold but < proceed
-	ScreenReject                           // Score < suggest_threshold
-	ScreenFailOpen                         // Circuit breaker or timeout
+	ScreenProceed      ScreenOutcome = iota // Score >= proceed_threshold
+	ScreenSuggestBasic                      // Score >= suggest_threshold but < proceed
+	ScreenReject                            // Score < suggest_threshold
+	ScreenFailOpen                          // Circuit breaker or timeout
 )
 
 // ScreenResponse holds the result of the screen evaluation.
 type ScreenResponse struct {
-	Outcome      ScreenOutcome
-	Score        int
-	Rationale    string
+	Outcome       ScreenOutcome
+	Score         int
+	Rationale     string
 	SuggestedMode string
 }
 

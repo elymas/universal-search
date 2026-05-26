@@ -43,11 +43,11 @@ type ReplayRateLimiter interface {
 // @MX:WARN: [AUTO] Admin can re-execute arbitrary queries
 // @MX:REASON: If AUTH-002 permission validation is bypassed, admin could re-execute all queries in audit_events. Verify RBAC check order when changing this function.
 type ReplayHandler struct {
-	emitter    *Emitter
-	fetcher    EventFetcher
-	rateLimit  ReplayRateLimiter
-	metrics    *Metrics
-	cfg        Config
+	emitter   *Emitter
+	fetcher   EventFetcher
+	rateLimit ReplayRateLimiter
+	metrics   *Metrics
+	cfg       Config
 }
 
 // NewReplayHandler creates a new replay handler.

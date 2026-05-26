@@ -67,8 +67,8 @@ func TestRouterCollectorsCardinality(t *testing.T) {
 			"adapter_class", "adapter", "outcome",
 			"version", "commit", "go_version",
 			"provider", "model",
-			"mode",         // SPEC-IDX-002; bounded to 4 values.
-			"store", "op",  // SPEC-IDX-001; bounded.
+			"mode",        // SPEC-IDX-002; bounded to 4 values.
+			"store", "op", // SPEC-IDX-001; bounded.
 			"shard",        // SPEC-IDX-003; bounded to ko/default.
 			"agent",        // SPEC-DEEP-002; bounded to 4 values.
 			"result",       // SPEC-DEEP-002; bounded to 3 values.

@@ -119,10 +119,10 @@ func TestScreenScoreThresholds(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name          string
-		score         int
-		wantOutcome   ScreenOutcome
-		wantMode      string
+		name        string
+		score       int
+		wantOutcome ScreenOutcome
+		wantMode    string
 	}{
 		{
 			name:        "score_7_proceeds",

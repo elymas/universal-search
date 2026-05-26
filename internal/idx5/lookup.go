@@ -42,8 +42,8 @@ func Lookup(ctx context.Context, emb Embedder, search SearchFunc, cfg Config, qu
 	vec, err := emb.Embed(ctx, queryText)
 	if err != nil {
 		return &LookupResult{
-			Outcome: OutcomeMiss,
-			Score:   0,
+			Outcome:  OutcomeMiss,
+			Score:    0,
 			Duration: time.Since(start),
 		}, err
 	}
@@ -57,8 +57,8 @@ func Lookup(ctx context.Context, emb Embedder, search SearchFunc, cfg Config, qu
 	})
 	if err != nil {
 		return &LookupResult{
-			Outcome: OutcomeMiss,
-			Score:   0,
+			Outcome:  OutcomeMiss,
+			Score:    0,
 			Duration: time.Since(start),
 		}, err
 	}
@@ -147,7 +147,7 @@ func (l *Lookuper) LookupWithBypass(ctx context.Context, queryText, teamID strin
 // docToCachedAnswer reconstructs a CachedAnswer from a Qdrant search result.
 func docToCachedAnswer(doc *types.NormalizedDoc, score float64) *CachedAnswer {
 	ca := &CachedAnswer{
-		DocID:     doc.ID,
+		DocID:      doc.ID,
 		Similarity: score,
 	}
 	if doc.Metadata != nil {

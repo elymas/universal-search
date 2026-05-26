@@ -120,8 +120,8 @@ func TestForwardCompatWithAUTH001Keys(t *testing.T) {
 	assert.Equal(t, "tenant-1", costguard.TenantIDFromContext(ctx))
 
 	// AUTH-002 keys are additive.
-	assert.Equal(t, "", TeamIDFromContext(ctx))  // not set
-	assert.Nil(t, RolesFromContext(ctx))          // not set
+	assert.Equal(t, "", TeamIDFromContext(ctx)) // not set
+	assert.Nil(t, RolesFromContext(ctx))        // not set
 
 	// Set AUTH-002 keys — no interference with AUTH-001.
 	ctx = context.WithValue(ctx, TeamIDKey, "engineering")

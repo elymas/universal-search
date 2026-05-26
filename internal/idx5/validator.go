@@ -32,8 +32,8 @@ func RevalidateCitations(ctx context.Context, citations []Citation, cfg Config) 
 
 	// Probe URLs in parallel
 	type probeResult struct {
-		index  int
-		is4xx  bool
+		index int
+		is4xx bool
 	}
 
 	var wg sync.WaitGroup

@@ -20,9 +20,9 @@ type FeedbackStorer interface {
 // FeedbackHandler processes thumbs-down feedback.
 // REQ-IDX5-008: POST /feedback {score: -1} -> force_stale=TRUE.
 type FeedbackHandler struct {
-	store       FeedbackStorer
-	lru         *RequestLRU
-	unmappedMu  sync.Mutex
+	store         FeedbackStorer
+	lru           *RequestLRU
+	unmappedMu    sync.Mutex
 	unmappedCount int
 }
 

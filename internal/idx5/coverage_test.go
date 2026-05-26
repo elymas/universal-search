@@ -156,12 +156,12 @@ func TestLookupHardStaleResult(t *testing.T) {
 					RetrievedAt: now,
 					DocType:     DocTypeCachedAnswer,
 					Metadata: map[string]any{
-						"team_id":      "team-T",
-						"query_hash":   "abc",
-						"category":     "web",
-						"ttl_seconds":  int64(3600),
-						"created_at":   now.Add(-7200 * time.Second).Format(time.RFC3339), // 2h ago
-						"force_stale":  false,
+						"team_id":     "team-T",
+						"query_hash":  "abc",
+						"category":    "web",
+						"ttl_seconds": int64(3600),
+						"created_at":  now.Add(-7200 * time.Second).Format(time.RFC3339), // 2h ago
+						"force_stale": false,
 					},
 				},
 				Score: 0.95,

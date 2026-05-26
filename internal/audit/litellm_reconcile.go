@@ -88,12 +88,12 @@ func (r *Reconciler) Reconcile(ctx context.Context) error {
 		// INSERT as cost.reconciled.
 		// REQ-AUTH3-003: cost_ledger SHALL NOT be mutated.
 		payload := map[string]interface{}{
-			"litellm_request_id":  log.RequestID,
-			"model":               log.Model,
-			"prompt_tokens":       log.PromptTokens,
-			"completion_tokens":   log.CompletionTokens,
-			"spend_usd":           log.Spend,
-			"call_type":           log.CallType,
+			"litellm_request_id": log.RequestID,
+			"model":              log.Model,
+			"prompt_tokens":      log.PromptTokens,
+			"completion_tokens":  log.CompletionTokens,
+			"spend_usd":          log.Spend,
+			"call_type":          log.CallType,
 		}
 		if log.Metadata != nil {
 			payload["metadata"] = log.Metadata

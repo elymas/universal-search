@@ -14,10 +14,10 @@ import (
 // Validator performs JWT token validation against OIDC provider.
 // REQ-AUTH1-003: signature, iss exact, aud whitelist, exp+skew, nbf+skew, sub non-empty.
 type Validator struct {
-	provider    *oidc.Provider
-	verifier    *oidc.IDTokenVerifier
-	clockSkew   time.Duration
-	audiences   []string
+	provider  *oidc.Provider
+	verifier  *oidc.IDTokenVerifier
+	clockSkew time.Duration
+	audiences []string
 }
 
 // NewValidator creates a JWT validator for the given OIDC provider.
@@ -203,14 +203,14 @@ func extractAudience(claims map[string]interface{}) []string {
 
 // Sentinel errors for each failure reason.
 var (
-	ErrExpired           = failureReasonError{ReasonExpired}
-	ErrInvalidSignature  = failureReasonError{ReasonInvalidSignature}
-	ErrInvalidAudience   = failureReasonError{ReasonInvalidAudience}
-	ErrInvalidIssuer     = failureReasonError{ReasonInvalidIssuer}
-	ErrInvalidNbf        = failureReasonError{ReasonInvalidNbf}
-	ErrMalformed         = failureReasonError{ReasonMalformed}
-	ErrRevoked           = failureReasonError{ReasonRevoked}
-	ErrMissingToken      = failureReasonError{ReasonMissingToken}
+	ErrExpired               = failureReasonError{ReasonExpired}
+	ErrInvalidSignature      = failureReasonError{ReasonInvalidSignature}
+	ErrInvalidAudience       = failureReasonError{ReasonInvalidAudience}
+	ErrInvalidIssuer         = failureReasonError{ReasonInvalidIssuer}
+	ErrInvalidNbf            = failureReasonError{ReasonInvalidNbf}
+	ErrMalformed             = failureReasonError{ReasonMalformed}
+	ErrRevoked               = failureReasonError{ReasonRevoked}
+	ErrMissingToken          = failureReasonError{ReasonMissingToken}
 	ErrRevocationUnavailable = failureReasonError{ReasonRevocationUnavailable}
 )
 
