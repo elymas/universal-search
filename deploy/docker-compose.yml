@@ -205,7 +205,11 @@ services:
     volumes:
       - embedder_models:/root/.cache/huggingface
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; r=urllib.request.urlopen('http://localhost:8082/health'); sys.exit(0 if r.status==200 else 1)\""]
+      test:
+        [
+          "CMD-SHELL",
+          'python -c "import urllib.request,sys; r=urllib.request.urlopen(''http://localhost:8082/health''); sys.exit(0 if r.status==200 else 1)"',
+        ]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -254,7 +258,11 @@ services:
     environment:
       TOKENIZER_KO_PORT: "8083"
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8083/health')\" || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          'python -c "import urllib.request; urllib.request.urlopen(''http://localhost:8083/health'')" || exit 1',
+        ]
       interval: 15s
       timeout: 5s
       retries: 5

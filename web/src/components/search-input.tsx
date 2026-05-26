@@ -26,7 +26,7 @@ export function SearchInput({ onSubmit, isLoading }: SearchInputProps) {
     setSelectedSources((prev) =>
       prev.includes(sourceId)
         ? prev.filter((s) => s !== sourceId)
-        : [...prev, sourceId]
+        : [...prev, sourceId],
     );
   }, []);
 
@@ -43,7 +43,7 @@ export function SearchInput({ onSubmit, isLoading }: SearchInputProps) {
         handleSubmit();
       }
     },
-    [handleSubmit]
+    [handleSubmit],
   );
 
   return (
@@ -73,7 +73,11 @@ export function SearchInput({ onSubmit, isLoading }: SearchInputProps) {
         </Button>
       </div>
 
-      <div className="flex flex-wrap gap-2" role="group" aria-label="Source filters">
+      <div
+        className="flex flex-wrap gap-2"
+        role="group"
+        aria-label="Source filters"
+      >
         {SOURCE_CATEGORIES.map((cat) => {
           const active = selectedSources.includes(cat.id);
           return (

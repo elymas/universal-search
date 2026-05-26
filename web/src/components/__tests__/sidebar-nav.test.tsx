@@ -16,9 +16,7 @@ describe("SidebarNav", () => {
 
     const links = screen.getAllByRole("link");
     // 4 nav links in the sidebar
-    const navLinks = links.filter(
-      (link) => link.closest("nav") !== null
-    );
+    const navLinks = links.filter((link) => link.closest("nav") !== null);
     expect(navLinks).toHaveLength(4);
     expect(navLinks[3]).toHaveTextContent("Admin");
   });
@@ -68,7 +66,7 @@ describe("SidebarNav", () => {
 
     // Overlay should be gone (close button should be back to open)
     expect(
-      screen.queryByRole("button", { name: /close menu/i })
+      screen.queryByRole("button", { name: /close menu/i }),
     ).not.toBeInTheDocument();
   });
 });

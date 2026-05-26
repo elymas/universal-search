@@ -30,17 +30,14 @@ export interface AdapterInfo {
 // @MX:REASON: Both streaming and buffered search paths depend on this
 export async function searchQuery(
   query: string,
-  sources?: string[]
+  sources?: string[],
 ): Promise<Response> {
   const params = new URLSearchParams({ q: query });
   if (sources?.length) params.set("sources", sources.join(","));
   return fetch(`${API_BASE}/api/query?${params}`);
 }
 
-export function searchStream(
-  query: string,
-  sources?: string[]
-): EventSource {
+export function searchStream(query: string, sources?: string[]): EventSource {
   const params = new URLSearchParams({ q: query });
   if (sources?.length) params.set("sources", sources.join(","));
   return new EventSource(`${API_BASE}/api/query/stream?${params}`);
@@ -117,7 +114,7 @@ export async function fetchAdminAdapters(): Promise<AdminAdapter[]> {
 
 export async function toggleAdapter(
   id: string,
-  enabled: boolean
+  enabled: boolean,
 ): Promise<AdminAdapter> {
   const res = await fetch(`${API_BASE}/api/admin/adapters/${id}/toggle`, {
     method: "POST",
@@ -141,7 +138,7 @@ export async function resyncAdapter(id: string): Promise<AdminAdapter> {
 }
 
 export async function fetchAdminAudit(
-  params: AuditQueryParams
+  params: AuditQueryParams,
 ): Promise<AuditResponse> {
   const searchParams = new URLSearchParams({
     limit: String(params.limit),
@@ -151,7 +148,7 @@ export async function fetchAdminAudit(
   if (params.errors_only) searchParams.set("errors_only", "true");
 
   const res = await fetch(
-    `${API_BASE}/api/admin/audit/queries?${searchParams}`
+    `${API_BASE}/api/admin/audit/queries?${searchParams}`,
   );
   if (!res.ok) {
     if (res.status === 403) {

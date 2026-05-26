@@ -23,14 +23,18 @@ from tokenizer_ko import __version__
 from tokenizer_ko.models import TokenizeRequest, TokenizeResponse
 from tokenizer_ko.obs import (
     OUTCOME_ERROR_INTERNAL,
-    OUTCOME_ERROR_INVALID,
     OUTCOME_SUCCESS,
     Timer,
     log_invalid_input,
     log_tokenize,
     setup_logging,
 )
-from tokenizer_ko.tokenize import MAX_INPUT_BYTES, create_tagger, get_dict_version, tokenize_text
+from tokenizer_ko.tokenize import (
+    MAX_INPUT_BYTES,
+    create_tagger,
+    get_dict_version,
+    tokenize_text,
+)
 
 logger = logging.getLogger("tokenizer_ko.app")
 

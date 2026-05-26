@@ -34,7 +34,7 @@ export function SidebarNav() {
               "hover:bg-accent hover:text-accent-foreground",
               active
                 ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground"
+                : "text-muted-foreground",
             )}
             aria-current={active ? "page" : undefined}
           >
@@ -72,7 +72,7 @@ export function SidebarNav() {
       <aside
         className={cn(
           "fixed md:static inset-y-0 left-0 z-40 w-56 border-r border-border bg-card flex flex-col transition-transform md:translate-x-0",
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
+          mobileOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
         {/* Logo */}

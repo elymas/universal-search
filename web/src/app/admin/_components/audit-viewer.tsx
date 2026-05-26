@@ -16,26 +16,29 @@ export function AuditViewer() {
   const [errorsOnly, setErrorsOnly] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const loadEntries = useCallback(async (newOffset: number, errOnly: boolean) => {
-    setLoading(true);
-    try {
-      const res = await fetchAdminAudit({
-        limit: PAGE_SIZE,
-        offset: newOffset,
-        errors_only: errOnly || undefined,
-      });
-      setEntries(res.entries);
-      setTotal(res.total);
-      setHasMore(res.has_more);
-    } catch {
-      // Silently handle — empty state will show
-      setEntries([]);
-      setTotal(0);
-      setHasMore(false);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const loadEntries = useCallback(
+    async (newOffset: number, errOnly: boolean) => {
+      setLoading(true);
+      try {
+        const res = await fetchAdminAudit({
+          limit: PAGE_SIZE,
+          offset: newOffset,
+          errors_only: errOnly || undefined,
+        });
+        setEntries(res.entries);
+        setTotal(res.total);
+        setHasMore(res.has_more);
+      } catch {
+        // Silently handle — empty state will show
+        setEntries([]);
+        setTotal(0);
+        setHasMore(false);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     // eslint-disable-next-line -- data fetch on dependency change triggers setState
@@ -88,13 +91,48 @@ export function AuditViewer() {
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-border bg-muted/50">
-                <th scope="col" className="px-3 py-2 text-xs font-medium text-muted-foreground">ID</th>
-                <th scope="col" className="px-3 py-2 text-xs font-medium text-muted-foreground">Timestamp</th>
-                <th scope="col" className="px-3 py-2 text-xs font-medium text-muted-foreground">Latency</th>
-                <th scope="col" className="px-3 py-2 text-xs font-medium text-muted-foreground">Tokens</th>
-                <th scope="col" className="px-3 py-2 text-xs font-medium text-muted-foreground">Sources</th>
-                <th scope="col" className="px-3 py-2 text-xs font-medium text-muted-foreground">Config</th>
-                <th scope="col" className="px-3 py-2 text-xs font-medium text-muted-foreground">Error</th>
+                <th
+                  scope="col"
+                  className="px-3 py-2 text-xs font-medium text-muted-foreground"
+                >
+                  ID
+                </th>
+                <th
+                  scope="col"
+                  className="px-3 py-2 text-xs font-medium text-muted-foreground"
+                >
+                  Timestamp
+                </th>
+                <th
+                  scope="col"
+                  className="px-3 py-2 text-xs font-medium text-muted-foreground"
+                >
+                  Latency
+                </th>
+                <th
+                  scope="col"
+                  className="px-3 py-2 text-xs font-medium text-muted-foreground"
+                >
+                  Tokens
+                </th>
+                <th
+                  scope="col"
+                  className="px-3 py-2 text-xs font-medium text-muted-foreground"
+                >
+                  Sources
+                </th>
+                <th
+                  scope="col"
+                  className="px-3 py-2 text-xs font-medium text-muted-foreground"
+                >
+                  Config
+                </th>
+                <th
+                  scope="col"
+                  className="px-3 py-2 text-xs font-medium text-muted-foreground"
+                >
+                  Error
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -119,7 +157,7 @@ export function AuditViewer() {
                         className="text-xs text-primary hover:underline"
                         onClick={() =>
                           setExpandedId(
-                            expandedId === entry.id ? null : entry.id
+                            expandedId === entry.id ? null : entry.id,
                           )
                         }
                       >

@@ -33,7 +33,7 @@ describe("Security Regression Tests", () => {
       });
 
       const passwordInputs = container.querySelectorAll(
-        'input[type="password"]'
+        'input[type="password"]',
       );
       expect(passwordInputs).toHaveLength(0);
     });
@@ -50,7 +50,7 @@ describe("Security Regression Tests", () => {
       });
 
       const secretInputs = container.querySelectorAll(
-        'input[name*="token"], input[name*="key"], input[name*="secret"], input[name*="password"]'
+        'input[name*="token"], input[name*="key"], input[name*="secret"], input[name*="password"]',
       );
       expect(secretInputs).toHaveLength(0);
     });
@@ -71,7 +71,7 @@ describe("Security Regression Tests", () => {
 
       // All inputs in admin panel should be checkboxes (errors-only filter) or buttons, not text fields for secrets
       const textInputs = container.querySelectorAll(
-        'input[type="text"], input[type="url"]'
+        'input[type="text"], input[type="url"]',
       );
       expect(textInputs).toHaveLength(0);
     });
@@ -93,7 +93,7 @@ describe("Security Regression Tests", () => {
       expect(textareas).toHaveLength(0);
 
       const textInputs = container.querySelectorAll(
-        'input[type="text"], input[type="password"], input[type="url"]'
+        'input[type="text"], input[type="password"], input[type="url"]',
       );
       expect(textInputs).toHaveLength(0);
     });
@@ -102,18 +102,18 @@ describe("Security Regression Tests", () => {
   describe("LH-4.4 — Localhost gate hides error details", () => {
     it("shows advisory message, not raw 403 on forbidden response", async () => {
       vi.mocked(fetchAdminAdapters).mockRejectedValueOnce(
-        new Error("403: Admin access restricted to localhost")
+        new Error("403: Admin access restricted to localhost"),
       );
 
       render(
         <LocalhostGate>
           <div data-testid="child-content">Secret admin content</div>
-        </LocalhostGate>
+        </LocalhostGate>,
       );
 
       await waitFor(() => {
         expect(
-          screen.getByText(/only accessible from localhost/i)
+          screen.getByText(/only accessible from localhost/i),
         ).toBeInTheDocument();
       });
 
@@ -128,18 +128,18 @@ describe("Security Regression Tests", () => {
 
     it("shows advisory message, not raw error on network failure", async () => {
       vi.mocked(fetchAdminAdapters).mockRejectedValueOnce(
-        new Error("Failed to fetch")
+        new Error("Failed to fetch"),
       );
 
       render(
         <LocalhostGate>
           <div data-testid="child-content">Admin panel</div>
-        </LocalhostGate>
+        </LocalhostGate>,
       );
 
       await waitFor(() => {
         expect(
-          screen.getByText(/only accessible from localhost/i)
+          screen.getByText(/only accessible from localhost/i),
         ).toBeInTheDocument();
       });
 
@@ -156,7 +156,7 @@ describe("Security Regression Tests", () => {
       render(
         <LocalhostGate>
           <div data-testid="child-content">Admin panel</div>
-        </LocalhostGate>
+        </LocalhostGate>,
       );
 
       await waitFor(() => {
@@ -165,7 +165,7 @@ describe("Security Regression Tests", () => {
 
       // Advisory should NOT appear
       expect(
-        screen.queryByText(/only accessible from localhost/i)
+        screen.queryByText(/only accessible from localhost/i),
       ).not.toBeInTheDocument();
     });
   });
@@ -184,9 +184,7 @@ describe("Security Regression Tests", () => {
         secret_set: true,
       };
 
-      vi.mocked(fetchAdminAdapters).mockResolvedValueOnce([
-        adapterWithSecret,
-      ]);
+      vi.mocked(fetchAdminAdapters).mockResolvedValueOnce([adapterWithSecret]);
 
       render(<AdapterStatusPanel />);
 
@@ -206,9 +204,7 @@ describe("Security Regression Tests", () => {
         "-----BEGIN",
       ];
       for (const pattern of forbiddenPatterns) {
-        expect(
-          screen.queryByText(new RegExp(pattern))
-        ).not.toBeInTheDocument();
+        expect(screen.queryByText(new RegExp(pattern))).not.toBeInTheDocument();
       }
 
       // Source names (env var names) ARE expected to be visible

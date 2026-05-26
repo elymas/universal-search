@@ -95,9 +95,7 @@ export function ResultsPanel({
     return (
       <div className="text-center text-muted-foreground py-12">
         <p className="text-lg">Search results will appear here</p>
-        <p className="text-sm mt-1">
-          Enter a query above to start searching
-        </p>
+        <p className="text-sm mt-1">Enter a query above to start searching</p>
       </div>
     );
   }

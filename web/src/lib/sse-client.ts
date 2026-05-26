@@ -23,7 +23,7 @@ const BASE_RECONNECT_DELAY_MS = 1000;
 export function createSSEConnection(
   eventSource: EventSource,
   callbacks: SSECallbacks,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): () => void {
   let reconnectAttempts = 0;
 
@@ -63,11 +63,10 @@ export function createSSEConnection(
   const handleError = () => {
     if (eventSource.readyState === EventSource.CLOSED) {
       if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-        const delay =
-          BASE_RECONNECT_DELAY_MS * Math.pow(2, reconnectAttempts);
+        const delay = BASE_RECONNECT_DELAY_MS * Math.pow(2, reconnectAttempts);
         reconnectAttempts++;
         callbacks.onError(
-          `Connection lost. Reconnecting in ${delay}ms... (attempt ${reconnectAttempts})`
+          `Connection lost. Reconnecting in ${delay}ms... (attempt ${reconnectAttempts})`,
         );
         setTimeout(() => {
           if (!signal?.aborted) {
@@ -77,7 +76,7 @@ export function createSSEConnection(
         }, delay);
       } else {
         callbacks.onError(
-          "Max reconnection attempts reached. Please try again."
+          "Max reconnection attempts reached. Please try again.",
         );
       }
     }

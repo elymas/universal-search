@@ -44,7 +44,7 @@ describe("fetchAdminAdapters", () => {
     expect(result[0].id).toBe("google");
     expect(result[0].status).toBe("connected");
     expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining("/api/admin/adapters")
+      expect.stringContaining("/api/admin/adapters"),
     );
   });
 
@@ -72,9 +72,11 @@ describe("toggleAdapter", () => {
       expect.stringContaining("/api/admin/adapters/google/toggle"),
       expect.objectContaining({
         method: "POST",
-        headers: expect.objectContaining({ "Content-Type": "application/json" }),
+        headers: expect.objectContaining({
+          "Content-Type": "application/json",
+        }),
         body: JSON.stringify({ enabled: false }),
-      })
+      }),
     );
   });
 });
@@ -92,7 +94,7 @@ describe("resyncAdapter", () => {
       expect.stringContaining("/api/admin/adapters/slack/resync"),
       expect.objectContaining({
         method: "POST",
-      })
+      }),
     );
   });
 });

@@ -4,7 +4,12 @@ import { useState, useCallback, useRef } from "react";
 import { SearchInput } from "@/components/search-input";
 import { ResultsPanel } from "@/components/results-panel";
 import { Badge } from "@/components/ui/badge";
-import { searchQuery, searchStream, type Citation, type SearchResult } from "@/lib/api";
+import {
+  searchQuery,
+  searchStream,
+  type Citation,
+  type SearchResult,
+} from "@/lib/api";
 import { createSSEConnection } from "@/lib/sse-client";
 
 type FormatMode = "text" | "markdown";
@@ -75,7 +80,7 @@ export default function HomePage() {
               setError(
                 fallbackErr instanceof Error
                   ? fallbackErr.message
-                  : "Search failed"
+                  : "Search failed",
               );
             }
           }
@@ -92,11 +97,11 @@ export default function HomePage() {
       } catch (err) {
         setIsStreaming(false);
         setError(
-          err instanceof Error ? err.message : "Failed to connect to server"
+          err instanceof Error ? err.message : "Failed to connect to server",
         );
       }
     },
-    [answer, isStreaming]
+    [answer, isStreaming],
   );
 
   return (
