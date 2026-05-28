@@ -1,0 +1,4 @@
+packages:
+  - 'docs'
+  # Exclude root from workspace to avoid dependency conflicts
+  # Each sub-package manages its own dependencies independently
