@@ -1,0 +1,15 @@
+{
+  "id": "doc-034",
+  "source_id": "naver",
+  "url": "https://example.com/naver/0034",
+  "title": "A/B testing statistical frameworks - study 34",
+  "body": "This document discusses A/B testing statistical frameworks. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of A/B testing statistical frameworks. Key findings include improved accuracy, reduced latency, and better scalability. The study 34 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on A/B testing statistical frameworks.",
+  "published_at": "2025-02-04T00:00:00+00:00",
+  "retrieved_at": "2026-05-02T10:00:00+00:00",
+  "author": "author-34",
+  "score": 0.84,
+  "lang": "en",
+  "doc_type": "paper",
+  "hash": "66e6f894524ba019"
+}

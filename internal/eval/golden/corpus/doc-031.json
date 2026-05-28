@@ -1,0 +1,15 @@
+{
+  "id": "doc-031",
+  "source_id": "bluesky",
+  "url": "https://example.com/bluesky/0031",
+  "title": "stream processing with Apache Kafka - study 31",
+  "body": "This document discusses stream processing with Apache Kafka. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of stream processing with Apache Kafka. Key findings include improved accuracy, reduced latency, and better scalability. The study 31 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on stream processing with Apache Kafka.",
+  "published_at": "2025-02-01T00:00:00+00:00",
+  "retrieved_at": "2026-05-02T07:00:00+00:00",
+  "author": "author-31",
+  "score": 0.81,
+  "lang": "en",
+  "doc_type": "other",
+  "hash": "4d5d1ec0ce5c5f62"
+}

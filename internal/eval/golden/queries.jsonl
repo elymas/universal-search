@@ -1,0 +1,50 @@
+{"id": "EVAL-001-Q001", "query": "What is quantum computing and how does it differ from classical computing?", "locale": "en", "category": "factual", "expected_sources": ["doc-001", "doc-041", "doc-081"]}
+{"id": "EVAL-001-Q002", "query": "How do transformer attention mechanisms work?", "locale": "en", "category": "factual", "expected_sources": ["doc-007", "doc-047", "doc-087"]}
+{"id": "EVAL-001-Q003", "query": "What are the main challenges in federated learning?", "locale": "en", "category": "factual", "expected_sources": ["doc-009", "doc-049"]}
+{"id": "EVAL-001-Q004", "query": "Explain the concept of knowledge distillation in machine learning", "locale": "en", "category": "factual", "expected_sources": ["doc-017", "doc-057"]}
+{"id": "EVAL-001-Q005", "query": "What is retrieval-augmented generation and why is it important?", "locale": "en", "category": "factual", "expected_sources": ["doc-006", "doc-046", "doc-086"]}
+{"id": "EVAL-001-Q006", "query": "How does contrastive learning improve embedding quality?", "locale": "en", "category": "factual", "expected_sources": ["doc-011", "doc-051"]}
+{"id": "EVAL-001-Q007", "query": "What are the key differences between SQL and NoSQL databases?", "locale": "en", "category": "factual", "expected_sources": ["doc-021", "doc-061"]}
+{"id": "EVAL-001-Q008", "query": "Describe the main approaches to neural architecture search", "locale": "en", "category": "factual", "expected_sources": ["doc-020", "doc-060", "doc-100"]}
+{"id": "EVAL-001-Q009", "query": "What is feature engineering and how does it affect model performance?", "locale": "en", "category": "factual", "expected_sources": ["doc-031", "doc-071"]}
+{"id": "EVAL-001-Q010", "query": "How do graph neural networks work for molecular design?", "locale": "en", "category": "factual", "expected_sources": ["doc-010", "doc-050", "doc-090"]}
+{"id": "EVAL-001-Q011", "query": "What are the fundamental principles of site reliability engineering?", "locale": "en", "category": "factual", "expected_sources": ["doc-040", "doc-080", "doc-120"]}
+{"id": "EVAL-001-Q012", "query": "Explain the zero-shot and few-shot learning paradigm", "locale": "en", "category": "factual", "expected_sources": ["doc-019", "doc-059"]}
+{"id": "EVAL-001-Q013", "query": "What is the role of activation functions in neural networks?", "locale": "en", "category": "factual", "expected_sources": ["doc-004", "doc-044"]}
+{"id": "EVAL-001-Q014", "query": "Compare GPT and BERT architectures for NLP tasks", "locale": "en", "category": "comparison", "expected_sources": ["doc-002", "doc-042", "doc-082"]}
+{"id": "EVAL-001-Q015", "query": "How does reinforcement learning from human feedback compare to supervised fine-tuning?", "locale": "en", "category": "comparison", "expected_sources": ["doc-003", "doc-043"]}
+{"id": "EVAL-001-Q016", "query": "Compare vector database indexing strategies: HNSW vs IVF", "locale": "en", "category": "comparison", "expected_sources": ["doc-005", "doc-045", "doc-085"]}
+{"id": "EVAL-001-Q017", "query": "What are the trade-offs between model pruning and quantization?", "locale": "en", "category": "comparison", "expected_sources": ["doc-008", "doc-048"]}
+{"id": "EVAL-001-Q018", "query": "Compare microservices vs monolithic architectures for ML deployment", "locale": "en", "category": "comparison", "expected_sources": ["doc-036", "doc-076", "doc-116"]}
+{"id": "EVAL-001-Q019", "query": "How do diffusion models compare to GANs for image generation?", "locale": "en", "category": "comparison", "expected_sources": ["doc-012", "doc-052"]}
+{"id": "EVAL-001-Q020", "query": "Compare columnar storage formats Parquet and ORC for analytics", "locale": "en", "category": "comparison", "expected_sources": ["doc-034", "doc-074"]}
+{"id": "EVAL-001-Q021", "query": "What are the differences between Kubernetes and Docker Swarm orchestration?", "locale": "en", "category": "comparison", "expected_sources": ["doc-038", "doc-078", "doc-118"]}
+{"id": "EVAL-001-Q022", "query": "How does mixture of experts compare to dense transformer models?", "locale": "en", "category": "comparison", "expected_sources": ["doc-004", "doc-044", "doc-084"]}
+{"id": "EVAL-001-Q023", "query": "Synthesize the latest advances in large language model architectures", "locale": "en", "category": "synthesis", "expected_sources": ["doc-002", "doc-007", "doc-022", "doc-062"]}
+{"id": "EVAL-001-Q024", "query": "Provide a comprehensive overview of distributed training techniques", "locale": "en", "category": "synthesis", "expected_sources": ["doc-028", "doc-068", "doc-108", "doc-148"]}
+{"id": "EVAL-001-Q025", "query": "Summarize the state of multi-modal foundation models", "locale": "en", "category": "synthesis", "expected_sources": ["doc-013", "doc-053", "doc-093"]}
+{"id": "EVAL-001-Q026", "query": "What are the current best practices in prompt engineering?", "locale": "en", "category": "synthesis", "expected_sources": ["doc-015", "doc-055", "doc-095"]}
+{"id": "EVAL-001-Q027", "query": "Synthesize research on causal inference in machine learning", "locale": "en", "category": "synthesis", "expected_sources": ["doc-021", "doc-061", "doc-101"]}
+{"id": "EVAL-001-Q028", "query": "Provide an overview of autonomous vehicle perception systems", "locale": "en", "category": "synthesis", "expected_sources": ["doc-025", "doc-065", "doc-105"]}
+{"id": "EVAL-001-Q029", "query": "Summarize streaming data processing frameworks and their trade-offs", "locale": "en", "category": "synthesis", "expected_sources": ["doc-033", "doc-073", "doc-113"]}
+{"id": "EVAL-001-Q030", "query": "What is the current state of semi-supervised learning?", "locale": "en", "category": "synthesis", "expected_sources": ["doc-018", "doc-058", "doc-098"]}
+{"id": "EVAL-001-Q031", "query": "", "locale": "en", "category": "edge", "expected_sources": ["doc-001"]}
+{"id": "EVAL-001-Q032", "query": "What is the meaning of life?", "locale": "en", "category": "edge", "expected_sources": ["doc-001", "doc-002"]}
+{"id": "EVAL-001-Q033", "query": "asdfghjkl qwertyuiop zxcvbnm", "locale": "en", "category": "edge", "expected_sources": ["doc-003"]}
+{"id": "EVAL-001-Q034", "query": "a", "locale": "en", "category": "edge", "expected_sources": ["doc-001"]}
+{"id": "EVAL-001-Q035", "query": "Compare every programming language ever created", "locale": "en", "category": "edge", "expected_sources": ["doc-037", "doc-077", "doc-117", "doc-157", "doc-197"]}
+{"id": "EVAL-001-Q036", "query": "한국어 자연어 처리 모델의 최신 발전 동향을 설명해주세요", "locale": "ko", "category": "korean", "expected_sources": ["doc-005", "doc-030", "doc-055"]}
+{"id": "EVAL-001-Q037", "query": "대규모 언어 모델의 한국어 성능을 어떻게 평가하나요?", "locale": "ko", "category": "korean", "expected_sources": ["doc-010", "doc-035", "doc-060"]}
+{"id": "EVAL-001-Q038", "query": "한국어 토크나이저의 종류와 장단점을 비교해주세요", "locale": "ko", "category": "korean", "expected_sources": ["doc-015", "doc-040"]}
+{"id": "EVAL-001-Q039", "query": "한국어 임베딩 모델 벤치마크 결과를 요약해주세요", "locale": "ko", "category": "korean", "expected_sources": ["doc-020", "doc-045", "doc-070"]}
+{"id": "EVAL-001-Q040", "query": "한국어 질의응답 시스템 구축 방법을 설명해주세요", "locale": "ko", "category": "korean", "expected_sources": ["doc-025", "doc-050"]}
+{"id": "EVAL-001-Q041", "query": "한국어 텍스트 분류를 위한 최신 기법은 무엇인가요?", "locale": "ko", "category": "korean", "expected_sources": ["doc-030", "doc-055", "doc-080"]}
+{"id": "EVAL-001-Q042", "query": "한국어 감성 분석 연구의 최신 동향을 정리해주세요", "locale": "ko", "category": "korean", "expected_sources": ["doc-035", "doc-060"]}
+{"id": "EVAL-001-Q043", "query": "한국어 기계 번역 품질을 향상시키는 방법을 설명해주세요", "locale": "ko", "category": "korean", "expected_sources": ["doc-040", "doc-065", "doc-090"]}
+{"id": "EVAL-001-Q044", "query": "한국어 음성 인식 기술의 발전 과정을 요약해주세요", "locale": "ko", "category": "korean", "expected_sources": ["doc-045", "doc-070"]}
+{"id": "EVAL-001-Q045", "query": "한국어 정보 검색 시스템의 설계 원칙을 설명해주세요", "locale": "ko", "category": "korean", "expected_sources": ["doc-050", "doc-075", "doc-100"]}
+{"id": "EVAL-001-Q046", "query": "한국 뉴스 데이터 마이닝 기법을 비교해주세요", "locale": "ko", "category": "korean", "expected_sources": ["doc-055", "doc-080"]}
+{"id": "EVAL-001-Q047", "query": "한국어 지식 그래프 구축 방법론을 설명해주세요", "locale": "ko", "category": "korean", "expected_sources": ["doc-060", "doc-085", "doc-110"]}
+{"id": "EVAL-001-Q048", "query": "한국어 문서 요약 모델의 성능을 평가해주세요", "locale": "ko", "category": "korean", "expected_sources": ["doc-065", "doc-090"]}
+{"id": "EVAL-001-Q049", "query": "한국어 대화 시스템 개발 현황을 요약해주세요", "locale": "ko", "category": "korean", "expected_sources": ["doc-070", "doc-095", "doc-120"]}
+{"id": "EVAL-001-Q050", "query": "한국 핀테크 AI 도입 사례를 분석해주세요", "locale": "ko", "category": "korean", "expected_sources": ["doc-080", "doc-105"]}

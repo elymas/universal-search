@@ -1,0 +1,15 @@
+{
+  "id": "doc-114",
+  "source_id": "korea_news",
+  "url": "https://example.com/korea_news/0114",
+  "title": "A/B testing statistical frameworks - study 114",
+  "body": "This document discusses A/B testing statistical frameworks. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of A/B testing statistical frameworks. Key findings include improved accuracy, reduced latency, and better scalability. The study 114 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on A/B testing statistical frameworks.",
+  "published_at": "2025-04-25T00:00:00+00:00",
+  "retrieved_at": "2026-05-05T18:00:00+00:00",
+  "author": "author-14",
+  "score": 0.64,
+  "lang": "en",
+  "doc_type": "paper",
+  "hash": "15be96fe4acce9bf"
+}

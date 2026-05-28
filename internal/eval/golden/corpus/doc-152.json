@@ -1,0 +1,15 @@
+{
+  "id": "doc-152",
+  "source_id": "daum",
+  "url": "https://example.com/daum/0152",
+  "title": "columnar storage formats for analytics - study 152",
+  "body": "This document discusses columnar storage formats for analytics. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of columnar storage formats for analytics. Key findings include improved accuracy, reduced latency, and better scalability. The study 152 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on columnar storage formats for analytics.",
+  "published_at": "2025-06-02T00:00:00+00:00",
+  "retrieved_at": "2026-05-07T08:00:00+00:00",
+  "author": "author-2",
+  "score": 0.52,
+  "lang": "en",
+  "doc_type": "article",
+  "hash": "90f7f6586a757d7b"
+}

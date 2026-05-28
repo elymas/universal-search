@@ -1,0 +1,15 @@
+{
+  "id": "doc-208",
+  "source_id": "reddit",
+  "url": "https://example.com/reddit/0208",
+  "title": "federated learning privacy guarantees - study 208",
+  "body": "This document discusses federated learning privacy guarantees. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of federated learning privacy guarantees. Key findings include improved accuracy, reduced latency, and better scalability. The study 208 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on federated learning privacy guarantees.",
+  "published_at": "2025-07-28T00:00:00+00:00",
+  "retrieved_at": "2026-05-09T16:00:00+00:00",
+  "author": "author-8",
+  "score": 0.58,
+  "lang": "en",
+  "doc_type": "article",
+  "hash": "e6dfda4a7e6c55c5"
+}

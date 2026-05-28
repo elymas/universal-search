@@ -1,0 +1,15 @@
+{
+  "id": "doc-186",
+  "source_id": "youtube",
+  "url": "https://example.com/youtube/0186",
+  "title": "GPU cluster scheduling optimization - study 186",
+  "body": "This document discusses GPU cluster scheduling optimization. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of GPU cluster scheduling optimization. Key findings include improved accuracy, reduced latency, and better scalability. The study 186 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on GPU cluster scheduling optimization.",
+  "published_at": "2025-07-06T00:00:00+00:00",
+  "retrieved_at": "2026-05-08T18:00:00+00:00",
+  "author": "author-36",
+  "score": 0.86,
+  "lang": "en",
+  "doc_type": "paper",
+  "hash": "7dcb495f8dd02ea0"
+}

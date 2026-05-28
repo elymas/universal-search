@@ -1,0 +1,15 @@
+{
+  "id": "doc-153",
+  "source_id": "korea_news",
+  "url": "https://example.com/korea_news/0153",
+  "title": "time series anomaly detection methods - study 153",
+  "body": "This document discusses time series anomaly detection methods. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of time series anomaly detection methods. Key findings include improved accuracy, reduced latency, and better scalability. The study 153 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on time series anomaly detection methods.",
+  "published_at": "2025-06-03T00:00:00+00:00",
+  "retrieved_at": "2026-05-07T09:00:00+00:00",
+  "author": "author-3",
+  "score": 0.53,
+  "lang": "en",
+  "doc_type": "post",
+  "hash": "3a12338a7162d78f"
+}

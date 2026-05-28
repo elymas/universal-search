@@ -1,0 +1,15 @@
+{
+  "id": "doc-128",
+  "source_id": "rss",
+  "url": "https://example.com/rss/0128",
+  "title": "federated learning privacy guarantees - study 128",
+  "body": "This document discusses federated learning privacy guarantees. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of federated learning privacy guarantees. Key findings include improved accuracy, reduced latency, and better scalability. The study 128 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on federated learning privacy guarantees.",
+  "published_at": "2025-05-09T00:00:00+00:00",
+  "retrieved_at": "2026-05-06T08:00:00+00:00",
+  "author": "author-28",
+  "score": 0.78,
+  "lang": "en",
+  "doc_type": "article",
+  "hash": "df3d38a353adfe5e"
+}

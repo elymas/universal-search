@@ -1,0 +1,15 @@
+{
+  "id": "doc-049",
+  "source_id": "korea_news",
+  "url": "https://example.com/korea_news/0049",
+  "title": "graph neural networks for molecule design - study 49",
+  "body": "This document discusses graph neural networks for molecule design. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of graph neural networks for molecule design. Key findings include improved accuracy, reduced latency, and better scalability. The study 49 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on graph neural networks for molecule design.",
+  "published_at": "2025-02-19T00:00:00+00:00",
+  "retrieved_at": "2026-05-03T01:00:00+00:00",
+  "author": "author-49",
+  "score": 0.99,
+  "lang": "en",
+  "doc_type": "post",
+  "hash": "3fb8551f974df4e7"
+}

@@ -1,0 +1,15 @@
+{
+  "id": "doc-157",
+  "source_id": "hackernews",
+  "url": "https://example.com/hackernews/0157",
+  "title": "infrastructure as code best practices - study 157",
+  "body": "This document discusses infrastructure as code best practices. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of infrastructure as code best practices. Key findings include improved accuracy, reduced latency, and better scalability. The study 157 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on infrastructure as code best practices.",
+  "published_at": "2025-06-07T00:00:00+00:00",
+  "retrieved_at": "2026-05-07T13:00:00+00:00",
+  "author": "author-7",
+  "score": 0.57,
+  "lang": "en",
+  "doc_type": "issue",
+  "hash": "a2d5d3f315bdf359"
+}

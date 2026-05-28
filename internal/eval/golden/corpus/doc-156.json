@@ -1,0 +1,15 @@
+{
+  "id": "doc-156",
+  "source_id": "reddit",
+  "url": "https://example.com/reddit/0156",
+  "title": "container orchestration security policies - study 156",
+  "body": "This document discusses container orchestration security policies. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of container orchestration security policies. Key findings include improved accuracy, reduced latency, and better scalability. The study 156 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on container orchestration security policies.",
+  "published_at": "2025-06-06T00:00:00+00:00",
+  "retrieved_at": "2026-05-07T12:00:00+00:00",
+  "author": "author-6",
+  "score": 0.56,
+  "lang": "en",
+  "doc_type": "repo",
+  "hash": "1254246c79ca476d"
+}
