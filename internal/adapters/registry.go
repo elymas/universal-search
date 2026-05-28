@@ -15,6 +15,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net"
 	"os"
 	"sort"
 	"strings"
@@ -428,6 +429,68 @@ func (w *wrappedAdapter) Search(ctx context.Context, q types.Query) ([]types.Nor
 	return docs, err
 }
 
+// ClassifyFailure maps an error to a coarse failure_class string for slog
+// drilldown (SPEC-EVAL-002 REQ-EVAL2-005). The taxonomy is intentionally
+// open-set; new classes can be added without breaking existing consumers.
+//
+// Canonical classes:
+//   - "5xx":  HTTP 500-599 via *types.SourceError
+//   - "4xx":  HTTP 400-499 via *types.SourceError
+//   - "dns":  *net.DNSError
+//   - "tls":  tls.RecordHeaderError, tls.AlertError, x509 errors
+//   - "parse": JSON/XML unmarshal errors (heuristic)
+//   - "transcript": adapter-specific transcript extraction failure (heuristic)
+//   - "unknown": anything else
+//
+// @MX:NOTE: [AUTO] SPEC-EVAL-002 REQ-EVAL2-005 failure_class taxonomy. Open-set; add new classes as adapter failure modes are discovered.
+func ClassifyFailure(err error) string {
+	if err == nil {
+		return ""
+	}
+
+	// Check for *types.SourceError with HTTP status.
+	var srcErr *types.SourceError
+	if errors.As(err, &srcErr) && srcErr.HTTPStatus > 0 {
+		if srcErr.HTTPStatus >= 500 && srcErr.HTTPStatus < 600 {
+			return "5xx"
+		}
+		if srcErr.HTTPStatus >= 400 && srcErr.HTTPStatus < 500 {
+			return "4xx"
+		}
+	}
+
+	// DNS errors.
+	var dnsErr *net.DNSError
+	if errors.As(err, &dnsErr) {
+		return "dns"
+	}
+
+	// TLS errors — check for common TLS error types by string matching
+	// since Go's TLS errors are not all exported types.
+	errMsg := err.Error()
+	if strings.Contains(errMsg, "tls:") ||
+		strings.Contains(errMsg, "certificate") ||
+		strings.Contains(errMsg, "x509:") {
+		return "tls"
+	}
+
+	// Parse errors — heuristic check for JSON/XML unmarshal errors.
+	if strings.Contains(errMsg, "invalid character") ||
+		strings.Contains(errMsg, "unexpected end of JSON") ||
+		strings.Contains(errMsg, "xml:") ||
+		strings.Contains(errMsg, "unmarshal") {
+		return "parse"
+	}
+
+	// Transcript extraction errors — heuristic for yt-dlp or similar.
+	if strings.Contains(errMsg, "transcript") ||
+		strings.Contains(errMsg, "yt-dlp") {
+		return "transcript"
+	}
+
+	return "unknown"
+}
+
 // emit records the per-call metrics + slog event. Pulled into a helper so
 // nil-guard noise stays out of Search.
 func (w *wrappedAdapter) emit(ctx context.Context, name, outcome string, elapsed float64, count int, err error) {
@@ -457,6 +520,9 @@ func (w *wrappedAdapter) emit(ctx context.Context, name, outcome string, elapsed
 	}
 	if err != nil {
 		attrs = append(attrs, slog.String("error", err.Error()))
+		// SPEC-EVAL-002 REQ-EVAL2-005: failure_class for slog/Loki drilldown.
+		// NOT promoted to Prometheus label (cardinality budget NFR-EVAL2-001).
+		attrs = append(attrs, slog.String("failure_class", ClassifyFailure(err)))
 	}
 	w.obs.Logger.LogAttrs(ctx, level, "adapter call", attrs...)
 }

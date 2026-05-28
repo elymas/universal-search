@@ -8,9 +8,15 @@ import (
 	"testing"
 	"time"
 
+	dto "github.com/prometheus/client_model/go"
+
 	"github.com/elymas/universal-search/internal/adapters"
 	"github.com/elymas/universal-search/internal/fanout"
+	"github.com/elymas/universal-search/internal/obs"
+	"github.com/elymas/universal-search/internal/obs/metrics"
 	"github.com/elymas/universal-search/pkg/types"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // TestDispatchHappyPath3Adapters verifies 3 adapters × 5 docs = 15 in result with no dedup.
@@ -492,4 +498,144 @@ func TestDispatchCancelledMidQueue(t *testing.T) {
 	if elapsed > 500*time.Millisecond {
 		t.Fatalf("elapsed %v too long (want < 500ms; bounded by cancel, not adapter sleep)", elapsed)
 	}
+}
+
+// ---------------------------------------------------------------------------
+// SPEC-EVAL-002 Phase 2: Fanout partial counter emission tests
+// ---------------------------------------------------------------------------
+
+// TestFanoutPartialCounterEmission verifies that when a fanout dispatch has
+// partial results (some adapters fail), usearch_fanout_partial_total is
+// incremented exactly once per failed adapter (REQ-EVAL2-004).
+func TestFanoutPartialCounterEmission(t *testing.T) {
+	t.Parallel()
+
+	// Build a metrics registry to observe counter values.
+	metricsReg := metrics.NewRegistry()
+	o := &obs.Obs{
+		Metrics: metricsReg,
+	}
+
+	// 3 adapters: 2 succeed, 1 fails.
+	ad1 := &stubAdapter{name: "reddit", docs: makeDocs("reddit", 3)}
+	ad2 := &stubAdapter{name: "naver", err: errors.New("upstream timeout")}
+	ad3 := &stubAdapter{name: "github", docs: makeDocs("github", 3)}
+	reg := buildTestRegistry(ad1, ad2, ad3)
+
+	f, err := fanout.New(fanout.Options{Registry: reg, Obs: o})
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+
+	result, err := f.Dispatch(context.Background(), makeDecision("reddit", "naver", "github"), types.Query{Text: "test"})
+	if err != nil {
+		t.Fatalf("Dispatch: %v", err)
+	}
+
+	// Verify result has partial errors.
+	if result.Stats.ErrorCount != 1 {
+		t.Fatalf("want ErrorCount==1, got %d", result.Stats.ErrorCount)
+	}
+
+	// Verify FanoutPartial counter incremented for "naver" (the failing adapter).
+	naverCount := counterValueFromReg(metricsReg.Prometheus, "usearch_fanout_partial_total",
+		map[string]string{"adapter": "naver"})
+	if naverCount != 1 {
+		t.Errorf("naver partial count: got %.0f, want 1", naverCount)
+	}
+
+	// Verify successful adapters did NOT get their partial counter incremented.
+	redditCount := counterValueFromReg(metricsReg.Prometheus, "usearch_fanout_partial_total",
+		map[string]string{"adapter": "reddit"})
+	if redditCount != 0 {
+		t.Errorf("reddit partial count: got %.0f, want 0 (adapter succeeded)", redditCount)
+	}
+
+	githubCount := counterValueFromReg(metricsReg.Prometheus, "usearch_fanout_partial_total",
+		map[string]string{"adapter": "github"})
+	if githubCount != 0 {
+		t.Errorf("github partial count: got %.0f, want 0 (adapter succeeded)", githubCount)
+	}
+}
+
+// TestFanoutPartialCounterMultipleFailures verifies partial counter increments
+// for multiple failing adapters (5 adapters, 2 fail).
+func TestFanoutPartialCounterMultipleFailures(t *testing.T) {
+	t.Parallel()
+
+	metricsReg := metrics.NewRegistry()
+	o := &obs.Obs{
+		Metrics: metricsReg,
+	}
+
+	ad1 := &stubAdapter{name: "reddit", docs: makeDocs("reddit", 2)}
+	ad2 := &stubAdapter{name: "naver", err: errors.New("rate limited")}
+	ad3 := &stubAdapter{name: "youtube", err: errors.New("transcript error")}
+	ad4 := &stubAdapter{name: "github", docs: makeDocs("github", 2)}
+	ad5 := &stubAdapter{name: "hackernews", docs: makeDocs("hackernews", 2)}
+	reg := buildTestRegistry(ad1, ad2, ad3, ad4, ad5)
+
+	f, err := fanout.New(fanout.Options{Registry: reg, Obs: o})
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+
+	result, err := f.Dispatch(context.Background(),
+		makeDecision("reddit", "naver", "youtube", "github", "hackernews"),
+		types.Query{Text: "test"})
+	if err != nil {
+		t.Fatalf("Dispatch: %v", err)
+	}
+
+	if result.Stats.ErrorCount != 2 {
+		t.Fatalf("want ErrorCount==2, got %d", result.Stats.ErrorCount)
+	}
+
+	// Both failing adapters should have partial count = 1.
+	for _, name := range []string{"naver", "youtube"} {
+		count := counterValueFromReg(metricsReg.Prometheus, "usearch_fanout_partial_total",
+			map[string]string{"adapter": name})
+		if count != 1 {
+			t.Errorf("%s partial count: got %.0f, want 1", name, count)
+		}
+	}
+
+	// Successful adapters should have partial count = 0.
+	for _, name := range []string{"reddit", "github", "hackernews"} {
+		count := counterValueFromReg(metricsReg.Prometheus, "usearch_fanout_partial_total",
+			map[string]string{"adapter": name})
+		if count != 0 {
+			t.Errorf("%s partial count: got %.0f, want 0", name, count)
+		}
+	}
+}
+
+// counterValueFromReg extracts a counter value from a Prometheus registry.
+func counterValueFromReg(reg *prometheus.Registry, name string, labels map[string]string) float64 {
+	mfs, err := reg.Gather()
+	if err != nil {
+		return 0
+	}
+	for _, mf := range mfs {
+		if mf.GetName() != name {
+			continue
+		}
+		for _, m := range mf.GetMetric() {
+			if labelsMatch2(m.GetLabel(), labels) {
+				return m.GetCounter().GetValue()
+			}
+		}
+	}
+	return 0
+}
+
+func labelsMatch2(got []*dto.LabelPair, want map[string]string) bool {
+	matched := 0
+	for _, lp := range got {
+		v, ok := want[lp.GetName()]
+		if ok && v == lp.GetValue() {
+			matched++
+		}
+	}
+	return matched == len(want)
 }

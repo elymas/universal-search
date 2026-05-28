@@ -69,12 +69,13 @@ func TestRouterCollectorsCardinality(t *testing.T) {
 			"provider", "model",
 			"mode",        // SPEC-IDX-002; bounded to 4 values.
 			"store", "op", // SPEC-IDX-001; bounded.
-			"shard",        // SPEC-IDX-003; bounded to ko/default.
-			"agent",        // SPEC-DEEP-002; bounded to 4 values.
-			"result",       // SPEC-DEEP-002; bounded to 3 values.
-			"reason",       // SPEC-AUTH-001; bounded to 9 values.
-			"trigger",      // SPEC-AUTH-001; bounded to 1 value.
-			"reason_class": // SPEC-AUTH-002; bounded to 4 values.
+			"shard",       // SPEC-IDX-003; bounded to ko/default.
+			"agent",       // SPEC-DEEP-002; bounded to 4 values.
+			"result",      // SPEC-DEEP-002; bounded to 3 values.
+			"reason",      // SPEC-AUTH-001; bounded to 9 values.
+			"trigger",     // SPEC-AUTH-001; bounded to 1 value.
+			"reason_class", // SPEC-AUTH-002; bounded to 4 values.
+			"state":        // SPEC-EVAL-002; bounded to 3 values (closed, open, half_open).
 		default:
 			t.Errorf("unexpected label %q in cardinality allowlist", label)
 		}

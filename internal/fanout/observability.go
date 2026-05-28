@@ -104,3 +104,19 @@ func emitPanic(ctx context.Context, o *obs.Obs, adapterName string, recovered an
 		slog.String("stack_trace", string(stack)),
 	)
 }
+
+// emitPartialResultCounters increments usearch_fanout_partial_total once per
+// adapter that contributed an error to Result.AdapterErrors (SPEC-EVAL-002
+// REQ-EVAL2-004). Called after eg.Wait() returns and before the result is
+// returned to the caller.
+func emitPartialResultCounters(o *obs.Obs, result *Result) {
+	if o == nil || o.Metrics == nil || o.Metrics.FanoutPartial == nil {
+		return
+	}
+	if result.AdapterErrors == nil {
+		return
+	}
+	for adapterName := range result.AdapterErrors {
+		o.Metrics.FanoutPartial.WithLabelValues(adapterName).Inc()
+	}
+}
