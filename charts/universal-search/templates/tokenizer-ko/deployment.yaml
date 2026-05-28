@@ -1,0 +1,40 @@
+{{- if .Values.tokenizerKo.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "tokenizer-ko") }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "universal-search.componentLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "tokenizer-ko") | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "universal-search.componentSelectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "tokenizer-ko") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "universal-search.componentSelectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "tokenizer-ko") | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/tokenizer-ko/configmap.yaml") . | sha256sum }}
+    spec:
+      containers:
+        - name: tokenizer-ko
+          image: {{ include "universal-search.image" (dict "Values" .Values "Chart" .Chart "image" .Values.tokenizerKo.image) }}
+          imagePullPolicy: {{ .Values.tokenizerKo.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.tokenizerKo.service.port }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "tokenizer-ko") }}
+          {{- with .Values.tokenizerKo.probes }}
+          livenessProbe:
+            {{- toYaml .liveness | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .readiness | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.tokenizerKo.resources | nindent 12 }}
+{{- end }}

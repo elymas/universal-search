@@ -1,0 +1,68 @@
+# =============================================================================
+# CI smoke-test values — minimal profile for kind cluster
+# Only api + postgres + redis enabled. All sidecars + Qdrant + Meili + SearXNG
+# disabled to stay within hosted runner resource limits.
+# =============================================================================
+
+imageTag: "0.1.0"
+
+secrets:
+  backend: "values"
+
+secretsValues:
+  postgresPassword: "test-password"
+  meiliMasterKey: "test-meili-key"
+  litellmMasterKey: "test-litellm-key"
+  searxngSecret: "test-searxng-secret"
+
+usearch:
+  api:
+    enabled: true
+    replicas: 1
+    hpa:
+      enabled: false
+    pdb:
+      enabled: false
+    networkPolicy:
+      enabled: false
+    ingress:
+      enabled: false
+    serviceMonitor:
+      enabled: false
+    env:
+      DATABASE_URL: "postgresql://usearch:test-password@{{ .Release.Name }}-postgresql:5432/usearch?sslmode=disable"
+      REDIS_URL: "redis://{{ .Release.Name }}-redis-master:6379/0"
+  mcp:
+    enabled: false
+
+researcher:
+  enabled: false
+embedder:
+  enabled: false
+tokenizerKo:
+  enabled: false
+storm:
+  enabled: false
+koreanews:
+  enabled: false
+litellm:
+  enabled: false
+searxng:
+  enabled: false
+meilisearch:
+  enabled: false
+
+postgresql:
+  enabled: true
+  auth:
+    password: "test-password"
+
+redis:
+  enabled: true
+
+qdrant:
+  enabled: false
+
+observability:
+  serviceMonitor:
+    enabled: false

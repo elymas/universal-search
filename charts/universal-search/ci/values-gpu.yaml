@@ -1,0 +1,24 @@
+# =============================================================================
+# GPU overlay values — embedder with nvidia.com/gpu
+# Overlay on top of values.yaml: helm install -f values.yaml -f ci/values-gpu.yaml
+# =============================================================================
+
+embedder:
+  enabled: true
+  env:
+    EMBEDDER_DEVICE: "cuda"
+    EMBEDDER_USE_FP16: "true"
+  gpu:
+    enabled: true
+    nodeSelector:
+      accelerator: nvidia-rtx
+    tolerations:
+      - key: "nvidia.com/gpu"
+        operator: "Exists"
+        effect: "NoSchedule"
+  resources:
+    requests:
+      nvidia.com/gpu: 1
+    limits:
+      nvidia.com/gpu: 1
+  amd64OnlyAffinity: false

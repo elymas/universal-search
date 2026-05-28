@@ -1,0 +1,11 @@
+# Patterns to ignore when building packages.
+ci/
+
+# Ignore common large/irrelevant directories that Helm may traverse.
+.venv/
+venv/
+.git/
+.github/
+node_modules/
+__pycache__/
+*.pyc

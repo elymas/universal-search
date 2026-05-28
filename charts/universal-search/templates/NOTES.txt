@@ -1,0 +1,56 @@
+=======================================================================
+ Universal Search Engine — Helm Chart Installed
+=======================================================================
+
+Release:    {{ .Release.Name }}
+Namespace:  {{ .Release.Namespace }}
+Chart:      {{ .Chart.Name }}-{{ .Chart.Version }}
+
+WARNING — SearXNG License Notice:
+  SearXNG is AGPL-3.0 licensed and consumed as a service-boundary.
+  See NOTICE and docs/dependencies.md for compliance details.
+
+IMPORTANT — NetworkPolicy:
+  NetworkPolicy resources are ENABLED by default. If your cluster
+  does NOT have a NetworkPolicy controller (Calico, Cilium, etc.),
+  these policies will be silently ignored (no-op). Install a CNI
+  with NetworkPolicy support for enforcement.
+
+IMPORTANT — Secret Backend:
+  Current backend: {{ .Values.secrets.backend }}
+  {{- if eq .Values.secrets.backend "values" }}
+  ** WARNING: secrets.backend is "values" — secrets are embedded in
+     values.yaml! This is ONLY for dev/CI. Production MUST use
+     "existingSecret" (tier 2) or "externalSecrets" (tier 3).
+  {{- end }}
+
+Getting started:
+
+  1. Port-forward the API:
+     kubectl port-forward svc/{{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "api") }} {{ .Values.usearch.api.service.port }}:{{ .Values.usearch.api.service.port }} -n {{ .Release.Namespace }}
+
+  2. Check health:
+     curl http://localhost:{{ .Values.usearch.api.service.port }}/healthz
+
+  3. Run smoke tests:
+     helm test {{ .Release.Name }} -n {{ .Release.Namespace }}
+
+  4. OIDC Setup (if using authentication):
+     Configure OIDC_ISSUER_URL, OIDC_CLIENT_ID, OIDC_CLIENT_SECRET,
+     and OIDC_REDIRECT_URL in your secret or values.
+
+{{- if .Values.usearch.api.ingress.enabled }}
+
+  5. Access via Ingress:
+     https://{{ (index .Values.usearch.api.ingress.hosts 0).host }}
+{{- end }}
+
+Documentation:
+  https://elymas.github.io/universal-search/operators/deployment-helm
+
+Image Verification (cosign):
+  cosign verify {{ .Values.global.imageRegistry }}/{{ .Values.usearch.api.image.repository }}:{{ .Values.imageTag }} \
+    --certificate-identity-regexp 'https://github.com/elymas/universal-search/' \
+    --certificate-oidc-issuer 'https://token.actions.githubusercontent.com'
+
+=======================================================================

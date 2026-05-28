@@ -1,0 +1,18 @@
+{{- if .Values.researcher.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "researcher") }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "universal-search.componentLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "researcher") | nindent 4 }}
+spec:
+  type: {{ .Values.researcher.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.researcher.service.port }}
+      targetPort: http
+      protocol: TCP
+  selector:
+    {{- include "universal-search.componentSelectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "researcher") | nindent 4 }}
+{{- end }}

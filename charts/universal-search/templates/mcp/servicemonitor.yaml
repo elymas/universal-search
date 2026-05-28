@@ -1,0 +1,19 @@
+{{- if and .Values.usearch.mcp.enabled .Values.observability.serviceMonitor.enabled .Values.usearch.mcp.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "mcp") }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "universal-search.componentLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "mcp") | nindent 4 }}
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      {{- include "universal-search.componentSelectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "mcp") | nindent 6 }}
+  endpoints:
+    - port: http
+      path: {{ .Values.usearch.mcp.serviceMonitor.path | default "/metrics" }}
+      interval: {{ .Values.usearch.mcp.serviceMonitor.interval | default "30s" }}
+      scrapeTimeout: {{ .Values.usearch.mcp.serviceMonitor.scrapeTimeout | default "10s" }}
+{{- end }}
