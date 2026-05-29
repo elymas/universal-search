@@ -10,13 +10,15 @@ test-first discipline is the right fit for a brand-new evaluation
 package with no characterization-test obligation)
 Coverage target: 85% (per quality.yaml `test_coverage_target: 85`)
 Harness: standard (per `.moai/config/sections/harness.yaml` auto-
-routing — 11 REQs (4 × P0 + 5 × P1 + 2 × P2) + 5 NFRs + 2 new
-packages (Go `internal/eval/*`, Python `eval_judge.py`) + 2 CI
-workflows; Sprint Contract RECOMMENDED — judge prompt stability
-and per-claim scoring semantics are cross-iteration concerns that
-benefit from explicit contract negotiation between expert-testing
-and evaluator-active per
-`.claude/rules/moai/design/constitution.md` §11)
+routing — a multi-file net-new feature with no security/payment/
+auth keywords: 10 active REQs + REQ-EVAL1-010 deferred to V1.1, 5
+NFRs, 2 new packages (Go `internal/eval/*`, Python `eval_judge.py`),
+1 PR-gating CI workflow. Sprint Contract is OPTIONAL at the
+standard harness level — it is NOT required (Sprint Contracts are
+required only at the `thorough` level per
+`.claude/rules/moai/design/constitution.md` §11). Judge prompt
+stability is tracked via NFR-EVAL1-001 determinism, not a mandatory
+Sprint Contract.)
 
 This plan sequences SPEC-EVAL-001 implementation into priority-
 ordered phases. Per `.claude/rules/moai/core/agent-common-protocol.md`,
@@ -74,8 +76,9 @@ Priority labels per MoAI rule (no time estimates).
 
 ### Phase 1 — Golden set + corpus authoring (Priority High)
 
-Goal: hand-curated 50-query golden set + ≥ 200 doc corpus exist
-on disk and load cleanly.
+Goal: hand-curated 50-query golden set + 50–80 doc corpus (V1
+size) exist on disk and load cleanly. (≥200 docs is a post-V1
+expansion goal per REQ-EVAL1-002, not a V1 requirement.)
 
 Tasks:
 
@@ -84,7 +87,7 @@ Tasks:
    `factual`/`comparison`/`synthesis`/`korean`/`edge` per
    research §3.1).
 2. Author `internal/eval/golden/corpus/doc-*.json` fixtures
-   (≥ 200 files, each a valid `pkg/types.NormalizedDoc`).
+   (50–80 files for V1, each a valid `pkg/types.NormalizedDoc`).
    Strip PII per research §3.3; respect license compliance.
 3. Write `internal/eval/golden/manifest.json` with
    `corpus_revision: "1.0.0"`, `total_docs`, `created_at`,
@@ -97,7 +100,7 @@ Tasks:
    - `TestGoldenSetLocalePartition`: 35 EN + 15 KO.
    - `TestCorpusDeserializes`: every JSON file parses to
      `NormalizedDoc`.
-   - `TestCorpusSize`: ≥ 200 files.
+   - `TestCorpusSize`: ≥ 50 files (V1 floor).
    - `TestExpectedSourcesResolveToCorpus`: every record's
      `expected_sources` is a subset of corpus `doc_id`s.
    - `TestOverridesSchemaValid`: empty overrides file parses.
@@ -140,9 +143,14 @@ Tasks:
    the new router.
 4. MODIFY `services/researcher/pyproject.toml` to add
    `deepeval ~= 1.0` (resolution of research §10 Q3).
-5. REFACTOR: extract claim-segmentation logic from
-   SPEC-SYN-002's `faithfulness.py` if it can be shared (DRY
-   only if the abstraction is clean; otherwise inline).
+5. REFACTOR: the live structural checker
+   (`services/researcher/src/researcher/faithfulness_endpoint.py`,
+   SPEC-DEEP-002) uses ASCII-only `_split_sentences` via
+   `(?<=[.!?])\s+` and has NO Korean segmentation. The judge
+   service MUST therefore add its own Korean-aware claim
+   segmentation (do NOT reuse the ASCII-only splitter for KO
+   queries). Share the EN path with the endpoint splitter only if
+   the abstraction stays clean; otherwise inline.
 6. Run `pytest services/researcher/tests/test_eval_judge.py` —
    green.
 7. **Calibration sub-phase**: run the judge against 15 Korean
@@ -170,7 +178,14 @@ Tasks:
      `"A [1]. B [2]. C [1]."` + 2 docs → 3 claims with correct
      `cited_doc_ids`.
    - `TestBridgeExtractsCitations`: marker-to-doc_id mapping
-     correct (consumes `SynthesizeResponse.Citations`).
+     correct (consumes `synthesis.Result.Citations`, i.e.
+     `[]Citation{Marker int, DocID, URL, Title}` from
+     `internal/synthesis/types.go`; map `Marker` → `DocID`).
+   - `TestBridgeKoreanSegmentation`: a `locale:"ko"` response with
+     `다.`-style endings (no trailing whitespace between sentences)
+     is split into the correct number of claims by the bridge's
+     own Korean-aware segmenter (the structural checker does NOT
+     do this — see spec.md HISTORY D3).
    - `TestBridgeRespectsTimeout`: judge endpoint stub sleeps 35s;
      bridge times out at 30s; returns error with
      `error_class: "judge_timeout"`.
@@ -182,15 +197,18 @@ Tasks:
      JSON; bridge returns error with `error_class:
      "judge_parse_error"`.
 2. GREEN: implement `internal/eval/scorer/deepeval_bridge.go`:
-   - Public `Score(ctx, synthesisResp, docs) (Result, error)`
-   - Claim segmentation via SPEC-SYN-002 regex (shared module
-     or inline if simpler)
+   - Public `Score(ctx, result synthesis.Result, docs) (Result, error)`
+     (consumes `synthesis.Result.Text + Citations`)
+   - Locale-aware claim segmentation: ASCII `(?<=[.!?])\s+` for EN
+     (matching the live checker), plus a Korean-aware segmenter for
+     KO (EVAL-001-owned; the structural checker has none)
+   - Marker resolution via `\[(\d+)\]` + `Citation.Marker` → `DocID`
    - HTTP POST to `${EVAL_JUDGE_URL}/judge/faithfulness`
    - 30s deadline enforced via `context.WithTimeout`
 3. REFACTOR: error handling — wrap errors with `fmt.Errorf("%w",
    err)` per Go MUST rules.
-4. Add `@MX:ANCHOR` on `Score` function (it will have fan_in ≥ 3
-   from runner + nightly cron + CLI eval) with
+4. Add `@MX:ANCHOR` on `Score` function (fan_in ≥ 2 from runner +
+   CLI eval in V1; grows when the V1.1 nightly cron lands) with
    `@MX:SPEC: SPEC-EVAL-001` and
    `@MX:REASON: external service contract, judge endpoint changes
    ripple to runner + CI`.
@@ -218,12 +236,12 @@ Tasks:
    - `TestRunnerParallelismCap`: with 50 queries, max in-flight
      count ≤ 5 (NFR-EVAL1-004).
    - `TestRunnerCollectsScores`: returns per-query scores.
-   - `TestRunnerExcludesOverrides`: queries with active overrides
-     not included in mean.
-   - `TestRunnerEnforcesOverrideCap`: 6 active overrides → early
+   - `TestRunnerExcludesOverrides`: queries listed in the manual
+     override list are not included in mean.
+   - `TestRunnerEnforcesOverrideCap`: 6 override entries → early
      return with `error_class: "override_cap_exceeded"`.
-   - `TestRunnerAutoExpiresOverrides`: expired overrides not
-     applied; logged as auto-removed.
+     (V1 uses a simple count check; no auto-expiry / auto-removal —
+     see spec.md REQ-EVAL1-003 v0.2.0.)
    - `TestRunnerHandlesJudgeUnavailable`: stub judge fails on
      3 queries; runner marks scores null, continues.
    - `TestRunnerNullScoreExitCode`: any null score → run summary
@@ -239,8 +257,8 @@ Tasks:
    - Override application + cap enforcement
 3. RED: write `internal/eval/runner/report_test.go`:
    - `TestReportContainsAllRequiredSections`: Summary, Score by
-     category, Lowest-Scoring Queries, Regression Delta, Active
-     Overrides.
+     category, Lowest-Scoring Queries, Active Overrides. (Regression
+     Delta section deferred with the V1.1 nightly history.)
    - `TestReportTopTenLowestQueriesSection`: with 50 queries
      scored, report lists exactly 10 (or fewer if total < 10).
    - `TestReportContainsJudgeRationalesForLowScores`: every
@@ -248,13 +266,13 @@ Tasks:
    - `TestReportPerCategoryBreakdown`: aggregation by `category`
      field (NFR-EVAL1-003 transparency).
    - `TestReportCostBreakdown`: per-category + aggregate cost.
-   - `TestReportNightlyHistoryWriter`: writes
-     `.moai/eval/history/EVAL-001-{date}.json` with documented
-     schema (REQ-EVAL1-010).
+   - (`TestReportNightlyHistoryWriter` DEFERRED to V1.1 with
+     REQ-EVAL1-010 — V1 writes only `latest.md`, no JSON history.)
 4. GREEN: implement `report.go`:
    - Markdown rendering (for `.moai/eval/reports/latest.md` +
      PR comment)
-   - JSON serialisation (for history)
+   - (JSON history serialisation DEFERRED to V1.1 with the nightly
+     cron — REQ-EVAL1-010.)
 5. REFACTOR: extract report sections into named functions for
    readability; ensure < 100 LOC per function (TRUST 5
    Readable).
@@ -286,7 +304,7 @@ Tasks:
      reason "floor violation".
    - `TestGateFailsOnNullScores`: any null → exit 2, reason
      "judge availability error".
-   - `TestGateFailsOnOverrideCap`: > 5 active overrides → exit 1.
+   - `TestGateFailsOnOverrideCap`: > 5 override entries → exit 1.
    - `TestGateExitCodeMapping`: assert {pass: 0, score: 1,
      judge: 2, parse: 3}.
    - `TestGateStdoutSummaryFormat`: stdout matches grep-friendly
@@ -305,10 +323,12 @@ Exit criterion:
 - Manual: pipe a sample report to `go run ./cmd/eval gate` →
   correct exit code.
 
-### Phase 6 — CI workflow + nightly cron (Priority Medium)
+### Phase 6 — PR-gating CI workflow (Priority Medium)
 
-Goal: GitHub Actions workflows run the benchmark on PRs touching
-synthesis paths and nightly at 03:00 UTC.
+Goal: a GitHub Actions workflow runs the benchmark on PRs touching
+synthesis paths and gates the PR. (The nightly cron
+`eval-nightly.yml` is DEFERRED to V1.1 per REQ-EVAL1-010 — not
+built in this phase.)
 
 Tasks:
 
@@ -322,12 +342,9 @@ Tasks:
      CLI in workflow)
    - Concurrency group keyed on `${{ github.workflow }}-${{
      github.event.pull_request.number }}` to prevent collisions
-2. Author `.github/workflows/eval-nightly.yml` per REQ-EVAL1-010:
-   - Trigger: `schedule: cron: '0 3 * * *'`
-   - Job: same as eval.yml but writes to
-     `.moai/eval/history/EVAL-001-${date}.json` and commits the
-     history file back via PR-bot
-   - No PR comment; nightly job does NOT gate any merge
+2. (DEFERRED to V1.1) `.github/workflows/eval-nightly.yml` +
+   `.moai/eval/history/` writer — re-scoped in the V1.1 amendment
+   alongside REQ-EVAL1-010.
 3. Add path filter test: simulate dry-run with
    `act` or workflow lint to verify paths trigger / skip
    correctly.
@@ -336,7 +353,7 @@ Tasks:
    verify eval workflow triggers, runs, and posts comment.
 
 Exit criterion:
-- Both workflows pass `actionlint`.
+- `eval.yml` passes `actionlint`.
 - Draft PR demonstrates end-to-end CI workflow.
 - PR comment renders correctly.
 
@@ -423,14 +440,18 @@ Per-phase tests are listed inline above. Aggregated coverage:
 - Phase 1: 7 Go tests (`golden_test.go`).
 - Phase 2: 6 Python tests (`test_eval_judge.py`) + calibration
   sub-phase (manual log).
-- Phase 3: 6 Go tests (`deepeval_bridge_test.go`).
-- Phase 4: 10 Go tests (`runner_test.go` + `report_test.go`).
+- Phase 3: 7 Go tests (`deepeval_bridge_test.go`, incl. Korean
+  segmentation).
+- Phase 4: 8 Go tests (`runner_test.go` + `report_test.go`; the 2
+  nightly/auto-expiry tests are deferred with REQ-EVAL1-010 /
+  override automation).
 - Phase 5: 7 Go tests (`gate_test.go`).
-- Phase 6: workflow lint + manual draft-PR test.
+- Phase 6: workflow lint + manual draft-PR test (PR-gating only;
+  nightly cron deferred to V1.1).
 - Phase 7: 1 modified test (cardinality allowlist).
 - Phase 8: manual contract validation.
 
-Total automated: 37 unit tests + integration tests in Phase 2
+Total automated: 36 unit tests + integration tests in Phase 2
 (judge service end-to-end) + Phase 4 (runner against local
 synthesis stack).
 
@@ -445,8 +466,8 @@ Python side for judge endpoint edge cases.
 | File | Tag | Function | Reason |
 |------|-----|----------|--------|
 | `internal/eval/scorer/deepeval_bridge.go` | `@MX:ANCHOR` | `Score` | External service contract; judge endpoint changes ripple to runner + CI. fan_in ≥ 3 (runner + cron + CLI). |
-| `internal/eval/runner/runner.go` | `@MX:ANCHOR` | `Run` | Top-level orchestrator; benchmark behaviour funnels through here. fan_in ≥ 3 (CLI + CI workflow + nightly cron). |
-| `internal/eval/ci/gate.go` | `@MX:ANCHOR` | `Decide` | Pure decision function; threshold semantics MUST be preserved across refactors. fan_in ≥ 2 (CI workflow + nightly cron, growing). |
+| `internal/eval/runner/runner.go` | `@MX:ANCHOR` | `Run` | Top-level orchestrator; benchmark behaviour funnels through here. fan_in ≥ 2 (CLI + CI workflow; grows to 3 when the V1.1 nightly cron lands). |
+| `internal/eval/ci/gate.go` | `@MX:ANCHOR` | `Decide` | Pure decision function; threshold semantics MUST be preserved across refactors. fan_in ≥ 1 (CI workflow; grows with the V1.1 nightly cron). |
 | `services/researcher/src/researcher/eval_judge.py` | `# @MX:NOTE` | judge endpoint | Deterministic params (`temperature=0, top_p=1, seed=42`) MUST be preserved per NFR-EVAL1-001; changes invalidate the regression baseline. |
 | `internal/eval/runner/runner.go` | `@MX:WARN` | parallel exec loop | Bounded goroutine pool; if parallelism cap changes, NFR-EVAL1-004 runtime budget needs re-validation. `@MX:REASON: judge rate-limit + sidecar concurrency assumptions are encoded in cap = 5`. |
 
@@ -460,7 +481,8 @@ All tags follow `code_comments: en` per
 Risks from research.md §9 with their mitigation phase:
 
 - **Haiku judge calibration drift** → Phase 2 calibration sub-phase
-  + Phase 6 nightly cron baseline + NFR-EVAL1-001 alert wiring.
+  + NFR-EVAL1-001 determinism re-run check (the nightly cron
+  baseline that would also catch this is deferred to V1.1).
 - **DeepEval API churn** → Phase 2 version pin `~= 1.0`; Phase 3
   bridge tests assert documented JSON schema (not internal
   DeepEval API).
@@ -476,7 +498,7 @@ Risks from research.md §9 with their mitigation phase:
   exit 1; documented as "operator must fix root cause, not raise
   cap".
 - **Synthesis path changes breaking corpus assumptions** → Phase 3
-  bridge consumes `SynthesizeResponse.Citations` by contract;
+  bridge consumes `synthesis.Result.Citations` by contract;
   changes to that contract are a separate SPEC.
 - **Cost overrun on retry storms** → Phase 3 30s timeout enforced;
   no automatic retries; failed queries mark null and continue.
@@ -523,9 +545,12 @@ implementation-detail choices the run-phase agent will make:
    recommended; annotation cycle confirms.
 
 5. **Claim segmentation sharing** — Phase 3 decides whether to
-   extract a shared module between SPEC-SYN-002 `faithfulness.py`
-   and EVAL-001 bridge, or inline the regex in each. Decision
-   anchored on DRY benefit vs coupling cost.
+   share the ASCII EN splitter with the live structural checker
+   (`services/researcher/src/researcher/faithfulness_endpoint.py`
+   `_split_sentences`, SPEC-DEEP-002), or inline it. Either way,
+   EVAL-001 MUST add its own Korean-aware segmenter (the checker
+   has none — spec.md HISTORY D3). Decision anchored on DRY benefit
+   vs coupling cost for the EN path only.
 
 6. **Golden set authoring style** — V1 author = limbowl; manual
    curation. Phase 1 produces the 50 queries; format consistency
@@ -545,13 +570,13 @@ implementation-detail choices the run-phase agent will make:
    overrides (with mandatory `override_reason`). 2-person
    approval is a future enhancement (research §10 Q5).
 
-10. **Nightly history retention** — V1 keeps all history files
-    forever (modest size, < 100 KB per file). Pruning policy is
-    a Phase 9 docs note; not enforced in code for V1.
+10. **Nightly history retention** — DEFERRED to V1.1 with the
+    nightly cron (REQ-EVAL1-010). Retention/pruning policy will be
+    decided when the history writer is built in the V1.1 amendment.
 
 These are scope-bounded — none change the SPEC contract; all are
 mechanical implementation choices.
 
 ---
 
-*End of SPEC-EVAL-001 plan v0.1.0 (draft).*
+*End of SPEC-EVAL-001 plan v0.2.0 (draft).*
