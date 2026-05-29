@@ -16,6 +16,7 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/elymas/universal-search/internal/access"
 	obslog "github.com/elymas/universal-search/internal/obs/log"
 	"github.com/elymas/universal-search/internal/obs/metrics"
 	obstrace "github.com/elymas/universal-search/internal/obs/trace"
@@ -90,6 +91,15 @@ func Init(ctx context.Context, cfg Config) (*Obs, func(context.Context) error, e
 	// --- Metrics ---
 	reg := metrics.NewRegistry()
 	reg.BuildInfo.WithLabelValues(cfg.ServiceVersion, cfg.GitCommit, goVersion()).Set(1)
+
+	// SPEC-SEC-001 REQ-SEC-009: wire the access-cascade SSRF block metric to
+	// the security collector with component="access". The access package keeps
+	// no metrics import (cycle-free); it emits through this hook.
+	if reg.Security != nil {
+		access.SetSSRFBlockHook(func(reason string) {
+			reg.Security.RecordSSRFBlock(reason, "access")
+		})
+	}
 
 	// --- Admin server ---
 	var adminAddr string

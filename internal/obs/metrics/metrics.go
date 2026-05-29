@@ -108,6 +108,10 @@ type Registry struct {
 	DeepTreeNodeExpand  *prometheus.HistogramVec
 	DeepTreeTotalTokens *prometheus.CounterVec
 
+	// Security metrics (SPEC-SEC-001 REQ-SEC-009, REQ-SEC-017). New labels:
+	// component, type, severity (reason already present). NFR-SEC-007 bounded.
+	Security *SecurityCollectors
+
 	// labelNames tracks all registered label names for cardinality validation.
 	labelNames []string
 }
@@ -224,6 +228,9 @@ func NewRegistry() *Registry {
 	// Register Deep tree metrics (SPEC-DEEP-003 Phase E).
 	deepTree := registerDeepTree(pr)
 
+	// Register Security metrics (SPEC-SEC-001).
+	security := registerSecurity(pr)
+
 	return &Registry{
 		Prometheus:                    pr,
 		HTTPRequests:                  httpRequests,
@@ -262,6 +269,7 @@ func NewRegistry() *Registry {
 		DeepAgentVerifierGateResults:  deepAgent.verifierGate,
 		DeepTreeNodeExpand:            deepTree.nodeExpand,
 		DeepTreeTotalTokens:           deepTree.totalTokens,
+		Security:                      security,
 		labelNames: []string{
 			"method", "route", "status_class",
 			"adapter_class",
@@ -286,6 +294,12 @@ func NewRegistry() *Registry {
 			// RBAC labels (SPEC-AUTH-002 NFR-AUTH2-003): bounded enums only.
 			// reason_class in {policy_matched, no_policy_matched, explicit_deny, empty_team} (4 values).
 			"reason_class",
+			// Security labels (SPEC-SEC-001 NFR-SEC-007): bounded enums only.
+			// reason already present; component ∈ {access, auth, adapter};
+			// type ∈ 7-event taxonomy; severity ∈ {critical, high, medium, low}.
+			"component",
+			"type",
+			"severity",
 		},
 	}
 }

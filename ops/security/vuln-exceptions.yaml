@@ -1,0 +1,32 @@
+# Vulnerability Exceptions — SPEC-SEC-001 REQ-SEC-003
+#
+# Tracks UNFIXED dependency/container vulnerabilities that are accepted
+# temporarily because no upstream fix is available. Each exception has a hard
+# 90-day review deadline; the security.yml `vuln-exceptions` CI job FAILS if
+# any deadline has passed without renewal.
+#
+# Schema (per entry under `exceptions:`):
+#   cve_id:           required, string  — CVE / GHSA / PYSEC identifier
+#   dependency:       required, string  — affected module/package name
+#   severity:         required, enum    — critical | high | medium | low
+#   rationale:        required, string  — why the exception is accepted
+#   discovered_at:    required, date    — ISO-8601 (YYYY-MM-DD), for MTTR (NFR-SEC-002)
+#   review_deadline:  required, date    — ISO-8601, <= discovered_at + 90 days
+#   owner:            required, string  — accountable reviewer (GitHub handle)
+#   fixed_at:         optional, date    — set when remediated (closes MTTR window)
+#
+# MTTR targets (NFR-SEC-002): CRITICAL <= 7 days, HIGH <= 30 days.
+
+version: 1
+
+exceptions: []
+# Example (commented — copy and uncomment when adding a real exception):
+#   - cve_id: PYSEC-2026-87
+#     dependency: lxml
+#     severity: medium
+#     rationale: >
+#       Pinned transitively by FlagEmbedding/researcher; no compatible fix
+#       without breaking import. Tracked upstream.
+#     discovered_at: 2026-05-29
+#     review_deadline: 2026-08-27
+#     owner: elymas

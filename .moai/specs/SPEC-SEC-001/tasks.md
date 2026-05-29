@@ -91,3 +91,18 @@ parallel after T02. T06 and T08 may run in parallel after T05.
 
 85% (DDD; characterization-first for T01/T04, TDD sub-cycles for net-new
 packages in T02/T03/T05/T06/T08).
+
+## Task status
+
+| Task | Status | Notes |
+|------|--------|-------|
+| T01 | completed | Characterization baselines + analyze-report; 22 SSRF tests verified green on unchanged code |
+| T02 | completed | .gitleaks.toml + security.yml gitleaks job + pre-commit hook + CODEOWNERS + fp-log. gitleaks binary absent locally → CI-only history scan |
+| T03 | completed | Trivy jobs + vuln-exceptions.yaml + check-vuln-exceptions.sh (deadline enforcement verified); deps-audit.yml unchanged |
+| T04 | completed | internal/security/ssrf extracted; access+auth delegate; 22 SSRF tests pass unchanged; hostname blocklist + ssrf_blocks metric; coverage 91.8% |
+| T05 | completed | internal/security/events 7-type taxonomy emits into existing AUTH-003 chain; 4 new EventType consts (AUTH-003 owner sign-off pending); coverage 96.6% |
+| T06 | pending | not in this run |
+| T07 | pending | not in this run |
+| T08 | pending | not in this run |
+| T09 | pending | not in this run |
+| T10 | pending | not in this run |
