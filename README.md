@@ -61,6 +61,7 @@ make clean         # Remove build artifacts
 - [Project structure](.moai/project/structure.md)
 - [Tech stack](.moai/project/tech.md)
 - [Roadmap](.moai/project/roadmap.md)
+- [Security policy & vulnerability disclosure](SECURITY.md) — operator runbooks at [`ops/security/`](ops/security/)
 
 ## Architecture
 
