@@ -1,9 +1,9 @@
 ---
 id: SPEC-DOC-002
-version: 0.1.0
-status: draft
+version: 0.2.0
+status: in-progress
 created: 2026-05-22
-updated: 2026-05-22
+updated: 2026-05-28
 author: limbowl
 priority: P1
 issue_number: 0
@@ -20,6 +20,13 @@ related: [SPEC-DEPLOY-001, SPEC-EVAL-001, SPEC-EVAL-003, SPEC-SEC-001]
 # SPEC-DOC-002: Adapter reference — per-adapter pages with drift-gated Capabilities, status badges, and Korean-locale operator notes
 
 ## HISTORY
+
+- 2026-05-28 (Phase 1 ANALYZE complete, status draft → in-progress, v0.1.0 → v0.2.0):
+  DDD ANALYZE complete: per-adapter Capabilities() line numbers mapped,
+  partial status code rosetta enumerated, Troubleshooting entries
+  sourced (analyze-report.md). Phases 2-N (PRESERVE/IMPROVE — actual
+  per-adapter MDX pages + CI drift gate) pending. Blocked sub-items
+  flagged in progress.md (DOC-001 ship state, EVAL-002 dashboard schema).
 
 - 2026-05-22 (initial draft v0.1.0, limbowl via manager-spec):
   M9 (V1 release)의 두 번째 SPEC. SPEC-DOC-001 (User guide —
