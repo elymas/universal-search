@@ -160,5 +160,12 @@ func dispatch(
 
 	// Supervisor builds Result.AdapterErrors from per-index slices.
 	// No worker ever touched a map directly (§2.6 H1 fix).
-	return assembleResult(decision.AdapterSet, perAdapterDocs, perAdapterErr), nil
+	result := assembleResult(decision.AdapterSet, perAdapterDocs, perAdapterErr)
+
+	// SPEC-EVAL-002 REQ-EVAL2-004: increment partial-result counter once per
+	// failed adapter after all workers complete and before returning to caller.
+	// @MX:NOTE: [AUTO] SPEC-EVAL-002 REQ-EVAL2-004 fanout partial counter emission
+	emitPartialResultCounters(o, result)
+
+	return result, nil
 }

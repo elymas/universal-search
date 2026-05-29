@@ -1,9 +1,9 @@
 ---
 id: SPEC-EVAL-002
-version: 0.1.0
-status: draft
+version: 1.0.0
+status: implemented
 created: 2026-05-22
-updated: 2026-05-22
+updated: 2026-05-28
 author: limbowl
 priority: P1
 issue_number: 0
@@ -20,6 +20,14 @@ related: [SPEC-EVAL-001, SPEC-EVAL-003, SPEC-AUTH-003]
 # SPEC-EVAL-002: Adapter reliability dashboard — 7-day rolling success rate per adapter
 
 ## HISTORY
+
+- 2026-05-28 (status flip draft → implemented, v0.1.0 → v1.0.0, limbowl via /moai sync):
+  Phases 1-3 complete per progress.md. Shipped: fanout_partial.go +
+  3 collectors (FanoutPartial/AdapterHealthStatus/AdapterCircuitState),
+  ClassifyFailure taxonomy in adapters/registry.go (5xx/4xx/dns/tls/parse/
+  transcript/unknown open-set), dispatch.go emitPartialResultCounters
+  wiring, cardinality allowlist extended with bounded `state` enum
+  (closed/open/half_open). Tests PASS across metrics/fanout/adapters.
 
 - 2026-05-22 (initial draft v0.1.0, limbowl via manager-spec):
   M8 운영 폴리시 SPEC의 첫 정식 초안. 이 SPEC은 새 로직을 만드는
