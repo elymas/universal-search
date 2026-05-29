@@ -39,6 +39,12 @@ func TestLoopbackRejectionOnAllAdminEndpoints(t *testing.T) {
 			handler: LoopbackOnly(NewAdaptersHandler(reg)),
 		},
 		{
+			name:    "GET /api/admin/adapters/health",
+			method:  http.MethodGet,
+			path:    "/api/admin/adapters/health",
+			handler: LoopbackOnly(NewAdaptersHealthHandler(reg)),
+		},
+		{
 			name:    "POST /api/admin/adapters/{id}/resync",
 			method:  http.MethodPost,
 			path:    "/api/admin/adapters/test/resync",
