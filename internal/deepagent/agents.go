@@ -18,6 +18,29 @@ import (
 // Abstracted for testability — production callers pass a wrapper around fanout.Fanout.Dispatch.
 type FanoutFn func(ctx context.Context, query string) (*fanout.Result, error)
 
+// sanitizeDocBodies returns a copy of docs with every untrusted document Body
+// wrapped in an <EVIDENCE> block and injection markers neutralized
+// (prompt.Sanitize). It is applied at every point where indexed-document
+// bodies are serialized into an LLM user message (Researcher, Reviewer,
+// Writer) so attacker-controlled corpus text reaches the model as quoted
+// evidence rather than instructions. The input slice is never mutated; the
+// canonical ResearcherOutput.Evidence stays raw so the Verifier path can
+// sanitize it once before synthesis.CheckFaithfulness without double-wrapping.
+//
+// @MX:ANCHOR: [AUTO] All LLM-facing document serialization funnels through here
+// @MX:REASON: SPEC-SEC-001 REQ-SEC-015 invariant — every indexed-document body
+// must be sanitized before reaching ANY synthesis LLM; Researcher/Reviewer/Writer
+// all depend on this single boundary, so drift here re-opens the prompt-injection surface
+// @MX:SPEC: SPEC-SEC-001 (REQ-SEC-015)
+func sanitizeDocBodies(docs []deepreport.NormalizedDocPayload) []deepreport.NormalizedDocPayload {
+	out := make([]deepreport.NormalizedDocPayload, len(docs))
+	copy(out, docs)
+	for i := range out {
+		out[i].Body = prompt.Sanitize(out[i].Body).Sanitized
+	}
+	return out
+}
+
 // Researcher performs retrieval via fanout and extracts claims from documents.
 // REQ-DEEP2-005: Calls fanoutFn EXACTLY once. No other retrieval mechanism.
 func Researcher(ctx context.Context, cfg Config, llmClient llm.Client, req PipelineRequest, fanoutFn FanoutFn) (ResearcherOutput, error) {
@@ -39,7 +62,9 @@ func Researcher(ctx context.Context, cfg Config, llmClient llm.Client, req Pipel
 	}
 
 	// Step 4: Call LLM to extract claims from documents.
-	docsJSON, err := json.Marshal(payloads)
+	// SPEC-SEC-001 REQ-SEC-015: sanitize each untrusted document body before it
+	// reaches the LLM. ResearcherOutput.Evidence remains the raw canonical copy.
+	docsJSON, err := json.Marshal(sanitizeDocBodies(payloads))
 	if err != nil {
 		return ResearcherOutput{}, fmt.Errorf("researcher: marshal docs: %w", err)
 	}
@@ -109,7 +134,8 @@ func Reviewer(ctx context.Context, cfg Config, llmClient llm.Client, research Re
 	if err != nil {
 		return ReviewerCritique{}, fmt.Errorf("reviewer: marshal claims: %w", err)
 	}
-	evidenceJSON, err := json.Marshal(research.Evidence)
+	// SPEC-SEC-001 REQ-SEC-015: sanitize untrusted document bodies before the LLM call.
+	evidenceJSON, err := json.Marshal(sanitizeDocBodies(research.Evidence))
 	if err != nil {
 		return ReviewerCritique{}, fmt.Errorf("reviewer: marshal evidence: %w", err)
 	}
@@ -149,7 +175,8 @@ func Writer(ctx context.Context, cfg Config, llmClient llm.Client, research Rese
 	if err != nil {
 		return WriterDraft{}, fmt.Errorf("writer: marshal claims: %w", err)
 	}
-	evidenceJSON, err := json.Marshal(research.Evidence)
+	// SPEC-SEC-001 REQ-SEC-015: sanitize untrusted document bodies before the LLM call.
+	evidenceJSON, err := json.Marshal(sanitizeDocBodies(research.Evidence))
 	if err != nil {
 		return WriterDraft{}, fmt.Errorf("writer: marshal evidence: %w", err)
 	}

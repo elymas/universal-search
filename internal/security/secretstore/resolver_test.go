@@ -55,7 +55,10 @@ func TestK8sResolverMissingFileReturnsError(t *testing.T) {
 
 func TestK8sResolverRejectsPathTraversal(t *testing.T) {
 	r := NewK8sResolver(t.TempDir())
-	for _, key := range []string{"../etc/passwd", "sub/key", ""} {
+	// "..": bare relative-parent key. filepath.Join(mountPath, "..") escapes to
+	// the parent directory; the character check alone (no "/" or "\\") would let
+	// it through, so the canonical-prefix guard must reject it.
+	for _, key := range []string{"../etc/passwd", "sub/key", "", "..", "."} {
 		if _, err := r.Get(context.Background(), key); err == nil {
 			t.Errorf("Get(%q) must reject path-unsafe key", key)
 		}

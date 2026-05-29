@@ -26,10 +26,17 @@ func NewK8sResolver(mountPath string) *K8sResolver {
 // contents. A missing file or empty value returns an error. The key is
 // path-sanitised so it cannot escape mountPath.
 func (r *K8sResolver) Get(_ context.Context, key string) (string, error) {
-	if strings.ContainsAny(key, "/\\") || key == "" {
+	// Reject empty, separator-bearing, and relative-traversal keys outright.
+	if key == "" || key == "." || key == ".." || strings.ContainsAny(key, "/\\") {
 		return "", fmt.Errorf("secretstore: invalid k8s secret key %q", key)
 	}
+	// Canonical-prefix check: the cleaned join must stay strictly under mountPath.
+	// This catches any residual traversal the character check above misses (the
+	// guard's intent is that no key can escape mountPath).
 	p := filepath.Join(r.mountPath, key)
+	if !strings.HasPrefix(filepath.Clean(p), filepath.Clean(r.mountPath)+string(os.PathSeparator)) {
+		return "", fmt.Errorf("secretstore: invalid k8s secret key %q", key)
+	}
 	b, err := os.ReadFile(p) //nolint:gosec // path is rooted at mountPath and key is sanitised above
 	if err != nil {
 		return "", fmt.Errorf("secretstore: read k8s secret %q: %w", key, err)

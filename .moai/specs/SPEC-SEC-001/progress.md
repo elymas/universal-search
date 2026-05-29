@@ -297,3 +297,60 @@ Error count delta: 0 (no new test failures). The 2 previously-Deferred ASVS rows
   mounted on a live route — mounting + a TenantExtractor backed by costguard's
   TenantIDFromContext is a future integration step (no live HTTP route currently
   rate-limited; same posture as the cookie factory from Phase 8).
+
+---
+
+## DDD Cycle — evaluator-active FAIL remediation (Security 65→ closing)
+
+ANALYZE-PRESERVE-IMPROVE applied to the 3 must-fix findings from the
+evaluator-active FAIL. Characterization-first: `go test -race ./internal/deepagent/...`
+green before and after; behavior preserved except EVIDENCE wrapping.
+
+### Finding 1 [HIGH] — prompt-injection sanitization fully wired on the main LLM path
+Root cause: `prompt.Sanitize` (REQ-SEC-015) was applied only in
+`VerifierWithChecker`; the LLM-facing agents (Researcher, Reviewer, Writer) sent
+RAW document bodies to the model.
+
+Fix (`internal/deepagent/agents.go`):
+- Added shared helper `sanitizeDocBodies([]NormalizedDocPayload) []NormalizedDocPayload`
+  (@MX:ANCHOR) — returns a copy with each `.Body` EVIDENCE-wrapped via
+  `prompt.Sanitize`; never mutates input. The canonical `ResearcherOutput.Evidence`
+  stays RAW so the Verifier path sanitizes it exactly once (no double-wrap).
+- Wired at every document-body→LLM serialization site:
+  - Researcher `json.Marshal(sanitizeDocBodies(payloads))` (agents.go:~63)
+  - Reviewer `json.Marshal(sanitizeDocBodies(research.Evidence))` (agents.go:~117)
+  - Writer `json.Marshal(sanitizeDocBodies(research.Evidence))` (agents.go:~157)
+  - Verifier `prompt.Sanitize(d.Body)` (agents.go:~298, pre-existing, unchanged)
+- Plain `Sanitize` (no emitter) at all sites — matches the existing Verifier
+  pattern; no emitter is threaded into these functions, so no signature change.
+
+Contract tests (`internal/deepagent/agents_test.go`):
+- `TestResearcherSanitizesDocBodiesBeforeLLM` — asserts the EVIDENCE fence reaches
+  the LLM mock AND that returned Evidence stays raw.
+- `TestReviewerSanitizesEvidenceBeforeLLM`, `TestWriterSanitizesEvidenceBeforeLLM`.
+- `TestVerifierCallsCheckFaithfulnessExactlyOnce` — augmented to assert the doc
+  text reaching `checkFn` is EVIDENCE-wrapped (closes the gap the evaluator noted).
+- `assertContainsEvidence` helper derives the JSON-escaped marker at runtime
+  (json.Marshal escapes `<`→`<`), so assertions match the real LLM-facing bytes.
+
+deepagent: 75.0% coverage, race-clean, all green before+after.
+
+### Finding 2 [MEDIUM] — K8sResolver path-traversal guard hardened
+`internal/security/secretstore/k8s.go`: the old `strings.ContainsAny(key,"/\\")`
+let bare `".."` through. Hardened to reject `""`, `"."`, `".."`, separator-bearing
+keys, AND added a canonical-prefix check
+`strings.HasPrefix(filepath.Clean(join), filepath.Clean(mountPath)+os.PathSeparator)`.
+Test `TestK8sResolverRejectsPathTraversal` extended with `".."` and `"."` cases.
+secretstore: 92.6% coverage, green.
+
+### Finding 3 [LOW] — ASVS checklist refreshed
+`ops/security/owasp-asvs-checklist.md`: V5.2.5 and V11.1.4 Deferred→Pass with
+evidence links to real test files. Summary: Pass 33→35, Deferred 2→0,
+pass rate 33/35 (94.3%) → 35/35 (100%).
+
+### Verification
+- `go build ./...` exit 0; `go vet ./internal/deepagent/... ./internal/security/...` exit 0.
+- `go test -race -cover ./internal/deepagent/... ./internal/security/...` all ok.
+- Security self-check — every document-body→LLM path is now sanitized:
+  Researcher (docsJSON), Reviewer (evidenceJSON), Writer (evidenceJSON),
+  Verifier (docTexts). No raw `.Body` reaches any synthesis LLM.

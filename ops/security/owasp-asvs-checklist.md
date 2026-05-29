@@ -56,7 +56,7 @@ Verification: **Automated** (CI/test) or **Manual** (review).
 | ASVS ID | Applicability | Verification | Evidence | Status |
 |---------|---------------|--------------|----------|--------|
 | V5.1.1 | Applicable | Automated | Adapter input validation; SSRF scheme/host guards (`internal/security/ssrf`) | Pass |
-| V5.2.5 | Applicable | Deferred | LLM prompt-injection sanitization (`internal/security/prompt`, REQ-SEC-015) — package blocked on env dir-creation; see progress.md | Deferred |
+| V5.2.5 | Applicable | Automated | LLM prompt-injection sanitization (REQ-SEC-015): every indexed-document body is fenced as `<EVIDENCE>` with injection markers neutralized before reaching any synthesis LLM (Researcher/Reviewer/Writer/Verifier). Tests: `internal/security/prompt/sanitize_test.go`, `internal/deepagent/agents_test.go` (EVIDENCE-on-main-path contract) | Pass |
 | V5.3.3 | Applicable | Automated | Sanitized API error responses (threat-model I4) | Pass |
 
 ## V6 — Stored Cryptography
@@ -102,7 +102,7 @@ Verification: **Automated** (CI/test) or **Manual** (review).
 
 | ASVS ID | Applicability | Verification | Evidence | Status |
 |---------|---------------|--------------|----------|--------|
-| V11.1.4 | Applicable | Deferred | Per-tenant rate limiting (`internal/security/ratelimit`, REQ-SEC-014) — package blocked on env dir-creation; config in security.yaml; see progress.md | Deferred |
+| V11.1.4 | Applicable | Automated | Per-tenant rate limiting (REQ-SEC-014): `internal/security/ratelimit` implemented, config in security.yaml. Test: `internal/security/ratelimit/ratelimit_test.go` (100% coverage) | Pass |
 
 ## V12 — Files & Resources
 
@@ -137,19 +137,17 @@ Verification: **Automated** (CI/test) or **Manual** (review).
 | Total rows | 38 |
 | N/A (excluded from rate) | 3 |
 | Applicable rows | 35 |
-| Pass | 33 |
-| Deferred | 2 |
+| Pass | 35 |
+| Deferred | 0 |
 | Fail | 0 |
-| **Pass rate (Pass / Applicable)** | **33 / 35 = 94.3%** |
+| **Pass rate (Pass / Applicable)** | **35 / 35 = 100%** |
 
-Target >= 80% Pass: **met** (94.3%).
+Target >= 80% Pass: **met** (100%).
 
 ### Deferred items (rationale)
 
-- **V5.2.5** (LLM prompt-injection sanitization, REQ-SEC-015) and **V11.1.4**
-  (per-tenant rate limiting, REQ-SEC-014): the `internal/security/prompt` and
-  `internal/security/ratelimit` packages are designed and specified but could
-  not be created in the implementation environment (new-directory creation under
-  `internal/security/` was denied). Config defaults are present in
-  `.moai/config/sections/security.yaml`. These move to Pass once the packages
-  land. See `.moai/specs/SPEC-SEC-001/progress.md` blockers.
+- None. The previously-deferred **V5.2.5** (LLM prompt-injection sanitization,
+  REQ-SEC-015) and **V11.1.4** (per-tenant rate limiting, REQ-SEC-014) are now
+  Pass: the `internal/security/prompt` and `internal/security/ratelimit`
+  packages are implemented with passing tests, and prompt sanitization is wired
+  into every document-body→LLM path (Researcher/Reviewer/Writer/Verifier).
