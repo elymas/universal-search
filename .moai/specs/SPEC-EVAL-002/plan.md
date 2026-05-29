@@ -1,8 +1,17 @@
 # SPEC-EVAL-002 Plan — phased implementation
 
-Status: draft companion to spec.md
+Status: draft companion to spec.md (v0.2.0)
 Author: limbowl via manager-spec
-Date: 2026-05-22
+Date: 2026-05-22 (amended 2026-05-30 for v0.2.0)
+
+> **v0.2.0 amendment summary (2026-05-30):** (A1) Phase 7 rewritten —
+> reuse SPEC-UI-002's `/api/admin/adapters` handler + fill stub counts +
+> add `/api/admin/adapters/health` sibling on the same admin mux; no new
+> :9090 server. (A2) Phase 5 circuit-open alert + Phase 6 circuit-state
+> panel deferred to post-V1 (V1 ships 3 alerts + 4 panels). (A3) emit
+> line :223 → :433. (A4) Phase 4 now explicitly changes
+> `prometheus.yml` `evaluation_interval` 15s → 1m. (A5) Phase 6 Loki
+> log-link panel marked optional/non-gate.
 Methodology: **DDD** (per `.moai/config/sections/quality.yaml`
 `development_mode: tdd` default — **overridden to DDD for this
 SPEC**). 근거: EVAL-002 는 기존 `internal/obs/metrics/`,
@@ -33,8 +42,8 @@ EVAL-002 는 **declarative artifact 가 6**, **Go code 변경이 3**:
 
 | Type | 산출물 |
 |------|--------|
-| Declarative | `recording-rules.yml`, `alerts.yml`, `alertmanager.yml`, `adapter-reliability.json`, 2x provisioning YAML, runbook |
-| Go code | `internal/obs/metrics/fanout_partial.go` (NEW), `internal/fanout/dispatch.go` (MODIFY), `internal/adapters/registry.go` (MODIFY), `cmd/usearch-api/admin_health_adapters.go` (NEW) |
+| Declarative | `recording-rules.yml`, `alerts.yml` (V1 3 rule), `alertmanager.yml`, `adapter-reliability.json` (V1 4 panel), 2x provisioning YAML, runbook |
+| Go code | `internal/obs/metrics/fanout_partial.go` (NEW), `internal/fanout/dispatch.go` (MODIFY), `internal/adapters/registry.go` (MODIFY — emit attr + AdapterAdminView fill), `internal/api/admin/handler_adapters_health.go` (NEW, SPEC-UI-002 package reuse) + `handler_adapters.go`/`main.go` (MODIFY) |
 
 기본 원칙:
 
@@ -44,10 +53,15 @@ EVAL-002 는 **declarative artifact 가 6**, **Go code 변경이 3**:
 2. **Recording rule first** — Grafana 패널과 alert rule 은 모두
    사전 집계된 시리즈만 쿼리. Raw `rate()` 가 dashboard JSON 에
    나타나면 즉시 reject.
-3. **Loose coupling to circuit state** — `usearch_adapter_circuit_
-   state` 는 아무도 emit 하지 않는 상태로 시작; metric family 만
-   등록. SPEC-CACHE-001 v2 가 등장하면 그 SPEC 에서 emit 코드를
-   추가 (EVAL-002 plan 의 책임 아님).
+3. **Loose coupling to circuit state (deferred, A2)** — `usearch_
+   adapter_circuit_state` 는 아무도 emit 하지 않는 상태로 시작;
+   metric family 만 forward-compat 로 등록. circuit-open alert 와
+   circuit-state panel 은 **post-V1 로 연기, V1 gate 제외.**
+   SPEC-CACHE-001 v2 (또는 미래 SPEC-RESIL-001) 가 등장해 emit 하면
+   그 SPEC 에서 alert/panel 을 재활성화 (EVAL-002 plan 책임 아님).
+8. **Admin surface reuse (A1)** — 새 admin 서버/포트 신설 금지.
+   SPEC-UI-002 의 `/api/admin/adapters` handler + LoopbackOnly 를
+   재사용, stub count 채우고 `/api/admin/adapters/health` sibling 추가.
 4. **Operator-tunable defaults** — alert threshold (85%, 50%, 30%,
    10min) 은 권장값. runbook 에 tuning 가이드 포함.
 5. **No external notification destination shipped** — Alertmanager
@@ -166,9 +180,9 @@ Exit criterion:
 Goal: `wrappedAdapter.emit` 가 `failure_class` slog attribute 추가.
 
 DDD ANALYZE:
-1. `internal/adapters/registry.go:223` `emit` 함수 읽고 현재
+1. `internal/adapters/registry.go:433` `emit` 함수 읽고 현재
    attribute 목록 (adapter, outcome, elapsed_seconds, result_count,
-   error) 확인
+   error) 확인 (v0.2.0 A3: 라인 :223 → :433 정정)
 2. error → failure_class 변환 규칙 설계:
    - HTTP `*SourceError` 의 `HTTPStatus` 가 500-599 → `"5xx"`
    - HTTP 400-499 → `"4xx"`
@@ -222,6 +236,11 @@ Tasks:
    - `usearch:adapter_fanout_partial_ratio_24h`
    - 각 PromQL 표현은 research §3.3 그대로
 2. `deploy/prometheus/prometheus.yml` 수정:
+   - **`global.evaluation_interval` 를 `15s` → `1m` 으로 변경 (현재
+     line 9 가 15s). (v0.2.0 A4 / NFR-EVAL2-003)** recording rule 과
+     alert `for:` duration 이 모두 1m evaluation cadence 를 가정함.
+     `scrape_interval: 15s` 는 그대로 둠 (scrape 와 evaluation 독립).
+     이 변경을 놓치면 alert latency 계산이 어긋나므로 reject 사유.
    - 최상단에 `rule_files: ['recording-rules.yml', 'alerts.yml']`
    - `alerting:` 블록 추가 (Alertmanager target)
 3. CI gate `.github/workflows/promtool-validate.yml` 신규:
@@ -245,14 +264,19 @@ Exit criterion:
 
 ### Phase 5 — Alert rules + Alertmanager 통합 (Priority High)
 
-Goal: 4개 alert rule 정의 + Alertmanager config + amtool 검증.
+Goal: **V1: 3개** alert rule 정의 + Alertmanager config + amtool 검증.
+(4번째 circuit-open alert 는 post-V1 deferred — v0.2.0 A2.)
 
 Tasks:
-1. `deploy/prometheus/alerts.yml` 작성 (research §4.3 의 4 rule):
+1. `deploy/prometheus/alerts.yml` 작성 (V1 = 3 rule):
    - `AdapterSuccessRate7dLow`
    - `AdapterSuccessRate1hCritical`
    - `FanoutPartialRatioHigh`
-   - `AdapterCircuitOpen`
+   - **(DEFERRED post-V1, A2) `AdapterCircuitOpen`** — `usearch_
+     adapter_circuit_state` 를 emit 하는 upstream 이 V1 에 없으므로
+     V1 alerts.yml 에 포함하지 않음 (영구 no-data alert 방지). 미래
+     resilience SPEC 이 gauge 를 emit 하면 그때 추가. **V1
+     acceptance gate 에서 제외.**
 2. `deploy/alertmanager/alertmanager.yml` 작성 (research §4.2 의
    skeleton):
    - null receiver default
@@ -263,26 +287,32 @@ Tasks:
    - alert rule unit test (`promtool test rules`)
 4. Alert firing integration test (compose 환경):
    - synthetic time series seed
-   - 4 시나리오 (§5.5, §5.6, §5.7, §5.8) 각각 alert 가 inactive
+   - **V1: 3 시나리오 (§5.5, §5.6, §5.7)** 각각 alert 가 inactive
      → pending → firing 으로 전이하는지 확인
+   - §5.8 (circuit alert) 은 deferred — V1 테스트에서 제외
 
 Exit criterion:
 - `promtool check rules deploy/prometheus/alerts.yml` exits 0
 - `amtool check-config` exits 0
-- 4 alert 시나리오 통합 테스트 모두 PASS
+- **3 V1 alert 시나리오** 통합 테스트 모두 PASS (circuit alert deferred)
 
 ### Phase 6 — Grafana dashboard + provisioning (Priority Medium)
 
-Goal: 5 패널 dashboard JSON 가 Grafana 11.x 에 import 되고 모든
-패널이 데이터 렌더.
+Goal: **V1: 4 핵심 패널** dashboard JSON 가 Grafana 11.x 에 import
+되고 모든 핵심 패널이 데이터 렌더.
 
 Tasks:
 1. `deploy/grafana/dashboards/adapter-reliability.json` 작성:
-   - 5 패널 (research §5.2 매트릭스)
-   - 모든 패널이 recording rule 시리즈만 쿼리 (raw rate() 금지)
+   - **V1: 4 핵심 패널** (research §5.2 매트릭스 중 #1 heatmap, #2
+     7d trendline, #3 failure-cause stacked bar, #4 partial ratio)
+   - **(DEFERRED post-V1, A2) 패널 #5 circuit-state matrix** — emit
+     upstream 부재로 V1 dashboard 에 포함하지 않음 (영구 no-data 패널
+     방지). 미래 SPEC 이 gauge emit 하면 추가. **V1 gate 제외.**
+   - 모든 핵심 패널이 recording rule 시리즈만 쿼리 (raw rate() 금지)
    - Grafana template variable `adapter` 선언
-   - Loki datasource 가 있을 경우 활성화되는 log-link panel (#6,
-     선택적)
+   - **(OPTIONAL, A5) Loki datasource 가 있을 경우에만** 활성화되는
+     log-link panel — Loki 미배포 시 빈 패널, 4 핵심 패널 무손상.
+     **V1 acceptance gate 항목 아님.**
 2. `deploy/grafana/provisioning/datasources/prometheus.yaml` 작성
 3. `deploy/grafana/provisioning/dashboards/adapter-reliability.yaml`
    작성
@@ -303,35 +333,67 @@ Tasks:
 Exit criterion:
 - Dashboard JSON 가 grafana-cli lint 통과
 - compose up 후 30초 내 dashboard 접근 가능 (NFR-EVAL2-007)
-- 5 패널 모두 fixture 데이터로 < 2초 렌더 (NFR-EVAL2-002)
+- **4 핵심 패널** 모두 fixture 데이터로 < 2초 렌더 (NFR-EVAL2-002).
+  (circuit 패널 deferred, Loki 패널 optional — gate 제외)
 
-### Phase 7 — Health endpoint (Priority Medium)
+### Phase 7 — Adapter health surface, reusing SPEC-UI-002 admin handler (Priority Medium)
 
-Goal: `/admin/health/adapters` 가 NFR-EVAL2-010 스키마로 응답.
+> **v0.2.0 amendment A1 — REUSE, do NOT build a new server.** The
+> v0.1.0 plan built a separate `cmd/usearch-api/admin_health_adapters.go`
+> on a new :9090 server. That is replaced: SPEC-UI-002 already ships
+> `GET /api/admin/adapters` (`internal/api/admin/handler_adapters.go`,
+> mounted at `cmd/usearch-api/main.go:71` behind `LoopbackOnly`), and
+> `AdapterAdminView` (`internal/adapters/registry.go:200`) already has
+> `success_count`/`fail_count` JSON fields stubbed at 0 (lines 212/215).
+> EVAL-002 fills those stubs and adds a sibling `/api/admin/adapters/
+> health` on the SAME mux. No new port.
+
+Goal: (a) `GET /api/admin/adapters` returns populated `success_count`/
+`fail_count`/`success_rate`; (b) `GET /api/admin/adapters/health` (same
+LoopbackOnly mux) returns the health schema per REQ-EVAL2-010.
 
 DDD ANALYZE:
-1. `cmd/usearch-api/` (또는 admin server 가 어느 cmd 에 있는지
-   확인) 의 admin port handler 등록 패턴 파악
-2. obs.Metrics.AdapterCalls collector 에서 현재 상태 snapshot
-   읽는 방법 (`prometheus.Collector.Collect(ch)` 채널)
+1. `internal/api/admin/handler_adapters.go` + `cmd/usearch-api/main.go:
+   registerAdminRoutes` (line 68-81) 의 기존 mount 패턴 + LoopbackOnly
+   wrapping 파악
+2. `internal/adapters/registry.go:243` `SnapshotForAdmin` 가 현재
+   `success_count`/`fail_count` 를 0 으로 두는 지점 (line 272-279) 확인
+3. per-adapter call telemetry source: in-process counter snapshot
+   (`obs.Metrics.AdapterCalls` `prometheus.Collector.Collect(ch)` 채널)
+   에서 adapter/outcome 별 count 읽는 방법 (research §9.3)
 
 DDD PRESERVE:
-3. 기존 admin endpoint (`/metrics`) 가 영향받지 않음을 확인
+4. 기존 SPEC-UI-002 `handler_adapters_test.go` 의 모든 assertion
+   (secret 누설 방지, status, key_set) 이 그대로 PASS 함을 확인
+5. 기존 `/api/admin/adapters`, resync, toggle 라우트 동작 무변경 확인
 
 DDD IMPROVE:
-4. `cmd/usearch-api/admin_health_adapters.go` 작성:
-   - HTTP handler `GET /admin/health/adapters`
-   - in-process counter snapshot 읽기 (research §9.3)
-   - 7d 정확도 한계 명시: process lifetime < 7d 이면 field `null`
-   - status 분류: healthy / degraded / unhealthy
+6. `AdapterAdminView` 에 `success_rate float64 \`json:"success_rate"\``
+   필드 추가 (SPEC-UI-002 소유 struct — 변경 좌표 명시); `SnapshotFor
+   Admin` 에서 telemetry 로 `SuccessCount`/`FailCount`/`SuccessRate`
+   채움. 7d 정확도 한계 명시: process lifetime < 7d 이면 24h 값만
+   신뢰, 7d 필드는 best-effort.
+7. `internal/api/admin/handler_adapters_health.go` 신규:
+   - HTTP handler `GET /api/admin/adapters/health`
+   - status 분류: healthy (≥0.95) / degraded (0.85–0.95) / unhealthy
+     (<0.85), REQ-EVAL2-008 threshold 재사용
    - JSON marshal + HTTP status code 매핑 (503 if any unhealthy)
-5. `cmd/usearch-api/admin_health_adapters_test.go`:
-   - 시나리오: all healthy → 200, mixed → 200 (degraded 만), one
-     unhealthy → 503
+   - `circuit_state` 필드는 deferred — 항상 `closed` 반환 (A2)
+8. `cmd/usearch-api/main.go:registerAdminRoutes` 에 한 줄 추가:
+   `mux.Handle("/api/admin/adapters/health", adminapi.LoopbackOnly(
+   adminapi.NewAdaptersHealthHandler(reg)))`
+9. `internal/api/admin/handler_adapters_health_test.go`:
+   - 시나리오: all healthy → 200, mixed → 200, one unhealthy → 503
+   - non-loopback RemoteAddr → 403 (기존 LoopbackOnly 테스트 패턴 재사용)
    - JSON 스키마 검증
+   - `GET /api/admin/adapters` 가 non-zero count/rate 반환 확인
 
 Exit criterion:
-- endpoint 가 모든 분기에서 정확한 status code + JSON 반환
+- `GET /api/admin/adapters` 가 populated success/fail/rate 반환
+- `GET /api/admin/adapters/health` 가 모든 분기에서 정확한 status
+  code + JSON 반환, LoopbackOnly 적용 확인
+- 새 :9090 서버 없음 (기존 admin mux 재사용)
+- 기존 SPEC-UI-002 admin 테스트 무회귀
 - 7d 정확도 한계 문서화 완료
 
 ### Phase 8 — Operator runbook (Priority Medium)
@@ -383,8 +445,9 @@ Tasks:
      `firing` 상태로 등장
    - Grafana dashboard 의 패널 #2 가 해당 adapter 의 라인을 빨간색
      으로 표시 (threshold line 아래)
-   - `/admin/health/adapters` 가 해당 adapter `status: "unhealthy"`,
-     overall_status `"degraded"`, HTTP 503 반환
+   - `/api/admin/adapters/health` (LoopbackOnly, 기존 admin mux) 가
+     해당 adapter `status: "unhealthy"`, overall_status `"degraded"`,
+     HTTP 503 반환
 4. 결과 캡처 → runbook 의 "정상 동작 예시" 섹션에 추가
 
 Exit criterion:
@@ -437,16 +500,23 @@ Phase별 file write 일관성을 위해 파일 단위 매트릭스:
 
 | File | Phase | Action |
 |------|-------|--------|
-| `registry.go` | 3 | MODIFY — `classifyFailure` helper + emit attr |
-| `registry_test.go` | 3 | MODIFY — `TestFailureClassClassification` table-driven |
+| `registry.go` | 3 | MODIFY — `classifyFailure` helper + emit attr (emit at :433, not :223) |
+| `registry.go` | 7 | MODIFY — add `AdapterAdminView.success_rate` field + populate counts/rate in `SnapshotForAdmin` (SPEC-UI-002 owned struct) |
+| `registry_test.go` | 3/7 | MODIFY — `TestFailureClassClassification` + populated-count assertion |
+
+### `internal/api/admin/` (SPEC-UI-002 package — reuse, A1)
+
+| File | Phase | Action |
+|------|-------|--------|
+| `handler_adapters_health.go` | 7 | NEW — `/api/admin/adapters/health` sibling handler (same admin mux, LoopbackOnly) |
+| `handler_adapters_health_test.go` | 7 | NEW — schema + status code + LoopbackOnly tests |
+| `handler_adapters.go` | 7 | MODIFY (SPEC-UI-002 owned) — reflect populated counts in `/api/admin/adapters` |
 
 ### `cmd/usearch-api/`
 
 | File | Phase | Action |
 |------|-------|--------|
-| `admin_health_adapters.go` | 7 | NEW — HTTP handler |
-| `admin_health_adapters_test.go` | 7 | NEW — schema + status code tests |
-| (existing admin server file) | 7 | MODIFY — register the new route |
+| `main.go` | 7 | MODIFY — register `/api/admin/adapters/health` in `registerAdminRoutes` (line 68-81) behind LoopbackOnly |
 
 ### `deploy/prometheus/`
 
@@ -511,7 +581,7 @@ Phase별 file write 일관성을 위해 파일 단위 매트릭스:
 | `internal/obs/metrics/fanout_partial.go::registerFanoutPartial` | `@MX:ANCHOR` | fan_in ≥ 3 (NewRegistry, tests, possibly admin endpoint) |
 | `internal/fanout/dispatch.go` (partial counter increment 지점) | `@MX:NOTE` | SPEC-EVAL-002 REQ-EVAL2-004 emission point |
 | `internal/adapters/registry.go::classifyFailure` | `@MX:NOTE` | failure_class taxonomy mapping; open-set 유의 |
-| `cmd/usearch-api/admin_health_adapters.go::handler` | `@MX:ANCHOR` | public HTTP API boundary |
+| `internal/api/admin/handler_adapters_health.go::handler` | `@MX:ANCHOR` | admin HTTP boundary (LoopbackOnly); `@MX:SPEC: SPEC-EVAL-002 REQ-EVAL2-010 + SPEC-UI-002 reuse` |
 
 ### 기존 수정 예상
 
@@ -536,7 +606,7 @@ Research §11 의 risk 와 mitigation phase:
 | Alert fatigue | Phase 5 (`for: 30m` 적용) + Phase 8 (runbook tuning) |
 | Acute 알람 false positive | Phase 5 (`for: 5m`) + Phase 8 (low-traffic adapter 명시) |
 | Grafana 패널 렌더 < 2초 미충족 | Phase 6 (recording rule만 쿼리, raw rate 금지 — peer review gate) |
-| `usearch_adapter_circuit_state` "no data" | Phase 1 (의도된 동작 명시) + Phase 8 (runbook 안내) |
+| `usearch_adapter_circuit_state` "no data" | Phase 1 (metric family만 등록) + **A2: alert/panel deferred, V1 gate 제외** |
 | Prometheus 30d retention 디스크 부족 | Phase 8 (sizing 가이드) |
 | Alertmanager 미설치 환경 | Phase 5 (`alerting:` 섹션 optional 명시) |
 | `failure_class` slog Loki 부재 환경 | Phase 6 (Loki panel optional, 핵심 5 panel 무손상) |
@@ -573,8 +643,12 @@ Contract 가 optional. EVAL-002 는 다음 이유로 **권장**:
   서 increase
 - Phase 4 끝: `promtool check rules` exits 0 + recording-rules-test
   PASS
-- Phase 5 끝: 4 alert 가 synthetic data 로 firing 상태 도달
-- Phase 6 끝: dashboard JSON import + 5 panel 렌더 < 2초
+- Phase 5 끝: **3 V1 alert** 가 synthetic data 로 firing 상태 도달
+  (circuit alert deferred)
+- Phase 6 끝: dashboard JSON import + **4 핵심 panel** 렌더 < 2초
+  (circuit panel deferred, Loki panel optional)
+- Phase 7 끝: `/api/admin/adapters` 가 populated count 반환 +
+  `/api/admin/adapters/health` 가 LoopbackOnly 로 응답 (새 포트 없음)
 - Phase 9 끝: end-to-end synthetic load 로 알람 → dashboard →
   health endpoint 전체 흐름 검증
 
@@ -621,4 +695,4 @@ implementation choices.
 
 ---
 
-*End of SPEC-EVAL-002 plan v0.1.0 (draft).*
+*End of SPEC-EVAL-002 plan v0.2.0 (draft).*
