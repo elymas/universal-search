@@ -1,0 +1,31 @@
+{{- if and .Values.usearch.mcp.enabled .Values.usearch.mcp.hpa.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "mcp") }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "universal-search.componentLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "mcp") | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "mcp") }}
+  minReplicas: {{ .Values.usearch.mcp.hpa.minReplicas }}
+  maxReplicas: {{ .Values.usearch.mcp.hpa.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.usearch.mcp.hpa.targetCPUUtilizationPercentage }}
+    {{- if .Values.usearch.mcp.hpa.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.usearch.mcp.hpa.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}

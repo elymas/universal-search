@@ -1,0 +1,13 @@
+{{- if .Values.koreanews.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "koreanews") }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "universal-search.componentLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "koreanews") | nindent 4 }}
+data:
+  {{- range $key, $value := .Values.koreanews.env }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
+{{- end }}

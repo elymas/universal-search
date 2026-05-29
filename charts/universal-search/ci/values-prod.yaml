@@ -1,0 +1,87 @@
+# =============================================================================
+# Production reference values — HPA/PDB/NetworkPolicy enabled, existingSecret
+# =============================================================================
+
+secrets:
+  backend: "existingSecret"
+  existingSecretPrefix: "usearch-secrets"
+
+usearch:
+  api:
+    replicas: 2
+    hpa:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 10
+    pdb:
+      enabled: true
+      minAvailable: 1
+    networkPolicy:
+      enabled: true
+    ingress:
+      enabled: true
+      className: nginx
+      hosts:
+        - host: search.example.com
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - secretName: usearch-api-tls
+          hosts:
+            - search.example.com
+    serviceMonitor:
+      enabled: true
+  mcp:
+    replicas: 2
+    hpa:
+      enabled: true
+    pdb:
+      enabled: true
+    networkPolicy:
+      enabled: true
+
+researcher:
+  enabled: true
+embedder:
+  enabled: true
+  persistence:
+    storageClass: "ssd-durable"
+tokenizerKo:
+  enabled: true
+storm:
+  enabled: false
+koreanews:
+  enabled: false
+
+litellm:
+  enabled: true
+searxng:
+  enabled: true
+meilisearch:
+  enabled: true
+  persistence:
+    storageClass: "ssd-durable"
+
+postgresql:
+  enabled: true
+  primary:
+    persistence:
+      storageClass: "ssd-durable"
+
+redis:
+  enabled: true
+  master:
+    persistence:
+      storageClass: "ssd-durable"
+
+qdrant:
+  enabled: true
+  persistence:
+    storageClass: "ssd-durable"
+
+observability:
+  serviceMonitor:
+    enabled: true
+  otlp:
+    endpoint: "otel-collector.observability.svc.cluster.local:4317"

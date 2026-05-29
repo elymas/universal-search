@@ -1,0 +1,207 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "Universal Search Helm Values",
+  "description": "Schema for the universal-search Helm chart values.yaml",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "global": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Global settings shared across all services",
+      "properties": {
+        "imageRegistry": {
+          "type": "string",
+          "description": "Default container image registry"
+        },
+        "imagePullSecrets": {
+          "type": "array",
+          "items": { "type": "object" },
+          "description": "List of image pull secrets"
+        },
+        "storageClass": {
+          "type": "string",
+          "description": "Default storage class for PVCs"
+        },
+        "security": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "allowInsecureImages": {
+              "type": "boolean",
+              "description": "Allow Bitnami subcharts to use their default registries"
+            }
+          }
+        }
+      }
+    },
+    "imageTag": {
+      "type": "string",
+      "description": "Default image tag for all services"
+    },
+    "secrets": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "backend": {
+          "type": "string",
+          "enum": ["values", "existingSecret", "externalSecrets"],
+          "description": "Secret backend strategy tier"
+        },
+        "existingSecretPrefix": {
+          "type": "string"
+        },
+        "externalSecrets": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "secretStoreRef": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "kind": { "type": "string" }
+              }
+            },
+            "refreshInterval": { "type": "string" }
+          }
+        }
+      }
+    },
+    "secretsValues": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Tier 1 dev defaults (only used when secrets.backend=values)"
+    },
+    "usearch": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Core usearch services (api, mcp)",
+      "properties": {
+        "api": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "replicas": { "type": "integer", "minimum": 0 },
+            "image": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "repository": { "type": "string" },
+                "pullPolicy": { "type": "string" }
+              }
+            }
+          }
+        },
+        "mcp": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "replicas": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "researcher": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" }
+      }
+    },
+    "embedder": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "gpu": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "tokenizerKo": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" }
+      }
+    },
+    "storm": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" }
+      }
+    },
+    "koreanews": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" }
+      }
+    },
+    "litellm": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" }
+      }
+    },
+    "searxng": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" }
+      }
+    },
+    "meilisearch": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "masterKey": { "type": "string" }
+      }
+    },
+    "postgresql": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Bitnami PostgreSQL subchart configuration"
+    },
+    "redis": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Bitnami Redis subchart configuration"
+    },
+    "qdrant": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Qdrant official subchart configuration"
+    },
+    "observability": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "serviceMonitor": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "migration": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "backoffLimit": { "type": "integer" }
+      }
+    }
+  }
+}

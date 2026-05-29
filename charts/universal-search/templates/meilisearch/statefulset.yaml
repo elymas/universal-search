@@ -1,0 +1,66 @@
+{{- if .Values.meilisearch.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "meilisearch") }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "universal-search.componentLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "meilisearch") | nindent 4 }}
+spec:
+  serviceName: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "meilisearch") }}
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "universal-search.componentSelectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "meilisearch") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "universal-search.componentSelectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "meilisearch") | nindent 8 }}
+    spec:
+      containers:
+        - name: meilisearch
+          image: "{{ .Values.meilisearch.image.repository }}:{{ .Values.meilisearch.image.tag }}"
+          imagePullPolicy: {{ .Values.meilisearch.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 7700
+              protocol: TCP
+          env:
+            - name: MEILI_ENV
+              value: {{ .Values.meilisearch.env.MEILI_ENV | default "development" | quote }}
+          {{- if .Values.meilisearch.secretEnv }}
+          {{- include "universal-search.secretEnvEntries" (dict "root" . "secretEnv" .Values.meilisearch.secretEnv "component" "meilisearch") | nindent 12 }}
+          {{- end }}
+          {{- with .Values.meilisearch.probes }}
+          livenessProbe:
+            {{- toYaml .liveness | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .readiness | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.meilisearch.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /meili_data
+            {{- with .Values.meilisearch.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+  {{- if .Values.meilisearch.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          {{- include "universal-search.componentLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "meilisearch") | nindent 10 }}
+      spec:
+        accessModes:
+          - {{ .Values.meilisearch.persistence.accessMode | default "ReadWriteOnce" }}
+        {{- if .Values.meilisearch.persistence.storageClass }}
+        storageClassName: {{ .Values.meilisearch.persistence.storageClass }}
+        {{- else if .Values.global.storageClass }}
+        storageClassName: {{ .Values.global.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.meilisearch.persistence.size | default "5Gi" }}
+  {{- end }}
+{{- end }}

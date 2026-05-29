@@ -1,0 +1,18 @@
+{{- if .Values.usearch.mcp.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "mcp") }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "universal-search.componentLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "mcp") | nindent 4 }}
+spec:
+  type: {{ .Values.usearch.mcp.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.usearch.mcp.service.port }}
+      targetPort: http
+      protocol: TCP
+  selector:
+    {{- include "universal-search.componentSelectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "mcp") | nindent 4 }}
+{{- end }}

@@ -1,0 +1,26 @@
+{{- if .Values.usearch.api.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "api") }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "universal-search.componentLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "api") | nindent 4 }}
+  {{- with .Values.usearch.api.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.usearch.api.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.usearch.api.service.port }}
+      targetPort: http
+      protocol: TCP
+    - name: admin
+      port: {{ .Values.usearch.api.env.USEARCH_ADMIN_PORT | default 9090 }}
+      targetPort: admin
+      protocol: TCP
+  selector:
+    {{- include "universal-search.componentSelectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "api") | nindent 4 }}
+{{- end }}

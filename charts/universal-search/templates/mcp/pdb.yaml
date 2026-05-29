@@ -1,0 +1,19 @@
+{{- if and .Values.usearch.mcp.enabled .Values.usearch.mcp.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "mcp") }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "universal-search.componentLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "mcp") | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "universal-search.componentSelectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "mcp") | nindent 6 }}
+  {{- if .Values.usearch.mcp.pdb.minAvailable }}
+  minAvailable: {{ .Values.usearch.mcp.pdb.minAvailable }}
+  {{- end }}
+  {{- if .Values.usearch.mcp.pdb.maxUnavailable }}
+  maxUnavailable: {{ .Values.usearch.mcp.pdb.maxUnavailable }}
+  {{- end }}
+{{- end }}

@@ -1,9 +1,9 @@
 ---
 id: SPEC-DEPLOY-001
-version: 0.1.0
-status: draft
+version: 1.0.0
+status: implemented
 created: 2026-05-22
-updated: 2026-05-22
+updated: 2026-05-28
 author: limbowl
 priority: P0
 issue_number: 0
@@ -20,6 +20,15 @@ related: [SPEC-DOC-001, SPEC-DOC-002]
 # SPEC-DEPLOY-001: Helm chart — k8s team-scale deploy for universal-search
 
 ## HISTORY
+
+- 2026-05-28 (status flip draft → implemented, v0.1.0 → v1.0.0, limbowl via /moai sync):
+  Phase 5.1-5.8 chart templates complete per progress.md. Shipped:
+  charts/universal-search/ (Chart.yaml + 11 helpers + ~50 templates across
+  api/mcp/researcher/embedder/litellm/koreanews/searxng/storm/meilisearch/
+  tokenizer-ko/jobs, plus values.yaml ~300 keys + values.schema.json),
+  deploy/Dockerfile.usearch-{api,mcp,migrate}, scripts/compose-chart-parity.sh,
+  .github/workflows/{build-images,chart-ci,chart-release}.yml. helm lint PASS.
+  Commit 11f1b62.
 
 - 2026-05-22 (initial draft v0.1.0, limbowl via manager-spec):
   M9 (V1 release)의 세 번째 SPEC이자 SPEC-REL-001 V1.0.0 태깅의

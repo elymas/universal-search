@@ -1,0 +1,42 @@
+{{- if .Values.storm.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "storm") }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "universal-search.componentLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "storm") | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "universal-search.componentSelectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "storm") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "universal-search.componentSelectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "storm") | nindent 8 }}
+    spec:
+      containers:
+        - name: storm
+          image: {{ include "universal-search.image" (dict "Values" .Values "Chart" .Chart "image" .Values.storm.image) }}
+          imagePullPolicy: {{ .Values.storm.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.storm.service.port }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "storm") }}
+          {{- if .Values.storm.secretEnv }}
+          env:
+            {{- include "universal-search.secretEnvEntries" (dict "root" . "secretEnv" .Values.storm.secretEnv "component" "storm") | nindent 12 }}
+          {{- end }}
+          {{- with .Values.storm.probes }}
+          livenessProbe:
+            {{- toYaml .liveness | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .readiness | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.storm.resources | nindent 12 }}
+{{- end }}

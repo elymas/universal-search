@@ -1,0 +1,20 @@
+{{- if and .Values.embedder.enabled .Values.embedder.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "embedder") }}-models
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "universal-search.componentLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "embedder") | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.embedder.persistence.accessMode | default "ReadWriteOnce" }}
+  {{- if .Values.embedder.persistence.storageClass }}
+  storageClassName: {{ .Values.embedder.persistence.storageClass }}
+  {{- else if .Values.global.storageClass }}
+  storageClassName: {{ .Values.global.storageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.embedder.persistence.size | default "5Gi" }}
+{{- end }}

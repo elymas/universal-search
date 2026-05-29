@@ -1,0 +1,15 @@
+{{- if .Values.searxng.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "searxng") }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "universal-search.componentLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "searxng") | nindent 4 }}
+data:
+  settings.yml: |
+    {{- toYaml .Values.searxng.settings | nindent 4 }}
+  {{- range $key, $value := .Values.searxng.env }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
+{{- end }}

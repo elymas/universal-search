@@ -1,0 +1,27 @@
+{{- if .Values.litellm.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "litellm") }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "universal-search.componentLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "litellm") | nindent 4 }}
+data:
+  config.yaml: |
+    model_list:
+      {{- if .Values.litellm.config.model_list }}
+      {{- toYaml .Values.litellm.config.model_list | nindent 6 }}
+      {{- else }}
+      # Default empty model list — operators MUST configure models.
+      # See deploy/litellm/config.yaml for the dev reference.
+      []
+      {{- end }}
+    general_settings:
+      master_key: os.environ/LITELLM_MASTER_KEY
+      database_url: os.environ/DATABASE_URL
+    {{- range $key, $value := .Values.litellm.env }}
+    {{- if and (ne $key "LITELLM_BUDGET_USD") (ne $key "DATABASE_URL") (ne $key "REDIS_URL") (ne $key "OLLAMA_BASE_URL") }}
+    {{ $key }}: {{ $value }}
+    {{- end }}
+    {{- end }}
+{{- end }}

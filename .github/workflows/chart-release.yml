@@ -1,0 +1,65 @@
+name: Chart Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+env:
+  REGISTRY: ghcr.io
+  ORG: elymas
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.17.1
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+        with:
+          cosign-release: v2.4.0
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Helm dependencies
+        run: |
+          helm dependency update charts/universal-search
+
+      - name: Package chart
+        id: package
+        run: |
+          helm package charts/universal-search \
+            --destination ./dist \
+            --app-version ${{ github.ref_name }}
+          CHART_PKG=$(ls ./dist/*.tgz)
+          echo "chart_package=${CHART_PKG}" >> "$GITHUB_OUTPUT"
+          echo "Packaged: ${CHART_PKG}"
+
+      - name: Sign chart blob (cosign keyless)
+        run: |
+          cosign sign-blob --yes ${{ steps.package.outputs.chart_package }}
+
+      - name: Push chart to OCI registry
+        run: |
+          helm push ${{ steps.package.outputs.chart_package }} \
+            oci://${{ env.REGISTRY }}/${{ env.ORG }}/charts
+
+      - name: Verify chart is downloadable
+        run: |
+          helm pull oci://${{ env.REGISTRY }}/${{ env.ORG }}/charts/universal-search \
+            --version $(helm show chart charts/universal-search | yq .version)

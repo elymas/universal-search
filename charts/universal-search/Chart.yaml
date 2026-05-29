@@ -1,0 +1,52 @@
+apiVersion: v2
+name: universal-search
+description: Universal Search Engine - multi-service Helm chart for team-scale Kubernetes deployment
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.28-0 <1.32-0"
+home: https://github.com/elymas/universal-search
+sources:
+  - https://github.com/elymas/universal-search
+maintainers:
+  - name: limbowl
+    email: limbowl@users.noreply.github.com
+icon: https://raw.githubusercontent.com/elymas/universal-search/main/docs/static/favicon.ico
+
+annotations:
+  artifacthub.io/license: MIT
+  artifacthub.io/links: |
+    - name: Documentation
+      url: https://elymas.github.io/universal-search/operators/deployment-helm
+  artifacthub.io/images: |
+    - name: usearch-api
+      image: ghcr.io/elymas/universal-search/usearch-api:0.1.0
+    - name: usearch-mcp
+      image: ghcr.io/elymas/universal-search/usearch-mcp:0.1.0
+
+dependencies:
+  # PostgreSQL — Bitnami subchart, pinned exact patch version.
+  # Quarterly audit + manual bump per NFR-DEPLOY-005.
+  - name: postgresql
+    version: "16.4.5"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.enabled
+    tags:
+      - infrastructure
+
+  # Redis — Bitnami subchart, standalone architecture.
+  # Sentinel/Cluster is V1 untested per D3.
+  - name: redis
+    version: "20.6.2"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: redis.enabled
+    tags:
+      - infrastructure
+
+  # Qdrant — official subchart.
+  - name: qdrant
+    version: "1.16.3"
+    repository: "https://qdrant.github.io/qdrant-helm"
+    condition: qdrant.enabled
+    tags:
+      - infrastructure
