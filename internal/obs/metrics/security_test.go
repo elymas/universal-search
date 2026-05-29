@@ -46,6 +46,34 @@ func TestRecordSecurityEventIncrements(t *testing.T) {
 	}
 }
 
+func TestRecordRateLimitExceededIncrements(t *testing.T) {
+	t.Parallel()
+	r := NewRegistry()
+	r.Security.RecordRateLimitExceeded("known")
+	got := testutil.ToFloat64(r.Security.RateLimitExceeded.WithLabelValues("known"))
+	if got != 1 {
+		t.Errorf("ratelimit_exceeded_total{tenant_id_class=known} = %v, want 1", got)
+	}
+}
+
+func TestRecordRateLimitExceededRejectsUnknownClass(t *testing.T) {
+	t.Parallel()
+	r := NewRegistry()
+	// A raw tenant_id (not a bounded class) must be rejected to protect the cap.
+	r.Security.RecordRateLimitExceeded("tenant-xyz-123")
+	if got := testutil.ToFloat64(r.Security.RateLimitExceeded.WithLabelValues("known")); got != 0 {
+		t.Errorf("unknown class must not increment a valid series; got %v", got)
+	}
+}
+
+func TestRateLimitExceededCardinalityCap(t *testing.T) {
+	t.Parallel()
+	// REQ-SEC-014 / NFR-SEC-007: tenant_id_class is a 2-value bounded bucket.
+	if len(rateLimitTenantClasses) != 2 {
+		t.Errorf("tenant_id_class cardinality = %d, want exactly 2 (known|unknown)", len(rateLimitTenantClasses))
+	}
+}
+
 func TestSecurityEventCardinalityCap(t *testing.T) {
 	t.Parallel()
 	// REQ-SEC-017 / NFR-SEC-007: <= 28 unique (type, severity) combinations.

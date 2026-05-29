@@ -300,6 +300,9 @@ func NewRegistry() *Registry {
 			"component",
 			"type",
 			"severity",
+			// Rate-limit label (SPEC-SEC-001 REQ-SEC-014): tenant_id_class ∈
+			// {known, unknown}. Raw tenant_id is NEVER a label.
+			"tenant_id_class",
 		},
 	}
 }

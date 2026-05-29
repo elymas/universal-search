@@ -286,6 +286,9 @@ func TestCardinalityGuardRejectsUnboundedLabels(t *testing.T) {
 		"component": true,
 		"type":      true,
 		"severity":  true,
+		// Rate-limit label added by SPEC-SEC-001 (REQ-SEC-014).
+		// tenant_id_class ∈ {known, unknown}; raw tenant_id is never a label.
+		"tenant_id_class": true,
 	}
 
 	reg := metrics.NewRegistry()

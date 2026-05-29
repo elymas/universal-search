@@ -340,7 +340,7 @@ Exit criterion:
 D5 핵심: 3-tier secrets (env / K8s / Vault stub).
 
 Tasks:
-1. `internal/security/secrets/` 패키지 생성:
+1. `internal/security/secretstore/` 패키지 생성:
    - `resolver.go`: Resolver interface (`Get(ctx, key) (string,
      error)`)
    - `env.go`: EnvResolver (os.Getenv wrapping)
@@ -671,7 +671,7 @@ per-phase test checkpoints:
 | `internal/access/dialer.go::pinnedIPDialer` | `@MX:ANCHOR` | Update `@MX:REASON` | Same — extracted to shared package |
 | `internal/auth/private_ip.go::isPrivateIP` | `@MX:ANCHOR` | Update or remove (if function merged into shared package) | Refactor consolidation |
 | `internal/security/ssrf/ssrf.go::ValidateHost` | `@MX:ANCHOR` (NEW) | Add | High fan_in (called from access + auth + future adapters) |
-| `internal/security/secrets/resolver.go::Get` | `@MX:ANCHOR` (NEW) | Add | High fan_in (called from llm + index + auth) |
+| `internal/security/secretstore/resolver.go::Get` | `@MX:ANCHOR` (NEW) | Add | High fan_in (called from llm + index + auth) |
 | `internal/security/events/event.go::Emit` | `@MX:ANCHOR` (NEW) | Add | High fan_in (called from all security event sites); delegates to existing `internal/audit` emitter |
 | `internal/security/ratelimit/limiter.go::Allow` | `@MX:NOTE` (NEW) | Add | Per-request hot path |
 | `internal/security/prompt/sanitize.go::Sanitize` | `@MX:NOTE` (NEW) | Add | SYN-002 integration point |

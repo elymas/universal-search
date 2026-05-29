@@ -9,6 +9,7 @@ import (
 	"github.com/elymas/universal-search/internal/deepreport"
 	"github.com/elymas/universal-search/internal/fanout"
 	"github.com/elymas/universal-search/internal/llm"
+	"github.com/elymas/universal-search/internal/security/prompt"
 	"github.com/elymas/universal-search/internal/streamsynth"
 	"github.com/elymas/universal-search/pkg/types"
 )
@@ -264,10 +265,13 @@ func VerifierWithChecker(ctx context.Context, cfg Config, draft WriterDraft, doc
 		citations = append(citations, fmt.Sprintf("[%d] %s %s", c.Marker, c.Title, c.URL))
 	}
 
-	// Serialize docs.
+	// Serialize docs. SPEC-SEC-001 REQ-SEC-015: each untrusted document body is
+	// wrapped in an <EVIDENCE> block and has injection markers neutralized
+	// before it reaches synthesis.CheckFaithfulness, so corpus text is treated
+	// as quoted evidence rather than instructions.
 	var docTexts []string
 	for _, d := range docs {
-		docTexts = append(docTexts, d.Body)
+		docTexts = append(docTexts, prompt.Sanitize(d.Body).Sanitized)
 	}
 
 	return checkFn(ctx, text, citations, docTexts)

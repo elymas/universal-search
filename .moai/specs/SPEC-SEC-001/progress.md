@@ -218,3 +218,82 @@ identified, code blocked). Error count delta: 0 (no new test failures).
 - CROSS-SPEC carry-forward: UI-001 (next.config.mjs CSP review), REL-001
   (release.yml SLSA/cosign boundary), AUTH-003 (4 new EventType consts sign-off
   from T05).
+
+## 2026-05-29 — Run Phase T06 + T08 UNBLOCKED (Phases 6/9/10) — manager-ddd (DDD)
+
+The three net-new packages that were dir-creation-blocked last run are now
+landed (orchestrator pre-created the dirs + doc.go stubs). The package formerly
+named `secrets/` is now `secretstore/` (spec v0.2.1 rename — `secrets/` collided
+with the repo-root `./secrets/**` deny rule). Config key UNCHANGED:
+`secrets.backend`. Build clean (`go build ./...` exit 0); `go vet` clean on all
+touched packages; `go mod tidy` done.
+
+### Phase 6 (T06) — secret resolver — COMPLETE
+- `internal/security/secretstore/`: resolver.go (Resolver iface + ErrNotImplemented
+  sentinel, @MX:ANCHOR+REASON on the Resolver.Get contract), env.go (EnvResolver =
+  os.LookupEnv wrapper, error on unset), k8s.go (K8sResolver reads
+  <mount>/<key>, trims, path-traversal guard), vault.go (stub → ErrNotImplemented),
+  factory.go (NewResolver env|k8s|vault, "" defaults to env, unknown=error).
+  Coverage 96.0%.
+- PRESERVE refactor (characterization-first): `internal/llm/config/config.go`
+  LITELLM_MASTER_KEY and `internal/adapters/naver/naver.go` NAVER_CLIENT_ID/SECRET
+  now resolve via a package-level `secretEnv secretstore.Resolver = NewEnvResolver()`.
+  EnvResolver has os.Getenv semantics (error iff empty), so the existing empty→
+  fallback/"not set" paths are byte-identical. Evidence: llm + naver suites GREEN
+  both BEFORE (cached ok) and AFTER (llm 89.9%, llm/config 94.7%, naver 94.7%).
+  `os` import dropped from naver.go (no other use). Scope kept minimal — Meili/
+  Qdrant struct-field keys and the non-existent OIDC Getenv site untouched.
+- REQ-SEC-018: relies on the existing CI grep (`scripts/check-no-secret-logs.sh`)
+  — secretstore never logs a resolved value, so there is no natural unit-test
+  home for TestNoSecretInLogs (noted, not invented).
+
+### Phase 9 (T08-ratelimit) — per-tenant rate limit — COMPLETE
+- `internal/security/ratelimit/`: limiter.go (per-tenant `golang.org/x/time/rate`
+  token bucket, default 60/min + burst 60, lazy per-tenant creation under mutex;
+  @MX:WARN+REASON on hot-path Allow), middleware.go (stdlib net/http — NO chi;
+  alert-only by DEFAULT, 429+Retry-After only when MiddlewareConfig.RejectOnExceed
+  is true, modeled on costguard CapCheckMiddleware). On breach it ALWAYS emits
+  `ratelimit.exceeded` (events.SeverityMedium) + increments the metric, then
+  serves the request unless enforcement is on.
+- New metric `usearch_security_ratelimit_exceeded_total{tenant_id_class}` with
+  class ∈ {known, unknown} ONLY — raw tenant_id is never a label. Added to ALL
+  THREE cardinality allowlists (metrics.go `labelNames` slice, metrics_test.go
+  map, router_test.go switch — the inverse-check site that initially failed).
+  `golang.org/x/time` promoted to a direct dep (v0.15.0). Coverage 100%.
+
+### Phase 10 (T08-prompt) — prompt-injection sanitization — COMPLETE
+- `internal/security/prompt/`: patterns.go (5 heuristic regex classes —
+  override_attempt, role_injection, tag_break, persona_swap, format_break; NO LLM
+  classifier), sanitize.go (Sanitize wraps content in <EVIDENCE>…</EVIDENCE> and
+  neutralizes breakout markers incl. literal </EVIDENCE>; SanitizeAndEmit fires a
+  low-severity `prompt.sanitized` event on detection; @MX:NOTE marks the SYN-002
+  integration point). Coverage 100%.
+- SYN-002 wiring: `internal/deepagent/agents.go` VerifierWithChecker docs loop now
+  passes each `d.Body` through `prompt.Sanitize(...).Sanitized` before
+  CheckFaithfulness. deepagent suite GREEN (74.7% pkg coverage unchanged; mockFns
+  ignore doc-body content so wrapping is behavior-safe). Python sidecar
+  (services/researcher) UNCHANGED.
+
+### Verification (this run)
+- `go build ./...` exit 0; `go vet` clean (security/llm/naver/deepagent/obs-metrics).
+- `go test -race -cover ./internal/security/... ./internal/llm/... ./internal/adapters/naver/... ./internal/deepagent/...`
+  ALL GREEN. New-package coverage: secretstore 96.0%, ratelimit 100.0%, prompt 100.0%
+  (all >= 85% target). obs/metrics GREEN with the new collector + 3 allowlist updates.
+
+### Acceptance criteria progress (this run)
+Newly met: REQ-SEC-013 (secretstore 3 backends + env-resolver call-site refactor),
+REQ-SEC-014 (ratelimit alert-only + config-gated 429 + bounded metric),
+REQ-SEC-015 (prompt Sanitize + EVIDENCE wrap wired into SYN-002 verifier flow).
+Error count delta: 0 (no new test failures). The 2 previously-Deferred ASVS rows
+(V5.2.5 prompt-injection, V11.1.4 rate-limit) are now implemented.
+
+### Residual / cross-SPEC carry-forward
+- SPEC path amendment applied (spec.md + plan.md `secrets/`→`secretstore/`,
+  v0.2.1 HISTORY note, version bumped 0.2.0→0.2.1, status stays approved).
+- Orchestrator note: the task brief labeled these "T06/T09/T10"; the accurate
+  task IDs are T06 (secretstore) and T08 (ratelimit+prompt). T09/T10 (supply-chain
+  + operator docs) were already completed in the prior run and are untouched.
+- ratelimit middleware is wired as a constructor (MiddlewareConfig) but not yet
+  mounted on a live route — mounting + a TenantExtractor backed by costguard's
+  TenantIDFromContext is a future integration step (no live HTTP route currently
+  rate-limited; same posture as the cookie factory from Phase 8).

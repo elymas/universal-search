@@ -11,10 +11,16 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
 
+	"github.com/elymas/universal-search/internal/security/secretstore"
 	"github.com/elymas/universal-search/pkg/types"
 )
+
+// secretEnv resolves NAVER_* credentials (REQ-SEC-016). It is the default env
+// backend (os.Getenv semantics); behaviour at the call site is identical — an
+// unset variable yields an empty value that triggers the existing "not set"
+// error path. The resolver is immutable and stateless.
+var secretEnv secretstore.Resolver = secretstore.NewEnvResolver()
 
 const (
 	// baseURLBlog is the Naver Blog search API endpoint.
@@ -112,7 +118,7 @@ type Adapter struct {
 func New(opts Options) (*Adapter, error) {
 	clientID := opts.ClientID
 	if clientID == "" {
-		clientID = os.Getenv("NAVER_CLIENT_ID")
+		clientID, _ = secretEnv.Get(context.Background(), "NAVER_CLIENT_ID")
 	}
 	if clientID == "" {
 		return nil, fmt.Errorf("naver: NAVER_CLIENT_ID not set")
@@ -120,7 +126,7 @@ func New(opts Options) (*Adapter, error) {
 
 	clientSecret := opts.ClientSecret
 	if clientSecret == "" {
-		clientSecret = os.Getenv("NAVER_CLIENT_SECRET")
+		clientSecret, _ = secretEnv.Get(context.Background(), "NAVER_CLIENT_SECRET")
 	}
 	if clientSecret == "" {
 		return nil, fmt.Errorf("naver: NAVER_CLIENT_SECRET not set")

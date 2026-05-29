@@ -2,7 +2,10 @@
 //
 // REQ-SEC-009: usearch_security_ssrf_blocks_total{reason, component}
 // REQ-SEC-017: usearch_security_event_total{type, severity}
-// NFR-SEC-007: bounded label cardinality (ssrf_blocks 5x3=15 + event 7x4=28).
+// REQ-SEC-014: usearch_security_ratelimit_exceeded_total{tenant_id_class}
+// NFR-SEC-007: bounded label cardinality (ssrf_blocks 5x3=15 + event 7x4=28 +
+// ratelimit 2). tenant_id_class is a 2-value bucket (known|unknown) — the raw
+// tenant_id is NEVER a label.
 package metrics
 
 import "github.com/prometheus/client_golang/prometheus"
@@ -21,7 +24,15 @@ type SecurityCollectors struct {
 	// severity. type ∈ the 7-event taxonomy; severity ∈ {critical, high,
 	// medium, low}.
 	SecurityEvents *prometheus.CounterVec
+
+	// RateLimitExceeded counts per-tenant rate-limit breaches (REQ-SEC-014),
+	// partitioned ONLY by tenant_id_class ∈ {known, unknown}. The raw tenant_id
+	// is never a label (NFR-SEC-007 cardinality protection).
+	RateLimitExceeded *prometheus.CounterVec
 }
+
+// rateLimitTenantClasses is the bounded tenant_id_class label allowlist.
+var rateLimitTenantClasses = []string{"known", "unknown"}
 
 // ssrfBlockReasons is the bounded reason label allowlist (REQ-SEC-009).
 var ssrfBlockReasons = []string{"scheme", "private_ip", "redirect_hop", "dns_rebind", "hostname_allowlist"}
@@ -57,7 +68,15 @@ func registerSecurity(pr *prometheus.Registry) *SecurityCollectors {
 		[]string{"type", "severity"},
 	)
 
-	pr.MustRegister(ssrfBlocks, securityEvents)
+	rateLimitExceeded := prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "usearch_security_ratelimit_exceeded_total",
+			Help: "Total per-tenant rate-limit breaches, partitioned by tenant_id_class (known|unknown).",
+		},
+		[]string{"tenant_id_class"},
+	)
+
+	pr.MustRegister(ssrfBlocks, securityEvents, rateLimitExceeded)
 
 	// Pre-initialise the full bounded label space so cardinality is explicit
 	// and the families are present even before the first real observation.
@@ -71,11 +90,28 @@ func registerSecurity(pr *prometheus.Registry) *SecurityCollectors {
 			securityEvents.WithLabelValues(t, sev).Add(0)
 		}
 	}
+	for _, c := range rateLimitTenantClasses {
+		rateLimitExceeded.WithLabelValues(c).Add(0)
+	}
 
 	return &SecurityCollectors{
-		SSRFBlocks:     ssrfBlocks,
-		SecurityEvents: securityEvents,
+		SSRFBlocks:        ssrfBlocks,
+		SecurityEvents:    securityEvents,
+		RateLimitExceeded: rateLimitExceeded,
 	}
+}
+
+// RecordRateLimitExceeded increments the rate-limit-exceeded counter for the
+// given tenant_id_class. Unknown class values are ignored to protect the
+// cardinality cap (NFR-SEC-007).
+func (s *SecurityCollectors) RecordRateLimitExceeded(tenantIDClass string) {
+	if s == nil || s.RateLimitExceeded == nil {
+		return
+	}
+	if !contains(rateLimitTenantClasses, tenantIDClass) {
+		return
+	}
+	s.RateLimitExceeded.WithLabelValues(tenantIDClass).Inc()
 }
 
 // RecordSSRFBlock increments the SSRF block counter for the given reason and
