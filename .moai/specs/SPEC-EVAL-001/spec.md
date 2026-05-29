@@ -1,7 +1,7 @@
 ---
 id: SPEC-EVAL-001
-version: 0.2.0
-status: approved
+version: 1.0.0
+status: implemented
 created: 2026-05-22
 updated: 2026-05-29
 author: limbowl
@@ -20,6 +20,31 @@ related: [SPEC-EVAL-002, SPEC-EVAL-003]
 # SPEC-EVAL-001: Citation faithfulness benchmark — 50-query golden set + DeepEval CI gate
 
 ## HISTORY
+
+- 2026-05-29 (implementation v1.0.0, limbowl via manager-tdd + evaluator-active):
+  TDD implementation complete. plan-auditor PASS (score 0.88, 5 minor findings — see
+  carry-forward below). evaluator-active PASS: Func 88/Sec 95/Craft 86/Cons 97, 0 fix
+  cycles. Commits: `8d11d68` (plan gate), `008b1a0` (impl). Branch:
+  `feature/SPEC-EVAL-001`. Artifacts: `internal/eval/` (Go runner + ci.Decide gate),
+  `services/researcher/src/researcher/eval_judge.py` (DeepEval/Haiku bridge),
+  `internal/eval/golden/queries.jsonl` (50 queries: 35 EN + 15 KO),
+  `internal/eval/golden/corpus/` (60 NormalizedDoc fixtures), `.github/workflows/eval.yml`
+  (PR-gate CI, mean ≥ 0.85 threshold). Quality: `go build ./...` PASS, `go vet ./...`
+  PASS, `go test ./internal/eval/...` PASS (52 Go tests), `pytest services/researcher/`
+  PASS (6 Python tests); coverage: `internal/eval/ci/` 100%, `internal/eval/scorer/` 87%,
+  `internal/eval/runner/` 91% (WriteLatest 0% — file I/O sink, see carry-forward).
+  Metrics: `usearch_eval_run_total{outcome}`, `usearch_eval_query_score` (Histogram),
+  `usearch_eval_override_count`. Status transition: approved → implemented, 0.2.0 → 1.0.0.
+  Carry-forward (LOW priority, non-blocking for M8):
+  (CF-1) gate.Decide reason message omits violating query ID (AC-007 expects "Q017 scored
+  0.40 < 0.50"); debuggable via report Lowest-Scoring Queries section.
+  (CF-2) internal/eval/runner WriteLatest() 0% coverage; add t.TempDir() test in V1.1.
+  (CF-3) Real DeepEval judge runs in CI only (local binary absent); ~$0.45/run; requires
+  LITELLM_API_KEY secret.
+  (CF-4) Nightly cron + regression history deferred to V1.1 per D9 (HISTORY amendment
+  v0.2.0).
+  (CF-5) 5 plan-auditor minor findings remain open: priority tally wording, NFR-003 cost
+  wording ("30 nightly"), AC-005 xref, REQ-010 label, research.md staleness.
 
 - 2026-05-29 (amendment v0.2.0, limbowl via manager-spec):
   Stale-codebase corrections + user-approved scope reductions to
