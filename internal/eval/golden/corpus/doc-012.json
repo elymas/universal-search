@@ -1,0 +1,20 @@
+{
+  "id": "doc-012",
+  "source_id": "github",
+  "url": "https://example.test/github/rustgc-ko-b",
+  "title": "GC 없는 러스트 메모리 모델 (심화)",
+  "body": "러스트는 컴파일 시점에 검사하는 소유권과 빌림 시스템으로 가비지 컬렉터 없이 메모리 안전성을 달성한다. 각 값은 단일 소유자를 가지며 참조는 빌림 검사기가 검증한다. 이는 전체 메모리 버그 부류를 제거한다. 후속 연구는 더 광범위한 실험으로 이러한 발견을 확장했다.",
+  "snippet": "GC 없는 러스트 메모리 모델 (심화)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "ko",
+  "doc_type": "repo",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
+}

@@ -1,0 +1,20 @@
+{
+  "id": "doc-060",
+  "source_id": "arxiv",
+  "url": "https://example.test/arxiv/llmquant-ko-b",
+  "title": "LLM 양자화 트레이드오프 (심화)",
+  "body": "양자화는 모델 가중치를 int8이나 int4 같은 낮은 정밀도로 줄여 메모리를 축소하고 추론을 가속한다. 정확도를 떨어뜨릴 수 있으나 GPTQ와 AWQ 같은 기법으로 완화한다. 트레이드오프는 작업에 따라 다르다. 후속 연구는 더 광범위한 실험으로 이러한 발견을 확장했다.",
+  "snippet": "LLM 양자화 트레이드오프 (심화)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "ko",
+  "doc_type": "paper",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
+}

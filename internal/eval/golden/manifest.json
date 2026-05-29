@@ -1,0 +1,9 @@
+{
+  "corpus_revision": 1,
+  "doc_count": 60,
+  "en_count": 35,
+  "generated_at": "2026-05-01T00:00:00Z",
+  "ko_count": 15,
+  "provenance": "synthetic; no PII; authored for SPEC-EVAL-001 benchmark",
+  "query_count": 50
+}

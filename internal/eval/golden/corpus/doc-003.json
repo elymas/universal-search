@@ -1,0 +1,20 @@
+{
+  "id": "doc-003",
+  "source_id": "arxiv",
+  "url": "https://example.test/arxiv/quantum-ko-a",
+  "title": "2019년 양자 우월성 이정표",
+  "body": "구글은 양자 프로세서가 200초 만에 표본 추출 작업을 완료했다고 발표했다. 고전 슈퍼컴퓨터로는 약 1만 년이 걸린다고 주장했다. 이 결과는 최초의 양자 우월성 시연으로 널리 인용된다.",
+  "snippet": "2019년 양자 우월성 이정표",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "ko",
+  "doc_type": "paper",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
+}

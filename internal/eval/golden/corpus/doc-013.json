@@ -1,0 +1,20 @@
+{
+  "id": "doc-013",
+  "source_id": "github",
+  "url": "https://example.test/github/k8s-a",
+  "title": "Kubernetes scheduling basics",
+  "body": "The Kubernetes scheduler assigns pods to nodes based on resource requests, affinity rules, and taints. It runs a filtering phase followed by a scoring phase. The highest scoring feasible node wins the pod.",
+  "snippet": "Kubernetes scheduling basics",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "en",
+  "doc_type": "repo",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
+}

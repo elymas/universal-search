@@ -1,0 +1,20 @@
+{
+  "id": "doc-046",
+  "source_id": "rss",
+  "url": "https://example.test/rss/sqlindex-b",
+  "title": "SQL index internals (deep dive)",
+  "body": "A B-tree index speeds up lookups by keeping keys sorted on disk pages. The query planner chooses an index when selectivity is high. Composite indexes follow the leftmost-prefix rule. Subsequent work expanded on these findings with broader experiments.",
+  "snippet": "SQL index internals (deep dive)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "en",
+  "doc_type": "article",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
+}

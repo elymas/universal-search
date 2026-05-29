@@ -108,6 +108,11 @@ type Registry struct {
 	DeepTreeNodeExpand  *prometheus.HistogramVec
 	DeepTreeTotalTokens *prometheus.CounterVec
 
+	// Eval benchmark metrics (SPEC-EVAL-001). Reuses existing `outcome` label;
+	// no new label name is added (NFR-OBS-002).
+	EvalRuns  *prometheus.CounterVec
+	EvalScore prometheus.Gauge
+
 	// labelNames tracks all registered label names for cardinality validation.
 	labelNames []string
 }
@@ -224,6 +229,9 @@ func NewRegistry() *Registry {
 	// Register Deep tree metrics (SPEC-DEEP-003 Phase E).
 	deepTree := registerDeepTree(pr)
 
+	// Register Eval benchmark metrics (SPEC-EVAL-001).
+	eval := registerEval(pr)
+
 	return &Registry{
 		Prometheus:                    pr,
 		HTTPRequests:                  httpRequests,
@@ -262,6 +270,8 @@ func NewRegistry() *Registry {
 		DeepAgentVerifierGateResults:  deepAgent.verifierGate,
 		DeepTreeNodeExpand:            deepTree.nodeExpand,
 		DeepTreeTotalTokens:           deepTree.totalTokens,
+		EvalRuns:                      eval.runs,
+		EvalScore:                     eval.score,
 		labelNames: []string{
 			"method", "route", "status_class",
 			"adapter_class",

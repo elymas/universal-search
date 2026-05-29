@@ -1,0 +1,20 @@
+{
+  "id": "doc-038",
+  "source_id": "github",
+  "url": "https://example.test/github/wasm-b",
+  "title": "WebAssembly runtime model (deep dive)",
+  "body": "WebAssembly is a portable bytecode that runs in a sandboxed stack-based virtual machine. It offers near-native performance and language independence. Browsers and standalone runtimes both execute it. Subsequent work expanded on these findings with broader experiments.",
+  "snippet": "WebAssembly runtime model (deep dive)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "en",
+  "doc_type": "repo",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
+}

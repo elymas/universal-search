@@ -1,0 +1,20 @@
+{
+  "id": "doc-043",
+  "source_id": "arxiv",
+  "url": "https://example.test/arxiv/diffusion-ko-a",
+  "title": "이미지를 위한 확산 모델",
+  "body": "확산 모델은 점진적인 노이즈 추가 과정을 역전시켜 이미지를 생성한다. 신경망이 단계별로 샘플의 노이즈를 제거하는 법을 학습한다. 많은 이미지 생성 벤치마크에서 GAN을 능가했다.",
+  "snippet": "이미지를 위한 확산 모델",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "ko",
+  "doc_type": "paper",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
+}

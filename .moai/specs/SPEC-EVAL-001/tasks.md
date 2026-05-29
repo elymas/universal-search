@@ -1,5 +1,22 @@
 # SPEC-EVAL-001 Tasks — atomic decomposition
 
+## Implementation status (2026-05-29, manager-tdd)
+
+| Task | Status | Evidence |
+|------|--------|----------|
+| T-EVAL1-00 | gate (orchestrator-owned) | plan-auditor run is orchestrator's responsibility |
+| T-EVAL1-01 | DONE | `internal/eval/golden/` — 50 queries + 60 docs; 17 tests; cov 94.4% |
+| T-EVAL1-02 | DONE | `eval_judge.py` + `/judge/faithfulness`; 6 pytest tests; deepeval~=1.0 pinned |
+| T-EVAL1-03 | DONE (KO seg moved to T04; bias = CI concern) | KO segmentation in bridge; documented |
+| T-EVAL1-04 | DONE | `deepeval_bridge.go`; 9 tests race-clean; cov 90.2% |
+| T-EVAL1-05 | DONE | `runner.go`; 8 tests race-clean; cov 87.2% |
+| T-EVAL1-06 | DONE | `report.go`; 6 tests |
+| T-EVAL1-07 | DONE | `ci/gate.go` + `cmd/eval/main.go`; 13 tests; gate cov 100% |
+| T-EVAL1-08 | DONE (nightly deferred V1.1) | `.github/workflows/eval.yml` PR-gate |
+| T-EVAL1-09 | DONE | eval metrics registered; cardinality guard extended; cov 95.7% |
+
+---
+
 Status: Phase 1 (analysis/planning) output — NOT yet approved for implementation.
 Methodology: TDD (RED → GREEN → REFACTOR). Coverage target 85%.
 Harness: standard (confirmed from harness.yaml — P1 feature SPEC, multi-domain, no security/payment keywords → standard, plan-auditor enabled).

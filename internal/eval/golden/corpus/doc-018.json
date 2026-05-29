@@ -1,0 +1,20 @@
+{
+  "id": "doc-018",
+  "source_id": "arxiv",
+  "url": "https://example.test/arxiv/crispr-b",
+  "title": "CRISPR gene editing overview (deep dive)",
+  "body": "CRISPR-Cas9 uses a guide RNA to direct the Cas9 nuclease to a specific DNA sequence where it makes a double-strand break. The cell's repair machinery then introduces edits. It has transformed genetic research since 2012. Subsequent work expanded on these findings with broader experiments.",
+  "snippet": "CRISPR gene editing overview (deep dive)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "en",
+  "doc_type": "paper",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
+}

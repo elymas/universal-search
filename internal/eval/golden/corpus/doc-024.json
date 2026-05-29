@@ -1,0 +1,20 @@
+{
+  "id": "doc-024",
+  "source_id": "arxiv",
+  "url": "https://example.test/arxiv/raft-ko-b",
+  "title": "래프트 합의 알고리즘 (심화)",
+  "body": "래프트는 이해하기 쉽도록 설계된 합의 알고리즘이다. 복제 로그를 관리하는 리더를 선출하고 팔로워는 리더로부터 항목을 복제한다. 안전성은 임기 번호와 로그 매칭으로 보장된다. 후속 연구는 더 광범위한 실험으로 이러한 발견을 확장했다.",
+  "snippet": "래프트 합의 알고리즘 (심화)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "ko",
+  "doc_type": "paper",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
+}

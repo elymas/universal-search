@@ -1,0 +1,20 @@
+{
+  "id": "doc-030",
+  "source_id": "github",
+  "url": "https://example.test/github/vectordb-b",
+  "title": "Vector databases for retrieval (deep dive)",
+  "body": "Vector databases store high-dimensional embeddings and support approximate nearest neighbour search. Common index types include HNSW and IVF. They power semantic retrieval in modern search systems. Subsequent work expanded on these findings with broader experiments.",
+  "snippet": "Vector databases for retrieval (deep dive)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "en",
+  "doc_type": "repo",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
+}

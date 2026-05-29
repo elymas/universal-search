@@ -1,0 +1,20 @@
+{
+  "id": "doc-034",
+  "source_id": "rss",
+  "url": "https://example.test/rss/tls13-b",
+  "title": "TLS 1.3 handshake (deep dive)",
+  "body": "TLS 1.3 reduces the handshake to one round trip by removing legacy cipher suites and key exchange methods. It mandates forward secrecy and encrypts more of the handshake. Zero round-trip resumption is supported with caveats. Subsequent work expanded on these findings with broader experiments.",
+  "snippet": "TLS 1.3 handshake (deep dive)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "en",
+  "doc_type": "article",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
+}

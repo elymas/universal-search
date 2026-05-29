@@ -1,0 +1,20 @@
+{
+  "id": "doc-025",
+  "source_id": "rss",
+  "url": "https://example.test/rss/httpcache-a",
+  "title": "HTTP caching semantics",
+  "body": "HTTP caching uses Cache-Control directives such as max-age and no-store to control freshness. Conditional requests with ETag and If-None-Match enable revalidation. A 304 Not Modified response saves bandwidth.",
+  "snippet": "HTTP caching semantics",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "en",
+  "doc_type": "article",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
+}

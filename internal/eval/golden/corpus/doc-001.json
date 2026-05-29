@@ -1,0 +1,20 @@
+{
+  "id": "doc-001",
+  "source_id": "arxiv",
+  "url": "https://example.test/arxiv/quantum-a",
+  "title": "Quantum supremacy milestone 2019",
+  "body": "Google reported a quantum processor completing a sampling task in 200 seconds that would take a classical supercomputer about 10000 years. The claim was later contested by IBM researchers who argued a classical method could finish it in days. The result is widely cited as the first quantum supremacy demonstration.",
+  "snippet": "Quantum supremacy milestone 2019",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "en",
+  "doc_type": "paper",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
+}

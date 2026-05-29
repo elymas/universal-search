@@ -1,0 +1,20 @@
+{
+  "id": "doc-009",
+  "source_id": "github",
+  "url": "https://example.test/github/rustgc-a",
+  "title": "Rust memory model without GC",
+  "body": "Rust achieves memory safety without a garbage collector using an ownership and borrowing system checked at compile time. Each value has a single owner and references are validated by the borrow checker. This eliminates entire classes of memory bugs.",
+  "snippet": "Rust memory model without GC",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "en",
+  "doc_type": "repo",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
+}

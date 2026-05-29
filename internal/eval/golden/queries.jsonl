@@ -1,0 +1,50 @@
+{"id":"EVAL-001-Q001","query":"What was the quantum supremacy claim in 2019?","locale":"en","expected_sources":["doc-001","doc-002"],"category":"factual","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q002","query":"How did IBM respond to the quantum supremacy result?","locale":"en","expected_sources":["doc-001","doc-002"],"category":"comparison","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q003","query":"What does the transformer architecture replace?","locale":"en","expected_sources":["doc-005","doc-006"],"category":"synthesis","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q004","query":"Why are transformers good for large language models?","locale":"en","expected_sources":["doc-005","doc-006"],"category":"edge","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q005","query":"How does Rust achieve memory safety without a garbage collector?","locale":"en","expected_sources":["doc-009","doc-010"],"category":"factual","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q006","query":"What is the borrow checker in Rust?","locale":"en","expected_sources":["doc-009","doc-010"],"category":"comparison","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q007","query":"How does the Kubernetes scheduler assign pods?","locale":"en","expected_sources":["doc-013","doc-014"],"category":"synthesis","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q008","query":"What phases does Kubernetes scheduling use?","locale":"en","expected_sources":["doc-013","doc-014"],"category":"edge","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q009","query":"How does CRISPR-Cas9 edit DNA?","locale":"en","expected_sources":["doc-017","doc-018"],"category":"factual","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q010","query":"What role does guide RNA play in CRISPR?","locale":"en","expected_sources":["doc-017","doc-018"],"category":"comparison","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q011","query":"What problem does the Raft algorithm solve?","locale":"en","expected_sources":["doc-021","doc-022"],"category":"synthesis","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q012","query":"How does Raft guarantee safety?","locale":"en","expected_sources":["doc-021","doc-022"],"category":"edge","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q013","query":"What HTTP directives control cache freshness?","locale":"en","expected_sources":["doc-025","doc-026"],"category":"factual","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q014","query":"How do conditional HTTP requests save bandwidth?","locale":"en","expected_sources":["doc-025","doc-026"],"category":"comparison","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q015","query":"What index types do vector databases use?","locale":"en","expected_sources":["doc-029","doc-030"],"category":"synthesis","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q016","query":"How do vector databases power semantic retrieval?","locale":"en","expected_sources":["doc-029","doc-030"],"category":"edge","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q017","query":"How many round trips does the TLS 1.3 handshake need?","locale":"en","expected_sources":["doc-033","doc-034"],"category":"factual","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q018","query":"What does TLS 1.3 mandate for security?","locale":"en","expected_sources":["doc-033","doc-034"],"category":"comparison","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q019","query":"What virtual machine model does WebAssembly use?","locale":"en","expected_sources":["doc-037","doc-038"],"category":"synthesis","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q020","query":"What performance does WebAssembly offer?","locale":"en","expected_sources":["doc-037","doc-038"],"category":"edge","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q021","query":"How do diffusion models generate images?","locale":"en","expected_sources":["doc-041","doc-042"],"category":"factual","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q022","query":"How do diffusion models compare to GANs?","locale":"en","expected_sources":["doc-041","doc-042"],"category":"comparison","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q023","query":"How does a B-tree SQL index speed up lookups?","locale":"en","expected_sources":["doc-045","doc-046"],"category":"synthesis","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q024","query":"What is the leftmost-prefix rule for composite indexes?","locale":"en","expected_sources":["doc-045","doc-046"],"category":"edge","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q025","query":"How does Go schedule goroutines?","locale":"en","expected_sources":["doc-049","doc-050"],"category":"factual","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q026","query":"What does GOMAXPROCS control in Go?","locale":"en","expected_sources":["doc-049","doc-050"],"category":"comparison","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q027","query":"What does the OAuth authorization code flow exchange?","locale":"en","expected_sources":["doc-053","doc-054"],"category":"synthesis","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q028","query":"How does PKCE protect OAuth public clients?","locale":"en","expected_sources":["doc-053","doc-054"],"category":"edge","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q029","query":"What does LLM quantization reduce?","locale":"en","expected_sources":["doc-057","doc-058"],"category":"factual","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q030","query":"What techniques mitigate quantization accuracy loss?","locale":"en","expected_sources":["doc-057","doc-058"],"category":"comparison","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q031","query":"Compare quantum supremacy claims by Google and IBM.","locale":"en","expected_sources":["doc-001","doc-002"],"category":"synthesis","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q032","query":"Summarize how transformers and diffusion models differ.","locale":"en","expected_sources":["doc-001","doc-002"],"category":"synthesis","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q033","query":"What are the tradeoffs of int4 quantization for LLMs?","locale":"en","expected_sources":["doc-005","doc-006"],"category":"synthesis","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q034","query":"Explain the relationship between Raft terms and log matching.","locale":"en","expected_sources":["doc-005","doc-006"],"category":"synthesis","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q035","query":"Does an empty query return a graceful result?","locale":"en","expected_sources":["doc-009","doc-010"],"category":"edge","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q036","query":"2019년 양자 우월성 주장은 무엇이었나?","locale":"ko","expected_sources":["doc-003","doc-004"],"category":"korean","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q037","query":"트랜스포머 구조는 무엇을 대체하는가?","locale":"ko","expected_sources":["doc-007","doc-008"],"category":"korean","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q038","query":"러스트는 어떻게 GC 없이 메모리 안전성을 달성하는가?","locale":"ko","expected_sources":["doc-011","doc-012"],"category":"korean","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q039","query":"쿠버네티스 스케줄러는 어떻게 파드를 할당하는가?","locale":"ko","expected_sources":["doc-015","doc-016"],"category":"korean","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q040","query":"크리스퍼-Cas9는 어떻게 DNA를 편집하는가?","locale":"ko","expected_sources":["doc-019","doc-020"],"category":"korean","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q041","query":"래프트 알고리즘은 어떤 문제를 해결하는가?","locale":"ko","expected_sources":["doc-023","doc-024"],"category":"korean","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q042","query":"어떤 HTTP 지시어가 캐시 신선도를 제어하는가?","locale":"ko","expected_sources":["doc-027","doc-028"],"category":"korean","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q043","query":"벡터 데이터베이스는 어떤 인덱스 유형을 사용하는가?","locale":"ko","expected_sources":["doc-031","doc-032"],"category":"korean","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q044","query":"TLS 1.3 핸드셰이크는 몇 번의 왕복이 필요한가?","locale":"ko","expected_sources":["doc-035","doc-036"],"category":"korean","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q045","query":"웹어셈블리는 어떤 가상 머신 모델을 사용하는가?","locale":"ko","expected_sources":["doc-039","doc-040"],"category":"korean","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q046","query":"확산 모델은 어떻게 이미지를 생성하는가?","locale":"ko","expected_sources":["doc-043","doc-044"],"category":"korean","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q047","query":"B-트리 인덱스는 어떻게 조회 속도를 높이는가?","locale":"ko","expected_sources":["doc-047","doc-048"],"category":"korean","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q048","query":"Go는 어떻게 고루틴을 스케줄링하는가?","locale":"ko","expected_sources":["doc-051","doc-052"],"category":"korean","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q049","query":"OAuth 인가 코드 흐름은 무엇을 교환하는가?","locale":"ko","expected_sources":["doc-055","doc-056"],"category":"korean","notes":"synthetic golden query"}
+{"id":"EVAL-001-Q050","query":"LLM 양자화는 무엇을 줄이는가?","locale":"ko","expected_sources":["doc-059","doc-060"],"category":"korean","notes":"synthetic golden query"}

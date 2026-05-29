@@ -1,0 +1,20 @@
+{
+  "id": "doc-007",
+  "source_id": "arxiv",
+  "url": "https://example.test/arxiv/transformer-ko-a",
+  "title": "어텐션이 전부다",
+  "body": "트랜스포머 구조는 순환을 자기어텐션으로 대체하여 시퀀스를 병렬로 학습할 수 있게 했다. 이는 대규모 언어 모델의 기초가 되었다. 원 논문은 멀티헤드 어텐션과 위치 인코딩을 도입했다.",
+  "snippet": "어텐션이 전부다",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "ko",
+  "doc_type": "paper",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
+}

@@ -1,0 +1,20 @@
+{
+  "id": "doc-057",
+  "source_id": "arxiv",
+  "url": "https://example.test/arxiv/llmquant-a",
+  "title": "LLM quantization tradeoffs",
+  "body": "Quantization reduces model weights to lower precision such as int8 or int4, shrinking memory and speeding inference. It can degrade accuracy, mitigated by techniques like GPTQ and AWQ. The tradeoff depends on the task.",
+  "snippet": "LLM quantization tradeoffs",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "en",
+  "doc_type": "paper",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
+}

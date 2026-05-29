@@ -1,0 +1,20 @@
+{
+  "id": "doc-053",
+  "source_id": "rss",
+  "url": "https://example.test/rss/oauth-a",
+  "title": "OAuth 2.0 authorization code flow",
+  "body": "The authorization code flow exchanges a short-lived code for an access token at the token endpoint. PKCE protects public clients from interception. Refresh tokens enable long-lived sessions.",
+  "snippet": "OAuth 2.0 authorization code flow",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "en",
+  "doc_type": "article",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
+}

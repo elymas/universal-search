@@ -1,0 +1,20 @@
+{
+  "id": "doc-016",
+  "source_id": "github",
+  "url": "https://example.test/github/k8s-ko-b",
+  "title": "쿠버네티스 스케줄링 기초 (심화)",
+  "body": "쿠버네티스 스케줄러는 리소스 요청, 어피니티 규칙, 테인트를 기반으로 파드를 노드에 할당한다. 필터링 단계 후 점수 매기기 단계를 실행한다. 가장 높은 점수의 실행 가능한 노드가 파드를 차지한다. 후속 연구는 더 광범위한 실험으로 이러한 발견을 확장했다.",
+  "snippet": "쿠버네티스 스케줄링 기초 (심화)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "ko",
+  "doc_type": "repo",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
+}

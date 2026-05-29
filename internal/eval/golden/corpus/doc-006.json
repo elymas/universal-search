@@ -1,0 +1,20 @@
+{
+  "id": "doc-006",
+  "source_id": "arxiv",
+  "url": "https://example.test/arxiv/transformer-b",
+  "title": "Attention is all you need (deep dive)",
+  "body": "The transformer architecture replaced recurrence with self-attention, enabling parallel training over sequences. It became the foundation for large language models. The original paper introduced multi-head attention and positional encodings. Subsequent work expanded on these findings with broader experiments.",
+  "snippet": "Attention is all you need (deep dive)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "en",
+  "doc_type": "paper",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
+}
