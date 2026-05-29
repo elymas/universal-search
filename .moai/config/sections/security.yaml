@@ -9,3 +9,40 @@ security:
         - dd\s+if=.*of=/dev/
     extra_deny_patterns: []
     extra_sensitive_content_patterns: []
+
+    # ── SPEC-SEC-001 runtime security configuration ─────────────────────────
+    # Consumed by internal/security/{secrets,ratelimit,ssrf} and, downstream,
+    # by the SPEC-DEPLOY-001 Helm chart (secrets.backend selection).
+
+    # D5 / REQ-SEC-013 — runtime secret resolution backend.
+    secrets:
+        # backend: env | k8s | vault  (default env for dev/CI).
+        #   env   — os.Getenv (dev/CI default)
+        #   k8s   — mounted Kubernetes Secret volume files
+        #   vault — V1 stub (ErrNotImplemented); full client is post-V1
+        backend: env
+        # Mount path for the K8sResolver (one file per secret name).
+        k8s_mount_path: /var/run/secrets
+
+    # D6 / REQ-SEC-014 — per-tenant rate limiting.
+    ratelimit:
+        # Token-bucket refill rate per tenant.
+        per_tenant_per_minute: 60
+        # Burst allowance (max tokens that can accumulate).
+        burst: 60
+        # V1 default is alert-only (emit ratelimit.exceeded + metric, do NOT
+        # hard-reject). Set to true ONLY after operational tuning; rejection is
+        # config-gated per plan R9.
+        reject_on_exceed: false
+
+    # D3 — SSRF hostname blocklist (cloud metadata endpoints). The generic
+    # guards live in internal/security/ssrf; these are the default blocked
+    # hostnames (case-insensitive, suffix-aware).
+    ssrf:
+        hostname_blocklist:
+            - metadata.google.internal
+            - metadata.azure.com
+            - instance-data.ec2.internal
+        redirect_max_hops: 5
+        # Production MUST keep this false; true is testing-only.
+        allow_private_networks: false

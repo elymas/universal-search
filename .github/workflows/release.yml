@@ -1,0 +1,125 @@
+# SPEC-SEC-001 REQ-SEC-016 — supply-chain security layer for releases.
+#
+# ┌─ CROSS-SPEC BOUNDARY (SPEC-REL-001) ──────────────────────────────────────┐
+# │ SPEC-REL-001 OWNS the release mechanics: building the usearch Go binary,   │
+# │ building+pushing container images, goreleaser config, version tagging,    │
+# │ and GitHub Release creation.                                              │
+# │                                                                           │
+# │ SPEC-SEC-001 OWNS ONLY the security attestation layer below:              │
+# │   - SLSA provenance generation (slsa-github-generator)                    │
+# │   - cosign keyless signing of release artifacts/images                    │
+# │                                                                           │
+# │ When REL-001 lands, it should EITHER (a) merge its build jobs into this   │
+# │ workflow and feed artifact digests into the `provenance` + `sign` jobs    │
+# │ below, OR (b) call these as reusable jobs. REL-001 MUST NOT duplicate the │
+# │ SLSA/cosign steps — they are defined here. The `build` job below is a     │
+# │ PLACEHOLDER that REL-001 replaces with the real binary/image build.       │
+# └───────────────────────────────────────────────────────────────────────────┘
+#
+# Verification (documented in ops/security/runbook.md):
+#   cosign verify \
+#     --certificate-identity-regexp \
+#       "https://github.com/elymas/universal-search/.github/workflows/release.yml@.*" \
+#     --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+#     <image>:<tag>
+
+name: release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # ── build (PLACEHOLDER — owned by SPEC-REL-001) ─────────────────────────────
+  # REL-001 replaces this with the real goreleaser/docker build. It MUST output
+  # `artifact-digest` (sha256 of the primary artifact) for the provenance job.
+  build:
+    name: build artifacts (REL-001 placeholder)
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      artifact-digest: ${{ steps.digest.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build usearch binary (placeholder)
+        run: |
+          mkdir -p dist
+          CGO_ENABLED=0 go build -trimpath -o dist/usearch ./cmd/usearch
+
+      - name: Compute artifact digest
+        id: digest
+        run: |
+          digest="$(sha256sum dist/usearch | cut -d' ' -f1)"
+          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
+          echo "usearch sha256: ${digest}"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: usearch-binary
+          path: dist/usearch
+
+  # ── provenance: SLSA Level 2 attestation (REQ-SEC-016) ──────────────────────
+  # Generates *.intoto.jsonl SLSA provenance for the built artifact. On
+  # GitHub-hosted runners this achieves SLSA L2 (the generator workflow name
+  # says slsa3; L3 requires isolated builders — deferred per spec Exclusions).
+  provenance:
+    name: slsa provenance
+    needs: [build]
+    permissions:
+      actions: read
+      id-token: write
+      contents: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
+    with:
+      base64-subjects: ${{ needs.build.outputs.artifact-digest }}
+      upload-assets: true
+
+  # ── sign: cosign keyless signing (REQ-SEC-016) ──────────────────────────────
+  # Signs the release artifact(s) using the GitHub Actions OIDC identity
+  # (keyless / Fulcio + Rekor). No long-lived keys. Verification command is in
+  # ops/security/runbook.md.
+  sign:
+    name: cosign keyless sign
+    needs: [build]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write # required for keyless OIDC signing
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.7.0
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: usearch-binary
+          path: dist
+
+      - name: Sign artifact (keyless)
+        run: |
+          cosign sign-blob --yes \
+            --output-signature dist/usearch.sig \
+            --output-certificate dist/usearch.pem \
+            dist/usearch
+
+      - name: Upload signature + certificate
+        uses: actions/upload-artifact@v4
+        with:
+          name: usearch-cosign
+          path: |
+            dist/usearch.sig
+            dist/usearch.pem

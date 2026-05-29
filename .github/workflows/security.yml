@@ -116,3 +116,70 @@ jobs:
 
       - name: Validate vuln-exceptions.yaml + enforce 90-day deadlines
         run: bash scripts/check-vuln-exceptions.sh
+
+  # ── gosec: Go static analysis (REQ-SEC-010) ────────────────────────────────
+  # HIGH severity blocks merge; MEDIUM/LOW are informational. Config in
+  # .gosec.yml excludes tests/testdata. #nosec suppressions require a reason.
+  gosec:
+    name: gosec (static analysis)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Run gosec (HIGH-severity gate)
+        uses: securego/gosec@v2.21.4
+        with:
+          # -severity high : only HIGH findings set a non-zero exit (block).
+          # -conf          : project config (exclusions, #nosec audit).
+          # MEDIUM/LOW still print as annotations but do not fail the job.
+          args: "-severity high -confidence medium -conf .gosec.yml ./..."
+
+  # ── semgrep: pattern-based SAST (REQ-SEC-010) ───────────────────────────────
+  # Rule sets p/golang + p/owasp-top-ten + p/jwt. New findings (outside
+  # .semgrepignore) block the merge.
+  semgrep:
+    name: semgrep (SAST)
+    runs-on: ubuntu-24.04
+    container:
+      image: semgrep/semgrep:1.85.0
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run semgrep
+        run: semgrep ci --config p/golang --config p/owasp-top-ten --config p/jwt
+        env:
+          SEMGREP_RULES: "p/golang p/owasp-top-ten p/jwt"
+
+  # ── tls-grep: forbid legacy TLS versions (REQ-SEC-012) ──────────────────────
+  # Grep-asserts no tls.VersionTLS10/11 literal in non-test Go source. TLS 1.2
+  # is the enforced minimum (see internal/access/phase4_tls.go).
+  tls-grep:
+    name: tls-grep (no TLS 1.0/1.1)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assert no TLS 1.0/1.1 literals in non-test Go
+        run: |
+          if grep -rn --include='*.go' --exclude='*_test.go' \
+              -E 'tls\.VersionTLS1[01]\b' internal/ cmd/ ; then
+            echo "::error::Legacy TLS version (1.0/1.1) literal found — REQ-SEC-012 requires TLS 1.2 minimum"
+            exit 1
+          fi
+          echo "OK: no tls.VersionTLS10/11 in non-test Go source"
+
+  # ── secret-grep: forbid secret-named vars in log/error paths (REQ-SEC-018) ──
+  # Asserts no fmt/log formatting of *_SECRET / *_KEY / *_TOKEN / *_PASSWORD
+  # variables in non-test Go source.
+  secret-grep:
+    name: secret-grep (no secrets in logs)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assert no secret-named vars formatted into log/error paths
+        run: bash scripts/check-no-secret-logs.sh

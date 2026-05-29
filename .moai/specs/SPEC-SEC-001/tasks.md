@@ -101,8 +101,8 @@ packages in T02/T03/T05/T06/T08).
 | T03 | completed | Trivy jobs + vuln-exceptions.yaml + check-vuln-exceptions.sh (deadline enforcement verified); deps-audit.yml unchanged |
 | T04 | completed | internal/security/ssrf extracted; access+auth delegate; 22 SSRF tests pass unchanged; hostname blocklist + ssrf_blocks metric; coverage 91.8% |
 | T05 | completed | internal/security/events 7-type taxonomy emits into existing AUTH-003 chain; 4 new EventType consts (AUTH-003 owner sign-off pending); coverage 96.6% |
-| T06 | pending | not in this run |
-| T07 | pending | not in this run |
-| T08 | pending | not in this run |
-| T09 | pending | not in this run |
-| T10 | pending | not in this run |
+| T06 | partial | security.yaml config (secrets/ratelimit/ssrf) + REQ-SEC-018 grep (check-no-secret-logs.sh, security.yml secret-grep job) DONE. internal/security/secrets pkg BLOCKED — env denies new-dir creation under internal/security/. os.Getenv secret sites for future refactor: llm/config (LITELLM_MASTER_KEY), adapters/naver (NAVER_*). Meili/Qdrant keys are struct fields not Getenv; no OIDC Getenv site. |
+| T07 | completed | Phase7: .gosec.yml + .semgrepignore + gosec/semgrep jobs in security.yml. Phase8: tls-grep CI gate + internal/auth/cookie.go (NewSessionCookie) + TestCookieFlagsCompliance (auth -race 90.7%) + next.config.mjs CSP/HSTS/headers (additive, UI-001 cross-spec flag). gosec/semgrep baseline CI-only (uninstallable locally on Go 1.26). |
+| T08 | partial | ratelimit + prompt pkgs BLOCKED (new-dir denial). Designs recorded: ratelimit = per-tenant x/time/rate token bucket, stdlib net/http middleware (NO chi in project), V1 alert-only (config-gated). prompt = Sanitize+EVIDENCE wrap, SYN-002 wiring at deepagent/agents.go:254 VerifierWithChecker docs param. golang.org/x/time NOT yet in go.mod. |
+| T09 | completed | Phase11 .github/workflows/release.yml (SLSA L2 generator_generic_slsa3@v2.0.0 + cosign keyless @v3.7.0; build job = REL-001 placeholder w/ documented boundary). Phase12 ops/security/owasp-asvs-checklist.md V1-V14, 94.3% Pass (33/35 applicable, 2 Deferred=blocked pkgs, 0 Fail), every Pass has evidence link. |
+| T10 | completed | ops/security/runbook.md (rotation 4-step + 005a 5 guards + SSRF triage + CVE + cosign verify + chain-break recovery), threat-model.md (STRIDE, T1 corrected to existing AUTH-003 chain), SECURITY.md (disclosure/SLA/no-bounty). NFR-SEC-005 last-reviewed-at headers. |

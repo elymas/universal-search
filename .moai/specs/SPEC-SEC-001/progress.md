@@ -107,3 +107,114 @@ chain) met. Error count delta: 0 (no new failures introduced).
   agent did NOT rewrite history.
 - AUTH-003 owner cross-SPEC sign-off required for the 4 new EventType constants
   + fail-closed lockdown activation (kept default OFF, staged).
+
+## 2026-05-29 — Run Phase T06–T10 (plan Phases 6–13) — manager-ddd (DDD)
+
+DDD cycle for the Medium/Low composite tasks. Build clean; full `go test ./...`
+GREEN (55 packages, 0 FAIL). Characterization preserved on every refactor.
+
+### ENVIRONMENT BLOCKER (partial completion of T06/T08-prompt/T09)
+New-directory creation under `internal/security/` is DENIED in this run
+environment (Write + Bash mkdir both refused; writes to EXISTING dirs and repo
+root succeed). The three net-new packages — `internal/security/secrets`
+(Phase 6), `internal/security/ratelimit` (Phase 9), `internal/security/prompt`
+(Phase 10) — therefore COULD NOT be created. Relocating them was rejected: it
+would break the SPEC pinned paths + the DEPLOY-001 (`secrets.backend`) and
+SYN-002 wiring contracts. These three packages are BLOCKED pending the
+orchestrator/user creating the empty dirs (e.g. `mkdir -p
+internal/security/{secrets,ratelimit,prompt}` or a `.gitkeep` commit), after
+which the code lands mechanically.
+
+### Phase 6 (T06) — secrets resolver — PARTIAL
+- DONE: `.moai/config/sections/security.yaml` extended with `secrets.backend`
+  (env|k8s|vault, default env), `secrets.k8s_mount_path`, plus `ratelimit` and
+  `ssrf` blocks (DEPLOY-001 consumes secrets.backend).
+- DONE: REQ-SEC-018 — `scripts/check-no-secret-logs.sh` (python3, precise
+  secret-value-in-sink detection; excludes redactKey + env-name string
+  literals); baseline PASS (verified locally, exit 0). Wired as `secret-grep`
+  job in security.yml. Confirmed `internal/llm/client.go` already redacts
+  MasterKey via redactKey — codebase already REQ-SEC-018-compliant at runtime.
+- BLOCKED: `internal/security/secrets/{resolver,env,k8s,vault,factory}.go` +
+  tests (new dir). Verified real os.Getenv secret-read sites for the future
+  refactor: `internal/llm/config/config.go:46` (LITELLM_MASTER_KEY) and
+  `internal/adapters/naver/naver.go:115,123` (NAVER_CLIENT_ID/SECRET). NOTE:
+  Meili/Qdrant keys are STRUCT FIELDS (not os.Getenv); OIDC client secret has
+  NO os.Getenv site — the plan's assumed call sites are narrower than stated.
+
+### Phase 7 (T07a) — static analysis — DONE
+- `.gosec.yml` (exclude testdata/vendor/web; HIGH gate; #nosec audit) +
+  `.semgrepignore` (tests/fixtures/sidecar-tests/vendor/generated). gosec +
+  semgrep jobs added to security.yml (p/golang + p/owasp-top-ten + p/jwt).
+- Baseline: gosec/semgrep binaries NOT installable locally (gosec v2.21.4 pulls
+  x/tools incompatible with Go 1.26; no semgrep). Baseline runs in CI
+  (authoritative) — residual.
+
+### Phase 8 (T07b) — TLS + cookie + CSP — DONE
+- CI grep gate `tls-grep` job (no tls.VersionTLS10/11 in non-test Go). Verified:
+  `internal/access/phase4_tls.go` already enforces MinVersion TLS12; zero legacy
+  literals present.
+- `internal/auth/cookie.go` (NewSessionCookie, Secure+HttpOnly+SameSite=Lax) +
+  `cookie_test.go` (TestCookieFlagsCompliance, TestSessionCookieMaxAge). Auth
+  suite GREEN -race, coverage 90.7%. NOTE: no session cookie is set anywhere yet
+  (OIDC callback returns 501 in V1) — this is the tested contract factory for
+  when the session flow lands.
+- CROSS-SPEC (UI-001): `web/next.config.mjs` extended with additive `headers()`
+  — CSP (strict-dynamic + hash, NOT nonce), HSTS, X-Frame-Options DENY,
+  X-Content-Type-Options nosniff, Referrer-Policy, Permissions-Policy. File was
+  minimal (reactStrictMode only); change is non-conflicting; `node` load check
+  passes. Flag for UI-001 owner review.
+
+### Phase 9 (T09) — rate limit — BLOCKED (code) / config DONE
+- BLOCKED: `internal/security/ratelimit/limiter.go` + tests (new dir). Design
+  recorded: per-tenant token bucket (golang.org/x/time/rate — NOT yet in
+  go.mod), stdlib net/http middleware (NOT chi — project has NO web framework;
+  mirror `internal/deepagent/costguard/middleware.go` 429+Retry-After pattern),
+  V1 alert-only default (reject_on_exceed:false in security.yaml), tenant_id_class
+  (known/unknown) metric label only.
+
+### Phase 10 (T08-prompt) — prompt-injection sanitization — BLOCKED (code)
+- BLOCKED: `internal/security/prompt/{sanitize,patterns}.go` + tests (new dir).
+  SYN-002 wiring point identified precisely: `internal/deepagent/agents.go:254`
+  `VerifierWithChecker(ctx, cfg, draft, docs []deepreport.NormalizedDocPayload,
+  checkFn)` — Sanitize must wrap each doc body in an `<EVIDENCE>` block before it
+  reaches `CheckFaithfulnessFn` → `synthesis.CheckFaithfulness(...docs)`
+  (`internal/synthesis/faithfulness.go:40`). Python sidecar unchanged.
+
+### Phase 11 (T10a) — SLSA + cosign — DONE
+- `.github/workflows/release.yml` NEW: SLSA L2 provenance
+  (slsa-github-generator generator_generic_slsa3.yml@v2.0.0) + cosign keyless
+  sign (cosign-installer@v3.7.0). `build` job is an explicit REL-001 PLACEHOLDER
+  with a documented cross-SPEC boundary (REL-001 owns goreleaser/build; SEC-001
+  owns the SLSA+cosign layer — no duplication). cosign verify command in runbook.
+
+### Phase 12 (T10b) — OWASP ASVS L1 — DONE
+- `ops/security/owasp-asvs-checklist.md`: V1–V14, 38 rows (3 N/A, 35 applicable),
+  33 Pass / 2 Deferred / 0 Fail → 94.3% Pass (>= 80% target met). Every Pass row
+  has an evidence link (lint-clean). The 2 Deferred (V5.2.5 prompt-injection,
+  V11.1.4 rate-limit) map to the blocked packages.
+
+### Phase 13 (T10c) — operator docs — DONE
+- `ops/security/runbook.md` (secret rotation 4-step + REQ-SEC-005a 5 guards,
+  SSRF triage, CRITICAL CVE response, cosign verify, audit chain-break recovery),
+  `ops/security/threat-model.md` (STRIDE S/T/R/I/D/E from research §13, with T1
+  corrected to the EXISTING AUTH-003 chain — no "new Merkle"), `SECURITY.md`
+  (disclosure email, response SLA, V1 no-bounty). last-reviewed-at headers set
+  for NFR-SEC-005.
+
+### Acceptance criteria progress (this run)
+Newly met: AC for REQ-SEC-010 (gosec/semgrep CI), REQ-SEC-012 (TLS grep +
+cookie test), REQ-SEC-016 (SLSA+cosign), REQ-SEC-011 (ASVS >= 80%), REQ-SEC-005
+(+005a) runbook, NFR-SEC-005 (threat model), REQ-SEC-018 grep gate.
+Partial/blocked: REQ-SEC-013 (secrets — config done, code blocked), REQ-SEC-014
+(ratelimit — config done, code blocked), REQ-SEC-015 (prompt — wiring point
+identified, code blocked). Error count delta: 0 (no new test failures).
+
+### Blockers / gates for orchestrator (T06–T10)
+- HARD: create `internal/security/{secrets,ratelimit,prompt}/` dirs (env denied
+  agent dir-creation) so the three net-new packages can land. Code is designed;
+  only the directory creation is blocked.
+- CI-authoritative: gosec/semgrep/gitleaks/trivy/cosign baselines run in CI (no
+  local binaries; gosec uninstallable under Go 1.26).
+- CROSS-SPEC carry-forward: UI-001 (next.config.mjs CSP review), REL-001
+  (release.yml SLSA/cosign boundary), AUTH-003 (4 new EventType consts sign-off
+  from T05).
