@@ -1,9 +1,9 @@
 ---
 id: SPEC-DOC-001
-version: 0.1.0
-status: draft
+version: 0.2.0
+status: in-progress
 created: 2026-05-22
-updated: 2026-05-22
+updated: 2026-05-28
 author: limbowl
 priority: P1
 issue_number: 0
@@ -20,6 +20,13 @@ related: [SPEC-DOC-002, SPEC-DEPLOY-001]
 # SPEC-DOC-001: User guide — operator + end-user docs site on Nextra (bilingual EN+KO)
 
 ## HISTORY
+
+- 2026-05-28 (Phase 1 complete, status draft → in-progress, v0.1.0 → v0.2.0):
+  Nextra 3.1.1 + Next.js 14.2.21 site scaffold shipped (docs/). Migration
+  map (docs/MIGRATION_MAP.md) prepared for Phase 2 content port.
+  Note: Nextra 4.x + Next.js 16 Turbopack incompatibility forced
+  downgrade — documented in progress.md. Phases 2-N (content migration,
+  bilingual KO pages, gh-pages CI deploy, link-check gate) pending.
 
 - 2026-05-22 (initial draft v0.1.0, limbowl via manager-spec):
   M9 (V1 release) 첫 번째 SPEC이자 V1.0.0 태깅의 release-blocking
