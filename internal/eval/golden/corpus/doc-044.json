@@ -1,0 +1,15 @@
+{
+  "id": "doc-044",
+  "source_id": "bluesky",
+  "url": "https://example.com/bluesky/0044",
+  "title": "vector database indexing strategies - study 44",
+  "body": "This document discusses vector database indexing strategies. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of vector database indexing strategies. Key findings include improved accuracy, reduced latency, and better scalability. The study 44 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on vector database indexing strategies.",
+  "published_at": "2025-02-14T00:00:00+00:00",
+  "retrieved_at": "2026-05-02T20:00:00+00:00",
+  "author": "author-44",
+  "score": 0.94,
+  "lang": "en",
+  "doc_type": "repo",
+  "hash": "4884f70eab8b57e7"
+}

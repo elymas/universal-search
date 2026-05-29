@@ -20,6 +20,7 @@ import (
 	"github.com/elymas/universal-search/internal/obs/metrics"
 	obstrace "github.com/elymas/universal-search/internal/obs/trace"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel"
 	oteltrace "go.opentelemetry.io/otel/trace"
 )
 
@@ -62,7 +63,12 @@ type Obs struct {
 }
 
 // Tracer returns a named OTel tracer from the initialised provider.
+// Falls back to the global no-op tracer when tracerProvider is nil
+// (e.g., in tests that only wire Metrics).
 func (o *Obs) Tracer(name string) oteltrace.Tracer {
+	if o.tracerProvider == nil {
+		return otel.Tracer(name)
+	}
 	return o.tracerProvider(name)
 }
 

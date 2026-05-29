@@ -1,0 +1,15 @@
+{
+  "id": "doc-104",
+  "source_id": "reddit",
+  "url": "https://example.com/reddit/0104",
+  "title": "autonomous vehicle perception systems - study 104",
+  "body": "This document discusses autonomous vehicle perception systems. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of autonomous vehicle perception systems. Key findings include improved accuracy, reduced latency, and better scalability. The study 104 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on autonomous vehicle perception systems.",
+  "published_at": "2025-04-15T00:00:00+00:00",
+  "retrieved_at": "2026-05-05T08:00:00+00:00",
+  "author": "author-4",
+  "score": 0.54,
+  "lang": "en",
+  "doc_type": "article",
+  "hash": "23d37d9769b92312"
+}

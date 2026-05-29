@@ -1,0 +1,15 @@
+{
+  "id": "doc-028",
+  "source_id": "arxiv",
+  "url": "https://example.com/arxiv/0028",
+  "title": "model serving latency optimization - study 28",
+  "body": "This document discusses model serving latency optimization. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of model serving latency optimization. Key findings include improved accuracy, reduced latency, and better scalability. The study 28 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on model serving latency optimization.",
+  "published_at": "2025-01-29T00:00:00+00:00",
+  "retrieved_at": "2026-05-02T04:00:00+00:00",
+  "author": "author-28",
+  "score": 0.78,
+  "lang": "en",
+  "doc_type": "repo",
+  "hash": "a27c6add090c2bbe"
+}

@@ -1,0 +1,15 @@
+{
+  "id": "doc-127",
+  "source_id": "korea_news",
+  "url": "https://example.com/korea_news/0127",
+  "title": "neural network pruning and quantization - study 127",
+  "body": "This document discusses neural network pruning and quantization. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of neural network pruning and quantization. Key findings include improved accuracy, reduced latency, and better scalability. The study 127 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on neural network pruning and quantization.",
+  "published_at": "2025-05-08T00:00:00+00:00",
+  "retrieved_at": "2026-05-06T07:00:00+00:00",
+  "author": "author-27",
+  "score": 0.77,
+  "lang": "en",
+  "doc_type": "other",
+  "hash": "2c5051daf9e87c4c"
+}

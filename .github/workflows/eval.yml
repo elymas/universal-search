@@ -1,0 +1,55 @@
+# SPEC-EVAL-001: Citation faithfulness benchmark — PR gate.
+#
+# Triggers on PRs touching synthesis, researcher, LLM, fanout, or golden set.
+# Skips on docs-only changes (EC-001).
+# Exit codes: 0=pass, 1=score fail, 2=judge error, 3=parse error.
+name: eval-benchmark
+
+on:
+  pull_request:
+    paths:
+      - 'internal/synthesis/**'
+      - 'services/researcher/**'
+      - 'internal/llm/**'
+      - 'internal/fanout/**'
+      - 'internal/eval/**'
+      - '.github/workflows/eval.yml'
+      - '.github/workflows/eval-nightly.yml'
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Python deps
+        run: |
+          cd services/researcher
+          pip install -e .
+
+      - name: Run golden set integrity tests
+        run: go test ./internal/eval/golden/... -v -race -count=1
+
+      - name: Run Go eval unit tests
+        run: go test ./internal/eval/... -v -race -count=1 -cover
+
+      - name: Run Python judge tests
+        run: |
+          cd services/researcher
+          PYTHONPATH=src pytest tests/test_eval_judge.py -v
+
+      # The full 50-query benchmark requires EVAL_JUDGE_API key.
+      # In CI this runs against the real judge service.
+      # For now, the unit tests above validate the pipeline.
+      # Full benchmark execution will be enabled once the judge service
+      # is deployed and the API key is configured as a repo secret.

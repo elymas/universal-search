@@ -1,0 +1,15 @@
+{
+  "id": "doc-178",
+  "source_id": "daum",
+  "url": "https://example.com/daum/0178",
+  "title": "zero-shot and few-shot learning - study 178",
+  "body": "This document discusses zero-shot and few-shot learning. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of zero-shot and few-shot learning. Key findings include improved accuracy, reduced latency, and better scalability. The study 178 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on zero-shot and few-shot learning.",
+  "published_at": "2025-06-28T00:00:00+00:00",
+  "retrieved_at": "2026-05-08T10:00:00+00:00",
+  "author": "author-28",
+  "score": 0.78,
+  "lang": "en",
+  "doc_type": "paper",
+  "hash": "e984b45e30f1acbe"
+}

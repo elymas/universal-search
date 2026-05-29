@@ -1,0 +1,15 @@
+{
+  "id": "doc-017",
+  "source_id": "youtube",
+  "url": "https://example.com/youtube/0017",
+  "title": "semi-supervised learning techniques - study 17",
+  "body": "This document discusses semi-supervised learning techniques. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of semi-supervised learning techniques. Key findings include improved accuracy, reduced latency, and better scalability. The study 17 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on semi-supervised learning techniques.",
+  "published_at": "2025-01-18T00:00:00+00:00",
+  "retrieved_at": "2026-05-01T17:00:00+00:00",
+  "author": "author-17",
+  "score": 0.67,
+  "lang": "en",
+  "doc_type": "post",
+  "hash": "0670b0a131347603"
+}

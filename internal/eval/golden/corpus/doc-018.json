@@ -1,0 +1,15 @@
+{
+  "id": "doc-018",
+  "source_id": "bluesky",
+  "url": "https://example.com/bluesky/0018",
+  "title": "zero-shot and few-shot learning - study 18",
+  "body": "This document discusses zero-shot and few-shot learning. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of zero-shot and few-shot learning. Key findings include improved accuracy, reduced latency, and better scalability. The study 18 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on zero-shot and few-shot learning.",
+  "published_at": "2025-01-19T00:00:00+00:00",
+  "retrieved_at": "2026-05-01T18:00:00+00:00",
+  "author": "author-18",
+  "score": 0.68,
+  "lang": "en",
+  "doc_type": "paper",
+  "hash": "5cccfd5ea4de947c"
+}

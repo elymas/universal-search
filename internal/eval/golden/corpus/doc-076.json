@@ -1,0 +1,15 @@
+{
+  "id": "doc-076",
+  "source_id": "rss",
+  "url": "https://example.com/rss/0076",
+  "title": "container orchestration security policies - study 76",
+  "body": "This document discusses container orchestration security policies. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of container orchestration security policies. Key findings include improved accuracy, reduced latency, and better scalability. The study 76 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on container orchestration security policies.",
+  "published_at": "2025-03-18T00:00:00+00:00",
+  "retrieved_at": "2026-05-04T04:00:00+00:00",
+  "author": "author-26",
+  "score": 0.76,
+  "lang": "en",
+  "doc_type": "repo",
+  "hash": "d2c1999b4b9ce2de"
+}

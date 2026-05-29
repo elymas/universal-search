@@ -1,0 +1,15 @@
+{
+  "id": "doc-021",
+  "source_id": "naver",
+  "url": "https://example.com/naver/0021",
+  "title": "natural language processing tokenization - study 21",
+  "body": "This document discusses natural language processing tokenization. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of natural language processing tokenization. Key findings include improved accuracy, reduced latency, and better scalability. The study 21 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on natural language processing tokenization.",
+  "published_at": "2025-01-22T00:00:00+00:00",
+  "retrieved_at": "2026-05-01T21:00:00+00:00",
+  "author": "author-21",
+  "score": 0.71,
+  "lang": "en",
+  "doc_type": "issue",
+  "hash": "4b9e7beb612e5a0c"
+}

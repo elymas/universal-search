@@ -1,0 +1,15 @@
+{
+  "id": "doc-003",
+  "source_id": "github",
+  "url": "https://example.com/github/0003",
+  "title": "mixture of experts training techniques - study 3",
+  "body": "This document discusses mixture of experts training techniques. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of mixture of experts training techniques. Key findings include improved accuracy, reduced latency, and better scalability. The study 3 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on mixture of experts training techniques.",
+  "published_at": "2025-01-04T00:00:00+00:00",
+  "retrieved_at": "2026-05-01T03:00:00+00:00",
+  "author": "author-3",
+  "score": 0.53,
+  "lang": "en",
+  "doc_type": "video",
+  "hash": "78e0a2dc79e244ce"
+}

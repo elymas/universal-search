@@ -1,0 +1,15 @@
+{
+  "id": "doc-087",
+  "source_id": "daum",
+  "url": "https://example.com/daum/0087",
+  "title": "neural network pruning and quantization - study 87",
+  "body": "This document discusses neural network pruning and quantization. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of neural network pruning and quantization. Key findings include improved accuracy, reduced latency, and better scalability. The study 87 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on neural network pruning and quantization.",
+  "published_at": "2025-03-29T00:00:00+00:00",
+  "retrieved_at": "2026-05-04T15:00:00+00:00",
+  "author": "author-37",
+  "score": 0.87,
+  "lang": "en",
+  "doc_type": "other",
+  "hash": "a2e472b19e9cbf87"
+}

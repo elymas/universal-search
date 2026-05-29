@@ -1,0 +1,15 @@
+{
+  "id": "doc-158",
+  "source_id": "arxiv",
+  "url": "https://example.com/arxiv/0158",
+  "title": "continuous delivery pipeline design - study 158",
+  "body": "This document discusses continuous delivery pipeline design. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of continuous delivery pipeline design. Key findings include improved accuracy, reduced latency, and better scalability. The study 158 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on continuous delivery pipeline design.",
+  "published_at": "2025-06-08T00:00:00+00:00",
+  "retrieved_at": "2026-05-07T14:00:00+00:00",
+  "author": "author-8",
+  "score": 0.58,
+  "lang": "en",
+  "doc_type": "social",
+  "hash": "f3d0a597a9164d7f"
+}

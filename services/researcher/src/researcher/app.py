@@ -14,6 +14,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from researcher.deep_tree import router as deep_tree_router
+from researcher.eval_judge import router as eval_judge_router
 from researcher.faithfulness_endpoint import router as faithfulness_router
 from researcher.gateway import Gateway
 from researcher.models import SynthesizeRequest, SynthesizeResponse
@@ -38,6 +39,9 @@ app = FastAPI(title="researcher", version=__version__, lifespan=lifespan)
 
 # SPEC-DEEP-002 REQ-DEEP2-006: Faithfulness check endpoint.
 app.include_router(faithfulness_router)
+
+# SPEC-EVAL-001: Citation faithfulness judge endpoint.
+app.include_router(eval_judge_router)
 
 # SPEC-DEEP-003 Phase C: Tree decomposition endpoint.
 app.include_router(deep_tree_router)

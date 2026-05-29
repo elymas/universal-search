@@ -1,0 +1,15 @@
+{
+  "id": "doc-066",
+  "source_id": "hackernews",
+  "url": "https://example.com/hackernews/0066",
+  "title": "GPU cluster scheduling optimization - study 66",
+  "body": "This document discusses GPU cluster scheduling optimization. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of GPU cluster scheduling optimization. Key findings include improved accuracy, reduced latency, and better scalability. The study 66 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on GPU cluster scheduling optimization.",
+  "published_at": "2025-03-08T00:00:00+00:00",
+  "retrieved_at": "2026-05-03T18:00:00+00:00",
+  "author": "author-16",
+  "score": 0.66,
+  "lang": "en",
+  "doc_type": "paper",
+  "hash": "4f2fa17c496d334b"
+}

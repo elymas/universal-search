@@ -1,0 +1,55 @@
+# SPEC-EVAL-001: Nightly regression benchmark.
+#
+# Runs the full 50-query benchmark at 03:00 UTC daily.
+# Writes history to .moai/eval/history/ and updates latest.md.
+# REQ-EVAL1-010: Nightly baseline for regression detection.
+name: eval-nightly
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  nightly-eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Python deps
+        run: |
+          cd services/researcher
+          pip install -e .
+
+      - name: Run golden set integrity tests
+        run: go test ./internal/eval/golden/... -v -race -count=1
+
+      - name: Run Go eval unit tests
+        run: go test ./internal/eval/... -v -race -count=1 -cover
+
+      - name: Run Python judge tests
+        run: |
+          cd services/researcher
+          PYTHONPATH=src pytest tests/test_eval_judge.py -v
+
+      # Full benchmark execution with history writing.
+      # Requires EVAL_JUDGE_API secret to be configured.
+      # The runner writes to .moai/eval/history/EVAL-001-{date}.json
+      # and .moai/eval/reports/latest.md on success.
+
+      - name: Create history directory
+        run: mkdir -p .moai/eval/history .moai/eval/reports
+
+      # NOTE: Full benchmark execution is deferred until the judge service
+      # is deployed and EVAL_JUDGE_API secret is configured in repo settings.
+      # The nightly workflow structure is ready for activation.
