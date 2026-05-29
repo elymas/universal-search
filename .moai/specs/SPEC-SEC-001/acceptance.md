@@ -1,8 +1,9 @@
 ---
 id: SPEC-SEC-001
-version: 0.1.0
+version: 0.2.0
 status: draft
 created: 2026-05-26
+updated: 2026-05-29
 author: limbowl (via manager-spec)
 related_spec: SPEC-SEC-001 (spec.md, plan.md)
 format: Given/When/Then
@@ -12,9 +13,9 @@ format: Given/When/Then
 
 ## 0. Document Purpose
 
-This document specifies acceptance criteria for SPEC-SEC-001 in Given/When/Then format, expanding the scenario index in spec.md §5 (§5.1..§5.15) into externally-observable behaviors that the run phase MUST verify before declaring SEC-001 ship-ready.
+This document specifies acceptance criteria for SPEC-SEC-001 in Given/When/Then format, expanding the scenario index in spec.md §5 (§5.1..§5.20) into externally-observable behaviors that the run phase MUST verify before declaring SEC-001 ship-ready.
 
-Scope: 15 acceptance criteria (AC-001..AC-015) covering REQ-SEC-001 through REQ-SEC-018 + NFR-SEC-001 through NFR-SEC-007, plus 3 edge-case sections, plus a Definition of Done checklist.
+Scope: 15 acceptance criteria (AC-001..AC-015) covering REQ-SEC-001 through REQ-SEC-018 + REQ-SEC-005a + NFR-SEC-001 through NFR-SEC-007, plus 3 edge-case sections, plus a Definition of Done checklist. (v0.2.0: AC-003 extended for the REQ-SEC-005a git-rewrite guards; AC-004 corrected to 22 tests + `fopts` signature; AC-013 reconciled to the existing AUTH-003 chain + staged fail-closed.)
 
 Coverage policy: every REQ and every NFR in spec.md §2 / §3 has ≥1 matching AC below. See Coverage Matrix at end of file.
 
@@ -61,20 +62,28 @@ Maps to scenario §5.2 in spec.md.
 
 ---
 
-### AC-003 — Committed-secret incident response runbook executes correctly
+### AC-003 — Committed-secret incident response runbook executes correctly (with guarded history rewrite)
 
-Covers: REQ-SEC-005
+Covers: REQ-SEC-005, REQ-SEC-005a
 
-**Given** a simulated historical secret in the git log (test branch) AND the `ops/security/runbook.md` documenting the 4-step procedure.
+**Given** a simulated historical secret in the git log (test branch) AND the `ops/security/runbook.md` documenting the incident procedure + the five-guard pre-flight checklist for any history rewrite.
 
 **When** the runbook is followed.
 
-**Then**:
-- Step 1: The credential is revoked at the issuing provider (manual step verified by checklist).
-- Step 2: Git history is rewritten via `git filter-repo` (force-push requires explicit approval).
-- Step 3: SPEC-AUTH-003 audit log accepts and records the incident with `event_type=secret.scan.finding`, severity `critical`.
-- Step 4: A post-mortem document is filed within 24h (template in runbook).
-- The runbook acceptance test asserts all 4 steps are documented.
+**Then** (incident response steps):
+- The credential is revoked at the issuing provider (manual step verified by checklist).
+- SPEC-AUTH-003 audit log accepts and records the incident with `event_type=secret.scan.finding`, severity `critical`.
+- A post-mortem document is filed within 24h (template in runbook).
+
+**And** (REQ-SEC-005a — destructive git-history rewrite is GUARDED):
+- The runbook documents all FIVE guards as a mandatory pre-flight checklist before `git filter-repo` + force-push on `main`:
+  1. **Human approval gate** — a named approver/role (security lead / CODEOWNERS owner) authorizes the rewrite in writing.
+  2. **Backup before rewrite** — a `refs/backup/<ISO-date>` snapshot ref AND a `git clone --mirror` of the pre-rewrite repo are created and verified.
+  3. **Staging validation** — the rewrite first runs on a throwaway clone / staging branch; the result is validated (secret absent, history otherwise intact) before touching `main`.
+  4. **Rollback procedure** — a documented, tested rollback restoring `main` from the backup ref / mirror exists.
+  5. **Team coordination notice** — collaborators are notified before the force-push (every commit SHA changes).
+- The runbook acceptance test asserts each of the five guards is present AND that the runbook states the rewrite is BLOCKED if any single guard is missing.
+- A negative test: a rewrite attempt with any guard omitted is documented as a BLOCK condition (not executed).
 
 Maps to scenario §5.3 in spec.md.
 
@@ -84,20 +93,20 @@ Maps to scenario §5.3 in spec.md.
 
 Covers: REQ-SEC-007, NFR-SEC-006
 
-**Given** the new `internal/security/ssrf/` package extracted from `internal/access/ssrf.go` (SPEC-CACHE-001 REQ-CACHE-013) without behavior change.
+**Given** the new `internal/security/ssrf/` package extracted from `internal/access/ssrf.go` + `internal/access/dialer.go` (SPEC-CACHE-001 REQ-CACHE-013) without behavior change, preserving the existing `validateHost(ctx, u, opts, fopts)` / `validateRedirect(next, opts, fopts, hopCount)` semantics including the `fopts FetchOptions.AllowPrivateNetworks` per-call override.
 
 **When** the contributor:
 - Runs `go test -run TestSSRF -race ./internal/security/ssrf/...`.
-- Runs all 9 SPEC-CACHE-001 REQ-CACHE-013 tests against the refactored CACHE-001 package.
+- Runs all 22 SPEC-CACHE-001 REQ-CACHE-013 SSRF tests against the refactored `internal/access/` package (ssrf_test.go 14 + ssrf_redirect_test.go 5 + dialer_test.go 3).
 - Runs the SPEC-CACHE-001 Phase 3 benchmark.
 
 **Then**:
 - The package compiles.
-- The 9 SPEC-CACHE-001 tests pass UNCHANGED (characterization preserved per DDD).
+- All 22 SPEC-CACHE-001 SSRF tests pass UNCHANGED (characterization preserved per DDD) — including `TestValidateHost_FetchOptions_AllowPrivate` and `TestPinnedDialContext_FetchOptions_AllowPrivate` which exercise the `fopts` override path.
 - Zero `go test -race` failures.
 - SSRF validation overhead is ≤ 10ms p99 per Fetch call.
 - At default 5-hop max redirect, total budget is ≤ 60ms p99.
-- The package exposes: `ValidateScheme`, `ValidateHost`, `ValidateRedirect`, `PinnedIPDialer`, and `Options` struct with the documented defaults.
+- The package exposes: `ValidateScheme`, `ValidateHost(ctx, u, opts, fopts)`, `ValidateRedirect(next, opts, fopts, hopCount)`, `PinnedIPDialer`, an `Options` struct (`AllowPrivateNetworks`, `RedirectMaxHops` — NOT renamed to `MaxRedirects` —, `HostnameBlocklist`, `SchemeAllowlist`) with the documented defaults, AND a `FetchOptions` struct retaining the per-call `AllowPrivateNetworks` override.
 
 Maps to scenario §5.4 in spec.md.
 
@@ -274,24 +283,25 @@ Maps to scenario §5.12 in spec.md.
 
 ---
 
-### AC-013 — Security event Merkle chain integrity + tamper detection
+### AC-013 — Security event taxonomy emission into the EXISTING AUTH-003 chain + tamper detection
 
 Covers: REQ-SEC-017, NFR-SEC-004
 
-**Given** the new `internal/security/events/` package emitting 7 event types (`auth.failed`, `auth.success`, `ssrf.blocked`, `secret.scan.finding`, `ratelimit.exceeded`, `rbac.denied`, `prompt.sanitized`) into the SPEC-AUTH-003 audit log with `prev_hash` column.
+**Given** the new `internal/security/events/` package emitting 7 event types (`auth.failed`, `auth.success`, `ssrf.blocked`, `secret.scan.finding`, `ratelimit.exceeded`, `rbac.denied`, `prompt.sanitized`) INTO the EXISTING SPEC-AUTH-003 audit subsystem (`internal/audit/`) — which already provides the `prev_hash`/`this_hash` columns (`deploy/postgres/migrations/0003_audit_events.sql`), the chain logic (`internal/audit/chain.go`: `ComputeThisHash`, `VerifyChain`, per-tenant `AcquireAdvisoryLock`), and the daily `audit.chain_verify` job. SEC-001 adds NO new chain, NO new migration, NO new verify job.
 
 **When** the contributor:
-- Inserts 1M rows of synthetic security events.
-- Runs the nightly Merkle chain verification job (`02:00 UTC`).
+- Exercises each of the 7 SEC-001 event types.
+- Relies on the EXISTING AUTH-003 daily `audit.chain_verify` job to verify integrity (90-day retention window per NFR-AUTH3-007).
 - Tampers with one historical row (modify `event_type` or `timestamp`).
 
 **Then**:
-- The audit log row is inserted with `prev_hash = SHA-256(previous_row)`.
+- Each of the 7 SEC-001 event types maps to an `internal/audit.EventType` constant (reusing `auth.fail`/`rbac.deny`; adding `ssrf.blocked`/`secret.scan.finding`/`ratelimit.exceeded`/`prompt.sanitized` in coordination with the AUTH-003 owner) and reaches the existing AUTH-003 emitter.
+- When `audit.hash_chain.enabled` is true, the row is written with `this_hash = SHA256(prev_hash || canonical_json(row_minus_hashes))` by the EXISTING `internal/audit` code (per-`(tenant_id, event_type)` chain) — SEC-001 introduces no new hash-chain code.
 - `usearch_security_event_total{type, severity}` Counter increments with bounded label values (`type` ∈ 7 enum, `severity` ∈ {critical, high, medium, low}); cardinality ≤ 28.
 - slog level mapping: low/medium → INFO, high → WARN, critical → ERROR.
-- The verification job completes in ≤ 30 seconds for the 1M-row chain.
-- After intentional tampering, the verification job FAILS the chain integrity check.
-- A CRITICAL alert fires; subsequent audit log writes are LOCKED (fail-closed) until manual operator intervention.
+- The EXISTING AUTH-003 verification job verifies the 90-day window within the AUTH-003 NFR-AUTH3-007 budget (≤ 30 min for ~600K–2M rows) — there is NO separate SEC-001 1M-row / 30s benchmark.
+- After intentional tampering, the existing AUTH-003 verification (`internal/audit.VerifyChain`) reports the chain violation via the existing `usearch_audit_chain_violations_total` counter + WARN slog, and a CRITICAL alert fires.
+- The fail-closed audit-write lockdown is STAGED / opt-in (`audit.hash_chain.fail_closed`, default `false`), NOT an immediate hard lock: activation requires (1) AUTH-003 owner sign-off, (2) a successful post-backfill chain verify on the target environment before enabling, and (3) a documented operator unlock procedure. Absent these, chain break is alert-only (alert-first, lock-later).
 
 Maps to scenario §5.13 in spec.md.
 
@@ -378,18 +388,18 @@ Covers: REQ-SEC-006, NFR-SEC-003, NFR-SEC-005
 
 ## 3. Definition of Done Checklist
 
-- [ ] All 15 AC scenarios pass on CI.
-- [ ] All 15 scenario index entries (§5.1..§5.15) in spec.md are implemented as automated tests.
+- [ ] All 20 AC scenarios pass on CI.
+- [ ] All 20 scenario index entries (§5.1..§5.20) in spec.md are implemented as automated tests.
 - [ ] `.github/workflows/security.yml` exists with gitleaks + gosec + semgrep + Trivy jobs.
 - [ ] `.github/workflows/deps-audit.yml` (existing) continues to PASS with govulncheck + pip-audit + pnpm audit.
 - [ ] `.gitleaks.toml` baseline allowlist documented; CODEOWNERS approval required for new entries.
 - [ ] `.gosec.yml` excludes test files; `.semgrepignore` documented.
 - [ ] `ops/security/runbook.md` + `ops/security/owasp-asvs-checklist.md` + `ops/security/threat-model.md` + `ops/security/vuln-exceptions.yaml` + `ops/security/gitleaks-fp-log.md` all exist.
-- [ ] `internal/security/ssrf/` package created; CACHE-001 refactored to depend on it; 9 REQ-CACHE-013 tests PASS unchanged.
+- [ ] `internal/security/ssrf/` package created; `internal/access/` (CACHE-001) refactored to depend on it; all 22 REQ-CACHE-013 SSRF tests PASS unchanged (signatures preserve `fopts FetchOptions` + `RedirectMaxHops`).
 - [ ] `internal/security/secrets/` package with 3 backends (env, k8s, vault stub).
 - [ ] `internal/security/ratelimit/` package with token bucket implementation.
 - [ ] `internal/security/prompt/` package with Sanitize function integrated into SYN-002 flow.
-- [ ] `internal/security/events/` package emits 7 event types into AUTH-003 audit log with Merkle chain.
+- [ ] `internal/security/events/` package emits 7 event types INTO the existing AUTH-003 audit subsystem (no new chain/migration/verify job); SEC-001 EventType constants coordinated with AUTH-003 owner; fail-closed lockdown staged/opt-in (default OFF).
 - [ ] SLSA L2 + cosign keyless signature integrated into release workflow.
 - [ ] All `usearch_security_*` metric labels stay within 200-series cardinality cap.
 - [ ] Total security CI parallel wall-clock ≤ 15 min.
@@ -407,6 +417,7 @@ Covers: REQ-SEC-006, NFR-SEC-003, NFR-SEC-005
 | REQ-SEC-003 |   |   |   |   |   |   |   |   |   |   |   |   |   | ✓ |   | EC-001 |
 | REQ-SEC-004 |   | ✓ |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
 | REQ-SEC-005 |   |   | ✓ |   |   |   |   |   |   |   |   |   |   |   |   |   |
+| REQ-SEC-005a |   |   | ✓ |   |   |   |   |   |   |   |   |   |   |   |   |   |
 | REQ-SEC-006 |   |   |   |   |   |   |   |   |   |   |   |   |   |   | ✓ |   |
 | REQ-SEC-007 |   |   |   | ✓ |   |   |   |   |   |   |   |   |   |   |   |   |
 | REQ-SEC-008 |   |   |   |   | ✓ |   |   |   |   |   |   |   |   |   |   | EC-002 |
@@ -432,4 +443,4 @@ Every REQ and NFR has ≥ 1 AC; edge cases EC-001..EC-003 supplement UNFIXED-fin
 
 ---
 
-*End of SPEC-SEC-001 acceptance.md.*
+*End of SPEC-SEC-001 acceptance.md (v0.2.0 — amended 2026-05-29 per SPEC-SEC-001-review-1).*
