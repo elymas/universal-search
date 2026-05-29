@@ -39,6 +39,10 @@ func TestValidateHostBlocksAWSMetadata(t *testing.T) {
 	if err := validateHostByName(t, "169.254.169.254"); err == nil {
 		t.Error("AWS IMDS IP literal must be blocked by hostname blocklist")
 	}
+	// AWS IMDS IPv6 literal as host (bracketed per RFC 3986 host syntax).
+	if err := validateHostByName(t, "[fd00:ec2::254]"); err == nil {
+		t.Error("AWS IMDS IPv6 literal must be blocked by hostname blocklist")
+	}
 }
 
 func TestValidateHostBlocksAzureMetadata(t *testing.T) {
