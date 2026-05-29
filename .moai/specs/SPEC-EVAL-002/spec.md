@@ -1,7 +1,7 @@
 ---
 id: SPEC-EVAL-002
-version: 0.2.0
-status: approved
+version: 1.0.0
+status: implemented
 created: 2026-05-22
 updated: 2026-05-30
 author: limbowl
@@ -20,6 +20,21 @@ related: [SPEC-EVAL-001, SPEC-EVAL-003, SPEC-AUTH-003]
 # SPEC-EVAL-002: Adapter reliability dashboard — 7-day rolling success rate per adapter
 
 ## HISTORY
+
+- 2026-05-30 (implemented v1.0.0, limbowl via manager-docs — DDD ANALYZE-PRESERVE-IMPROVE
+  complete, evaluator-active PASS Func 91/Sec 96/Craft 88/Cons 95, 0 fix cycles):
+  Implementation complete on branch feature/SPEC-EVAL-002, 3 commits
+  (7baf5d0 plan gate, 741993f impl, 6d4d0b8 test fix). All V1
+  acceptance criteria met. plan-auditor PASS 0.88 at v0.2.0 approve gate.
+  Carry-forward (LOW, non-blocking): AdapterHealth.LastCallAt always
+  zero-time (AC-009 operationally useless until telemetry timestamp
+  tracking), circuit_state alert + Grafana panel #5 deferred post-V1
+  (metric family registered forward-compat), cmd/usearch-api/main.go
+  uses NewRegistry(nil) — telemetry zero in prod until SPEC-IR-001
+  wiring (pre-existing scaffolding). Merge note: EVAL-001 (PR #43) +
+  EVAL-002 both edit internal/obs/metrics/metrics.go — conflict expected
+  at main merge time, resolve manually. status: approved → implemented,
+  version: 0.2.0 → 1.0.0.
 
 - 2026-05-30 (amendment v0.2.0, limbowl via manager-spec — resolve
   manager-strategy findings + apply user-approved scope decisions):
