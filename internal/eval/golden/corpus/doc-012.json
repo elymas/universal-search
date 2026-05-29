@@ -1,0 +1,15 @@
+{
+  "id": "doc-012",
+  "source_id": "polymarket",
+  "url": "https://example.com/polymarket/0012",
+  "title": "multi-modal foundation models - study 12",
+  "body": "This document discusses multi-modal foundation models. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of multi-modal foundation models. Key findings include improved accuracy, reduced latency, and better scalability. The study 12 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on multi-modal foundation models.",
+  "published_at": "2025-01-13T00:00:00+00:00",
+  "retrieved_at": "2026-05-01T12:00:00+00:00",
+  "author": "author-12",
+  "score": 0.62,
+  "lang": "en",
+  "doc_type": "repo",
+  "hash": "c31fad8ad2d9d17d"
+}

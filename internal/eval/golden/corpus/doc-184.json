@@ -1,0 +1,15 @@
+{
+  "id": "doc-184",
+  "source_id": "arxiv",
+  "url": "https://example.com/arxiv/0184",
+  "title": "autonomous vehicle perception systems - study 184",
+  "body": "This document discusses autonomous vehicle perception systems. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of autonomous vehicle perception systems. Key findings include improved accuracy, reduced latency, and better scalability. The study 184 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on autonomous vehicle perception systems.",
+  "published_at": "2025-07-04T00:00:00+00:00",
+  "retrieved_at": "2026-05-08T16:00:00+00:00",
+  "author": "author-34",
+  "score": 0.84,
+  "lang": "en",
+  "doc_type": "article",
+  "hash": "b7fa1e45feb5c682"
+}

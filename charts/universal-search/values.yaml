@@ -1,0 +1,819 @@
+# =============================================================================
+# Universal Search Helm Chart — values.yaml
+# Safe minimal defaults (dev-ready). Production: overlay with ci/values-prod.yaml.
+# =============================================================================
+
+# -- Global settings shared across all services
+global:
+  imageRegistry: "ghcr.io/elymas"
+  imagePullSecrets: []
+  storageClass: ""
+  # Bitnami subcharts inherit global.imageRegistry which replaces their default
+  # docker.io registry. Since we only mirror our own images (not Bitnami), set
+  # allowInsecureImages=true so Bitnami charts accept their original registries.
+  security:
+    allowInsecureImages: true
+
+# -- Image tag defaults; overridden by CI on tag push
+imageTag: "0.1.0"
+
+# -- Secret backend strategy: "values" | "existingSecret" | "externalSecrets"
+# Tier 1 ("values"): Chart creates K8s Secret from values — dev/CI ONLY.
+# Tier 2 ("existingSecret"): Operator pre-creates K8s Secret; chart refs it.
+# Tier 3 ("externalSecrets"): Chart emits ExternalSecret CRD (ESO required).
+secrets:
+  backend: "values"
+  # existingSecret name prefix when backend=existingSecret
+  existingSecretPrefix: "usearch-secrets"
+  # ExternalSecret settings when backend=externalSecrets
+  externalSecrets:
+    secretStoreRef:
+      name: ""
+      kind: "ClusterSecretStore"
+    refreshInterval: "1h"
+
+# =============================================================================
+# usearch-api — Go admin server (primary Deployment)
+# Source: cmd/usearch-api, Dockerfile: deploy/Dockerfile.usearch-api
+# =============================================================================
+usearch:
+  api:
+    enabled: true
+    replicas: 1
+    image:
+      repository: "universal-search/usearch-api"
+      pullPolicy: IfNotPresent
+    serviceAccount:
+      create: true
+      annotations: {}
+      name: ""
+    service:
+      type: ClusterIP
+      port: 8080
+      annotations: {}
+    # -- Non-secret environment variables (ConfigMap)
+    env:
+      LOG_LEVEL: "info"
+      USEARCH_ADMIN_PORT: "9090"
+      OTLP_ENDPOINT: ""
+      OTLP_SAMPLE_RATIO: "0.1"
+      LOKI_ENDPOINT: ""
+      # Service URLs (in-cluster)
+      QDRANT_URL: "http://qdrant:6333"
+      MEILI_URL: "http://meilisearch:7700"
+      REDIS_URL: "redis://redis-master:6379/0"
+      DATABASE_URL: "postgresql://usearch:$(POSTGRES_PASSWORD)@postgresql:5432/usearch?sslmode=disable"
+      RESEARCHER_BASE_URL: "http://researcher:8081"
+      EMBEDDER_BASE_URL: "http://embedder:8082"
+      TOKENIZER_KO_BASE_URL: "http://tokenizer-ko:8083"
+      # Ports for sidecar clients
+      RESEARCHER_REQUEST_TIMEOUT_SECONDS: "10"
+      EMBEDDER_REQUEST_TIMEOUT_SECONDS: "15"
+      TOKENIZER_KO_TIMEOUT_MS: "500"
+      TOKENIZER_KO_MAX_RETRIES: "2"
+      # Deep Agent (SPEC-DEEP-002)
+      DEEP_AGENT_RESEARCHER_MODEL: "claude-3-5-haiku-20241022"
+      DEEP_AGENT_REVIEWER_MODEL: "claude-3-5-haiku-20241022"
+      DEEP_AGENT_WRITER_MODEL: "claude-3-5-sonnet-20241022"
+      DEEP_AGENT_VERIFIER_MODEL: "claude-3-5-sonnet-20241022"
+      DEEP_AGENT_MAX_RETRIES: "2"
+      DEEP_AGENT_WRITER_RETRY_DELAY_MS: "500"
+      DEEP_AGENT_VERIFIER_TIMEOUT_MS: "30000"
+      DEEP_AGENT_FAITHFULNESS_URL: "http://researcher:8081/faithfulness_check"
+      # Deep Tree (SPEC-DEEP-003)
+      DEEP_TREE_ENABLED: "false"
+      DEEP_TREE_DEFAULT_BREADTH: "4"
+      DEEP_TREE_DEFAULT_DEPTH: "3"
+      DEEP_TREE_TOKEN_BUDGET: "60000"
+      DEEP_TREE_ROOT_TOKEN_ESTIMATE: "5000"
+      DEEP_TREE_NODE_TIMEOUT_MS: "30000"
+      DEEP_TREE_DECOMPOSE_MODEL: "claude-3-5-haiku-20241022"
+      DEEP_TREE_PERSISTENCE_DIR: "/tmp/usearch/runs"
+      # LiteLLM proxy URL (in-cluster)
+      LITELLM_BASE_URL: "http://litellm:4000"
+      # LiteLLM budget cap per request (USD)
+      LITELLM_BUDGET_USD: "0.50"
+      # SearXNG base URL (in-cluster)
+      SEARXNG_BASE_URL: "http://searxng:8080/"
+      # OIDC (SPEC-AUTH-001) — fill via secret or env
+      OIDC_ISSUER_URL: ""
+      OIDC_CLIENT_ID: ""
+      OIDC_REDIRECT_URL: ""
+      OIDC_SCOPES: "openid,profile,email"
+    # -- Secret environment variables (via secret backend)
+    secretEnv:
+      POSTGRES_PASSWORD: ""
+      MEILI_MASTER_KEY: ""
+      LITELLM_MASTER_KEY: ""
+      LITELLM_API_KEY: ""
+      OPENAI_API_KEY: ""
+      ANTHROPIC_API_KEY: ""
+      SEARXNG_SECRET: ""
+      OIDC_CLIENT_SECRET: ""
+      JWT_SIGNING_KEY: ""
+      SESSION_SECRET: ""
+    resources:
+      requests:
+        cpu: "250m"
+        memory: "256Mi"
+      limits:
+        cpu: "1000m"
+        memory: "512Mi"
+    probes:
+      liveness:
+        httpGet:
+          path: /healthz
+          port: 9090
+        initialDelaySeconds: 5
+        periodSeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 3
+      readiness:
+        httpGet:
+          path: /healthz
+          port: 9090
+        initialDelaySeconds: 3
+        periodSeconds: 5
+        timeoutSeconds: 3
+        failureThreshold: 3
+    hpa:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 70
+      targetMemoryUtilizationPercentage: 80
+    pdb:
+      enabled: true
+      minAvailable: 1
+      maxUnavailable: null
+    networkPolicy:
+      enabled: true
+      ingress:
+        fromNamespaces:
+          - ingress-nginx
+        fromServices: []
+      egress:
+        toServices:
+          - postgresql
+          - redis-master
+          - qdrant
+          - meilisearch
+          - litellm
+          - researcher
+          - embedder
+          - tokenizer-ko
+          - searxng
+        toExternal:
+          # OIDC issuer (e.g. accounts.google.com)
+          - ""
+          # LLM provider hosts
+          - "api.openai.com"
+          - "api.anthropic.com"
+    ingress:
+      enabled: false
+      className: "nginx"
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        nginx.ingress.kubernetes.io/configuration-snippet: |
+          more_set_headers "Strict-Transport-Security: max-age=31536000; includeSubDomains";
+      hosts:
+        - host: usearch.local
+          paths:
+            - path: /
+              pathType: Prefix
+      tls:
+        - secretName: usearch-api-tls
+          hosts:
+            - usearch.local
+    serviceMonitor:
+      enabled: true
+      interval: 30s
+      scrapeTimeout: 10s
+      path: /metrics
+      port: admin
+    # Forward-compat extension points
+    extraEnv: []
+    extraEnvFrom: []
+    extraVolumes: []
+    extraVolumeMounts: []
+    podAnnotations: {}
+    podLabels: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+    topologySpreadConstraints: []
+
+  # ===========================================================================
+  # usearch-mcp — MCP server (secondary Deployment, cluster-internal only)
+  # Source: cmd/usearch-mcp, Dockerfile: deploy/Dockerfile.usearch-mcp
+  # ===========================================================================
+  mcp:
+    enabled: true
+    replicas: 1
+    image:
+      repository: "universal-search/usearch-mcp"
+      pullPolicy: IfNotPresent
+    serviceAccount:
+      create: true
+      annotations: {}
+      name: ""
+    service:
+      type: ClusterIP
+      port: 8081
+      annotations: {}
+    env:
+      LOG_LEVEL: "info"
+      MCP_PORT: "8081"
+      DATABASE_URL: "postgresql://usearch:$(POSTGRES_PASSWORD)@postgresql:5432/usearch?sslmode=disable"
+      REDIS_URL: "redis://redis-master:6379/0"
+    secretEnv:
+      POSTGRES_PASSWORD: ""
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "500m"
+        memory: "256Mi"
+    probes:
+      liveness:
+        httpGet:
+          path: /healthz
+          port: 8081
+        initialDelaySeconds: 5
+        periodSeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 3
+      readiness:
+        httpGet:
+          path: /healthz
+          port: 8081
+        initialDelaySeconds: 3
+        periodSeconds: 5
+        timeoutSeconds: 3
+        failureThreshold: 3
+    hpa:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 5
+      targetCPUUtilizationPercentage: 70
+    pdb:
+      enabled: true
+      minAvailable: 1
+    networkPolicy:
+      enabled: true
+      ingress:
+        fromNamespaces: []
+        fromServices:
+          - usearch-api
+      egress:
+        toServices:
+          - postgresql
+          - redis-master
+        toExternal: []
+    ingress:
+      enabled: false
+    serviceMonitor:
+      enabled: true
+      interval: 30s
+      scrapeTimeout: 10s
+      path: /metrics
+      port: http
+    extraEnv: []
+    extraEnvFrom: []
+    extraVolumes: []
+    extraVolumeMounts: []
+    podAnnotations: {}
+    podLabels: {}
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+# =============================================================================
+# Python Sidecars — optional Deployment per sidecar
+# Each gated by <sidecar>.enabled: true|false
+# =============================================================================
+
+# -- Researcher synthesis sidecar (SPEC-SYN-001)
+researcher:
+  enabled: true
+  image:
+    repository: "universal-search/researcher"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8081
+  env:
+    RESEARCHER_PORT: "8081"
+    RESEARCHER_MODEL_DEFAULT: "claude-haiku-4-5"
+    RESEARCHER_TIMEOUT_SECONDS: "8"
+    RESEARCHER_LOG_LEVEL: "INFO"
+    LITELLM_BASE_URL: "http://litellm:4000"
+  secretEnv:
+    LITELLM_API_KEY: ""
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  probes:
+    liveness:
+      httpGet:
+        path: /health
+        port: 8081
+      initialDelaySeconds: 15
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      httpGet:
+        path: /health
+        port: 8081
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 3
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 10s
+    path: /metrics
+  extraEnv: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  podAnnotations: {}
+  podLabels: {}
+
+# -- BGE-M3 embedding sidecar (SPEC-IDX-002)
+# CPU-only default. GPU overlay: ci/values-gpu.yaml
+embedder:
+  enabled: true
+  image:
+    repository: "universal-search/embedder"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8082
+  env:
+    EMBEDDER_PORT: "8082"
+    EMBEDDER_MODEL_NAME: "BAAI/bge-m3"
+    EMBEDDER_DEVICE: "cpu"
+    EMBEDDER_USE_FP16: "false"
+    EMBEDDER_CACHE_MAX_ENTRIES: "1024"
+    EMBEDDER_LOG_LEVEL: "INFO"
+  secretEnv: {}
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2000m"
+      memory: "2Gi"
+  probes:
+    liveness:
+      httpGet:
+        path: /health
+        port: 8082
+      initialDelaySeconds: 120
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 12
+    readiness:
+      httpGet:
+        path: /health
+        port: 8082
+      initialDelaySeconds: 120
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 12
+    startup:
+      httpGet:
+        path: /health
+        port: 8082
+      periodSeconds: 1
+      failureThreshold: 120
+  # HuggingFace model cache PVC
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClass: ""
+    accessMode: ReadWriteOnce
+  # GPU support (SPEC-IDX-002, NFR-DEPLOY-007)
+  gpu:
+    enabled: false
+    # resource limit for nvidia.com/gpu
+    # limits:
+    #   nvidia.com/gpu: 1
+    nodeSelector: {}
+    tolerations: []
+  # amd64 nodeAffinity when GPU disabled (NFR-DEPLOY-007)
+  amd64OnlyAffinity: true
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 10s
+    path: /metrics
+  extraEnv: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  podAnnotations: {}
+  podLabels: {}
+
+# -- Korean tokenizer sidecar (SPEC-IDX-003)
+tokenizerKo:
+  enabled: true
+  image:
+    repository: "universal-search/tokenizer-ko"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8083
+  env:
+    TOKENIZER_KO_PORT: "8083"
+    TOKENIZER_KO_LOG_LEVEL: "INFO"
+  secretEnv: {}
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  probes:
+    liveness:
+      httpGet:
+        path: /health
+        port: 8083
+      initialDelaySeconds: 30
+      periodSeconds: 15
+      timeoutSeconds: 5
+      failureThreshold: 5
+    readiness:
+      httpGet:
+        path: /health
+        port: 8083
+      initialDelaySeconds: 15
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 5
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 10s
+    path: /health
+  extraEnv: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  podAnnotations: {}
+  podLabels: {}
+
+# -- STORM long-form report sidecar (SPEC-DEEP-001)
+# Default disabled — operator opt-in.
+storm:
+  enabled: false
+  image:
+    repository: "universal-search/storm"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8084
+  env:
+    STORM_PORT: "8084"
+    LITELLM_BASE_URL: "http://litellm:4000"
+  secretEnv:
+    LITELLM_API_KEY: ""
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  probes:
+    liveness:
+      httpGet:
+        path: /health
+        port: 8084
+      initialDelaySeconds: 15
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      httpGet:
+        path: /health
+        port: 8084
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 3
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 10s
+  extraEnv: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  podAnnotations: {}
+  podLabels: {}
+
+# -- KoreaNews crawler sidecar (SPEC-ADP-009)
+# Default disabled — operator opt-in.
+koreanews:
+  enabled: false
+  image:
+    repository: "universal-search/koreanews"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8085
+  env:
+    KOREANEWS_PORT: "8085"
+  secretEnv: {}
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  probes:
+    liveness:
+      httpGet:
+        path: /health
+        port: 8085
+      initialDelaySeconds: 15
+      periodSeconds: 30
+      timeoutSeconds: 5
+      failureThreshold: 3
+    readiness:
+      httpGet:
+        path: /health
+        port: 8085
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 3
+      failureThreshold: 3
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+    scrapeTimeout: 10s
+  extraEnv: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  podAnnotations: {}
+  podLabels: {}
+
+# =============================================================================
+# In-chart custom services (not bundled as subcharts per D3)
+# =============================================================================
+
+# -- LiteLLM proxy (SPEC-LLM-001) — unified LLM gateway
+litellm:
+  enabled: true
+  image:
+    repository: "ghcr.io/berriai/litellm"
+    tag: "v1.83.7-stable.patch.1"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 4000
+  config:
+    # Inline config.yaml content for LiteLLM
+    # Operators should override this with their model list
+    model_list: []
+  env:
+    LITELLM_BUDGET_USD: "0.50"
+    DATABASE_URL: "postgresql://usearch:$(POSTGRES_PASSWORD)@postgresql:5432/usearch?sslmode=disable"
+    REDIS_URL: "redis://redis-master:6379/0"
+    OLLAMA_BASE_URL: ""
+  secretEnv:
+    LITELLM_MASTER_KEY: ""
+    OPENAI_API_KEY: ""
+    ANTHROPIC_API_KEY: ""
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  probes:
+    liveness:
+      httpGet:
+        path: /health
+        port: 4000
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 5
+    readiness:
+      httpGet:
+        path: /health
+        port: 4000
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 5
+  extraEnv: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  podAnnotations: {}
+  podLabels: {}
+
+# -- SearXNG metasearch engine — AGPL-3.0, service-boundary consumed
+# WARNING: SearXNG is AGPL-3.0 licensed. Consumed as an external service
+# (service-boundary, not linked). See NOTICE for license compliance.
+searxng:
+  enabled: true
+  image:
+    repository: "searxng/searxng"
+    tag: "2026.04.22-74f1ca203"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8080
+  settings:
+    # Inline settings.yml — operators should override
+    use_default_settings: true
+    server:
+      secret_key: ""
+      base_url: ""
+    search:
+      formats:
+        - html
+        - json
+  env:
+    SEARXNG_BASE_URL: "http://searxng:8080/"
+  secretEnv:
+    SEARXNG_SECRET: ""
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "128Mi"
+    limits:
+      cpu: "250m"
+      memory: "256Mi"
+  probes:
+    liveness:
+      httpGet:
+        path: /
+        port: 8080
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 5
+    readiness:
+      httpGet:
+        path: /
+        port: 8080
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 5
+  extraEnv: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  podAnnotations: {}
+  podLabels: {}
+
+# -- Meilisearch keyword + hybrid index (in-chart StatefulSet, not subchart per D3)
+meilisearch:
+  enabled: true
+  image:
+    repository: "getmeili/meilisearch"
+    tag: "v1.42.1"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 7700
+  env:
+    MEILI_ENV: "development"
+  secretEnv:
+    MEILI_MASTER_KEY: ""
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClass: ""
+    accessMode: ReadWriteOnce
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  probes:
+    liveness:
+      httpGet:
+        path: /health
+        port: 7700
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 5
+    readiness:
+      httpGet:
+        path: /health
+        port: 7700
+      initialDelaySeconds: 30
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 5
+  extraEnv: []
+  extraVolumes: []
+  extraVolumeMounts: []
+  podAnnotations: {}
+  podLabels: {}
+
+# =============================================================================
+# Infrastructure subcharts — Bitnami postgresql + redis, official qdrant
+# Each can be disabled with <name>.enabled: false + external.* opt-out
+# =============================================================================
+postgresql:
+  enabled: true
+  # Bitnami subchart: preserve default registry (global.imageRegistry overrides it).
+  image:
+    registry: docker.io
+  auth:
+    username: usearch
+    password: ""
+    database: usearch
+    existingSecret: ""
+    secretKeys:
+      userPasswordKey: "password"
+  primary:
+    persistence:
+      enabled: true
+      size: 10Gi
+  external:
+    host: ""
+    port: 5432
+    database: "usearch"
+
+redis:
+  enabled: true
+  # Bitnami subchart: preserve default registry (global.imageRegistry overrides it).
+  image:
+    registry: docker.io
+  architecture: standalone
+  auth:
+    enabled: false
+  master:
+    persistence:
+      enabled: true
+      size: 2Gi
+  external:
+    host: ""
+    port: 6379
+
+qdrant:
+  enabled: true
+  service:
+    type: ClusterIP
+  persistence:
+    enabled: true
+    size: 10Gi
+  external:
+    host: ""
+    httpPort: 6333
+    grpcPort: 6334
+
+# =============================================================================
+# Observability — ServiceMonitor + OTLP wiring (D6)
+# Prometheus + OTel Collector NOT bundled — operator cluster-wide install assumed.
+# =============================================================================
+observability:
+  serviceMonitor:
+    enabled: true
+  otlp:
+    endpoint: ""
+    # e.g. "otel-collector.observability.svc.cluster.local:4317"
+
+# =============================================================================
+# Migration job — golang-migrate pre-install/pre-upgrade Helm hook (D4)
+# =============================================================================
+migration:
+  enabled: true
+  image:
+    repository: "universal-search/usearch-migrate"
+    pullPolicy: IfNotPresent
+  backoffLimit: 3
+
+# =============================================================================
+# Default password values for dev/CI (Tier 1 ONLY)
+# WARNING: NEVER use Tier 1 ("values") in production!
+# These are convenience defaults for docker-compose parity in dev.
+# =============================================================================
+secretsValues:
+  # ONLY used when secrets.backend == "values"
+  postgresPassword: "usearch"
+  meiliMasterKey: "change_me_meilisearch_key"
+  litellmMasterKey: "change_me_litellm_key"
+  searxngSecret: "change_me_searxng_secret"
+  openaiApiKey: ""
+  anthropicApiKey: ""
+  oidcClientSecret: ""
+  jwtSigningKey: ""
+  sessionSecret: ""

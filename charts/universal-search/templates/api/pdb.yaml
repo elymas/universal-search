@@ -1,0 +1,19 @@
+{{- if and .Values.usearch.api.enabled .Values.usearch.api.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "api") }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "universal-search.componentLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "api") | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "universal-search.componentSelectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "api") | nindent 6 }}
+  {{- if .Values.usearch.api.pdb.minAvailable }}
+  minAvailable: {{ .Values.usearch.api.pdb.minAvailable }}
+  {{- end }}
+  {{- if .Values.usearch.api.pdb.maxUnavailable }}
+  maxUnavailable: {{ .Values.usearch.api.pdb.maxUnavailable }}
+  {{- end }}
+{{- end }}

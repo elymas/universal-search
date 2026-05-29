@@ -1,0 +1,15 @@
+{
+  "id": "doc-074",
+  "source_id": "daum",
+  "url": "https://example.com/daum/0074",
+  "title": "A/B testing statistical frameworks - study 74",
+  "body": "This document discusses A/B testing statistical frameworks. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of A/B testing statistical frameworks. Key findings include improved accuracy, reduced latency, and better scalability. The study 74 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on A/B testing statistical frameworks.",
+  "published_at": "2025-03-16T00:00:00+00:00",
+  "retrieved_at": "2026-05-04T02:00:00+00:00",
+  "author": "author-24",
+  "score": 0.74,
+  "lang": "en",
+  "doc_type": "paper",
+  "hash": "de6c3735b5e42cbd"
+}

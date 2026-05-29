@@ -1,0 +1,15 @@
+{
+  "id": "doc-167",
+  "source_id": "rss",
+  "url": "https://example.com/rss/0167",
+  "title": "neural network pruning and quantization - study 167",
+  "body": "This document discusses neural network pruning and quantization. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of neural network pruning and quantization. Key findings include improved accuracy, reduced latency, and better scalability. The study 167 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on neural network pruning and quantization.",
+  "published_at": "2025-06-17T00:00:00+00:00",
+  "retrieved_at": "2026-05-07T23:00:00+00:00",
+  "author": "author-17",
+  "score": 0.67,
+  "lang": "en",
+  "doc_type": "other",
+  "hash": "c09e6e150917476c"
+}

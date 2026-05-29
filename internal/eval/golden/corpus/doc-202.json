@@ -1,0 +1,15 @@
+{
+  "id": "doc-202",
+  "source_id": "searxng",
+  "url": "https://example.com/searxng/0202",
+  "title": "reinforcement learning from human feedback - study 202",
+  "body": "This document discusses reinforcement learning from human feedback. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of reinforcement learning from human feedback. Key findings include improved accuracy, reduced latency, and better scalability. The study 202 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on reinforcement learning from human feedback.",
+  "published_at": "2025-07-22T00:00:00+00:00",
+  "retrieved_at": "2026-05-09T10:00:00+00:00",
+  "author": "author-2",
+  "score": 0.52,
+  "lang": "en",
+  "doc_type": "paper",
+  "hash": "e2c004a52549da97"
+}

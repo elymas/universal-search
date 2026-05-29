@@ -1,0 +1,62 @@
+{{- if .Values.researcher.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "researcher") }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "universal-search.componentLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "researcher") | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "universal-search.componentSelectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "researcher") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "universal-search.componentSelectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "researcher") | nindent 8 }}
+        {{- with .Values.researcher.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/researcher/configmap.yaml") . | sha256sum }}
+        {{- with .Values.researcher.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: researcher
+          image: {{ include "universal-search.image" (dict "Values" .Values "Chart" .Chart "image" .Values.researcher.image) }}
+          imagePullPolicy: {{ .Values.researcher.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.researcher.service.port }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "researcher") }}
+          {{- if .Values.researcher.secretEnv }}
+          env:
+            {{- include "universal-search.secretEnvEntries" (dict "root" . "secretEnv" .Values.researcher.secretEnv "component" "researcher") | nindent 12 }}
+          {{- end }}
+          {{- with .Values.researcher.probes }}
+          livenessProbe:
+            {{- toYaml .liveness | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .readiness | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.researcher.resources | nindent 12 }}
+          {{- with .Values.researcher.extraVolumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.researcher.extraVolumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

@@ -1,0 +1,15 @@
+{
+  "id": "doc-101",
+  "source_id": "korea_news",
+  "url": "https://example.com/korea_news/0101",
+  "title": "natural language processing tokenization - study 101",
+  "body": "This document discusses natural language processing tokenization. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of natural language processing tokenization. Key findings include improved accuracy, reduced latency, and better scalability. The study 101 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on natural language processing tokenization.",
+  "published_at": "2025-04-12T00:00:00+00:00",
+  "retrieved_at": "2026-05-05T05:00:00+00:00",
+  "author": "author-1",
+  "score": 0.51,
+  "lang": "en",
+  "doc_type": "issue",
+  "hash": "10c6673b65310638"
+}

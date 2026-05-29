@@ -118,6 +118,12 @@ type Registry struct {
 	// AdapterCircuitState: gauge tracking circuit breaker state per adapter.
 	// State label ∈ {closed, open, half_open}.
 	AdapterCircuitState *prometheus.GaugeVec
+	// Eval benchmark metrics (SPEC-EVAL-001). Reuses existing `outcome` label;
+	// no new label name is added (NFR-OBS-002).
+	EvalBenchmarkRuns  *prometheus.CounterVec
+	EvalBenchmarkScore prometheus.Histogram
+	EvalJudgeCalls     *prometheus.CounterVec
+	EvalJudgeDuration  *prometheus.HistogramVec
 
 	// labelNames tracks all registered label names for cardinality validation.
 	labelNames []string
@@ -237,6 +243,8 @@ func NewRegistry() *Registry {
 
 	// Register adapter reliability metrics (SPEC-EVAL-002).
 	eval2 := registerFanoutPartial(pr)
+	// Register Eval benchmark metrics (SPEC-EVAL-001).
+	evalMetrics := registerEval(pr)
 
 	return &Registry{
 		Prometheus:                    pr,
@@ -279,6 +287,10 @@ func NewRegistry() *Registry {
 		FanoutPartial:                 eval2.fanoutPartial,
 		AdapterHealthStatus:           eval2.healthStatus,
 		AdapterCircuitState:           eval2.circuitState,
+		EvalBenchmarkRuns:             evalMetrics.benchmarkRuns,
+		EvalBenchmarkScore:            evalMetrics.benchmarkScore,
+		EvalJudgeCalls:                evalMetrics.judgeCalls,
+		EvalJudgeDuration:             evalMetrics.judgeDuration,
 		labelNames: []string{
 			"method", "route", "status_class",
 			"adapter_class",
@@ -407,4 +419,62 @@ func HTTPMiddleware(reg *Registry, route string, next http.Handler) http.Handler
 		reg.HTTPRequests.WithLabelValues(r.Method, route, sc).Inc()
 		reg.HTTPRequestDuration.WithLabelValues(r.Method, route).Observe(elapsed)
 	})
+}
+
+// evalCollectors holds the eval benchmark metric collectors.
+type evalCollectors struct {
+	benchmarkRuns  *prometheus.CounterVec
+	benchmarkScore prometheus.Histogram
+	judgeCalls     *prometheus.CounterVec
+	judgeDuration  *prometheus.HistogramVec
+}
+
+// registerEval creates and registers eval benchmark metrics (SPEC-EVAL-001).
+func registerEval(pr *prometheus.Registry) evalCollectors {
+	benchmarkRuns := prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "usearch_eval_benchmark_runs_total",
+			Help: "Total eval benchmark runs, partitioned by outcome.",
+		},
+		[]string{"outcome"},
+	)
+
+	benchmarkScore := prometheus.NewHistogram(
+		prometheus.HistogramOpts{
+			Name:    "usearch_eval_benchmark_score",
+			Help:    "Distribution of eval benchmark aggregate faithfulness scores.",
+			Buckets: []float64{0.5, 0.6, 0.7, 0.8, 0.85, 0.9, 0.95, 1.0},
+		},
+	)
+
+	judgeCalls := prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "usearch_eval_judge_calls_total",
+			Help: "Total eval judge calls, partitioned by outcome.",
+		},
+		[]string{"outcome"},
+	)
+
+	judgeDuration := prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "usearch_eval_judge_call_duration_seconds",
+			Help:    "Eval judge call latency distribution.",
+			Buckets: []float64{0.5, 1, 2, 5, 10, 15, 30},
+		},
+		[]string{"outcome"},
+	)
+
+	pr.MustRegister(benchmarkRuns, benchmarkScore, judgeCalls, judgeDuration)
+
+	// Pre-initialise with placeholder values.
+	benchmarkRuns.WithLabelValues("pass").Add(0)
+	judgeCalls.WithLabelValues("success").Add(0)
+	judgeDuration.WithLabelValues("success").Observe(0)
+
+	return evalCollectors{
+		benchmarkRuns:  benchmarkRuns,
+		benchmarkScore: benchmarkScore,
+		judgeCalls:     judgeCalls,
+		judgeDuration:  judgeDuration,
+	}
 }

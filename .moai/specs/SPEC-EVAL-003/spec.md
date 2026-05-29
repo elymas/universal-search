@@ -1,9 +1,9 @@
 ---
 id: SPEC-EVAL-003
-version: 0.1.0
-status: draft
+version: 1.0.0
+status: implemented
 created: 2026-05-22
-updated: 2026-05-22
+updated: 2026-05-28
 author: limbowl
 priority: P1
 issue_number: 0
@@ -20,6 +20,12 @@ related: [SPEC-EVAL-001, SPEC-EVAL-002]
 # SPEC-EVAL-003: Korean-locale benchmark — 50-query manual scoring protocol
 
 ## HISTORY
+
+- 2026-05-28 (status flip draft → implemented, v0.1.0 → v1.0.0, limbowl via /moai sync):
+  Phases 2-4 complete per progress.md. Shipped: internal/eval/korean/
+  package (loader, scoring, kappa, snapshot) + tests/eval/korean/
+  golden-set.jsonl (50 queries × 6 categories) + scoring sheet template
+  + baseline snapshot directory. 40 Go tests PASS.
 
 - 2026-05-22 (initial draft v0.1.0, limbowl via manager-spec):
   M8 폴리시 단계의 한국어 평가 SPEC 초안. `.moai/project/roadmap.md`

@@ -1,0 +1,42 @@
+{{- if .Values.koreanews.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "koreanews") }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "universal-search.componentLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "koreanews") | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "universal-search.componentSelectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "koreanews") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "universal-search.componentSelectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "koreanews") | nindent 8 }}
+    spec:
+      containers:
+        - name: koreanews
+          image: {{ include "universal-search.image" (dict "Values" .Values "Chart" .Chart "image" .Values.koreanews.image) }}
+          imagePullPolicy: {{ .Values.koreanews.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.koreanews.service.port }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "koreanews") }}
+          {{- if .Values.koreanews.secretEnv }}
+          env:
+            {{- include "universal-search.secretEnvEntries" (dict "root" . "secretEnv" .Values.koreanews.secretEnv "component" "koreanews") | nindent 12 }}
+          {{- end }}
+          {{- with .Values.koreanews.probes }}
+          livenessProbe:
+            {{- toYaml .liveness | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .readiness | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.koreanews.resources | nindent 12 }}
+{{- end }}

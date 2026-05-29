@@ -1,0 +1,15 @@
+{
+  "id": "doc-023",
+  "source_id": "korea_news",
+  "url": "https://example.com/korea_news/0023",
+  "title": "robotics simulation-to-real transfer - study 23",
+  "body": "This document discusses robotics simulation-to-real transfer. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of robotics simulation-to-real transfer. Key findings include improved accuracy, reduced latency, and better scalability. The study 23 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on robotics simulation-to-real transfer.",
+  "published_at": "2025-01-24T00:00:00+00:00",
+  "retrieved_at": "2026-05-01T23:00:00+00:00",
+  "author": "author-23",
+  "score": 0.73,
+  "lang": "en",
+  "doc_type": "other",
+  "hash": "c750440034c5cfc8"
+}

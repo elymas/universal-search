@@ -1,0 +1,15 @@
+{
+  "id": "doc-082",
+  "source_id": "youtube",
+  "url": "https://example.com/youtube/0082",
+  "title": "reinforcement learning from human feedback - study 82",
+  "body": "This document discusses reinforcement learning from human feedback. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of reinforcement learning from human feedback. Key findings include improved accuracy, reduced latency, and better scalability. The study 82 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on reinforcement learning from human feedback.",
+  "published_at": "2025-03-24T00:00:00+00:00",
+  "retrieved_at": "2026-05-04T10:00:00+00:00",
+  "author": "author-32",
+  "score": 0.82,
+  "lang": "en",
+  "doc_type": "paper",
+  "hash": "4935f494b0c02885"
+}

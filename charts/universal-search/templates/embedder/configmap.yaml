@@ -1,0 +1,13 @@
+{{- if .Values.embedder.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "embedder") }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "universal-search.componentLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "embedder") | nindent 4 }}
+data:
+  {{- range $key, $value := .Values.embedder.env }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
+{{- end }}

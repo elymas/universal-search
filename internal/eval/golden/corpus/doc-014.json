@@ -1,0 +1,15 @@
+{
+  "id": "doc-014",
+  "source_id": "hackernews",
+  "url": "https://example.com/hackernews/0014",
+  "title": "prompt engineering best practices - study 14",
+  "body": "This document discusses prompt engineering best practices. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of prompt engineering best practices. Key findings include improved accuracy, reduced latency, and better scalability. The study 14 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on prompt engineering best practices.",
+  "published_at": "2025-01-15T00:00:00+00:00",
+  "retrieved_at": "2026-05-01T14:00:00+00:00",
+  "author": "author-14",
+  "score": 0.64,
+  "lang": "en",
+  "doc_type": "social",
+  "hash": "e19a030370616038"
+}

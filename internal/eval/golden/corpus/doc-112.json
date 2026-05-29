@@ -1,0 +1,15 @@
+{
+  "id": "doc-112",
+  "source_id": "naver",
+  "url": "https://example.com/naver/0112",
+  "title": "columnar storage formats for analytics - study 112",
+  "body": "This document discusses columnar storage formats for analytics. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of columnar storage formats for analytics. Key findings include improved accuracy, reduced latency, and better scalability. The study 112 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on columnar storage formats for analytics.",
+  "published_at": "2025-04-23T00:00:00+00:00",
+  "retrieved_at": "2026-05-05T16:00:00+00:00",
+  "author": "author-12",
+  "score": 0.62,
+  "lang": "en",
+  "doc_type": "article",
+  "hash": "c0e3ff3c9a66c293"
+}

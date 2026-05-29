@@ -1,0 +1,102 @@
+{{- if .Values.embedder.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "embedder") }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "universal-search.componentLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "embedder") | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "universal-search.componentSelectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "embedder") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "universal-search.componentSelectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "embedder") | nindent 8 }}
+        {{- with .Values.embedder.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/embedder/configmap.yaml") . | sha256sum }}
+        {{- with .Values.embedder.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if and (not .Values.embedder.gpu.enabled) .Values.embedder.amd64OnlyAffinity }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/arch
+                    operator: In
+                    values:
+                      - amd64
+      {{- end }}
+      {{- with .Values.embedder.gpu.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.embedder.gpu.enabled }}
+      {{- with .Values.embedder.gpu.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- end }}
+      containers:
+        - name: embedder
+          image: {{ include "universal-search.image" (dict "Values" .Values "Chart" .Chart "image" .Values.embedder.image) }}
+          imagePullPolicy: {{ .Values.embedder.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.embedder.service.port }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "embedder") }}
+          {{- with .Values.embedder.extraEnv }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.embedder.probes }}
+          livenessProbe:
+            {{- toYaml .liveness | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .readiness | nindent 12 }}
+          {{- if .startup }}
+          startupProbe:
+            {{- toYaml .startup | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.embedder.resources | nindent 12 }}
+            {{- if .Values.embedder.gpu.enabled }}
+            limits:
+              nvidia.com/gpu: 1
+            {{- end }}
+          volumeMounts:
+            {{- if .Values.embedder.persistence.enabled }}
+            - name: model-cache
+              mountPath: /root/.cache/huggingface
+            {{- end }}
+            {{- with .Values.embedder.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+      volumes:
+        {{- if .Values.embedder.persistence.enabled }}
+        - name: model-cache
+          persistentVolumeClaim:
+            claimName: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "embedder") }}-models
+        {{- end }}
+        {{- with .Values.embedder.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+{{- end }}

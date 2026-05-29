@@ -1,0 +1,15 @@
+{
+  "id": "doc-189",
+  "source_id": "searxng",
+  "url": "https://example.com/searxng/0189",
+  "title": "feature store architecture patterns - study 189",
+  "body": "This document discusses feature store architecture patterns. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of feature store architecture patterns. Key findings include improved accuracy, reduced latency, and better scalability. The study 189 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on feature store architecture patterns.",
+  "published_at": "2025-07-09T00:00:00+00:00",
+  "retrieved_at": "2026-05-08T21:00:00+00:00",
+  "author": "author-39",
+  "score": 0.89,
+  "lang": "en",
+  "doc_type": "issue",
+  "hash": "9038e099fed15216"
+}

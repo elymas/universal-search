@@ -1,0 +1,15 @@
+{
+  "id": "doc-119",
+  "source_id": "arxiv",
+  "url": "https://example.com/arxiv/0119",
+  "title": "site reliability engineering principles - study 119",
+  "body": "This document discusses site reliability engineering principles. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of site reliability engineering principles. Key findings include improved accuracy, reduced latency, and better scalability. The study 119 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on site reliability engineering principles.",
+  "published_at": "2025-04-30T00:00:00+00:00",
+  "retrieved_at": "2026-05-05T23:00:00+00:00",
+  "author": "author-19",
+  "score": 0.69,
+  "lang": "en",
+  "doc_type": "other",
+  "hash": "d411c796f8eec875"
+}

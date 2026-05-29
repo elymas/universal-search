@@ -1,0 +1,15 @@
+{
+  "id": "doc-171",
+  "source_id": "arxiv",
+  "url": "https://example.com/arxiv/0171",
+  "title": "diffusion models for image generation - study 171",
+  "body": "This document discusses diffusion models for image generation. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of diffusion models for image generation. Key findings include improved accuracy, reduced latency, and better scalability. The study 171 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on diffusion models for image generation.",
+  "published_at": "2025-06-21T00:00:00+00:00",
+  "retrieved_at": "2026-05-08T03:00:00+00:00",
+  "author": "author-21",
+  "score": 0.71,
+  "lang": "en",
+  "doc_type": "video",
+  "hash": "f81428c7454c7845"
+}

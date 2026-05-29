@@ -1,0 +1,34 @@
+# =============================================================================
+# Multi-stage Dockerfile for usearch-mcp (MCP server)
+# REQ-DEPLOY-003: distroless, multi-arch, non-root USER
+# =============================================================================
+
+# -- Builder stage
+FROM golang:1.24-alpine AS builder
+
+RUN apk add --no-cache git ca-certificates
+
+WORKDIR /src
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux go build \
+    -ldflags="-s -w -X main.version=$(git describe --tags --always --dirty 2>/dev/null || echo dev)" \
+    -o /out/usearch-mcp ./cmd/usearch-mcp
+
+# -- Final stage (distroless non-root)
+FROM gcr.io/distroless/static-debian12:nonroot
+
+COPY --from=builder /out/usearch-mcp /usearch-mcp
+
+USER 65532:65532
+
+EXPOSE 8081
+
+HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=3 \
+    CMD ["/usearch-mcp", "--healthcheck"]
+
+ENTRYPOINT ["/usearch-mcp"]

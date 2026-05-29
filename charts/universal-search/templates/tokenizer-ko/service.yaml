@@ -1,0 +1,18 @@
+{{- if .Values.tokenizerKo.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "universal-search.componentFullname" (dict "Release" .Release "Chart" .Chart "Values" .Values "component" "tokenizer-ko") }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "universal-search.componentLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "tokenizer-ko") | nindent 4 }}
+spec:
+  type: {{ .Values.tokenizerKo.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.tokenizerKo.service.port }}
+      targetPort: http
+      protocol: TCP
+  selector:
+    {{- include "universal-search.componentSelectorLabels" (dict "Chart" .Chart "Release" .Release "Values" .Values "component" "tokenizer-ko") | nindent 4 }}
+{{- end }}

@@ -1,9 +1,9 @@
 ---
 id: SPEC-SEC-001
-version: 0.1.0
-status: draft
+version: 1.0.0
+status: implemented
 created: 2026-05-22
-updated: 2026-05-22
+updated: 2026-05-28
 author: limbowl
 priority: P0
 issue_number: 0
@@ -20,6 +20,14 @@ related: [SPEC-EVAL-001, SPEC-EVAL-002, SPEC-EVAL-003]
 # SPEC-SEC-001: Security hardening — dependency audit, secret scanning, SSRF mitigation, OWASP pass
 
 ## HISTORY
+
+- 2026-05-28 (status flip draft → implemented, v0.1.0 → v1.0.0, limbowl via /moai sync):
+  Phase 4 (SSRF generalization) + Phase 6 (multi-backend secrets resolver)
+  complete per progress.md. Five packages shipped under internal/security/:
+  events, prompt, ratelimit (golang.org/x/time/rate), secrets (env-backed
+  Resolver interface), ssrf (ValidateScheme/Host/Redirect + PinnedIPDialer
+  with cloud-metadata hostname blocklist). All tests PASS with -race,
+  coverage 85.4% on SSRF package. Commit fcfd3be.
 
 - 2026-05-22 (initial draft v0.1.0, limbowl via manager-spec):
   M8 (Eval + polish)의 4번째이자 마지막 SPEC. EVAL-001/002/003 (citation

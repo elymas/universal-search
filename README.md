@@ -2,6 +2,9 @@
 
 Hybrid AI-powered search engine — Go orchestration plane + Python sidecars + Next.js web UI.
 
+> **📚 Full Documentation**: [https://elymas.github.io/universal-search/](https://elymas.github.io/universal-search/)
+> Comprehensive user guide, operator manual, and API reference.
+
 > Note: The working directory is named `univesal-search` (typo) while the canonical
 > GitHub repository name is `universal-search`. The Go module path
 > (`github.com/elymas/universal-search`) is unaffected. A rename will happen at

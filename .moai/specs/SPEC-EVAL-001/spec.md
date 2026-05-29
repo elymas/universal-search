@@ -1,9 +1,9 @@
 ---
 id: SPEC-EVAL-001
-version: 0.1.0
-status: draft
+version: 1.0.0
+status: implemented
 created: 2026-05-22
-updated: 2026-05-22
+updated: 2026-05-28
 author: limbowl
 priority: P1
 issue_number: 0
@@ -20,6 +20,15 @@ related: [SPEC-EVAL-002, SPEC-EVAL-003]
 # SPEC-EVAL-001: Citation faithfulness benchmark — 50-query golden set + DeepEval CI gate
 
 ## HISTORY
+
+- 2026-05-28 (status flip draft → implemented, v0.1.0 → v1.0.0, limbowl via /moai sync):
+  Phases 1-4 complete per progress.md. Shipped: 50-query golden set
+  (35 EN + 15 KO) + 210 NormalizedDoc corpus fixtures, Go-side runner
+  + DeepEval HTTP bridge + ≥0.85 CI gate, Python judge router
+  (eval_judge.py with deepeval~=1.0), 4 new Prometheus collectors
+  (EvalBenchmark*/EvalJudge*) reusing outcome label, and CI workflows
+  (eval.yml per-PR + eval-nightly.yml scheduled). All tests PASS.
+  Commit pending push (this branch).
 
 - 2026-05-22 (initial draft v0.1.0, limbowl via manager-spec):
   First EARS-formatted SPEC for the M8 evaluation gate that closes

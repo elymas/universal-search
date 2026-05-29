@@ -1,0 +1,15 @@
+{
+  "id": "doc-210",
+  "source_id": "arxiv",
+  "url": "https://example.com/arxiv/0210",
+  "title": "\ud55c\uad6d \ub274\uc2a4 \ub370\uc774\ud130 \ub9c8\uc774\ub2dd \uae30\ubc95 - study 210",
+  "body": "This document discusses \ud55c\uad6d \ub274\uc2a4 \ub370\uc774\ud130 \ub9c8\uc774\ub2dd \uae30\ubc95. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of \ud55c\uad6d \ub274\uc2a4 \ub370\uc774\ud130 \ub9c8\uc774\ub2dd \uae30\ubc95. Key findings include improved accuracy, reduced latency, and better scalability. The study 210 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on \ud55c\uad6d \ub274\uc2a4 \ub370\uc774\ud130 \ub9c8\uc774\ub2dd \uae30\ubc95.",
+  "published_at": "2025-07-30T00:00:00+00:00",
+  "retrieved_at": "2026-05-09T18:00:00+00:00",
+  "author": "author-10",
+  "score": 0.6,
+  "lang": "ko",
+  "doc_type": "paper",
+  "hash": "a754fec87e7f3275"
+}

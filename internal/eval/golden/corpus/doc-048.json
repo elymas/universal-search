@@ -1,0 +1,15 @@
+{
+  "id": "doc-048",
+  "source_id": "daum",
+  "url": "https://example.com/daum/0048",
+  "title": "federated learning privacy guarantees - study 48",
+  "body": "This document discusses federated learning privacy guarantees. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of federated learning privacy guarantees. Key findings include improved accuracy, reduced latency, and better scalability. The study 48 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
+  "snippet": "Summary of research on federated learning privacy guarantees.",
+  "published_at": "2025-02-18T00:00:00+00:00",
+  "retrieved_at": "2026-05-03T00:00:00+00:00",
+  "author": "author-48",
+  "score": 0.98,
+  "lang": "en",
+  "doc_type": "article",
+  "hash": "e149b80938d84cd5"
+}
