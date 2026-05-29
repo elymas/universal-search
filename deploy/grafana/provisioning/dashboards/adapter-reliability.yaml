@@ -1,0 +1,16 @@
+# SPEC-EVAL-002 REQ-EVAL2-007: Grafana dashboard auto-provisioning.
+# Loads every dashboard JSON under the mounted /var/lib/grafana/dashboards path
+# so `docker compose up grafana` serves the adapter-reliability dashboard with
+# no manual import step.
+apiVersion: 1
+providers:
+  - name: usearch
+    orgId: 1
+    folder: "Universal Search"
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

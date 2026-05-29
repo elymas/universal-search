@@ -74,7 +74,8 @@ func TestRouterCollectorsCardinality(t *testing.T) {
 			"result",       // SPEC-DEEP-002; bounded to 3 values.
 			"reason",       // SPEC-AUTH-001; bounded to 9 values.
 			"trigger",      // SPEC-AUTH-001; bounded to 1 value.
-			"reason_class": // SPEC-AUTH-002; bounded to 4 values.
+			"reason_class", // SPEC-AUTH-002; bounded to 4 values.
+			"state":        // SPEC-EVAL-002; bounded to closed/open/half_open.
 		default:
 			t.Errorf("unexpected label %q in cardinality allowlist", label)
 		}

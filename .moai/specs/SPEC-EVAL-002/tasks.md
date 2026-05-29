@@ -42,3 +42,19 @@ is folded into T10. Each task lists the spec phase(s) it covers.
 ## DDD posture per task
 - T1, T2, T3, T7 follow ANALYZE→PRESERVE(characterization)→IMPROVE. Existing emission behavior must not change.
 - T4, T5, T6, T8 are declarative; verification is promtool/amtool/grafana-lint, not characterization tests.
+
+## Run-phase status (2026-05-30, manager-ddd)
+
+| ID | Status | Notes |
+|----|--------|-------|
+| T0 | DONE (pre-run) | plan-auditor PASS, status approved (commit 7baf5d0) |
+| T1 | DONE | 3 families registered; cardinality `state`-only in 3 places; obs/metrics 95.8% |
+| T2 | DONE | emitPartialResult; +1 per failed adapter; full-success no-op; fanout 98.2% |
+| T3 | DONE | classifyFailure 7-class + failure_class slog attr (not a label); 100% |
+| T4 | DONE | recording-rules.yml (5) + test fixture; prometheus.yml 1m + rule_files + alerting; retention 30d in compose |
+| T5 | DONE | alerts.yml (V1: 3 rules) + alerts-test.yml + alertmanager.yml; CI gate added. Circuit alert DEFERRED (A2) |
+| T6 | DONE | dashboard JSON (4 panels, recording-rule-only, adapter var) + 2 provisioning YAML; compose grafana+alertmanager. Circuit panel DEFERRED (A2); Loki panel omitted (optional) |
+| T7 | DONE | REUSE admin mux: AdapterAdminView.success_rate + filled counts via telemetry snapshot; /api/admin/adapters/health on same LoopbackOnly mux; no new port |
+| T8 | DONE | runbook with 3 alert sections (anchors match), tuning, sizing, silence |
+| T9 | PARTIAL | build/vet/lint/race-cover green; promtool/grafana e2e are CI/compose-only (tooling absent locally) |
+| T10 | PENDING | sync/PR — left to orchestrator (commit + roadmap/CHANGELOG + PR) |

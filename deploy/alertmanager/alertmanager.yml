@@ -1,0 +1,53 @@
+# SPEC-EVAL-002 REQ-EVAL2-009: Alertmanager configuration.
+#
+# Privacy-first / multi-tenant default: the root route uses the `null` receiver
+# so a fresh deployment is SILENT until the operator wires a channel. Three
+# commented receiver examples (generic webhook, PagerDuty, OpsGenie) are
+# provided — uncomment + edit the one you need, then point the route at it.
+#
+# Validate with:  amtool check-config deploy/alertmanager/alertmanager.yml
+route:
+  receiver: "null"
+  group_by: ["alertname", "adapter"]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    - matchers:
+        - severity = "critical"
+      # receiver: 'pagerduty-critical'  # uncomment + configure below
+      receiver: "null"
+    - matchers:
+        - severity = "warning"
+      # receiver: 'webhook-warnings'  # uncomment + configure below
+      receiver: "null"
+
+receivers:
+  - name: "null"
+
+  # --- Example 1: generic webhook (Discord, Slack incoming webhook, etc.) ---
+  # - name: 'webhook-warnings'
+  #   webhook_configs:
+  #     - url: 'https://example.com/api/webhooks/REPLACE_ME/usearch-warnings'
+  #       send_resolved: true
+
+  # --- Example 2: PagerDuty ---
+  # - name: 'pagerduty-critical'
+  #   pagerduty_configs:
+  #     - routing_key: 'YOUR_PAGERDUTY_ROUTING_KEY'
+  #       send_resolved: true
+
+  # --- Example 3: OpsGenie ---
+  # - name: 'opsgenie-team'
+  #   opsgenie_configs:
+  #     - api_key: 'YOUR_OPSGENIE_API_KEY'
+  #       teams: 'usearch-oncall'
+
+# Suppress the warning-severity alert for an adapter when a critical alert for
+# the same adapter is already firing (avoids double-paging during acute outages).
+inhibit_rules:
+  - source_matchers:
+      - severity = "critical"
+    target_matchers:
+      - severity = "warning"
+    equal: ["alertname", "adapter"]

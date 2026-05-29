@@ -1,0 +1,44 @@
+# SPEC-EVAL-002 REQ-EVAL2-001: adapter reliability recording rules.
+#
+# Five rules pre-aggregate usearch_adapter_calls_total{adapter,outcome}
+# (SPEC-OBS-001) into rolling-window success rates so Grafana panels and
+# alert rules read pre-computed series, not raw counter rates (NFR-EVAL2-002).
+#
+# Success-rate denominator includes all six OutcomeFromError values
+# (success / failure / timeout / rate_limited / unavailable / transient) per
+# HISTORY D1 — i.e. sum over the full family, no outcome filter on the
+# denominator. The numerator filters outcome="success".
+#
+# Evaluation interval is 1m (see deploy/prometheus/prometheus.yml
+# global.evaluation_interval). Alert `for:` durations assume this cadence.
+groups:
+  - name: usearch_adapter_reliability
+    interval: 1m
+    rules:
+      - record: usearch:adapter_success_rate_1h
+        expr: |
+          sum by (adapter) (rate(usearch_adapter_calls_total{outcome="success"}[1h]))
+          /
+          sum by (adapter) (rate(usearch_adapter_calls_total[1h]))
+
+      - record: usearch:adapter_success_rate_24h
+        expr: |
+          sum by (adapter) (rate(usearch_adapter_calls_total{outcome="success"}[24h]))
+          /
+          sum by (adapter) (rate(usearch_adapter_calls_total[24h]))
+
+      - record: usearch:adapter_success_rate_7d
+        expr: |
+          sum by (adapter) (rate(usearch_adapter_calls_total{outcome="success"}[7d]))
+          /
+          sum by (adapter) (rate(usearch_adapter_calls_total[7d]))
+
+      - record: usearch:adapter_failure_rate_by_outcome_24h
+        expr: |
+          sum by (adapter, outcome) (rate(usearch_adapter_calls_total{outcome!="success"}[24h]))
+
+      - record: usearch:adapter_fanout_partial_ratio_24h
+        expr: |
+          sum by (adapter) (rate(usearch_fanout_partial_total[24h]))
+          /
+          sum by (adapter) (rate(usearch_adapter_calls_total[24h]))

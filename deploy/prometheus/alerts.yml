@@ -1,0 +1,44 @@
+# SPEC-EVAL-002 REQ-EVAL2-008: adapter reliability alert rules.
+#
+# V1 ships THREE alert rules. The 4th rule (AdapterCircuitOpen) is DEFERRED to
+# post-V1 (amendment A2): no upstream emits usearch_adapter_circuit_state in V1,
+# so a circuit-open rule would never fire and is excluded from the V1 gate. It
+# is re-enabled when a future resilience SPEC emits real circuit transitions.
+#
+# All alerts read the pre-aggregated recording rules from recording-rules.yml,
+# carry spec=SPEC-EVAL-002, and link to the operator runbook via runbook_url.
+groups:
+  - name: usearch_adapter_reliability
+    rules:
+      - alert: AdapterSuccessRate7dLow
+        expr: usearch:adapter_success_rate_7d < 0.85
+        for: 30m
+        labels:
+          severity: warning
+          spec: SPEC-EVAL-002
+        annotations:
+          summary: "Adapter {{ $labels.adapter }} 7-day success rate {{ $value | humanizePercentage }} below 85%"
+          description: "The 7-day rolling success rate for adapter {{ $labels.adapter }} has stayed below 0.85 for 30 minutes. Investigate sustained degradation (auth expiry, upstream block, parser drift)."
+          runbook_url: "https://github.com/elymas/universal-search/blob/main/docs/operations/adapter-reliability-runbook.md#adaptersuccessrate7dlow"
+
+      - alert: AdapterSuccessRate1hCritical
+        expr: usearch:adapter_success_rate_1h < 0.50
+        for: 5m
+        labels:
+          severity: critical
+          spec: SPEC-EVAL-002
+        annotations:
+          summary: "Adapter {{ $labels.adapter }} 1-hour success rate {{ $value | humanizePercentage }} acutely degraded"
+          description: "The 1-hour success rate for adapter {{ $labels.adapter }} dropped below 0.50 for 5 minutes — an acute outage. Check upstream availability and recent deploys."
+          runbook_url: "https://github.com/elymas/universal-search/blob/main/docs/operations/adapter-reliability-runbook.md#adaptersuccessrate1hcritical"
+
+      - alert: FanoutPartialRatioHigh
+        expr: usearch:adapter_fanout_partial_ratio_24h > 0.30
+        for: 15m
+        labels:
+          severity: warning
+          spec: SPEC-EVAL-002
+        annotations:
+          summary: "Adapter {{ $labels.adapter }} missing from {{ $value | humanizePercentage }} of fanout dispatches over 24h"
+          description: "Adapter {{ $labels.adapter }} contributed an error to more than 30% of fanout dispatches over the last 24h. Users may be receiving partial results without this source."
+          runbook_url: "https://github.com/elymas/universal-search/blob/main/docs/operations/adapter-reliability-runbook.md#fanoutpartialratiohigh"

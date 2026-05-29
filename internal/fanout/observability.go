@@ -41,6 +41,24 @@ func decInflight(o *obs.Obs, classLabel string) {
 	o.Metrics.FanoutInflight.WithLabelValues(classLabel).Dec()
 }
 
+// emitPartialResult increments usearch_fanout_partial_total{adapter} once for
+// each adapter that contributed an error to result.AdapterErrors. Nil-safe
+// across obs, obs.Metrics, and the FanoutPartial collector. The counter
+// increment is O(1) lock-free per adapter (NFR-EVAL2-005 hot-path budget).
+//
+// @MX:NOTE: [AUTO] SPEC-EVAL-002 REQ-EVAL2-004 partial-result counter emission.
+// Runs after eg.Wait() in dispatch; AdapterErrors is nil on full success so the
+// loop is a no-op.
+// @MX:SPEC: SPEC-EVAL-002
+func emitPartialResult(o *obs.Obs, result *Result) {
+	if o == nil || o.Metrics == nil || o.Metrics.FanoutPartial == nil || result == nil {
+		return
+	}
+	for adapterName := range result.AdapterErrors {
+		o.Metrics.FanoutPartial.WithLabelValues(adapterName).Inc()
+	}
+}
+
 // emitDispatch writes the fanout.dispatch span attributes and the slog summary
 // record. Nil-safe across obs, obs.Metrics, and obs.Logger per REQ-FAN-010.
 func emitDispatch(ctx context.Context, o *obs.Obs, span oteltrace.Span, decision router.RoutingDecision, result *Result) {

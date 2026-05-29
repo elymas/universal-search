@@ -108,6 +108,13 @@ type Registry struct {
 	DeepTreeNodeExpand  *prometheus.HistogramVec
 	DeepTreeTotalTokens *prometheus.CounterVec
 
+	// Adapter reliability metrics (SPEC-EVAL-002 REQ-EVAL2-003). FanoutPartial
+	// reuses the `adapter` label; AdapterCircuitState adds the new `state` label
+	// (the only new label name in this SPEC). NFR-EVAL2-001.
+	FanoutPartial       *prometheus.CounterVec
+	AdapterHealthStatus *prometheus.GaugeVec
+	AdapterCircuitState *prometheus.GaugeVec
+
 	// labelNames tracks all registered label names for cardinality validation.
 	labelNames []string
 }
@@ -224,6 +231,9 @@ func NewRegistry() *Registry {
 	// Register Deep tree metrics (SPEC-DEEP-003 Phase E).
 	deepTree := registerDeepTree(pr)
 
+	// Register Adapter reliability metrics (SPEC-EVAL-002 REQ-EVAL2-003).
+	adapterRel := registerAdapterReliability(pr)
+
 	return &Registry{
 		Prometheus:                    pr,
 		HTTPRequests:                  httpRequests,
@@ -262,6 +272,9 @@ func NewRegistry() *Registry {
 		DeepAgentVerifierGateResults:  deepAgent.verifierGate,
 		DeepTreeNodeExpand:            deepTree.nodeExpand,
 		DeepTreeTotalTokens:           deepTree.totalTokens,
+		FanoutPartial:                 adapterRel.fanoutPartial,
+		AdapterHealthStatus:           adapterRel.healthStatus,
+		AdapterCircuitState:           adapterRel.circuitState,
 		labelNames: []string{
 			"method", "route", "status_class",
 			"adapter_class",
@@ -286,6 +299,9 @@ func NewRegistry() *Registry {
 			// RBAC labels (SPEC-AUTH-002 NFR-AUTH2-003): bounded enums only.
 			// reason_class in {policy_matched, no_policy_matched, explicit_deny, empty_team} (4 values).
 			"reason_class",
+			// Adapter reliability label (SPEC-EVAL-002 NFR-EVAL2-001): the only
+			// new label name in this SPEC. state in {closed, open, half_open} (3 values).
+			"state",
 		},
 	}
 }

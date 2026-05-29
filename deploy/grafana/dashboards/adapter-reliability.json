@@ -1,0 +1,136 @@
+{
+  "uid": "adapter-reliability",
+  "title": "Adapter Reliability",
+  "tags": ["usearch", "adapters", "SPEC-EVAL-002"],
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "graphTooltip": 0,
+  "time": { "from": "now-7d", "to": "now" },
+  "refresh": "1m",
+  "templating": {
+    "list": [
+      {
+        "name": "adapter",
+        "label": "Adapter",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "query": "label_values(usearch_adapter_calls_total, adapter)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "allValue": ".*",
+        "sort": 1
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Per-adapter 24h success rate (heatmap)",
+      "description": "SPEC-EVAL-002 panel 1. Reads usearch:adapter_success_rate_24h recording rule.",
+      "type": "heatmap",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "usearch:adapter_success_rate_24h{adapter=~\"$adapter\"}",
+          "legendFormat": "{{adapter}}",
+          "format": "time_series"
+        }
+      ],
+      "options": {
+        "calculate": false,
+        "color": { "scheme": "RdYlGn", "mode": "scheme" }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Per-adapter 7d success rate (trendline)",
+      "description": "SPEC-EVAL-002 panel 2. Reads usearch:adapter_success_rate_7d. Threshold line at 0.85.",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "usearch:adapter_success_rate_7d{adapter=~\"$adapter\"}",
+          "legendFormat": "{{adapter}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0.85 },
+              { "color": "green", "value": 0.95 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "title": "Failure cause breakdown by outcome (24h)",
+      "description": "SPEC-EVAL-002 panel 3. Reads usearch:adapter_failure_rate_by_outcome_24h, stacked by outcome.",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 9 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "usearch:adapter_failure_rate_by_outcome_24h{adapter=~\"$adapter\"}",
+          "legendFormat": "{{adapter}} / {{outcome}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "drawStyle": "bars",
+            "stacking": { "mode": "normal", "group": "A" },
+            "fillOpacity": 80
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "title": "Fanout partial-result ratio (24h)",
+      "description": "SPEC-EVAL-002 panel 4. Reads usearch:adapter_fanout_partial_ratio_24h. Threshold line at 0.30.",
+      "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 9 },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "usearch:adapter_fanout_partial_ratio_24h{adapter=~\"$adapter\"}",
+          "legendFormat": "{{adapter}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 0.3 }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    }
+  ]
+}

@@ -160,5 +160,13 @@ func dispatch(
 
 	// Supervisor builds Result.AdapterErrors from per-index slices.
 	// No worker ever touched a map directly (§2.6 H1 fix).
-	return assembleResult(decision.AdapterSet, perAdapterDocs, perAdapterErr), nil
+	result := assembleResult(decision.AdapterSet, perAdapterDocs, perAdapterErr)
+
+	// SPEC-EVAL-002 REQ-EVAL2-004: increment usearch_fanout_partial_total once
+	// per adapter that contributed an error, after eg.Wait() and before the
+	// Result is returned. This runs for every dispatch (full success included:
+	// AdapterErrors is nil then, so the loop is a no-op).
+	emitPartialResult(o, result)
+
+	return result, nil
 }

@@ -280,6 +280,9 @@ func TestCardinalityGuardRejectsUnboundedLabels(t *testing.T) {
 		// RBAC labels added by SPEC-AUTH-002 (NFR-AUTH2-003).
 		// reason_class ∈ {policy_matched, no_policy_matched, explicit_deny, empty_team} (4 values).
 		"reason_class": true,
+		// Adapter reliability label added by SPEC-EVAL-002 (NFR-EVAL2-001).
+		// state ∈ {closed, open, half_open} (3 values, bounded enum).
+		"state": true,
 	}
 
 	reg := metrics.NewRegistry()
