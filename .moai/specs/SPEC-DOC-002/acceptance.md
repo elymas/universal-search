@@ -1,12 +1,18 @@
 ---
 id: SPEC-DOC-002
-version: 0.1.0
+version: 0.2.0
 status: draft
 created: 2026-05-26
+updated: 2026-05-31
 author: limbowl (via manager-spec)
 related_spec: SPEC-DOC-002 (spec.md, plan.md)
 format: Given/When/Then
 ---
+
+> v0.2.0 (2026-05-31): reconciled with spec.md HISTORY v0.2.0 code-spec
+> corrections — (A1) HN page slug `hackernews`; (A2) social AST helper
+> funcs; (A3) `x` disabled v0 stub; (A4) static `adapter-status.json`,
+> staleness/schema-validation gates deferred.
 
 # SPEC-DOC-002 Acceptance Scenarios
 
@@ -31,10 +37,10 @@ Covers: REQ-ADPDOC-001
 **When** the contributor runs `ls docs/content/en/reference/adapters/*.mdx`.
 
 **Then**:
-- Exactly 10 per-adapter MDX files exist: `reddit.mdx`, `hn.mdx`, `arxiv.mdx`, `github.mdx`, `youtube.mdx`, `bluesky.mdx`, `x.mdx`, `searxng.mdx`, `naver.mdx`, `koreanews.mdx`.
+- Exactly 10 per-adapter MDX files exist, named by SourceID: `reddit.mdx`, `hackernews.mdx`, `arxiv.mdx`, `github.mdx`, `youtube.mdx`, `bluesky.mdx`, `x.mdx`, `searxng.mdx`, `naver.mdx`, `koreanews.mdx`. (The HN page is `hackernews.mdx` — `hn.go:101` `SourceID: "hackernews"` — NOT `hn.mdx`; the Go package dir `hn/` is not the SourceID.)
 - Plus `index.mdx` and `errors.mdx` (12 MDX files total).
-- `noop.mdx` does NOT exist (test-only adapter).
-- For each file, the basename matches the `Capabilities().SourceID` value returned by the corresponding `internal/adapters/<name>/<name>.go`.
+- `noop.mdx` / `reference.mdx` does NOT exist (test-only adapter, SourceID `reference`).
+- For each file, the basename matches the `Capabilities().SourceID` value, resolved via the SourceID-keyed registry (handles `hn/`→`hackernews` and the two `social.go` helper funcs → `bluesky`/`x`), NOT the package directory name.
 - `scripts/check-adapter-page-completeness.sh` exits `0`.
 
 Maps to scenario §5.1 in spec.md.
@@ -117,25 +123,26 @@ Covers: REQ-ADPDOC-005
 - A green `<StatusBadge>` is rendered with lifecycle "stable".
 - The rendered output includes the 7-day success rate (0.97) and the `verifiedAt` timestamp.
 - Unit test boundary: successRate = 0.949 renders `beta`, successRate = 0.950 renders `stable`.
-- Lifecycle mapping rule: `stable` requires `status: implemented` AND rate ≥ 0.95; `beta` requires rate ∈ [0.80, 0.95); `alpha` covers all other cases.
+- Lifecycle mapping rule: `stable` requires `status: implemented` AND rate ≥ 0.95; `beta` requires rate ∈ [0.80, 0.95); `disabled` covers flag-gated stubs with no live V1 path (e.g. `x`, `lifecycle: disabled`, grey badge); `deprecated` is reserved for post-V1. (There is NO `alpha` tier — A3.)
+- `<StatusBadge>` reads the STATIC, DOC-002-owned `adapter-status.json` (A4 — EVAL-002 ships no such export).
 
 Maps to scenario §5.5 in spec.md.
 
 ---
 
-### AC-006 — adapter-status.json schema validation with fallback rendering
+### AC-006 — Static adapter-status.json drives badges with fallback rendering
 
 Covers: REQ-ADPDOC-006
 
-**Given** `_generated/adapter-status.schema.json` and a malformed `adapter-status.json` entry missing the `lifecycle` field.
+**Given** the STATIC, hand-curated `_generated/adapter-status.json` (DOC-002-owned; A4 — EVAL-002 ships no export and no `lifecycle` field), and an entry deliberately missing the `lifecycle` field.
 
 **When** the docs build runs.
 
 **Then**:
-- Build-time validation emits a WARN log with the malformed adapter key + missing field name.
-- `<StatusBadge>` renders the fallback "Status unknown" badge for that adapter.
-- The build does NOT fail (graceful degradation).
+- Every key in the file is a real adapter `SourceID`; `x` carries `lifecycle: disabled`.
+- The malformed entry (missing `lifecycle`) causes `<StatusBadge>` to render the fallback "Status unknown" badge for that adapter; the build does NOT fail.
 - Unknown adapter keys in the JSON are silently ignored.
+- NOTE (A4): the live cron-published feed + a build-time JSON-Schema validation step (`adapter-status.schema.json`) + staleness automation are DEFERRED to a post-V1 EVAL-002 amendment; they are NOT verified at V1.
 
 Maps to scenario §5.6 in spec.md.
 
@@ -147,17 +154,19 @@ Covers: REQ-ADPDOC-007, NFR-ADPDOC-001
 
 **Given** `tools/gen-adapter-ref/main.go` + `scripts/gen-adapter-reference.sh` + CI workflow `docs.yml` containing the `gen-adapter-ref-drift` job.
 
+**Given** the generator is driven by a SourceID-keyed registry (A2) that handles: standard `{pkg}.go` adapters, the `hn/`→`hackernews` slug (A1), and the `social.go` switch-dispatch over `blueskyCapabilities()` (`social.go:144`) / `xCapabilities()` (`social.go:164`) — emitting `bluesky` + `x` JSONs (no `bluesky.go`/`x.go`).
+
 **When** the contributor:
 - Case A: manually edits `_generated/reddit.capabilities.json` (artificial drift).
-- Case B: modifies `internal/adapters/naver/naver.go` `RateLimitPerMin: 600` → `500` without re-running the generator.
+- Case B: modifies a real adapter's `RateLimitPerMin` (e.g., `blueskyCapabilities()` `RateLimitPerMin: 600` → `500` in `social.go`) without re-running the generator.
 - Case C: clean state, no source changes.
 
 **Then**:
 - Case A: CI FAILS with diff showing the artificial modification.
-- Case B: CI FAILS with diff showing the regenerated JSON differs from the committed JSON.
-- Case C: CI PASSES.
+- Case B: CI FAILS with diff showing the regenerated `bluesky.capabilities.json` differs from the committed JSON.
+- Case C: CI PASSES; a clean run emits exactly 10 JSONs incl. `hackernews.capabilities.json` (from `hn/`), `bluesky.capabilities.json` (rate 600), and `x.capabilities.json` (rate 0).
 - Drift gate runtime ≤ 60 seconds wall-clock on `ubuntu-24.04` (NFR-ADPDOC-001).
-- Generator processes all 10 adapter packages in ≤ 5 seconds.
+- Generator processes all 10 adapters in ≤ 5 seconds.
 
 Maps to scenarios §5.7, §5.19 in spec.md.
 
@@ -192,7 +201,7 @@ Covers: REQ-ADPDOC-009
 **Then**:
 - Both pages exist as separate MDX files.
 - `bluesky.mdx` shows `RateLimitPerMin: 600` (from the auto-extracted Capabilities).
-- `x.mdx` shows `RateLimitPerMin: 0` (degraded mode).
+- `x.mdx` shows `RateLimitPerMin: 0` and is framed as a DISABLED v0 stub (A3): `Status & Compatibility` badge is `disabled`; the Overview states "not available in V1 — no live path; requires `USEARCH_X_ENABLED=true`". It is NOT framed as "alpha"/"degraded".
 - Each page contains a "Shared implementation notes" callout linking to the other.
 - The `index.mdx` catalog renders 2 separate rows with `Category: social`.
 - Shared notes (URL extraction, parse rules, scoring) are NOT duplicated — only cross-linked.
@@ -246,7 +255,7 @@ Covers: REQ-ADPDOC-012
 
 **Then** each section contains all 4 elements:
 - (a) Advertised `RateLimitPerMin` value (auto-imported via `<CapabilitiesTable>`).
-- (b) Enforcement mechanism — one of: `in-process interval guard` (arxiv), `HTTP 429 response handling` (reddit/hn/github/naver/youtube/bluesky), `operator-configured per-feed` (koreanews), `none — self-hosted` (searxng), `none advertised — degraded mode` (x). Each text matches research §1.4 verbatim.
+- (b) Enforcement mechanism — one of: `in-process interval guard` (arxiv), `HTTP 429 response handling` (reddit/hackernews/github/naver/youtube/bluesky), `operator-configured per-feed` (koreanews), `none — self-hosted` (searxng), `none — disabled v0 stub` (x: no live path at V1). Each text matches research §1.4 verbatim.
 - (c) Link to upstream provider's published quota documentation (lychee-resolved against the NFR-ADPDOC-005 allowlist).
 - (d) Exhaustion behaviour: returns `CategoryRateLimited` with `RetryAfter` from upstream; SPEC-FAN-001 cross-link.
 
@@ -368,21 +377,20 @@ Maps to scenario §5.18 in spec.md.
 
 ## 2. Edge Cases
 
-### EC-001 — adapter-status.json older than 7 days
+### EC-001 — adapter-status.json staleness gate (DEFERRED post-V1)
 
-Covers: NFR-ADPDOC-003
+Covers: NFR-ADPDOC-003 (deferred)
 
-**Given** `_generated/adapter-status.json` with mtime backdated to 10 days ago.
+**Given** the V1 `_generated/adapter-status.json` is a STATIC, hand-curated file (A4) — an mtime-based staleness gate is meaningless for a manually-edited file.
 
-**When** the docs build runs.
+**When** the docs build runs at V1.
 
 **Then**:
-- A CI WARNING is emitted naming the file and its age.
-- A GitHub Issue is auto-created (or updated) tagged `docs/stale-adapter-status` referencing the file.
-- The build SUCCEEDS (NFR-ADPDOC-003 is non-blocking).
-- Pages still render with whatever lifecycle the stale JSON declares.
+- There is NO `adapter-status-staleness` CI job and NO `docs/stale-adapter-status` GitHub-Issue automation at V1 — both are DEFERRED to the post-V1 EVAL-002 live-export amendment.
+- V1 freshness is instead asserted by the per-page `lastVerified` frontmatter staleness warn (REQ-ADPDOC-015, part of `adapter-page-completeness`).
+- When the live EVAL-002 export lands post-V1, this mtime gate is re-activated and this edge case becomes testable as originally written.
 
-Maps to scenario §5.20 in spec.md.
+Maps to scenario §5.20 in spec.md (deferred).
 
 ### EC-002 — Page falls below 50-character per-section threshold
 
@@ -422,7 +430,7 @@ Maps to scenario §5.21 in spec.md.
 - [ ] `.github/workflows/docs.yml` extended with `gen-adapter-ref-drift`, `adapter-page-completeness`, `check-doc-credentials` jobs.
 - [ ] SPEC-DOC-001 `scripts/check-bilingual-coverage.sh` amended to recognize the `reference/adapters/` Tier-1 set.
 - [ ] SPEC-DOC-001 `docs/lychee.toml` extended with the provider-doc allowlist (NFR-ADPDOC-005).
-- [ ] `_generated/adapter-status.schema.json` exists and validates `adapter-status.json`.
+- [ ] STATIC `_generated/adapter-status.json` is committed; every key is a real SourceID; `x` carries `lifecycle: disabled`. (A4: `adapter-status.schema.json` build-time validation is DEFERRED to a post-V1 EVAL-002 amendment, NOT a V1 DoD item.)
 - [ ] Drift CI runtime ≤ 60 seconds; page-completeness CI runtime ≤ 30 seconds; combined SPEC-DOC-001 + DOC-002 docs CI ≤ 6 minutes.
 - [ ] Clean credential-lint baseline across all 12 pages.
 - [ ] Open Questions in spec.md §8 are resolved or explicitly deferred with mitigation.
