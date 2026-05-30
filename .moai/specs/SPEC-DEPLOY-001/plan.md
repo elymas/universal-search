@@ -1,8 +1,18 @@
 # SPEC-DEPLOY-001 Plan — phased implementation
 
-Status: draft companion to spec.md
+Status: draft companion to spec.md (v0.2.0)
 Author: limbowl via manager-spec
-Date: 2026-05-22
+Date: 2026-05-22 (amended 2026-05-31)
+
+> AMENDMENT 2026-05-31 (v0.2.0) — aligned to spec.md v0.2.0 corrections:
+> (1) migration via existing `usearch migrate` / `EnsureSchema` runner,
+> NOT golang-migrate; (2) real topology = 10 compose services + 2 host
+> binaries (usearch-api/mcp) newly containerized; storm/koreanews are
+> services/ dirs only (chart `enabled: false`); (3) golang base
+> `golang:1.25.x-alpine`; (4) V1 amd64-only (arm64 deferred); (5)
+> signing/SBOM/SLSA deferred to fast-follow (REL-001 owns signing);
+> (6) 2-tier secrets for V1 (tier-3 ESO deferred, SEC-001 PR#42);
+> (7) sidecars reuse `services/*/Dockerfile` (no new sidecar Dockerfiles).
 Methodology: **DDD** (ANALYZE-PRESERVE-IMPROVE per `.claude/rules/
 moai/workflow/workflow-modes.md`). DDD-mode justification: 본 SPEC은
 **기존 dev-compose surface (`deploy/docker-compose.yml` 265 lines +
@@ -34,8 +44,9 @@ md` §11 "Sprint Contracts are required when harness level is
 
 본 SPEC의 plan philosophy 5축:
 
-1. **Compose-fidelity first** — 본 chart는 dev-compose의 13-service
-   topology를 **byte-fidelity equivalent**로 표현해야 한다. compose
+1. **Compose-fidelity first** — 본 chart는 dev-compose의 **10-service**
+   topology + 호스트 실행 2개 Go 바이너리를 **byte-fidelity equivalent**
+   로 표현해야 한다. compose
    ↔ chart parity smoke-test (REQ-DEPLOY-024)가 매 CI에서 강제. chart
    가 compose에 없는 env-var를 추가하면 (또는 vice versa) build fail.
 2. **DDD characterization-first** — Dockerfile / migration job / chart
@@ -47,11 +58,11 @@ md` §11 "Sprint Contracts are required when harness level is
    pipeline → CI gate 순으로 incremental improve. 각 stage 자체가
    independent PR로 ship 가능 (release-blocking이지만 incremental
    ship으로 risk 분산).
-4. **3-tier secret roll-out** — V1.0.0 ship 시점 권장 default tier 2
-   (existingSecret); tier 1 (values)은 dev/CI 전용, NOTES.txt 경고;
-   tier 3 (ExternalSecrets)은 ESO pre-install 운영자 한정 opt-in.
-   tier 3은 SEC-001 implementation 후 default-recommended로 promote
-   (post-V1 chart minor version bump).
+4. **2-tier secret roll-out (V1)** — V1.0.0 ship 시점 권장 default tier 2
+   (existingSecret); tier 1 (values)은 dev/CI 전용, NOTES.txt 경고.
+   tier 3 (ExternalSecrets)은 **V1.1로 연기** (SEC-001 PR#42 secretstore
+   의존). V1 schema는 `externalSecrets` enum을 reserve하되 선택 시
+   install 차단 + "V1.1 기능" 안내.
 5. **Cross-SPEC integration deferral acknowledgment** — SEC-001
    implementation 지연 시 본 SPEC은 K8s Secret refs까지만 ship; SEC-001
    ship 후 integration verification (NFR-DEPLOY-008) 별도 PR로 close-
@@ -85,21 +96,22 @@ Contract draft (run phase에서 evaluator-active와 finalize):
       sidecar 5개 (각각 Deployment + Service; embedder 추가 PVC)
 - [ ] `templates/{litellm,searxng}/` in-chart custom (Deployment +
       Service + ConfigMap)
-- [ ] `templates/jobs/migrate.yaml` pre-install Helm hook + golang-
-      migrate v4.18 + 9 SQL files
+- [ ] `templates/jobs/migrate.yaml` pre-install Helm hook running
+      `usearch migrate` (EnsureSchema runner) over the 10 SQL files
 - [ ] `templates/jobs/smoke-test.yaml` helm test hook (`/healthz` +
       `/metrics` curl)
-- [ ] `deploy/Dockerfile.usearch-api` multi-stage + multi-arch +
-      distroless + non-root USER
+- [ ] `deploy/Dockerfile.usearch-api` multi-stage (golang:1.25-alpine) +
+      amd64 + distroless + non-root USER
 - [ ] `deploy/Dockerfile.usearch-mcp` 동상
-- [ ] `deploy/Dockerfile.usearch-migrate` distroless + golang-migrate
-      + 9 SQL files COPY
-- [ ] `.github/workflows/build-images.yml` 7 image × multi-arch +
-      cosign + SBOM + SLSA L2 (build-time + run-time 모두 CI에서 검증)
+- [ ] `deploy/Dockerfile.usearch-migrate` distroless + `usearch migrate`
+      (EnsureSchema runner, NOT golang-migrate) + 10 SQL files COPY
+- [ ] `.github/workflows/build-images.yml` 3 Go image × amd64 BUILD +
+      verify (sidecars reuse services/*/Dockerfile; signing/SBOM/SLSA/
+      arm64 deferred to fast-follow)
 - [ ] `.github/workflows/chart-ci.yml` helm lint + helm template +
       kubeconform 1.28..1.31 + kind smoke-test + parity script
-- [ ] `.github/workflows/chart-release.yml` chart package + cosign +
-      OCI push on tag
+- [ ] `.github/workflows/chart-release.yml` chart package + verify on
+      tag (cosign sign + OCI push deferred — blocked on `<org>`)
 - [ ] `scripts/compose-chart-parity.sh` compose vs chart env-var diff
       검증
 - [ ] `ci/values-test.yaml` minimal smoke profile
@@ -113,9 +125,8 @@ Contract draft (run phase에서 evaluator-active와 finalize):
 - [ ] Schema validation rejects all 12 test scenarios in spec.md §5
       where expected (S6 invalid values fail-fast)
 - [ ] kind cluster smoke install completes within 5min (NFR-DEPLOY-003)
-- [ ] Multi-arch image manifest list verified for amd64+arm64 (embedder
-      amd64-only acknowledged)
-- [ ] cosign verify PASS for every signed artifact
+- [ ] amd64 image build verified for the 3 Go images (arm64 deferred)
+- [ ] (DEFERRED) cosign verify PASS — fast-follow, REL-001 owns signing
 
 ### Priority dimension
 
@@ -163,8 +174,8 @@ phase는 research가 SPEC-spec.md REQ에 빠짐없이 반영되었는지 verify.
 
 | Task ID | Task | Verification |
 |---------|------|--------------|
-| A1 | dev-compose 13-service 명세 vs spec.md §1.1 What ships 매핑 | research §1 표 ↔ spec §1.1 표 사이 service 누락 0건 |
-| A2 | 9 SQL migration 파일 vs migration Job spec | research §2 표 ↔ migrate.yaml `COPY deploy/postgres/migrations/` 일치 |
+| A1 | dev-compose 10-service + 2 host binary (api/mcp) 명세 vs spec.md §1.1 What ships 매핑 | research §1 표 ↔ spec §1.1 표 사이 service 누락 0건; storm/koreanews는 services/ dir만 (enabled:false) |
+| A2 | 10 SQL migration 파일 vs migration Job spec | research §2 표 ↔ migrate.yaml이 `usearch migrate` (EnsureSchema) + `COPY deploy/postgres/migrations/` 사용 일치 |
 | A3 | `.env.example` env-var ~50 vs ConfigMap + Secret spec | research §5 카테고리별 표 ↔ spec REQ-DEPLOY-007 (ConfigMap) + REQ-DEPLOY-008 (Secret) cross-ref |
 | A4 | cmd/{usearch-api,usearch-mcp,usearch} binary inventory | research §3 표 ↔ Dockerfile target (usearch CLI 제외 확인) |
 | A5 | services/ 5 Python sidecar Dockerfile 존재 확인 | research §4 표 ↔ chart templates/<sidecar>/ 생성 매핑 |
@@ -234,10 +245,11 @@ phase가 CT1를 break하지 않음을 verify (regression test).
 
 #### CT3 — Postgres migration replay test
 
-기존 dev workflow에서 `make migrate-up` (또는 동등 명령)이 9 SQL을
-순차 적용; PRESERVE에서 동일 sequence가 idempotent함을 verify
-(두 번 실행해도 schema 동일). Chart의 migration Job container가
-동일한 SQL을 동일한 순서로 적용함을 cross-check.
+기존 dev workflow의 `EnsureSchema` runner가 10 SQL을 lexicographic
+순서로 적용; PRESERVE에서 동일 sequence가 idempotent함을 verify
+(두 번 실행해도 schema 동일 — EnsureSchema 재실행은 no-op + drift
+check). Chart의 migration Job container가 **동일한 `usearch migrate`
+바이너리**로 동일한 SQL을 동일한 순서로 적용함을 cross-check.
 
 #### CT4 — Health endpoint contract
 
@@ -255,10 +267,10 @@ test).
 ### 4.2 PRESERVE phase exit gate
 
 - CT1..CT5 모두 PASS
-- spec.md §1.1 What ships의 dev-compose source artifact 13 service
-  중 chart에서 대응 template이 생성되지 않은 service 0건 (또는
-  documented exclusion으로 chart에 일부러 미포함 — 예: prometheus를
-  외부 의존으로 가정)
+- spec.md §1.1 What ships의 dev-compose source artifact 10 service +
+  2 host binary (api/mcp) 중 chart에서 대응 template이 생성되지 않은
+  workload 0건 (또는 documented exclusion으로 chart에 일부러 미포함 —
+  예: prometheus를 외부 의존으로 가정; storm/koreanews는 enabled:false)
 - chart manifest rendering이 compose-spec과 동등 service set 노출
 
 ---
@@ -303,16 +315,19 @@ in helpers).
 - `deploy/.dockerignore` (NEW or amend)
 
 **Verification**:
-- `docker buildx build --platform linux/amd64,linux/arm64 -f
-  deploy/Dockerfile.usearch-api -t usearch-api:test .` succeeds for
-  both architectures
+- `docker buildx build --platform linux/amd64 -f
+  deploy/Dockerfile.usearch-api -t usearch-api:test .` succeeds
+  (V1 amd64-only; arm64 deferred to V1.1)
 - 동상 for usearch-mcp + usearch-migrate
 - 결과 image가 non-root USER로 실행 + `/healthz` 응답 (api/mcp;
-  migrate는 ENTRYPOINT가 migrate 명령이므로 별도 verify)
+  migrate는 ENTRYPOINT가 `usearch migrate` (EnsureSchema)이므로 별도
+  verify — 빈 PG에 대해 10 SQL 적용 성공)
+- migrate 이미지는 `deploy/postgres/migrations/`를 COPY (golang-migrate
+  바이너리 download 없음)
 - image size < 100MB (distroless static-debian12 + Go binary)
 
 **REQs satisfied**: REQ-DEPLOY-002 (api Dockerfile), REQ-DEPLOY-003
-(mcp + migrate Dockerfile), NFR-DEPLOY-007 (multi-arch).
+(mcp + migrate Dockerfile), NFR-DEPLOY-007 (amd64 V1).
 
 ### 5.3 Sub-phase IMPROVE-3 — api + mcp template set
 
@@ -415,12 +430,14 @@ meilisearch).
 - `scripts/build-migrate-image.sh` (NEW, local dev helper)
 
 **Verification**:
-- migration Job runs once per `helm install` / `helm upgrade`
+- migration Job runs once per `helm install` / `helm upgrade` as a
+  pre-install/pre-upgrade hook
 - `helm.sh/hook-weight: "-5"` ordering verified (migration completes
   before app Deployments start)
 - helm test invocation returns success on healthy cluster
-- migration Job container image pulled successfully + entrypoint
-  works against test PG instance
+- migration Job container entrypoint is `usearch migrate` (EnsureSchema
+  runner, NOT golang-migrate) and applies all 10 SQL files against a
+  test PG instance idempotently
 
 **REQs satisfied**: REQ-DEPLOY-006 (migration hook), REQ-DEPLOY-022
 (helm test).
@@ -434,14 +451,14 @@ meilisearch).
   override)
 - `charts/universal-search/ci/values-external-pg.yaml` (NEW, external
   postgres example)
-- `charts/universal-search/ci/values-eso.yaml` (NEW, tier 3 secret
-  example)
+- (DEFERRED to V1.1) `ci/values-eso.yaml` tier-3 ESO example — omitted
+  in V1 (SEC-001 PR#42 dependency)
 
 **Verification**:
 - 각 values overlay에 대해 `helm template` 성공
 - production overlay에서 HPA/PDB/NetworkPolicy 활성 + secret tier 2
 - gpu overlay에서 embedder.gpu.enabled + GPU node tolerations
-- eso overlay에서 ExternalSecret CRD 출현
+- (DEFERRED) eso overlay ExternalSecret 출현 — V1.1
 
 **REQs satisfied**: REQ-DEPLOY-005 (schema validation), D8
 (multi-env layering).
@@ -453,24 +470,25 @@ meilisearch).
 - `.github/workflows/chart-ci.yml` (NEW)
 - `.github/workflows/chart-release.yml` (NEW)
 - `scripts/compose-chart-parity.sh` (NEW)
-- `scripts/cosign-verify.sh` (NEW, end-user verify helper)
 - `scripts/release-chart.sh` (NEW, local dev helper)
+- (DEFERRED) `scripts/cosign-verify.sh` — ships with signing fast-follow
 
 **Verification**:
-- build-images.yml: triggered by main merge + tag; 7 image × multi-
-  arch build + cosign + SBOM + SLSA all green
+- build-images.yml: triggered by main merge + tag; 3 Go image × amd64
+  BUILD + verify green (sidecars reuse services/*/Dockerfile; signing/
+  SBOM/SLSA/arm64 deferred to fast-follow, PUSH blocked on `<org>`)
 - chart-ci.yml: triggered by PR; helm lint + helm template +
   kubeconform 1.28..1.31 + kind smoke-test all green within hosted
   runner resource limits
-- chart-release.yml: triggered by `v*.*.*` tag; chart package +
-  cosign sign-blob + helm push to oci://ghcr.io
-- parity script catches injected env-var drift
-- cosign-verify.sh shipped as user-facing helper (DOC-001 cross-
-  link)
+- chart-release.yml: triggered by `v*.*.*` tag; chart package + verify
+  (cosign sign-blob + helm push to oci://ghcr.io deferred — `<org>`
+  unresolved, REL-001 owns signing)
+- parity script catches injected env-var drift (FAILs until
+  `.env.example` gains OIDC/JWT/SESSION keys — IMPROVE-10)
 
-**REQs satisfied**: REQ-DEPLOY-017 (chart OCI publish), REQ-DEPLOY-018
-(image build + signing), REQ-DEPLOY-020 (chart CI), REQ-DEPLOY-024
-(compose-chart parity).
+**REQs satisfied**: REQ-DEPLOY-017 (chart package verify; OCI publish
+deferred), REQ-DEPLOY-018 (amd64 image build; signing deferred),
+REQ-DEPLOY-020 (chart CI), REQ-DEPLOY-024 (compose-chart parity).
 
 ### 5.9 Sub-phase IMPROVE-9 — DOC cross-link finalization
 
@@ -623,7 +641,7 @@ dependency gate.
 | REQ-DEPLOY-020 chart-ci.yml | 6.9 | A3, A4 |
 | REQ-DEPLOY-021 Ingress optional | 6.4 | A2 |
 | REQ-DEPLOY-022 helm test | 6.5 | A4 |
-| REQ-DEPLOY-023 ExternalSecret P2 | 6.4 | A2 |
+| REQ-DEPLOY-023 ExternalSecret P2 (DEFERRED V1.1) | 6.4 (schema reserve only) | A2 |
 | REQ-DEPLOY-024 parity script | 6.9 | A8 |
 
 NFR matrix:
@@ -636,8 +654,8 @@ NFR matrix:
 | NFR-DEPLOY-004 rollback support | 6.5, 6.10 | A4 (S8) |
 | NFR-DEPLOY-005 subchart pinning policy | 6.1 + ongoing | A9 |
 | NFR-DEPLOY-006 image pull rate-limit awareness | 6.10 | A10 |
-| NFR-DEPLOY-007 multi-arch coverage | 6.2, 6.9 | A5 |
-| NFR-DEPLOY-008 cross-SPEC verification | 6.11 | (deferred) |
+| NFR-DEPLOY-007 arch coverage (V1 amd64) | 6.2, 6.9 | A5 |
+| NFR-DEPLOY-008 cross-SPEC verification (DEFERRED, SEC-001 PR#42) | 6.11 | (deferred) |
 
 ---
 
@@ -668,17 +686,17 @@ NFR matrix:
 본 plan은 evaluator-active와의 Sprint Contract 협상 (per §11 design
 constitution) 시작점. 협상 시 다음 항목 우선 합의:
 
-- chart artifact 최종 위치 (`charts/universal-search/` confirmed) +
-  OCI registry path (`oci://ghcr.io/<org>/charts/universal-search`
-  confirmed)
+- chart artifact 최종 위치 (`charts/universal-search/` confirmed); OCI
+  registry path (`oci://ghcr.io/<org>/...`)는 `<org>` 미해결 — REL-001/
+  BOOT-001과 해소 (V1은 package-verify, push 보류)
 - subchart 선정 (Bitnami postgresql + Bitnami redis + qdrant official)
   vs alternative operator path (Zalando, CrunchyData) — V1은 Bitnami
   default + external mode opt-out 합의
-- secret 3-tier strategy의 V1.0.0 default tier — tier 2
-  (existingSecret) recommended; tier 1 (values)은 dev/CI 한정 경고
-  강화; tier 3 (ESO)은 ESO pre-install 운영자 opt-in
-- multi-arch policy — embedder amd64-only 명시적 acknowledgment +
-  NFR-DEPLOY-007 acceptance
+- secret 2-tier strategy (V1)의 default tier — tier 2 (existingSecret)
+  recommended; tier 1 (values)은 dev/CI 한정 경고 강화; tier 3 (ESO)은
+  V1.1 연기 (SEC-001 PR#42 의존)
+- arch policy — V1 amd64-only (arm64 V1.1 연기); embedder amd64-only
+  유지 + NFR-DEPLOY-007 acceptance
 - compose-chart parity invariant — REQ-DEPLOY-024 강제; allowlist
   format 합의
 - DOC-001 / DOC-002 cross-link integrity — 두 SPEC slot reserved

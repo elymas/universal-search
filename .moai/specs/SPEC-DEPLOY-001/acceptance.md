@@ -1,14 +1,24 @@
 ---
 id: SPEC-DEPLOY-001
-version: 0.1.0
+version: 0.2.0
 status: draft
 created: 2026-05-26
+updated: 2026-05-31
 author: limbowl (via manager-spec)
 related_spec: SPEC-DEPLOY-001 (spec.md, plan.md)
 format: Given/When/Then
 ---
 
 # SPEC-DEPLOY-001 Acceptance Scenarios
+
+> AMENDMENT 2026-05-31 (v0.2.0) — reconciled to spec.md v0.2.0 against
+> live code. Corrections: Dockerfile path `deploy/Dockerfile.usearch-*`
+> (not root `Dockerfile.api`); Go base `golang:1.25-alpine` (not 1.23);
+> migration via existing `usearch migrate` / EnsureSchema runner (not
+> golang-migrate) as a `pre-install,pre-upgrade` hook (not post-install);
+> Python sidecars REUSE `services/*/Dockerfile` (no new sidecar
+> Dockerfiles). V1 amd64-only (arm64 deferred). Signing/SBOM/SLSA + ESO
+> tier-3 + NFR-008 SEC integration deferred to fast-follow / V1.1.
 
 ## 0. Document Purpose
 
@@ -47,33 +57,32 @@ Verification: scenario S1 in spec.md §5; gate A1 + A2 in spec.md §6.
 
 Covers: REQ-DEPLOY-002
 
-**Given** the file `Dockerfile.api` at repository root with multi-stage build (builder stage = `golang:1.23-alpine`, runtime stage = `gcr.io/distroless/static-debian12:nonroot`).
+**Given** the file `deploy/Dockerfile.usearch-api` with multi-stage build (builder stage = `golang:1.25-alpine`, matching `go.mod` toolchain `go 1.25.8`; runtime stage = `gcr.io/distroless/static-debian12:nonroot`).
 
-**When** CI builds the image via `docker buildx build --target runtime -t test-api:local -f Dockerfile.api .`.
+**When** CI builds the image via `docker buildx build --platform linux/amd64 --target runtime -t test-api:local -f deploy/Dockerfile.usearch-api .`.
 
 **Then**:
-- The image builds successfully on both `linux/amd64` and `linux/arm64`.
+- The image builds successfully on `linux/amd64` (arm64 multi-arch deferred to V1.1 per NFR-DEPLOY-007).
 - The runtime image runs as `USER nonroot` (UID 65532).
 - The runtime image exposes port `8080`.
 - The image size is `< 100 MB` (distroless static; no shell, no package manager).
-- `cosign verify` on the published image PASSES (see AC-012).
+- (DEFERRED) `cosign verify` on the published image — image signing is a fast-follow owned by REL-001 (see AC-012).
 
 ---
 
-### AC-003 — Multi-stage Python sidecar Dockerfiles produce hardened runtime images
+### AC-003 — Migration Dockerfile + reuse of existing Python sidecar Dockerfiles
 
 Covers: REQ-DEPLOY-003
 
-**Given** the Dockerfiles for Python sidecars (`Dockerfile.embedder`, `Dockerfile.tokenizer-ko`, `Dockerfile.storm`, `Dockerfile.koreanews`).
+**Given** the new `deploy/Dockerfile.usearch-migrate` and the EXISTING Python sidecar Dockerfiles at `services/{researcher,embedder,tokenizer-ko,storm,koreanews}/Dockerfile` (all five verified present — the chart references their images and does NOT author new sidecar Dockerfiles).
 
-**When** CI builds each image via `docker buildx build -f Dockerfile.<sidecar> .`.
+**When** CI builds the migrate image via `docker buildx build --platform linux/amd64 -f deploy/Dockerfile.usearch-migrate .`, and the sidecar images are built from their existing `services/<name>/Dockerfile`.
 
 **Then**:
-- Each runtime stage uses a slim base (e.g., `python:3.12-slim` or distroless) — not full Python image.
-- Each image exposes its declared port (embedder 8000, tokenizer-ko 9000, etc.).
-- Each image runs as non-root user.
+- `deploy/Dockerfile.usearch-migrate` runtime is distroless and its entrypoint is `usearch migrate` (the `internal/index/pg` EnsureSchema runner — NOT golang-migrate), with `deploy/postgres/migrations/` COPY-ed in.
+- The chart does NOT introduce `Dockerfile.embedder` / `.tokenizer-ko` / `.storm` / `.koreanews`; sidecar images are referenced by tag from values.
 - `embedder` image is `linux/amd64` only (torch + CUDA constraint; documented in NFR-DEPLOY-007).
-- All other sidecar images are multi-arch (amd64 + arm64).
+- V1 builds amd64 only for the Go images; arm64 multi-arch is deferred to V1.1.
 
 ---
 
@@ -89,7 +98,7 @@ helm template universal-search charts/universal-search -f charts/universal-searc
 ```
 
 **Then**:
-- stdout contains one `apiVersion: apps/v1, kind: Deployment` per declared service (api, embedder, tokenizer-ko, storm, koreanews, mcp).
+- stdout contains one `apiVersion: apps/v1, kind: Deployment` per ENABLED workload. Default-enabled: the 2 newly-containerized host binaries (api, mcp) + compose-derived services (researcher, embedder, tokenizer-ko, litellm, searxng, meilisearch). `storm` + `koreanews` are `enabled: false` by default (services/ dirs only, not compose services) and render NO Deployment unless opted in.
 - Each Deployment has `spec.replicas` matching its values key (default: api=2, sidecars=1).
 - Each Deployment has `resources.requests` and `resources.limits` set.
 - Each Deployment has `securityContext.runAsNonRoot: true`.
@@ -121,7 +130,7 @@ Verification: scenario S6 in spec.md §5.
 
 ---
 
-### AC-006 — Migration Job runs `golang-migrate up` idempotently on install and upgrade
+### AC-006 — Migration Job runs `usearch migrate` (EnsureSchema) idempotently as a pre-install/pre-upgrade hook
 
 Covers: REQ-DEPLOY-006
 
@@ -130,10 +139,10 @@ Covers: REQ-DEPLOY-006
 **When** the contributor runs `helm install usearch charts/universal-search -f ci/values-test.yaml --wait --timeout 5m`, then immediately runs `helm upgrade usearch charts/universal-search -f ci/values-test.yaml` (same chart version, no schema change).
 
 **Then**:
-- Initial `helm install` exits `0`; migration Job (`Job/usearch-migrate-<rev>`) completes `Succeeded`.
-- `helm upgrade` exits `0`; migration Job re-runs and completes `Succeeded` (idempotent — `CREATE TABLE IF NOT EXISTS` semantics preserved).
+- Initial `helm install` exits `0`; migration Job (`Job/usearch-migrate-<rev>`) runs `usearch migrate` (the `internal/index/pg` EnsureSchema runner — NOT golang-migrate; execs all `*.sql` in `deploy/postgres/migrations/` lexicographically) and completes `Succeeded`.
+- `helm upgrade` exits `0`; migration Job re-runs and completes `Succeeded` (idempotent — EnsureSchema re-exec on an existing schema is a no-op plus a drift check; `CREATE TABLE/INDEX IF NOT EXISTS` semantics preserved).
 - No schema modification between runs (verified via `psql -c '\d'` snapshot comparison).
-- The migration Job carries `helm.sh/hook: post-install,post-upgrade` annotation.
+- The migration Job carries `helm.sh/hook: pre-install,pre-upgrade` annotation with `hook-weight: "-5"`, so the schema is ensured BEFORE any application Deployment starts.
 
 Verification: scenarios S4, S7 in spec.md §5.
 
@@ -222,26 +231,23 @@ Covers: REQ-DEPLOY-011, REQ-DEPLOY-012, REQ-DEPLOY-013
 
 ---
 
-### AC-012 — Multi-arch image manifest + cosign signature verification
+### AC-012 — amd64 image build (V1) + reproducible manifests; signing deferred
 
 Covers: REQ-DEPLOY-018, NFR-DEPLOY-007, NFR-DEPLOY-002
 
-**Given** the image `ghcr.io/<org>/usearch-api:1.0.0` published via `.github/workflows/build-images.yml`.
+**Given** the Go images built via `.github/workflows/build-images.yml` (V1: amd64 BUILD + verify; registry PUSH blocked on unresolved `<org>`).
 
 **When** the contributor runs:
 ```
-docker buildx imagetools inspect ghcr.io/<org>/usearch-api:1.0.0
-cosign verify ghcr.io/<org>/usearch-api:1.0.0 \
-  --certificate-identity-regexp 'https://github.com/<org>/universal-search/' \
-  --certificate-oidc-issuer 'https://token.actions.githubusercontent.com'
+docker buildx build --platform linux/amd64 -f deploy/Dockerfile.usearch-api .
 ```
 
 **Then**:
-- The manifest list contains both `linux/amd64` and `linux/arm64` entries (except `embedder` — amd64-only by NFR-DEPLOY-007).
-- `cosign verify` exits `0` for every image listed in the chart.
-- The same Chart version installed twice on identical cluster produces byte-identical rendered manifests (`diff` of two `helm template` runs is empty) — NFR-DEPLOY-002.
+- The amd64 image builds successfully for api/mcp/migrate. `linux/arm64` is NOT expected in V1 (deferred to V1.1; embedder is amd64-only regardless).
+- (DEFERRED to fast-follow) `cosign verify` for signed images — image signing is owned by SPEC-REL-001's release workflow and blocked on `<org>` registry resolution; NOT a V1 gate.
+- The same Chart version rendered twice on an identical cluster produces byte-identical manifests (`diff` of two `helm template` runs is empty) — NFR-DEPLOY-002.
 
-Verification: scenarios S11, S12 in spec.md §5; gates A5, A6 in spec.md §6.
+Verification: scenario S11 in spec.md §5 (S12 deferred); gate A5 in spec.md §6 (A6 deferred).
 
 ---
 
@@ -275,16 +281,16 @@ Covers: REQ-DEPLOY-014, REQ-DEPLOY-015, REQ-DEPLOY-017, REQ-DEPLOY-019, REQ-DEPL
 **When** the release pipeline runs `.github/workflows/chart-release.yml`.
 
 **Then**:
-- The chart is pushed to `oci://ghcr.io/<org>/charts/universal-search` (REQ-DEPLOY-017); `helm pull oci://...` succeeds.
-- A SPDX SBOM is attached to each image via `cosign attest --predicate-type=spdx.dev/Document` (gate A7); `cosign download attestation` retrieves the SBOM.
-- The chart manifests declare a `ServiceMonitor` resource (when `serviceMonitor.enabled: true`) that targets every Service's `/metrics` endpoint (REQ-DEPLOY-014).
+- (V1) `helm package` produces a valid chart tarball and verifies cleanly. OCI PUSH to `oci://ghcr.io/<org>/charts/universal-search` and `helm pull` are DEFERRED to fast-follow — blocked on unresolved `<org>` (REQ-DEPLOY-017).
+- (DEFERRED to fast-follow) A SPDX SBOM attached to each image via `cosign attest` (gate A7) — ships with the signing fast-follow.
+- The chart manifests declare a `ServiceMonitor` resource when `serviceMonitor.enabled: true` and the Prometheus Operator CRD is present; when the CRD is absent, pod-annotation scrape hints (`prometheus.io/scrape`, `prometheus.io/port`, `prometheus.io/path`) are emitted instead (REQ-DEPLOY-014, REQ-DEPLOY-019 fallback).
 - ConfigMap or values surface OTLP exporter env vars (`OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_RESOURCE_ATTRIBUTES`) consumed by all services (REQ-DEPLOY-015).
-- `scripts/compose-chart-parity.sh` reports zero unexplained delta between `deploy/docker-compose.yml` and rendered chart manifests (REQ-DEPLOY-024, gate A8).
+- `scripts/compose-chart-parity.sh` reports zero unexplained delta between `deploy/docker-compose.yml` + `.env.example` and the chart values surface (REQ-DEPLOY-024, gate A8) — NOTE: this FAILs until `.env.example` gains `OIDC_*`/`JWT_*`/`SESSION_SECRET` (coordination item OQ3), at which point it passes.
 - When `ingress.enabled: true`, an `Ingress` resource is rendered with TLS annotations for cert-manager (REQ-DEPLOY-021).
-- When `secrets.backend: "externalSecrets"`, an `ExternalSecret` CR is rendered for ESO integration (REQ-DEPLOY-023).
-- `Chart.lock` pins every subchart to a major.minor version (NFR-DEPLOY-005).
+- (DEFERRED to V1.1) `secrets.backend: "externalSecrets"` ExternalSecret emission — depends on SEC-001 PR#42; in V1 the schema RESERVES the enum but selecting it blocks install with a "V1.1 feature" message (REQ-DEPLOY-023).
+- `Chart.lock` pins every subchart to an exact patch version, not a range (NFR-DEPLOY-005).
 - The chart README documents `global.imagePullSecrets` configuration for Docker Hub rate-limit mitigation (NFR-DEPLOY-006).
-- A cross-SPEC integration test confirms that the chart-rendered Secret references work end-to-end with SPEC-SEC-001's `internal/security/secrets` once both ship (NFR-DEPLOY-008).
+- (DEFERRED to post SEC-001 PR#42 merge) the cross-SPEC integration test confirming chart-rendered Secret refs work end-to-end with SEC-001's `internal/security/secrets` (NFR-DEPLOY-008) — NOT a V1 gate; chart is decoupled.
 - When `serviceMonitor.enabled: false`, no ServiceMonitor is rendered (REQ-DEPLOY-019 state-driven gate).
 
 ---
@@ -293,7 +299,7 @@ Covers: REQ-DEPLOY-014, REQ-DEPLOY-015, REQ-DEPLOY-017, REQ-DEPLOY-019, REQ-DEPL
 
 ### EC-001 — Bitnami subchart minor-version drift breaks chart render
 
-**Given** `Chart.lock` pins `postgresql ~16.4` and Bitnami publishes `16.5` with a breaking change to the values schema.
+**Given** `Chart.lock` pins `postgresql` to an exact patch (e.g. `16.4.5`, per NFR-DEPLOY-005 — no `~`/`^` ranges) and a quarterly audit considers Bitnami `16.5.x` which carries a breaking change to the values schema.
 
 **When** the quarterly audit (NFR-DEPLOY-005) runs `helm dependency update`.
 
@@ -329,18 +335,19 @@ Covers: REQ-DEPLOY-014, REQ-DEPLOY-015, REQ-DEPLOY-017, REQ-DEPLOY-019, REQ-DEPL
 
 ## 3. Definition of Done Checklist
 
-- [ ] All 14 AC scenarios pass on a CI kind cluster.
-- [ ] All 12 test scenarios from spec.md §5 (S1..S12) are implemented as automated tests.
-- [ ] All 13 acceptance gates A1..A13 in spec.md §6 PASS.
+- [ ] All 14 AC scenarios pass on a CI kind cluster (signing/SBOM/ESO/NFR-008 items marked DEFERRED do not block V1).
+- [ ] V1 test scenarios from spec.md §5 are implemented as automated tests (S12 cosign deferred to fast-follow).
+- [ ] V1 acceptance gates in spec.md §6 PASS (A6/A7 deferred; A9 = package-verify only).
 - [ ] `helm-unittest` coverage for chart helpers + scripts ≥ 85% (gate A11).
-- [ ] `gitleaks` + `Trivy` + `cosign verify` report zero finding (gate A12).
+- [ ] `gitleaks` + `Trivy` report zero finding (gate A12; `cosign verify` deferred to signing fast-follow).
 - [ ] Every PR cites `SPEC-DEPLOY-001` in commit message (gate A13).
 - [ ] DOC-001 cross-link integrity verified (gate A10).
 - [ ] Open Questions OQ1..OQ7 in spec.md §8 are resolved or explicitly deferred with mitigation in CHANGELOG.
-- [ ] NFR-DEPLOY-008 cross-SPEC integration test PASSES after SPEC-SEC-001 ships.
+- [ ] (DEFERRED) NFR-DEPLOY-008 cross-SPEC integration test PASSES after SPEC-SEC-001 PR#42 merges — not a V1 gate.
 - [ ] `values.schema.json` documented in DOC-002 (`operators/configuration/chart-values.mdx`).
+- [ ] `.env.example` gains `OIDC_*`/`JWT_*`/`SESSION_SECRET` so the parity script passes (coordination item OQ3).
 - [ ] CI workflow `chart-ci.yml` runs on every PR touching `charts/` and BLOCKS merge on failure.
-- [ ] CI workflow `chart-release.yml` runs on tag `v*.*.*` and publishes signed chart + signed images to GHCR.
+- [ ] CI workflow `chart-release.yml` runs on tag `v*.*.*` and packages + verifies the chart (signed chart + signed-image PUSH deferred to fast-follow, blocked on `<org>`).
 
 ---
 
