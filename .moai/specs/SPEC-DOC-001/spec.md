@@ -1,9 +1,9 @@
 ---
 id: SPEC-DOC-001
-version: 0.2.0
-status: approved
+version: 1.0.0
+status: implemented
 created: 2026-05-22
-updated: 2026-05-30
+updated: 2026-05-31
 author: limbowl
 priority: P1
 issue_number: 0
@@ -20,6 +20,22 @@ related: [SPEC-DOC-002, SPEC-DEPLOY-001]
 # SPEC-DOC-001: User guide — operator + end-user docs site on Nextra (bilingual EN+KO)
 
 ## HISTORY
+
+- 2026-05-31 (implementation v1.0.0, manager-docs via DDD):
+  DDD ANALYZE-PRESERVE-IMPROVE 완료. plan-auditor PASS (0.90) →
+  manager-docs DDD impl (commit `af99d28`) → evaluator-active FAIL
+  (iteration 1: static-export `_not-found` page crash, nextra-theme-docs@4.6.1
+  LayoutPropsSchema upstream bug) → pnpm patch 적용 + static-export fix
+  (commit `2c35523`) → evaluator-active PASS (Func 92 / Sec 82 / Craft 80 /
+  Cons 85). 63 HTML pages 생성, Tier-1 EN+KO bilingual coverage 100%,
+  build/lint clean. 상태 approved → implemented, version 0.2.0 → 1.0.0.
+  Carry-forward: (1) nextra-theme-docs pnpm patch — Nextra 업그레이드 시
+  재검증 필요 (Dependabot); (2) next.config.mjs i18n.locales non-App-Router
+  패턴 — Next.js 메이저 업그레이드 시 제거 검토 (LOW); (3) Docker publish
+  + gh-pages deploy 경로 확정은 SPEC-REL-001/SPEC-BOOT-001에서 처리;
+  (4) full reference-section KO 번역 + KO reviewer pool → V1.1;
+  (5) a11y/Lighthouse/Playwright CI → V1.1; (6) Tier-1 page-count
+  freeze + frontmatter label 검증은 link-check CI 유지.
 
 - 2026-05-30 (amendment v0.2.0, limbowl via manager-spec):
   plan-auditor re-audit 대응 — 3개 stale infra/feature assumption
