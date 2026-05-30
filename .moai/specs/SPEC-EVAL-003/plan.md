@@ -1,8 +1,8 @@
 # SPEC-EVAL-003 Plan — phased implementation
 
-Status: draft companion to spec.md
+Status: draft companion to spec.md (v0.2.0)
 Author: limbowl via manager-spec
-Date: 2026-05-22
+Date: 2026-05-22 (amended 2026-05-30 — B1 adapter-model fix + scope reductions)
 Methodology: **TDD** (per `.moai/config/sections/quality.yaml` default
 `development_mode: tdd` — 그리고 본 SPEC의 본질에 가장 잘 맞는다:
 golden set 자체가 실패하는 테스트 코퍼스다. 각 query는 expected
@@ -62,6 +62,11 @@ plan은 다음 원칙을 우선한다:
 - Plan-auditor가 spec.md + research.md + plan.md + acceptance.md
   (Phase 0 산물)를 검토.
 - MAJOR / MINOR / NIT 발견사항을 amendment commit으로 해결.
+- **(v0.2.0) R1 HARD blocker 해소됨**: 게이트 메트릭(REQ-EVAL-005)
+  + 골든셋 스키마(REQ-EVAL-001/008) + §1.3을 실제 어댑터 모델
+  (단일 `naver` SourceID + `naver_vertical` filter, 단일 `koreanews`
+  SourceID)로 재작성. tasks.md T03/T04/T08의 HARD BLOCKER 전제가
+  충족되었다. recall은 `SourceID == "naver"` 기준으로 측정 가능.
 - research §10 open question 중 plan-block 항목 해결:
   - Q4 code-mixed 한영 비율 — annotation에서 native 검토 → plan 확정.
   - Q6 κ 게이트 0.6 vs 0.7 — research §5.4 근거로 0.6 확정.
@@ -89,8 +94,9 @@ Tasks:
    - 각 점수의 한국어 example 5-10개 (concrete anchoring).
    - 카테고리별 특수 사례 (예: shopping bucket에서 가격 비교 결과
      누락 시 감점).
-   - REQ-EVAL-009 amendment 절차 (calibration log + SPEC owner
-     review).
+   - (v0.2.0: V1 invalid round 처리는 minimal re-round만. 정교한
+     rubric amendment 절차 + calibration log + SPEC owner review는
+     post-V1 — REQ-EVAL-009 deferral.)
 
 3. `docs/eval/ko/onboarding.md` 작성:
    - NFR-EVAL-005 fluency 기준 (native or near-native).
@@ -99,11 +105,13 @@ Tasks:
 
 4. `docs/eval/ko/kappa-interpretation.md` 작성:
    - Landis-Koch 표 (research §5.4).
-   - 0.6 게이트 근거 + invalid round 시 절차 포인터.
-   - Krippendorff α 보조 해석.
+   - 0.6 게이트 근거 + invalid round 시 minimal re-round 포인터.
+   - (v0.2.0: Krippendorff α 해석은 post-V1로 보류 — V1은 Cohen/
+     Light κ만 다룬다.)
 
-5. `docs/eval/ko/calibration-log.md` 템플릿 작성:
-   - 빈 양식 + 1개 예시 entry (가상의 round).
+5. (v0.2.0: `docs/eval/ko/calibration-log.md` 구조화 ledger는
+   post-V1로 보류 — REQ-EVAL-009 deferral. V1은 protocol.md에
+   "invalid round → re-round" 규칙만 명시한다.)
 
 6. `docs/eval/ko/rater-pool.md` 템플릿 작성:
    - 빈 양식 + 익명 ID 발급 절차.
@@ -129,17 +137,25 @@ Tasks:
    - Naver DataLab 최근 90일 시사 트렌드에서 4 query (capture date
      기록).
    - 합성 query 8개 (정치 / 경제 / 사회 분야 균등).
-   - 각 query에 expected `naver-news` 정답 doc_id (수동 검색 후
-     캡처).
+   - 각 query의 `expected_sources`에 `naver` SourceID +
+     `expected_naver_vertical: news`를 기록(단일 어댑터 + vertical
+     filter 모델, `naver.go:181`). 분리 `naver-news` ID는 사용하지
+     않는다.
 
 2. **Blog bucket 10 queries** 큐레이션:
    - Naver DataLab 라이프 / 리뷰 트렌드 4 + 합성 6.
+   - `expected_sources: [naver]` + `expected_naver_vertical: blog`.
 
 3. **Shopping bucket 8 queries**: 카테고리 균등 (가전 / 패션 /
    식품 / 생활용품 각 2).
+   - `expected_sources: [naver]` + `expected_naver_vertical: shop`.
 
 4. **Academic-tech bucket 8 queries**: 한국어 학술 키워드 + 한영
    기술 용어 mix (router는 `korean` 또는 `mixed` 양쪽 가능).
+   - **주의**: Naver에는 `academic` vertical이 없다(라이브 코드).
+     1차 target은 비-Naver SourceID(`arxiv`, `github`, …)이며
+     `expected_naver_relevant: false`가 기본. `naver` blog/news
+     결과가 독립적으로 기대되는 경우에만 `naver`를 추가한다.
 
 5. **Code-mixed bucket 6 queries**:
    - research §6의 6 query 시안을 native rater 1인 리뷰 → 확정.
@@ -206,12 +222,13 @@ Tasks (TDD RED → GREEN → REFACTOR):
    - `TestCohenKappa_DivergentRaters` → 0.3-0.5 범위.
    - `TestLightMeanKappa_ThreeRaters` — pairwise 3개 평균.
    - `TestKappa_MissingRow_ReturnsError` — sheet 정합성 검증.
-   - `TestKrippendorffAlpha_OrdinalAuxiliary` — α 보조 출력.
+   - (v0.2.0: `TestKrippendorffAlpha_OrdinalAuxiliary`는 post-V1로
+     보류 — V1 kappa.go는 α를 구현하지 않는다.)
 
 6. **GREEN**: `internal/eval/korean/kappa.go` 구현:
    - `CohenKappa(r1, r2 []int) (float64, error)`.
    - `LightMeanKappa(sheets [][]int) (float64, error)`.
-   - `KrippendorffAlphaOrdinal(sheets [][]int) (float64, error)`.
+   - (v0.2.0: `KrippendorffAlphaOrdinal`는 post-V1 보류.)
 
 7. `tests/eval/korean/scoring-sheet-template.csv` 작성 — CSV header
    per REQ-EVAL-003.
@@ -309,8 +326,9 @@ Tasks:
    - 통과 시 snapshot 작성, SPEC-REL-001에 evidence 전달.
    - 미달 시 회귀 진단 (IR-001 / ADP-008 / IDX-003 owner에게
      escalation), 본 phase는 진단 결과 별도 처리.
-7. invalid round (κ < 0.6) 시 REQ-EVAL-009 calibration 절차 수행 →
-   calibration-log entry + re-round → snapshot.
+7. invalid round (κ < 0.6) 시 V1 minimal path: 라운드 폐기 → 새
+   sheet로 re-round → κ ≥ 0.6 도달 시 snapshot (REQ-EVAL-009
+   v0.2.0). 정교한 calibration ceremony는 post-V1.
 
 Exit criterion:
 - valid round 1회 완료.
@@ -358,8 +376,8 @@ Phase별 TDD 체크포인트:
   `TestCohenKappa_RandomRaters`,
   `TestCohenKappa_DivergentRaters`,
   `TestLightMeanKappa_ThreeRaters`,
-  `TestKappa_MissingRow_ReturnsError`,
-  `TestKrippendorffAlphaOrdinal`.
+  `TestKappa_MissingRow_ReturnsError`.
+  (v0.2.0: `TestKrippendorffAlphaOrdinal`는 post-V1 보류.)
 
 - Phase 4 (snapshot): `TestSnapshot_ValidRound_WritesFile`,
   `TestSnapshot_InvalidRound_DoesNotWrite`,
@@ -405,8 +423,8 @@ research §11 risk와 phase mapping:
 
 - rater 3인 모집 실패 → Phase 6 차단. 운영 정책 분리이며 SPEC
   scope 외이나, Phase 0에서 모집 계획 확인 권고.
-- κ < 0.6 반복 → Phase 6 calibration 프로토콜 (REQ-EVAL-009) +
-  rubric anchor 보강 (Phase 1).
+- κ < 0.6 반복 → Phase 6 V1 minimal re-round (REQ-EVAL-009 v0.2.0).
+  정교한 calibration ceremony + rubric anchor 보강은 post-V1.
 - Naver DataLab 정책 변경 → Phase 2 provenance 보관 + fallback
   큐레이션 방안 (RSS 등).
 - ADP-008 어댑터 ID 변경 → Phase 6 baseline run 실행 전 ADP-008
@@ -487,4 +505,4 @@ implementation choices.
 
 ---
 
-*End of SPEC-EVAL-003 plan v0.1.0 (draft).*
+*End of SPEC-EVAL-003 plan v0.2.0 (draft).*
