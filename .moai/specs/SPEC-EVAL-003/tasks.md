@@ -14,8 +14,15 @@ completable in one TDD cycle. Ordering follows dependency.
 > resolved (SPEC amendment) before T03 onward. See progress.md
 > "Asset reality" + risk R1.
 
-| ID | Description | REQ mapping | Depends on | Acceptance |
-|----|-------------|-------------|------------|------------|
+> [RUN STATUS 2026-05-30, manager-tdd] T01–T08 DONE (TDD, 44 tests, 88.8%
+> coverage). T03/T04/T08 R1 blocker RESOLVED by v0.2.0 amendment — recall now
+> keyed on the single real `naver` SourceID (DocType→vertical, DocTypeOther→
+> unverified fallback); loader REJECTS phantom IDs. T09 DEFERRED (operational
+> 3-rater round). T10 PENDING (orchestrator sync). Krippendorff ABSENT;
+> baseline = placeholder + SCHEMA only; CI non-blocking; file = eval-ko.yml.
+
+| ID | Status | Description | REQ mapping | Depends on | Acceptance |
+|----|--------|-------------|-------------|------------|------------|
 | T01 | Author `docs/eval/ko/` protocol + rubric + onboarding + kappa-interpretation + calibration-log template + rater-pool template (6 docs). Reproducibility dry-run. | REQ-EVAL-003, REQ-EVAL-009, NFR-EVAL-001/002/005 | — | 6 docs published; external-reader dry-run summary matches intended workflow (NFR-EVAL-001). |
 | T02 | Curate 50-query golden set + provenance doc. PII grep gate wired (CI pre-check). | REQ-EVAL-001, REQ-EVAL-002, NFR-EVAL-004 | T01 (rubric anchors inform curation) | 50 objects, 12/10/8/8/6/6 distribution exact, provenance 100%, PII grep 0 matches. |
 | T03 | RED+GREEN `loader.go` + `loader_test.go`: JSONL → []GoldenQuery, schema/distribution/required-field validation. | REQ-EVAL-001 | T02 (needs the schema confirmed), **R1 resolved** | TestLoadGoldenSet_50Objects, _CategoryDistribution, _AllRequiredFields, _InvalidJSON pass. |

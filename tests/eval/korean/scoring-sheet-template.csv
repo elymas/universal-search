@@ -1,0 +1,4 @@
+query_id,rater_id,ranking_score,source_relevance,code_switching_handling,tokenization_quality,top3_naver_hit,mrr_top10,notes
+KR-001,R1,,,,,,,
+KR-001,R2,,,,,,,
+KR-001,R3,,,,,,,
