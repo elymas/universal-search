@@ -1,0 +1,99 @@
+---
+title: usearch query
+description: Run a search query across configured adapters
+generated: false
+lastUpdated: 2026-05-30
+---
+
+# usearch query
+
+Run a search query across configured adapters and synthesize the results.
+
+## Synopsis
+
+```
+usearch query [flags] <query-text>
+```
+
+## Flags
+
+| Flag | Default | Description |
+|---|---|---|
+| `--timeout <duration>` | `30s` | Total pipeline deadline (max 5m) |
+| `--json` | false | Output results as JSON instead of Markdown |
+| `--locale <code>` | `en` | Query locale; use `ko` for Korean-first results |
+| `--sources <list>` | all | Comma-separated list of adapters to use |
+
+## Examples
+
+```bash
+# Basic query
+usearch query "what is Raft consensus algorithm?"
+
+# With timeout
+usearch query --timeout 60s "compare Kafka vs Pulsar"
+
+# JSON output for scripting
+usearch query --json "what is Raft?" | jq '.citations[].url'
+
+# Korean-locale query
+usearch query --locale ko "네이버 클로바 vs GPT-4o"
+
+# Limit to specific sources
+usearch query --sources searxng,arxiv "quantum computing papers 2024"
+```
+
+## Output Format (Markdown)
+
+```markdown
+## <Synthesized Answer>
+
+<LLM-generated synthesis with inline citation markers>
+
+### Sources
+1. [Title](url) — source-name, date
+2. ...
+
+Citation confidence: 0.94
+```
+
+## Output Format (JSON)
+
+```json
+{
+  "query": "what is Raft?",
+  "synthesis": "Raft is a consensus algorithm...",
+  "citations": [
+    {
+      "marker": 1,
+      "title": "Raft Paper",
+      "url": "https://raft.github.io/raft.pdf",
+      "source": "arxiv",
+      "confidence": 0.98
+    }
+  ],
+  "confidence": 0.94,
+  "duration_ms": 1240
+}
+```
+
+## Exit Codes
+
+| Code | Condition |
+|---|---|
+| 0 | Successful synthesis with citations |
+| 1 | General error (config, network) |
+| 2 | Pipeline error (no results, synthesis failed) |
+| 3 | Authentication error |
+
+## Notes
+
+- Results are stored in the shared Qdrant + Meilisearch index and accessible via `usearch history`
+- The `--locale ko` flag enables Korean-first source ranking using Naver and Korean RSS adapters
+- Progress indicators are written to stderr; only the final result goes to stdout (safe for piping)
+
+## Related
+
+- [`usearch deep`](/en/reference/cli/deep) — multi-agent deep research
+- [`usearch history`](/en/reference/cli/history) — view past queries
+- [End Users: CLI Tour](/en/end-users/cli-tour) — guided walkthrough

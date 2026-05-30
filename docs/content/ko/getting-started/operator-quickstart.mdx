@@ -1,0 +1,114 @@
+---
+title: 운영자 빠른 시작
+description: Universal Search 운영자를 위한 프로덕션 배포 체크리스트
+lastUpdated: 2026-05-30
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# 운영자 빠른 시작
+
+이 가이드는 조직 규모의 자체 호스팅 프로덕션 환경에 Universal Search를 배포하는 팀을 위한 것입니다.
+
+<Steps>
+
+### 사전 요구사항 확인
+
+- Docker 24+, Go 1.25+, 표준 운영에 최소 8 GB RAM
+- SearXNG 엔진 제공자를 위한 아웃바운드 인터넷 접근
+- (선택 사항) 한국어 로케일 결과를 위한 네이버 개발자 계정
+- LLM API 키: Anthropic Claude 권장
+
+### 프로덕션 `.env` 구성
+
+```bash
+cp .env.example .env.production
+```
+
+프로덕션에 필요한 핵심 변수:
+
+```bash
+# 보안 — 생성 방법: openssl rand -hex 32
+MEILI_MASTER_KEY=<64자 hex>
+POSTGRES_PASSWORD=<강력한 비밀번호>
+JWT_SECRET=<64자 hex>
+SESSION_SECRET=<64자 hex>
+
+# LLM
+ANTHROPIC_API_KEY=sk-ant-...
+LITELLM_MASTER_KEY=<프록시 키>
+
+# 검색
+BRAVE_SEARCH_API_KEY=BSA...  # 선택 사항, 웹 커버리지 개선
+NAVER_CLIENT_ID=...           # 한국어 로케일 페르소나에 필요
+NAVER_CLIENT_SECRET=...
+
+# 관측가능성
+LOG_LEVEL=info
+```
+
+<Callout type="warning">
+  `.env.production`을 버전 관리에 커밋하지 마세요. 시크릿 관리 도구(Vault, AWS SSM, Kubernetes Secrets)를 사용하세요.
+</Callout>
+
+### 서비스 시작
+
+```bash
+docker compose -f deploy/docker-compose.yml --env-file .env.production up -d
+```
+
+### 인증 구성
+
+자세한 내용은 [인증 설정](/ko/operators/auth-setup)을 참조하세요:
+- OAuth/OIDC 제공자 설정 (Google, GitHub, 커스텀)
+- MCP 토큰 구성
+- 사용자 역할 지정 (admin, user)
+
+### 상태 확인
+
+```bash
+make compose-up   # 또는: docker compose ps
+curl http://localhost:6333/health   # Qdrant
+curl http://localhost:7700/health   # Meilisearch
+curl http://localhost:4000/health   # LiteLLM
+```
+
+### 첫 번째 팀 쿼리
+
+```bash
+# 관리자로 로그인
+usearch login --url http://localhost:8081
+
+# 테스트 쿼리 실행
+usearch query "운영자 확인용 테스트 쿼리"
+
+# 이력 확인
+usearch history list
+```
+
+</Steps>
+
+## 프로덕션 체크리스트
+
+- [ ] 강력한 시크릿 생성 (MEILI_MASTER_KEY, JWT_SECRET, POSTGRES_PASSWORD)
+- [ ] `.env.production`이 버전 관리에서 제외됨 (`.gitignore` 확인)
+- [ ] LLM API 키 구성 및 테스트 완료
+- [ ] Auth 제공자 (OAuth/OIDC) 구성 — [인증 설정](/ko/operators/auth-setup) 참조
+- [ ] Qdrant + Meilisearch + PG 데이터 디렉토리가 영속 볼륨에 위치
+- [ ] 로그 집계 구성 (slog JSON → 로깅 스택)
+- [ ] Qdrant 컬렉션 및 Postgres 데이터 백업 전략 수립
+- [ ] SearXNG 속도 제한이 사용 패턴에 맞게 검토됨
+
+## 보안 참고사항
+
+<Callout type="error">
+  보안 런북, OWASP ASVS 체크리스트, STRIDE 위협 모델은 **SPEC-SEC-001** (PR #42, 머지 대기 중)에서 제공됩니다. 해당 PR이 머지될 때까지 SPEC-SEC-001을 참조하세요.
+
+  현재 상태는 [보안](/ko/operators/security) 페이지를 참조하세요.
+</Callout>
+
+## 다음 단계
+
+- [인증 설정](/ko/operators/auth-setup) — OAuth/OIDC + MCP 토큰
+- [한국어 로케일 설정](/ko/operators/korean-locale-setup) — 네이버 API 및 mecab-ko
+- [문제 해결](/ko/troubleshooting) — 일반적인 운영자 문제

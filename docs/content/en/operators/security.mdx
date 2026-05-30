@@ -1,0 +1,58 @@
+---
+title: Security
+description: Security documentation placeholder — SPEC-SEC-001 forward reference
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# Security
+
+<Callout type="warning">
+  **Forward Reference — SPEC-SEC-001 Pending**
+
+  The full security documentation (runbook, OWASP ASVS checklist, STRIDE threat model) is delivered by **SPEC-SEC-001** (PR #42, pending merge into main).
+
+  This page is a placeholder. It will be expanded when SPEC-SEC-001 merges.
+
+  Track progress: [SPEC-SEC-001 status](https://github.com/elymas/universal-search/issues) | SPEC-SEC-001 tracking issue.
+</Callout>
+
+## What SPEC-SEC-001 Delivers
+
+When SPEC-SEC-001 merges, this section will include:
+
+- **Security Runbook** — incident response procedures
+- **OWASP ASVS Checklist** — Application Security Verification Standard evidence
+- **STRIDE Threat Model** — threat analysis for all surfaces (CLI, MCP, Web UI, REST API)
+- **Responsible Disclosure Policy** — vulnerability reporting process
+
+## Current Security Posture (V1)
+
+Until SPEC-SEC-001 merges, apply these baseline practices:
+
+### Authentication
+- Use OAuth/OIDC for all production deployments — see [Authentication Setup](/en/operators/auth-setup)
+- Rotate MCP tokens every 90 days
+- Never use the default/example credentials in production
+
+### Network
+- Do not expose Qdrant (6333), Meilisearch (7700), or PostgreSQL (5432) ports to the public internet
+- Use a reverse proxy (Caddy, nginx) with TLS for the public endpoint
+- Restrict SearXNG to internal access only
+
+### Secrets
+- Generate strong secrets: `openssl rand -hex 32`
+- Store secrets in a secrets manager (Vault, AWS SSM, Kubernetes Secrets)
+- Never commit `.env` to version control
+
+### Updates
+- Monitor this repository for security advisories
+- Keep Docker base images updated (run `docker compose pull` regularly)
+- Subscribe to upstream security notices for SearXNG, Qdrant, Meilisearch
+
+## Reporting Vulnerabilities
+
+To report a security vulnerability in Universal Search, please open a **private** security advisory on the GitHub repository (Security tab → Report a vulnerability).
+
+Do **not** report security vulnerabilities in public issues.

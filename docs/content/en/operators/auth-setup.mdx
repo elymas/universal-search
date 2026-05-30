@@ -1,0 +1,146 @@
+---
+title: Authentication Setup
+description: OAuth/OIDC and MCP token configuration for Universal Search
+lastUpdated: 2026-05-30
+related: [SPEC-AUTH-001, SPEC-AUTH-002, SPEC-AUTH-003]
+---
+
+import { Callout, Tabs, Steps } from 'nextra/components'
+
+# Authentication Setup
+
+Universal Search supports two authentication modes:
+
+1. **OAuth/OIDC** — for web UI and CLI login
+2. **MCP tokens** — for Claude for Desktop and other MCP clients
+
+## OAuth/OIDC Setup
+
+<Tabs items={['Google', 'GitHub', 'Custom OIDC']}>
+  <Tabs.Tab>
+    <Steps>
+    ### Create Google OAuth App
+    
+    1. Go to [console.cloud.google.com](https://console.cloud.google.com)
+    2. Create a new OAuth 2.0 client ID (Web application)
+    3. Add authorized redirect URI: `http://localhost:8081/auth/callback`
+    
+    ### Configure Environment
+
+    ```bash
+    OAUTH_PROVIDER=google
+    OAUTH_CLIENT_ID=<your-client-id>.apps.googleusercontent.com
+    OAUTH_CLIENT_SECRET=<your-client-secret>
+    OAUTH_REDIRECT_URL=http://localhost:8081/auth/callback
+    ```
+
+    ### Test Login
+
+    ```bash
+    usearch login --provider google
+    # Opens browser for Google OAuth flow
+    ```
+    </Steps>
+  </Tabs.Tab>
+  <Tabs.Tab>
+    <Steps>
+    ### Create GitHub OAuth App
+    
+    1. Go to GitHub Settings → Developer Settings → OAuth Apps
+    2. Create a new OAuth App
+    3. Set Authorization callback URL: `http://localhost:8081/auth/callback`
+    
+    ### Configure Environment
+
+    ```bash
+    OAUTH_PROVIDER=github
+    OAUTH_CLIENT_ID=<your-github-client-id>
+    OAUTH_CLIENT_SECRET=<your-github-client-secret>
+    OAUTH_REDIRECT_URL=http://localhost:8081/auth/callback
+    ```
+    </Steps>
+  </Tabs.Tab>
+  <Tabs.Tab>
+    Custom OIDC provider (Keycloak, Auth0, Okta, etc.):
+
+    ```bash
+    OAUTH_PROVIDER=oidc
+    OAUTH_CLIENT_ID=<client-id>
+    OAUTH_CLIENT_SECRET=<client-secret>
+    OAUTH_ISSUER_URL=https://your-idp.example.com
+    OAUTH_REDIRECT_URL=http://localhost:8081/auth/callback
+    ```
+  </Tabs.Tab>
+</Tabs>
+
+## MCP Token Setup
+
+MCP tokens allow non-interactive access for Claude for Desktop and CI pipelines.
+
+### Generate a Token
+
+From the admin panel or via CLI:
+
+```bash
+# Admin-only
+usearch admin token create --name "claude-desktop" --expires 90d
+# Output: eyJ... (copy this token)
+```
+
+### Configure Claude for Desktop
+
+Add to `~/.config/claude-desktop/config.json` (macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "usearch": {
+      "command": "usearch-mcp",
+      "args": ["--transport", "stdio"],
+      "env": {
+        "USEARCH_SERVER_URL": "http://localhost:8081",
+        "USEARCH_MCP_TOKEN": "eyJ..."
+      }
+    }
+  }
+}
+```
+
+### OAuth MCP Flow (Claude Code v2.1.30+)
+
+Claude Code supports OAuth for MCP servers via `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "usearch": {
+      "command": "usearch-mcp",
+      "args": [],
+      "oauth": {
+        "clientId": "<your-mcp-client-id>",
+        "callbackPort": 8082
+      }
+    }
+  }
+}
+```
+
+<Callout type="info">
+  OAuth secrets are never stored in `.mcp.json`. They are stored in the OS keychain (macOS Keychain, Linux Secret Service, Windows Credential Manager) after first authentication.
+</Callout>
+
+## Token Lifecycle
+
+| Action | Command |
+|---|---|
+| Check login status | `usearch login --status` |
+| Logout | `usearch login --logout` |
+| Refresh token | `usearch login --refresh` |
+| List active tokens (admin) | `usearch admin token list` |
+| Revoke token (admin) | `usearch admin token revoke --id <token-id>` |
+
+## Related SPECs
+
+- SPEC-AUTH-001: JWT authentication
+- SPEC-AUTH-002: OAuth/OIDC integration
+- SPEC-AUTH-003: MCP token management

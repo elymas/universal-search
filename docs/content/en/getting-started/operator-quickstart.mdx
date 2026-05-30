@@ -1,0 +1,122 @@
+---
+title: Operator Quickstart
+description: Production deployment checklist for Universal Search operators
+lastUpdated: 2026-05-30
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Operator Quickstart
+
+This guide is for teams deploying Universal Search for production use (organization-scale self-hosted).
+
+<Steps>
+
+### Review Prerequisites
+
+- Docker 24+, Go 1.25+, 8 GB RAM minimum for standard operation
+- Outbound internet access for SearXNG engine providers
+- (Optional) Naver Developer account for Korean-locale results
+- LLM API key: Anthropic Claude recommended
+
+### Configure Production `.env`
+
+```bash
+cp .env.example .env.production
+```
+
+Critical variables for production:
+
+```bash
+# Security — generate with: openssl rand -hex 32
+MEILI_MASTER_KEY=<64-char-hex>
+POSTGRES_PASSWORD=<strong-password>
+JWT_SECRET=<64-char-hex>
+SESSION_SECRET=<64-char-hex>
+
+# LLM
+ANTHROPIC_API_KEY=sk-ant-...
+LITELLM_MASTER_KEY=<proxy-key>
+
+# Search
+BRAVE_SEARCH_API_KEY=BSA...  # optional, improves web coverage
+NAVER_CLIENT_ID=...           # required for Korean-locale persona
+NAVER_CLIENT_SECRET=...
+
+# Observability
+LOG_LEVEL=info
+```
+
+<Callout type="warning">
+  Never commit `.env.production` to version control. Use secrets management (Vault, AWS SSM, Kubernetes Secrets).
+</Callout>
+
+### Start Services
+
+```bash
+docker compose -f deploy/docker-compose.yml --env-file .env.production up -d
+```
+
+### Configure Authentication
+
+See [Authentication Setup](/en/operators/auth-setup) for:
+- OAuth/OIDC provider setup (Google, GitHub, custom)
+- MCP token configuration
+- User role assignment (admin, user)
+
+### Verify Health
+
+```bash
+make compose-up   # or: docker compose ps
+curl http://localhost:6333/health   # Qdrant
+curl http://localhost:7700/health   # Meilisearch
+curl http://localhost:4000/health   # LiteLLM
+```
+
+### Set Up Observability
+
+See [Observability](/en/operators/observability) for:
+- Query log shipping (structured JSON logs to slog)
+- Citation-faithfulness metrics
+- Per-source success rate dashboards
+
+### First Team Query
+
+```bash
+# Login as admin
+usearch login --url http://localhost:8081
+
+# Run a test query
+usearch query "test query for operator verification"
+
+# Check history
+usearch history list
+```
+
+</Steps>
+
+## Production Checklist
+
+- [ ] Strong secrets generated (MEILI_MASTER_KEY, JWT_SECRET, POSTGRES_PASSWORD)
+- [ ] `.env.production` excluded from version control (`.gitignore` verified)
+- [ ] LLM API key configured and tested
+- [ ] Auth provider (OAuth/OIDC) configured — see [Auth Setup](/en/operators/auth-setup)
+- [ ] Qdrant + Meilisearch + PG data directories on persistent volumes
+- [ ] Log aggregation configured (slog JSON → your logging stack)
+- [ ] Backup strategy for Qdrant collections and Postgres data
+- [ ] SearXNG rate limits reviewed for your usage pattern
+
+## Security Notes
+
+<Callout type="error">
+  The security runbook, OWASP ASVS checklist, and STRIDE threat model are delivered by **SPEC-SEC-001** (PR #42, pending merge). Until that PR merges, refer to SPEC-SEC-001 for security guidance.
+
+  See the [Security](/en/operators/security) page for the current forward-reference status.
+</Callout>
+
+## Next Steps
+
+- [Authentication Setup](/en/operators/auth-setup) — OAuth/OIDC + MCP tokens
+- [Configuration Reference](/en/reference/configuration) — All config options
+- [Observability](/en/operators/observability) — Logging, metrics, tracing
+- [Troubleshooting](/en/troubleshooting) — Common operator issues

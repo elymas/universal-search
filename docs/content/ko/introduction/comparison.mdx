@@ -1,0 +1,47 @@
+---
+title: 기능 비교
+description: Universal Search와 기존 AI 검색 제품 비교
+lastUpdated: 2026-05-30
+---
+
+# 기능 비교
+
+## Universal Search vs. 상업용 AI 검색
+
+| 기능 | Universal Search | Perplexity | ChatGPT Search | You.com |
+|---|---|---|---|---|
+| 자체 호스팅 | 예 | 아니오 | 아니오 | 아니오 |
+| 한국어 로케일 우선 | 예 | 부분적 | 부분적 | 아니오 |
+| MCP 통합 | 예 (네이티브) | 아니오 | 아니오 | 아니오 |
+| CLI 접근 | 예 | 아니오 | 아니오 | 아니오 |
+| 팀 공유 메모리 | 예 | 아니오 | 아니오 | 부분적 |
+| 오픈소스 | 예 (Apache-2.0) | 아니오 | 아니오 | 아니오 |
+| 감사 가능한 인용 | 예 (주장별) | 부분적 | 부분적 | 부분적 |
+| 심층 연구 모드 | 예 (`/deep`) | Pro 티어 | 아니오 | 예 |
+| 사용자 정의 어댑터 | 예 (확장 가능) | 아니오 | 아니오 | 아니오 |
+| 비용 | 자체 호스팅 인프라 | 구독 | 구독 | 프리미엄 |
+
+## 소스 커버리지
+
+| 소스 카테고리 | Universal Search | 비고 |
+|---|---|---|
+| 웹 (일반) | 예 | SearXNG 메타검색, 70개 이상 엔진 |
+| 소셜 (Reddit, X, HN, YouTube) | 예 | 소셜 참여 점수 |
+| 학술 (arXiv, Semantic Scholar) | 예 | 인용 품질 소스 |
+| 한국어 로케일 (네이버, 다음, 한국어 RSS) | 예 | mecab-ko 토크나이저, 한국어 우선 순위 |
+| GitHub / 기술 문서 | 예 | 개발자 중심 어댑터 |
+| 개인 컨텍스트 | 부분적 (V1.1) | 옵트인, 읽기 전용 |
+
+## 오픈소스 계보
+
+Universal Search는 검증된 오픈소스 컴포넌트를 기반으로 합니다:
+
+| 컴포넌트 | 라이선스 | 역할 |
+|---|---|---|
+| SearXNG | AGPL-3.0 | 메타검색 엔진 (별도 컨테이너) |
+| gpt-researcher | Apache-2.0 | 심층 연구 파이프라인 |
+| last30days-skill 패턴 | MIT | 소셜 신호 집계 |
+| Stanford STORM 패턴 | Apache-2.0 | 인용 보고서 생성 |
+| insane-search 패턴 | MIT | 적응형 접근 레이어 |
+
+전체 기여 내역은 [의존성](/en/reference/dependencies) 및 [라이선스](/ko/legal/licenses)를 참조하세요.

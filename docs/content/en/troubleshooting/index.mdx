@@ -1,0 +1,158 @@
+---
+title: Troubleshooting
+description: Common issues and solutions for Universal Search
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# Troubleshooting
+
+Common issues and solutions organized by component.
+
+## Installation & Build
+
+### `make build` fails — Go version mismatch
+
+| Field | Value |
+|---|---|
+| **Symptom** | `go: go.mod requires Go >= 1.25` |
+| **Cause** | Go version below 1.25 |
+| **SPEC** | SPEC-CLI-001 |
+| **Fix** | Upgrade Go: `go install golang.org/dl/go1.25.0@latest && go1.25.0 download` |
+| **Verify** | `go version` shows 1.25+ |
+
+---
+
+### `make compose-up` fails — port conflict
+
+| Field | Value |
+|---|---|
+| **Symptom** | `Error: bind: address already in use` for port 6333, 7700, etc. |
+| **Cause** | Another service is using the port |
+| **Fix** | Stop the conflicting service, or override the port in `.env` (e.g., `QDRANT_PORT=6334`) |
+| **Verify** | `docker compose ps` shows all services healthy |
+
+---
+
+## Search & Queries
+
+### `usearch query` returns no results
+
+| Field | Value |
+|---|---|
+| **Symptom** | `No results found` or empty output |
+| **Cause** | SearXNG unreachable, all adapters disabled, or network blocked |
+| **Fix** | 1. Check `curl http://localhost:8080/search?q=test` (SearXNG). 2. Check `usearch sources list`. 3. Check firewall/proxy settings |
+| **Verify** | `usearch sources test searxng --query "test"` succeeds |
+
+---
+
+### Synthesis quality is poor / hallucinations
+
+| Field | Value |
+|---|---|
+| **Symptom** | LLM answer doesn't match the sources |
+| **Cause** | LLM model producing low-quality synthesis; insufficient citations |
+| **Fix** | Use `--timeout 60s` for more retrieval time; try `usearch deep` for higher quality; verify `ANTHROPIC_API_KEY` is set |
+| **Verify** | Citations appear in output with non-zero confidence score |
+
+---
+
+### Korean query returns no Korean results
+
+| Field | Value |
+|---|---|
+| **Symptom** | `usearch query --locale ko "..."` returns only English results |
+| **Cause** | Naver adapter disabled or credentials missing |
+| **SPEC** | SPEC-CLI-002 |
+| **Fix** | Set `NAVER_CLIENT_ID` + `NAVER_CLIENT_SECRET`; run `usearch sources enable naver` |
+| **Verify** | `usearch sources list` shows naver as `enabled`; `usearch sources test naver --query "test"` succeeds |
+
+---
+
+## MCP Integration
+
+### Claude for Desktop shows "usearch MCP server not found"
+
+| Field | Value |
+|---|---|
+| **Symptom** | MCP server not appearing in Claude |
+| **Cause** | `usearch-mcp` binary not in PATH, or config.json syntax error |
+| **SPEC** | SPEC-MCP-001 |
+| **Fix** | 1. Verify `which usearch-mcp`. 2. Validate config.json with `jq . config.json`. 3. Restart Claude for Desktop |
+| **Verify** | Reload Claude — usearch appears in MCP servers list |
+
+---
+
+### MCP authentication fails
+
+| Field | Value |
+|---|---|
+| **Symptom** | `AUTH_ERROR` in MCP response |
+| **Cause** | Token expired or invalid |
+| **Fix** | Generate a new token: `usearch admin token create --name "claude-desktop" --expires 90d` |
+| **Verify** | `usearch login --status` shows valid session |
+
+---
+
+## Database & Storage
+
+### Qdrant connection refused
+
+| Field | Value |
+|---|---|
+| **Symptom** | `connection refused` on port 6333 |
+| **Cause** | Qdrant container not started or unhealthy |
+| **Fix** | `docker compose restart qdrant`; check `docker compose logs qdrant` |
+| **Verify** | `curl http://localhost:6333/health` returns `{"status":"ok"}` |
+
+---
+
+### Meilisearch returns stale results
+
+| Field | Value |
+|---|---|
+| **Symptom** | `usearch history search` misses recent queries |
+| **Cause** | Meilisearch indexing lag (usually under 1s, but can be longer under load) |
+| **Fix** | Wait 2–3 seconds after running queries; check `docker compose logs meilisearch` |
+| **Verify** | `curl http://localhost:7700/indexes/usearch/stats` shows updated document count |
+
+---
+
+## Authentication
+
+### `usearch login` hangs at browser step
+
+| Field | Value |
+|---|---|
+| **Symptom** | Browser doesn't open or OAuth callback fails |
+| **Cause** | Incorrect `OAUTH_REDIRECT_URL` or firewall blocking the callback port |
+| **SPEC** | SPEC-AUTH-002 |
+| **Fix** | Verify `OAUTH_REDIRECT_URL=http://localhost:8081/auth/callback` matches the OAuth provider config |
+| **Verify** | Complete a test login flow in development |
+
+---
+
+## Performance
+
+### `usearch deep` times out
+
+| Field | Value |
+|---|---|
+| **Symptom** | Deep research exits before completing |
+| **Cause** | Default 5-minute timeout exceeded; or LLM API rate limits |
+| **Fix** | Increase timeout: `usearch deep --timeout 15m "..."`; check LLM API quota |
+| **Verify** | Shorter query completes within timeout |
+
+---
+
+## Getting More Help
+
+- [GitHub Discussions](https://github.com/elymas/universal-search/discussions) — community support
+- [GitHub Issues](https://github.com/elymas/universal-search/issues) — bug reports
+- Enable debug logs: `LOG_LEVEL=debug usearch query "..."` — captures verbose output
+
+<Callout type="info">
+  When filing a bug report, include the output of `usearch --version`, `docker compose ps`, and the debug log output.
+</Callout>

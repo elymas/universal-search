@@ -1,0 +1,100 @@
+---
+title: MCP Integration
+description: Connect Universal Search to Claude for Desktop via MCP
+lastUpdated: 2026-05-30
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# MCP Integration
+
+Universal Search exposes a Model Context Protocol (MCP) server that integrates with Claude for Desktop and other MCP-compatible clients.
+
+## Prerequisites
+
+- Universal Search stack running (`make compose-up`)
+- Claude for Desktop installed
+- MCP token (get from `usearch admin token create`)
+
+## Setup
+
+<Steps>
+
+### Get Your MCP Token
+
+```bash
+# Login as admin first
+usearch login --url http://localhost:8081
+
+# Create a token for Claude Desktop
+usearch admin token create --name "claude-desktop" --expires 90d
+# Output: eyJhbGciOiJIUzI1NiJ9... (copy this)
+```
+
+### Configure Claude for Desktop
+
+Open `~/.config/claude-desktop/config.json`:
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux**: `~/.config/claude-desktop/config.json`
+
+```json
+{
+  "mcpServers": {
+    "usearch": {
+      "command": "usearch-mcp",
+      "args": ["--transport", "stdio"],
+      "env": {
+        "USEARCH_SERVER_URL": "http://localhost:8081",
+        "USEARCH_MCP_TOKEN": "eyJhbGciOiJIUzI1NiJ9..."
+      }
+    }
+  }
+}
+```
+
+### Restart Claude for Desktop
+
+Restart the application. You should see "usearch" in the connected MCP servers list.
+
+### Test
+
+In Claude for Desktop:
+```
+Ask the usearch MCP server for information about Raft consensus.
+```
+
+</Steps>
+
+## Available Tools
+
+| Tool | Description |
+|---|---|
+| `search` | Search across configured adapters |
+| `get_citation` | Retrieve a full document by citation ID |
+| `list_sources` | List available search adapters |
+| `deep_research` | Multi-agent deep research |
+
+See [MCP Tools Reference](/en/reference/mcp) for full documentation.
+
+## Prompt Templates
+
+Example Claude prompts that work well with usearch:
+
+```
+Search usearch for recent papers on [topic] and summarize the key findings.
+
+Use usearch deep_research to write a comprehensive comparison of [A] vs [B].
+
+List the available usearch sources, then search for [query] using only the academic sources.
+```
+
+## Troubleshooting
+
+| Issue | Fix |
+|---|---|
+| "Server not found" | Verify `usearch-mcp` binary is in PATH |
+| "Authentication failed" | Check `USEARCH_MCP_TOKEN` is valid and not expired |
+| "Connection refused" | Verify usearch server is running on the configured port |
+
+See [Troubleshooting](/en/troubleshooting) for more issues.

@@ -1,0 +1,69 @@
+---
+title: Who is Universal Search for?
+description: Primary user personas and their use cases
+lastUpdated: 2026-05-30
+---
+
+# Who is Universal Search for?
+
+Universal Search is built for teams and individuals who do serious research work and need grounded, cited answers across multiple sources.
+
+## Primary Personas
+
+### Research-heavy Engineer
+
+**Need**: Technical deep-dives spanning GitHub, arXiv, docs, HN
+
+**Success Metric**: Finds grounded answer in ≤60s that previously took ≥15min
+
+**Key workflows**:
+- `usearch query "how does Raft consensus handle leader election?"` — cross-references arXiv, GitHub, HN
+- `usearch deep "compare Kafka vs Pulsar for event streaming"` — multi-agent deep research with citations
+- MCP integration with Claude for inline research during coding sessions
+
+---
+
+### Product / Strategy Lead
+
+**Need**: Market + social + news signal, Korean + global
+
+**Success Metric**: Weekly report assembled in under 10 minutes with cited sources
+
+**Key workflows**:
+- `usearch query "competitor product X market reception"` — web + social + news synthesis
+- Export cited markdown report for async sharing
+- Web UI dashboard for team-shared query history
+
+---
+
+### Korean Analyst / Journalist
+
+**Need**: Naver news, 다음, Korean RSS, cross-referenced with global sources
+
+**Success Metric**: Korean-first query returns Korean sources first, not translated summaries
+
+**Key workflows**:
+- `usearch query --locale ko "네이버 클로바 vs GPT-4o 비교"` — Korean-locale search
+- Naver news + 다음 + Korean tech blogs ranked first
+- mecab-ko tokenization for accurate Korean NLP
+
+---
+
+### Team Lead (Shared Memory)
+
+**Need**: Team's prior queries become re-searchable asset
+
+**Success Metric**: "Did anyone already research X?" answerable from shared index
+
+**Key workflows**:
+- Shared Qdrant + Meilisearch index across team
+- Query history via `usearch history`
+- RBAC for multi-user access control
+
+## Non-Targets
+
+Universal Search is **not** designed for:
+- General consumer search (use Google, Bing)
+- Coding assistance (use GitHub Copilot, Cursor)
+- Task execution (booking, sending emails)
+- Personal productivity (Gmail, Calendar integration — deferred to V1.1+)

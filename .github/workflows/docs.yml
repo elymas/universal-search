@@ -1,0 +1,192 @@
+name: docs
+
+on:
+  push:
+    branches: [main, feature/SPEC-DOC-001]
+    paths:
+      - "docs/**"
+      - ".github/workflows/docs.yml"
+      - "Dockerfile.docs"
+  pull_request:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - ".github/workflows/docs.yml"
+      - "Dockerfile.docs"
+
+# Cancel in-progress runs on same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Job 1: Build the Nextra site ──────────────────────────────────────────
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: docs/pnpm-lock.yaml
+
+      - name: Install deps
+        working-directory: docs
+        run: pnpm install --frozen-lockfile
+
+      - name: Build (static export)
+        working-directory: docs
+        run: pnpm build
+        env:
+          # Suppress Next.js telemetry in CI
+          NEXT_TELEMETRY_DISABLED: "1"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-out
+          path: docs/out/
+          retention-days: 1
+
+  # ── Job 2: Link check (internal fail / external warn) ─────────────────────
+  link-check:
+    name: link-check
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docs-out
+          path: docs/out/
+
+      - name: Install lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # Internal links only — fail on broken
+          args: >-
+            --config docs/lychee.toml
+            --no-progress
+            --base docs/out
+            'docs/out/**/*.html'
+          fail: true
+
+      - name: Link check (external — warn only)
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --config docs/lychee.toml
+            --no-progress
+            'docs/out/**/*.html'
+          fail: false
+        continue-on-error: true
+
+  # ── Job 3: Bilingual coverage gate (Tier-1 KO >= 90%) ─────────────────────
+  bilingual-coverage:
+    name: bilingual-coverage
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check KO Tier-1 coverage
+        run: |
+          chmod +x docs/scripts/check-bilingual-coverage.sh
+          docs/scripts/check-bilingual-coverage.sh --threshold 90
+
+  # ── Job 4: Screenshot freshness gate ──────────────────────────────────────
+  screenshot-freshness:
+    name: screenshot-freshness
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check screenshot freshness
+        run: |
+          chmod +x docs/scripts/check-screenshot-freshness.sh
+          docs/scripts/check-screenshot-freshness.sh --max-age-days 90
+
+  # ── Job 5: Doc claims advisory (non-blocking) ─────────────────────────────
+  doc-claims:
+    name: doc-claims-advisory
+    needs: build
+    runs-on: ubuntu-latest
+    continue-on-error: true   # advisory — never blocks merge
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build usearch binary
+        run: make build
+
+      - name: Run doc claims advisory check
+        run: |
+          chmod +x docs/scripts/check-doc-claims.sh
+          docs/scripts/check-doc-claims.sh --binary ./cmd/usearch/usearch
+
+  # ── Job 6: Docker build verify (no publish — SPEC-DOC-001 D deferred) ─────
+  docker-build:
+    name: docker-build-verify
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docs-out
+          path: docs/out/
+
+      - name: Build Docker image (verify only)
+        run: |
+          docker build -f Dockerfile.docs -t usearch-docs:ci-verify .
+          echo "Docker image built successfully"
+          docker image inspect usearch-docs:ci-verify --format '{{.Size}}' | awk '{printf "Image size: %.1f MB\n", $1/1024/1024}'
+        # NOTE: Push to ghcr.io/<org>/usearch-docs deferred pending <org> resolution
+        # See SPEC-DOC-001 Open Question §3 (SPEC-BOOT-001 registry path)
+
+  # ── Job 7: Deploy to gh-pages (main branch only) ──────────────────────────
+  deploy-gh-pages:
+    name: deploy-gh-pages
+    needs: [build, link-check, bilingual-coverage]
+    runs-on: ubuntu-latest
+    # Only deploy on push to main (not on PRs)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docs-out
+          path: docs/out/
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: docs/out/
+          publish_branch: gh-pages
+          commit_message: "docs: deploy ${{ github.sha }}"
+          # NOTE: gh-pages org/repo path confirmed pending SPEC-BOOT-001 Open Q3
+          # If this job fails, check that gh-pages branch exists and GitHub Pages
+          # is configured under Settings → Pages → Deploy from a branch → gh-pages

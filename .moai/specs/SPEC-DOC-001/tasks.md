@@ -21,7 +21,7 @@ implies greenfield, which is stale — flag, do not blindly trust.
 
 ## Tasks
 
-### T1 — ANALYZE: source inventory + migration map (plan Phase 1)
+### T1 — ANALYZE: source inventory + migration map (plan Phase 1) ✅ COMPLETE
 - Requirements: REQ-DOC-003 (IA), D2 sourcing strategy
 - Deps: none
 - Acceptance:
@@ -33,7 +33,7 @@ implies greenfield, which is stale — flag, do not blindly trust.
   - `docs/MIGRATION_MAP.md` written (Page→Source→Strategy→Owner).
   - `_meta` navigation skeletons drafted for en + ko.
 
-### T2 — IMPROVE infra: clean stale scaffold + Nextra v4 bootstrap (plan Phase 2)
+### T2 — IMPROVE infra: clean stale scaffold + Nextra v4 bootstrap (plan Phase 2) ✅ COMPLETE
 - Requirements: REQ-DOC-001, REQ-DOC-002, NFR-DOC-002
 - Deps: T1
 - Acceptance:
@@ -49,7 +49,7 @@ implies greenfield, which is stale — flag, do not blindly trust.
     the stale scaffold used `pages/` (v3) — verify v4 content dir layout
     via Context7/nextra docs before committing structure.
 
-### T3 — PRESERVE migration: existing assets → MDX wrappers (plan Phase 3)
+### T3 — PRESERVE migration: existing assets → MDX wrappers (plan Phase 3) ✅ COMPLETE
 - Requirements: REQ-DOC-005 (operators), REQ-DOC-003, D2 PRESERVE
 - Deps: T2
 - Acceptance:
@@ -64,7 +64,7 @@ implies greenfield, which is stale — flag, do not blindly trust.
     placeholder-with-forward-ref to SPEC-SEC-001 (B2), NOT cross-linking
     nonexistent ops/security/* files.
 
-### T4 — HAND-WRITE EN narrative: getting-started + end-users + troubleshooting (plan Phase 4)
+### T4 — HAND-WRITE EN narrative: getting-started + end-users + troubleshooting (plan Phase 4) ✅ COMPLETE
 - Requirements: REQ-DOC-004, REQ-DOC-006, REQ-DOC-009
 - Deps: T3
 - Acceptance:
@@ -75,7 +75,7 @@ implies greenfield, which is stale — flag, do not blindly trust.
   - Troubleshooting: >=10 entries in 5-field format with valid SPEC IDs.
   - operators/observability + team-rbac + audit-log narratives written.
 
-### T5 — GENERATE: scripts/gen-cli-reference.sh + CLI reference MDX (plan Phase 5)
+### T5 — GENERATE: scripts/gen-cli-reference.sh + CLI reference MDX (plan Phase 5) ✅ COMPLETE
 - Requirements: REQ-DOC-007 (TDD sub-cycle)
 - Deps: T2 (app), binary buildable via `make build`
 - Acceptance:
@@ -88,7 +88,7 @@ implies greenfield, which is stale — flag, do not blindly trust.
     drift check fails when committed reference is stale.
   - reference/adapters/index.mdx placeholder + SPEC-DOC-002 link (REQ-DOC-008).
 
-### T6 — KO Tier-1 translation + bilingual coverage (plan Phase 4/6)
+### T6 — KO Tier-1 translation + bilingual coverage (plan Phase 4/6) ✅ COMPLETE
 - Requirements: REQ-DOC-010, REQ-DOC-016, NFR-DOC-006
 - Deps: T3, T4 (EN content must exist first)
 - Acceptance:
@@ -100,7 +100,7 @@ implies greenfield, which is stale — flag, do not blindly trust.
   - >=90% page parity (excl reference/cli + reference/api EN-only).
   - DEFERRABLE: full KO for non-Tier-1 reference → V1.1 (D3 Tier-2).
 
-### T7 — CI gate scripts: screenshot-freshness + bilingual-coverage + doc-claims (plan Phase 6, TDD)
+### T7 — CI gate scripts: screenshot-freshness + bilingual-coverage + doc-claims (plan Phase 6, TDD) ✅ COMPLETE
 - Requirements: REQ-DOC-013, REQ-DOC-014, REQ-DOC-016, REQ-DOC-018
 - Deps: T5, T6
 - Acceptance:
@@ -110,7 +110,7 @@ implies greenfield, which is stale — flag, do not blindly trust.
     allowlist (github/anthropic/x/naver).
   - Pattern mirrors existing scripts/gen-deps-manifest.sh + check-*.sh.
 
-### T8 — CI workflow: .github/workflows/docs.yml (plan Phase 6)
+### T8 — CI workflow: .github/workflows/docs.yml (plan Phase 6) ✅ COMPLETE
 - Requirements: REQ-DOC-012, NFR-DOC-001
 - Deps: T7
 - Acceptance:
@@ -118,7 +118,7 @@ implies greenfield, which is stale — flag, do not blindly trust.
     bilingual-coverage. Parallel after build. <=5 min budget.
   - Green baseline on a trivial content PR.
 
-### T9 — Deploy: Dockerfile.docs + gh-pages + ghcr container (plan Phase 7)
+### T9 — Deploy: Dockerfile.docs + gh-pages + ghcr container (plan Phase 7) ✅ COMPLETE (build-verify; publish deferred)
 - Requirements: REQ-DOC-015, NFR-DOC-004
 - Deps: T8
 - Acceptance:

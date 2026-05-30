@@ -1,0 +1,66 @@
+---
+title: 구성
+description: Universal Search 운영자 구성 가이드
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# 구성
+
+이 페이지는 운영자 수준의 구성을 다룹니다. 전체 환경 변수 목록은 [구성 레퍼런스](/en/reference/configuration)를 참조하세요 *(영어)*.
+
+## 빠른 설정
+
+```bash
+# 1. 예시 env 파일 복사
+cp .env.example .env
+
+# 2. 필수 값 편집
+nano .env
+
+# 3. CLI로 확인
+usearch config show
+```
+
+## 구성 레이어
+
+| 레이어 | 우선순위 | 예시 |
+|---|---|---|
+| CLI 플래그 | 가장 높음 | `usearch query --timeout 60s` |
+| 환경 변수 | 높음 | `USEARCH_SEARCH_TIMEOUT=60s` |
+| 구성 파일 (TOML) | 보통 | `~/.config/usearch/config.toml` |
+| 내장 기본값 | 가장 낮음 | `30s` |
+
+## 필수 구성 파일
+
+`usearch config init`으로 `~/.config/usearch/config.toml`을 생성하고 수정합니다:
+
+```toml
+[server]
+endpoint = "http://localhost:8081"
+
+[llm]
+model = "claude-3-5-sonnet-20241022"
+provider = "anthropic"
+
+[search]
+timeout = "30s"
+locale = "en"
+
+[output]
+format = "markdown"
+```
+
+## 프로덕션 체크리스트
+
+- [ ] 모든 시크릿에 강력한 랜덤 값 사용 (`openssl rand -hex 32`)
+- [ ] `.env`가 `.gitignore`에 포함됨
+- [ ] 인증 구성 완료 (OAuth 또는 정적 토큰)
+- [ ] Qdrant, Meilisearch, PostgreSQL에 영속 볼륨 설정
+- [ ] 로그 레벨이 `info`로 설정됨 (프로덕션에서 `debug` 금지)
+- [ ] LLM API 키 속도 제한 확인
+
+<Callout type="info">
+  전체 환경 변수 목록은 [구성 레퍼런스](/en/reference/configuration)를 참조하세요 *(영어)*.
+</Callout>

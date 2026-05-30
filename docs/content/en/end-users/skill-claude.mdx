@@ -1,0 +1,65 @@
+---
+title: Claude Skill
+description: Using Universal Search as a Claude Skill
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# Claude Skill
+
+Universal Search can be used as a Claude Skill (SPEC-SKILL-001) — a slash command that Claude users can invoke directly in Claude for Desktop or claude.ai.
+
+## Setup
+
+<Callout type="info">
+  The Claude Skill integration requires SPEC-SKILL-001 to be merged. See that SPEC for the current status.
+</Callout>
+
+The skill is invoked as:
+
+```
+/usearch <query>
+```
+
+or with the deep research mode:
+
+```
+/usearch-deep <research-question>
+```
+
+## What It Does
+
+When you invoke `/usearch`:
+
+1. Your query is sent to the usearch MCP server
+2. The `search` MCP tool is called
+3. Results are returned as Markdown with citations
+4. Claude can use the citations for further reasoning
+
+## Configuration
+
+Add the usearch MCP server to Claude for Desktop (see [MCP Integration](/en/end-users/mcp-integration)), then the `/usearch` skill becomes available automatically.
+
+## Example
+
+```
+User: /usearch "latest news on AI search products"
+
+Claude: [using usearch search tool]
+
+Here's what I found:
+
+## AI Search Product Landscape (2026)
+
+...synthesized answer with citations...
+
+Sources:
+[1] TechCrunch: "Perplexity raises..."
+[2] The Verge: "OpenAI search..."
+```
+
+## Related
+
+- [MCP Integration](/en/end-users/mcp-integration) — MCP setup for Claude for Desktop
+- SPEC-SKILL-001: Claude Skill specification

@@ -1,0 +1,53 @@
+---
+title: 보안
+description: 보안 문서 플레이스홀더 — SPEC-SEC-001 포워드 레퍼런스
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# 보안
+
+<Callout type="warning">
+  **포워드 레퍼런스 — SPEC-SEC-001 미완료**
+
+  전체 보안 문서 (런북, OWASP ASVS 체크리스트, STRIDE 위협 모델)는 **SPEC-SEC-001** (PR #42, main 브랜치 머지 대기 중)에서 제공됩니다.
+
+  이 페이지는 플레이스홀더입니다. SPEC-SEC-001이 머지되면 확장됩니다.
+
+  진행 상황 추적: [SPEC-SEC-001 상태](https://github.com/elymas/universal-search/issues)
+</Callout>
+
+## SPEC-SEC-001이 제공하는 것
+
+SPEC-SEC-001이 머지되면 이 섹션에 다음이 포함됩니다:
+
+- **보안 런북** — 인시던트 대응 절차
+- **OWASP ASVS 체크리스트** — 애플리케이션 보안 검증 표준 증거
+- **STRIDE 위협 모델** — 모든 인터페이스(CLI, MCP, 웹 UI, REST API) 위협 분석
+- **책임 공개 정책** — 취약점 보고 프로세스
+
+## 현재 보안 상태 (V1)
+
+SPEC-SEC-001이 머지될 때까지 다음 기본 보안 관행을 적용하세요:
+
+### 인증
+- 모든 프로덕션 배포에 OAuth/OIDC 사용 — [인증 설정](/ko/operators/auth-setup) 참조
+- MCP 토큰 90일마다 교체
+- 프로덕션에서 기본/예제 자격 증명 절대 사용 금지
+
+### 네트워크
+- Qdrant(6333), Meilisearch(7700), PostgreSQL(5432) 포트를 공용 인터넷에 노출하지 마세요
+- 공용 엔드포인트에 TLS를 갖춘 리버스 프록시(Caddy, nginx) 사용
+- SearXNG를 내부 접근 전용으로 제한
+
+### 시크릿
+- 강력한 시크릿 생성: `openssl rand -hex 32`
+- 시크릿 관리 도구에 저장 (Vault, AWS SSM, Kubernetes Secrets)
+- `.env`를 버전 관리에 커밋하지 마세요
+
+## 취약점 보고
+
+Universal Search의 보안 취약점을 보고하려면 GitHub 저장소에서 **비공개** 보안 어드바이저리를 열어주세요 (Security 탭 → Report a vulnerability).
+
+보안 취약점을 공개 이슈로 보고하지 **마세요**.

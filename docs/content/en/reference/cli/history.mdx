@@ -1,0 +1,64 @@
+---
+title: usearch history
+description: View and manage query history
+generated: false
+lastUpdated: 2026-05-30
+---
+
+# usearch history
+
+View and manage the shared query history stored in Meilisearch.
+
+## Synopsis
+
+```
+usearch history <subcommand> [flags]
+```
+
+## Subcommands
+
+| Subcommand | Description |
+|---|---|
+| `list` | List recent queries |
+| `show <id>` | Show full result for a query |
+| `search <term>` | Full-text search across past queries |
+| `delete <id>` | Delete a query from history |
+| `clear` | Clear all history (requires confirmation) |
+
+## Examples
+
+```bash
+# List recent queries (default: last 20)
+usearch history list
+
+# List with more entries
+usearch history list --limit 50
+
+# Show a specific query result
+usearch history show --id q_abc123
+
+# Search past queries
+usearch history search "raft consensus"
+
+# Delete a query
+usearch history delete --id q_abc123
+
+# Clear all history
+usearch history clear
+# Prompts: "Are you sure? This cannot be undone. [y/N]"
+```
+
+## List Output
+
+```
+ID          QUERY                           DATE         SOURCES   CONFIDENCE
+q_abc123    what is Raft consensus?         2026-05-30   5         0.94
+q_def456    compare Kafka vs Pulsar         2026-05-29   8         0.87
+...
+```
+
+## Notes
+
+- History is stored in the shared Meilisearch index — accessible to all authenticated team members
+- `history search` runs full-text search across all past query texts and synthesized answers
+- History entries are also stored in Qdrant for semantic similarity search
