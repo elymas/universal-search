@@ -1,7 +1,7 @@
 ---
 id: SPEC-DEPLOY-001
-version: 0.2.0
-status: approved
+version: 1.0.0
+status: implemented
 created: 2026-05-22
 updated: 2026-05-31
 author: limbowl
@@ -20,6 +20,16 @@ related: [SPEC-DOC-001, SPEC-DOC-002]
 # SPEC-DEPLOY-001: Helm chart — k8s team-scale deploy for universal-search
 
 ## HISTORY
+
+- 2026-05-31 (v1.0.0, limbowl via manager-docs — sync phase, status approved → implemented):
+  DDD implementation complete on branch `feature/SPEC-DEPLOY-001` (commits `5309478`
+  plan gate, `554f800` impl). evaluator-active PASS: Func 90 / Sec 92 / Craft 88 /
+  Cons 91; 0 fix cycles. Quality gates: helm lint 0 failed, helm template 49 resources,
+  `go build/test` clean across 53 packages, D2 EnsureSchema *.down.sql exclusion
+  confirmed (latent data-loss bug fixed). Carry-forward: cosign/SBOM/SLSA/multi-arch
+  deferred → REL-001; <org>/ghcr registry unresolved → build-verify only; SEC-001
+  PR#42 unmerged → tier-3 ESO + NFR-DEPLOY-008 deferred to V1.1; D1/D3/D4
+  plan-auditor minors carried. CHANGELOG entry added; sync-report-DEPLOY-001.md written.
 
 - 2026-05-31 (amendment v0.2.0, limbowl via manager-spec — plan-auditor blocker
   + contradiction + topology + proportionality pass):
