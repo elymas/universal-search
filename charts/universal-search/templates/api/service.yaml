@@ -1,0 +1,20 @@
+{{/* SPEC-DEPLOY-001 — usearch-api Service (REQ-DEPLOY-009). */}}
+{{- if .Values.usearch.api.enabled }}
+{{- $c := "api" }}
+{{- $svc := .Values.usearch.api }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "usearch.componentName" (dict "root" . "component" $c) }}
+  labels:
+    {{- include "usearch.componentLabels" (dict "root" . "component" $c) | nindent 4 }}
+spec:
+  type: {{ $svc.service.type }}
+  selector:
+    {{- include "usearch.componentSelectorLabels" (dict "root" . "component" $c) | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ $svc.service.port }}
+      targetPort: http
+      protocol: TCP
+{{- end }}

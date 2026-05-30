@@ -1,0 +1,76 @@
+# SPEC-DEPLOY-001 — production reference overlay (D8, D9, D10).
+# HPA/PDB/NetworkPolicy enabled, tier-2 existingSecret, ServiceMonitor on,
+# Ingress on, multi-replica. Operators layer their own overlay on top:
+#   helm install usearch charts/universal-search \
+#     -f charts/universal-search/values.yaml \
+#     -f charts/universal-search/ci/values-prod.yaml \
+#     -f my-cluster-overlay.yaml
+
+secrets:
+  backend: existingSecret
+  existingSecret:
+    name: usearch-secrets   # operator creates this via kubectl create secret
+
+config:
+  OIDC_ISSUER_URL: "https://oidc.example.com"
+  OIDC_CLIENT_ID: "usearch"
+  OIDC_REDIRECT_URL: "https://search.example.com/auth/callback"
+
+observability:
+  otlp:
+    endpoint: "otel-collector.observability.svc.cluster.local:4317"
+  serviceMonitor:
+    enabled: true
+    fallback: annotations
+
+usearch:
+  api:
+    enabled: true
+    replicas: 2
+    hpa:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 70
+    pdb:
+      enabled: true
+      minAvailable: 1
+    networkPolicy:
+      enabled: true
+    ingress:
+      enabled: true
+      className: nginx
+      clusterIssuer: letsencrypt-prod
+      hosts:
+        - host: search.example.com
+          path: /
+      tls:
+        - secretName: usearch-api-tls
+          hosts:
+            - search.example.com
+  mcp:
+    enabled: true
+    replicas: 2
+    hpa:
+      enabled: true
+    pdb:
+      enabled: true
+    networkPolicy:
+      enabled: true
+
+embedder:
+  persistence:
+    enabled: true
+    size: 20Gi
+    # Operators should set a durable SSD-backed StorageClass (OQ5).
+    storageClass: ""
+
+postgresql:
+  enabled: true
+  primary:
+    persistence:
+      size: 20Gi
+redis:
+  enabled: true
+qdrant:
+  enabled: true

@@ -1,0 +1,56 @@
+# SPEC-DEPLOY-001 — production overlay (root convenience).
+# This is the canonical production reference and is identical in intent to
+# ci/values-prod.yaml. Operators layer their own cluster overlay on top:
+#   helm install usearch charts/universal-search \
+#     -f charts/universal-search/values.yaml \
+#     -f charts/universal-search/values-prod.yaml \
+#     -f my-cluster-overlay.yaml
+#
+# Key production toggles: tier-2 existingSecret, HPA + PDB + NetworkPolicy on,
+# Ingress + cert-manager on, multi-replica, OTLP wired. See README "Production".
+
+secrets:
+  backend: existingSecret
+  existingSecret:
+    name: usearch-secrets
+
+observability:
+  otlp:
+    endpoint: "otel-collector.observability.svc.cluster.local:4317"
+  serviceMonitor:
+    enabled: true
+    fallback: annotations
+
+usearch:
+  api:
+    enabled: true
+    replicas: 2
+    hpa:
+      enabled: true
+    pdb:
+      enabled: true
+    networkPolicy:
+      enabled: true
+    ingress:
+      enabled: true
+      hosts:
+        - host: search.example.com
+          path: /
+      tls:
+        - secretName: usearch-api-tls
+          hosts:
+            - search.example.com
+  mcp:
+    enabled: true
+    replicas: 2
+    hpa:
+      enabled: true
+    pdb:
+      enabled: true
+    networkPolicy:
+      enabled: true
+
+embedder:
+  persistence:
+    enabled: true
+    size: 20Gi

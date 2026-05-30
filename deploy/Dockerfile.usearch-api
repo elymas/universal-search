@@ -1,0 +1,49 @@
+# syntax=docker/dockerfile:1
+# usearch-api — REST/gRPC API server container (SPEC-DEPLOY-001 REQ-DEPLOY-002).
+#
+# Multi-stage: golang:1.25-alpine builder (go.mod toolchain go 1.25.8) ->
+# distroless static-debian12 runtime. CGO_ENABLED=0 produces a fully static
+# binary; the distroless `nonroot` variant runs as UID 65532 with no shell.
+#
+# V1: linux/amd64 only (arm64 multi-arch deferred to V1.1 per NFR-DEPLOY-007).
+# Build: docker buildx build --platform linux/amd64 \
+#          -f deploy/Dockerfile.usearch-api -t usearch-api:dev .
+
+FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS builder
+
+# git is needed for VCS stamping; build-base is intentionally omitted (CGO off).
+RUN apk add --no-cache git
+
+WORKDIR /src
+
+# Dependency layer — invalidated only when go.mod/go.sum change.
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
+
+# Source layer.
+COPY . .
+
+# Static amd64 build. -trimpath + -ldflags "-s -w" strip debug info for a
+# smaller image. Target arch is fixed to amd64 for V1.
+ARG TARGETOS=linux
+ARG TARGETARCH=amd64
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
+    go build -trimpath -ldflags="-s -w" -o /out/usearch-api ./cmd/usearch-api
+
+# ── Runtime ──────────────────────────────────────────────────────────────────
+FROM gcr.io/distroless/static-debian12:nonroot
+
+# distroless static carries CA certs at /etc/ssl/certs (needed for outbound TLS
+# to OIDC issuer / LLM providers).
+COPY --from=builder /out/usearch-api /usr/local/bin/usearch-api
+
+# Non-root (distroless nonroot = UID 65532).
+USER 65532:65532
+
+# API HTTP port (matches values.yaml usearch.api.service.port default).
+EXPOSE 8080
+
+ENTRYPOINT ["/usr/local/bin/usearch-api"]

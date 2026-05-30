@@ -1,0 +1,21 @@
+# SPEC-DEPLOY-001 — dev overlay (root convenience).
+# Full-stack dev install on a local cluster (e.g. kind/minikube) with tier-1
+# secrets and ServiceMonitor fallback to pod annotations.
+# Usage: helm install usearch charts/universal-search -f charts/universal-search/values-dev.yaml
+#
+# For the CI smoke MINIMAL profile (api+pg+redis only) use ci/values-test.yaml.
+secrets:
+  backend: values
+
+observability:
+  serviceMonitor:
+    enabled: true
+    fallback: annotations
+
+usearch:
+  api:
+    enabled: true
+    replicas: 1
+  mcp:
+    enabled: true
+    replicas: 1

@@ -1,0 +1,81 @@
+{{/* SPEC-DEPLOY-001 — usearch-api Deployment (REQ-DEPLOY-009). */}}
+{{- if .Values.usearch.api.enabled }}
+{{- $c := "api" }}
+{{- $svc := .Values.usearch.api }}
+{{- include "usearch.assertSecretBackend" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "usearch.componentName" (dict "root" . "component" $c) }}
+  labels:
+    {{- include "usearch.componentLabels" (dict "root" . "component" $c) | nindent 4 }}
+spec:
+  replicas: {{ $svc.replicas }}
+  selector:
+    matchLabels:
+      {{- include "usearch.componentSelectorLabels" (dict "root" . "component" $c) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "usearch.componentSelectorLabels" (dict "root" . "component" $c) | nindent 8 }}
+        {{- with $svc.podLabels }}{{ toYaml . | nindent 8 }}{{- end }}
+      annotations:
+        {{- include "usearch.scrapeAnnotations" (dict "root" . "port" $svc.service.port "path" "/metrics") | nindent 8 }}
+        {{- with $svc.podAnnotations }}{{ toYaml . | nindent 8 }}{{- end }}
+    spec:
+      serviceAccountName: {{ include "usearch.serviceAccountName" (dict "root" . "component" $c "svc" $svc) }}
+      {{- include "usearch.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: {{ $c }}
+          image: {{ include "usearch.image" (dict "root" . "image" $svc.image) }}
+          imagePullPolicy: {{ $svc.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ $svc.service.port }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "usearch.fullname" . }}-config
+          env:
+            # Admin server hosts /healthz + /metrics on the same port.
+            - name: USEARCH_ADMIN_PORT
+              value: {{ $svc.service.port | quote }}
+            {{- range $k := list "MEILI_MASTER_KEY" "POSTGRES_PASSWORD" "LITELLM_MASTER_KEY" "OPENAI_API_KEY" "ANTHROPIC_API_KEY" "OIDC_CLIENT_SECRET" "JWT_SIGNING_KEY" "SESSION_SECRET" }}
+            - name: {{ $k }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "usearch.secretName" $ }}
+                  key: {{ $k }}
+            {{- end }}
+            {{- with $svc.extraEnv }}{{ toYaml . | nindent 12 }}{{- end }}
+          livenessProbe:
+            httpGet:
+              path: {{ $svc.probes.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ $svc.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ $svc.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ $svc.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ $svc.probes.liveness.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ $svc.probes.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ $svc.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ $svc.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ $svc.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ $svc.probes.readiness.failureThreshold }}
+          {{- with $svc.resources }}
+          resources: {{ toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
+          {{- with $svc.extraVolumeMounts }}
+          volumeMounts: {{ toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with $svc.extraVolumes }}
+      volumes: {{ toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

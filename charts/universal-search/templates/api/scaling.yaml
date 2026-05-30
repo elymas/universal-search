@@ -1,0 +1,39 @@
+{{/* SPEC-DEPLOY-001 — usearch-api HPA + PDB (REQ-DEPLOY-009, D9). */}}
+{{- $c := "api" }}
+{{- $svc := .Values.usearch.api }}
+{{- if and $svc.enabled $svc.hpa.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "usearch.componentName" (dict "root" . "component" $c) }}
+  labels:
+    {{- include "usearch.componentLabels" (dict "root" . "component" $c) | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "usearch.componentName" (dict "root" . "component" $c) }}
+  minReplicas: {{ $svc.hpa.minReplicas }}
+  maxReplicas: {{ $svc.hpa.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ $svc.hpa.targetCPUUtilizationPercentage }}
+{{- end }}
+{{- if and $svc.enabled $svc.pdb.enabled }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "usearch.componentName" (dict "root" . "component" $c) }}
+  labels:
+    {{- include "usearch.componentLabels" (dict "root" . "component" $c) | nindent 4 }}
+spec:
+  minAvailable: {{ $svc.pdb.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "usearch.componentSelectorLabels" (dict "root" . "component" $c) | nindent 6 }}
+{{- end }}

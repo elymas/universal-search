@@ -1,0 +1,50 @@
+# SPEC-DEPLOY-001 — CI smoke-test minimal profile (REQ-DEPLOY-020, D8, R7).
+# api + postgres + redis only; everything else disabled to fit hosted-runner /
+# kind resource limits. Used by chart-ci.yml kind smoke install.
+secrets:
+  backend: values
+
+usearch:
+  api:
+    enabled: true
+    replicas: 1
+  mcp:
+    enabled: false
+
+migrate:
+  enabled: true
+
+# Subcharts: pg + redis on; qdrant off.
+postgresql:
+  enabled: true
+redis:
+  enabled: true
+qdrant:
+  enabled: false
+  external:
+    host: qdrant.disabled.local
+
+# In-chart custom services off.
+meilisearch:
+  enabled: false
+searxng:
+  enabled: false
+litellm:
+  enabled: false
+
+# Python sidecars off.
+researcher:
+  enabled: false
+embedder:
+  enabled: false
+tokenizer-ko:
+  enabled: false
+storm:
+  enabled: false
+koreanews:
+  enabled: false
+
+observability:
+  serviceMonitor:
+    enabled: true
+    fallback: annotations

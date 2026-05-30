@@ -1,0 +1,14 @@
+# SPEC-DEPLOY-001 — GPU overlay (REQ-DEPLOY-012). Maps the dev-compose
+# docker-compose.gpu.yml nvidia reservation to k8s. Layer on top of values-prod.
+embedder:
+  gpu:
+    enabled: true
+    nodeSelector:
+      nvidia.com/gpu.present: "true"
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+  env:
+    EMBEDDER_DEVICE: cuda
+    EMBEDDER_USE_FP16: "true"

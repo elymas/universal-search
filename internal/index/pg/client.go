@@ -84,28 +84,57 @@ func NewClient(ctx context.Context, cfg Config) (*Client, error) {
 	return &Client{pool: pool, cfg: cfg}, nil
 }
 
-// EnsureSchema applies migration files from MigrationsDir idempotently.
-// Re-running against an existing schema is a no-op. Structural drift (missing
-// expected columns) returns ErrSchemaBootstrapFailed.
-func (c *Client) EnsureSchema(ctx context.Context) error {
-	// Read migration files in lexicographic order.
-	entries, err := os.ReadDir(c.cfg.MigrationsDir)
+// selectMigrationFiles returns the forward-apply migration file names from dir
+// in lexicographic order, excluding directories, non-.sql files, and *.down.sql
+// down-migrations.
+//
+// @MX:ANCHOR: [AUTO] Forward apply must never exec down-migrations.
+// @MX:REASON: SPEC-DEPLOY-001 D2 — EnsureSchema (and the Helm pre-install/
+// pre-upgrade migrate Job that reuses it) exec every *.sql lexicographically;
+// e.g. 0002_deep_runs.down.sql (DROP TABLE) sorts before its .up.sql and would
+// drop a populated table on re-run/upgrade. The exclusion lives here so every
+// consumer of EnsureSchema is protected, not just the migrate image.
+// @MX:SPEC: SPEC-DEPLOY-001 REQ-DEPLOY-006
+func selectMigrationFiles(dir string) ([]string, error) {
+	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return fmt.Errorf("pg: read migrations dir %q: %w", c.cfg.MigrationsDir, err)
+		return nil, fmt.Errorf("pg: read migrations dir %q: %w", dir, err)
 	}
-
+	// os.ReadDir already returns entries sorted by filename (lexicographic),
+	// which is the ordering EnsureSchema relies on.
+	files := make([]string, 0, len(entries))
 	for _, entry := range entries {
-		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".sql") {
+		name := entry.Name()
+		if entry.IsDir() || !strings.HasSuffix(name, ".sql") {
 			continue
 		}
-		path := filepath.Join(c.cfg.MigrationsDir, entry.Name())
+		if strings.HasSuffix(name, ".down.sql") {
+			continue
+		}
+		files = append(files, name)
+	}
+	return files, nil
+}
+
+// EnsureSchema applies migration files from MigrationsDir idempotently.
+// Re-running against an existing schema is a no-op. Structural drift (missing
+// expected columns) returns ErrSchemaBootstrapFailed. Down-migrations
+// (*.down.sql) are never applied on forward apply (SPEC-DEPLOY-001 D2).
+func (c *Client) EnsureSchema(ctx context.Context) error {
+	files, err := selectMigrationFiles(c.cfg.MigrationsDir)
+	if err != nil {
+		return err
+	}
+
+	for _, name := range files {
+		path := filepath.Join(c.cfg.MigrationsDir, name)
 		sql, readErr := os.ReadFile(path)
 		if readErr != nil {
-			return fmt.Errorf("pg: read migration %q: %w", entry.Name(), readErr)
+			return fmt.Errorf("pg: read migration %q: %w", name, readErr)
 		}
 
 		if _, execErr := c.pool.Exec(ctx, string(sql)); execErr != nil {
-			return fmt.Errorf("pg: exec migration %q: %w", entry.Name(), execErr)
+			return fmt.Errorf("pg: exec migration %q: %w", name, execErr)
 		}
 	}
 

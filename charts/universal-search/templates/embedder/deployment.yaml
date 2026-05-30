@@ -1,0 +1,98 @@
+{{/* SPEC-DEPLOY-001 — embedder Python sidecar (REQ-DEPLOY-011/012/013, NFR-007).
+PVC-backed HF model cache; GPU state-driven; startupProbe protects model load
+(≥120s); amd64-only nodeAffinity (PyTorch+CUDA). */}}
+{{- if .Values.embedder.enabled }}
+{{- $c := "embedder" }}
+{{- $svc := .Values.embedder }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "usearch.componentName" (dict "root" . "component" $c) }}
+  labels:
+    {{- include "usearch.componentLabels" (dict "root" . "component" $c) | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "usearch.componentSelectorLabels" (dict "root" . "component" $c) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "usearch.componentSelectorLabels" (dict "root" . "component" $c) | nindent 8 }}
+      annotations:
+        {{- include "usearch.scrapeAnnotations" (dict "root" . "port" $svc.service.port "path" "/metrics") | nindent 8 }}
+    spec:
+      {{- include "usearch.imagePullSecrets" . | nindent 6 }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              # embedder is amd64-only (PyTorch+CUDA); never schedule on arm64.
+              - matchExpressions:
+                  - key: kubernetes.io/arch
+                    operator: In
+                    values: ["amd64"]
+      {{- if $svc.gpu.enabled }}
+      {{- with $svc.gpu.nodeSelector }}
+      nodeSelector: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $svc.gpu.tolerations }}
+      tolerations: {{ toYaml . | nindent 8 }}
+      {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ $c }}
+          image: {{ include "usearch.image" (dict "root" . "image" $svc.image) }}
+          imagePullPolicy: {{ $svc.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ $svc.service.port }}
+          env:
+            - name: EMBEDDER_PORT
+              value: {{ $svc.service.port | quote }}
+            {{- range $k, $v := $svc.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+          startupProbe:
+            httpGet:
+              path: {{ $svc.startupProbe.path }}
+              port: http
+            failureThreshold: {{ $svc.startupProbe.failureThreshold }}
+            periodSeconds: {{ $svc.startupProbe.periodSeconds }}
+          livenessProbe:
+            httpGet:
+              path: {{ $svc.startupProbe.path }}
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 12
+          readinessProbe:
+            httpGet:
+              path: {{ $svc.startupProbe.path }}
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          {{- if $svc.gpu.enabled }}
+          resources:
+            limits:
+              nvidia.com/gpu: 1
+            {{- with $svc.resources }}{{ toYaml . | nindent 12 }}{{- end }}
+          {{- else }}
+          {{- with $svc.resources }}
+          resources: {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- end }}
+          volumeMounts:
+            - name: model-cache
+              mountPath: {{ $svc.persistence.mountPath }}
+      volumes:
+        - name: model-cache
+          {{- if $svc.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "usearch.componentName" (dict "root" . "component" $c) }}-models
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+{{- end }}

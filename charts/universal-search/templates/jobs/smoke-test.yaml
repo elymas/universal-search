@@ -1,0 +1,30 @@
+{{/* SPEC-DEPLOY-001 — helm test smoke Job (REQ-DEPLOY-022, S5).
+Curls /healthz + /metrics on the api Service. Discoverable via `helm test`. */}}
+{{- if .Values.usearch.api.enabled }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "usearch.fullname" . }}-smoke-test
+  labels:
+    {{- include "usearch.componentLabels" (dict "root" . "component" "smoke-test") | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  {{- include "usearch.imagePullSecrets" . | nindent 2 }}
+  containers:
+    - name: smoke
+      image: curlimages/curl:8.11.1
+      command:
+        - sh
+        - -c
+        - |
+          set -e
+          API="http://{{ include "usearch.componentName" (dict "root" . "component" "api") }}:{{ .Values.usearch.api.service.port }}"
+          echo "GET ${API}/healthz"
+          curl -fsS "${API}/healthz"
+          echo "GET ${API}/metrics"
+          curl -fsS "${API}/metrics" >/dev/null
+          echo "smoke-test OK"
+{{- end }}

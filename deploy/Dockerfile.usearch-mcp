@@ -1,0 +1,42 @@
+# syntax=docker/dockerfile:1
+# usearch-mcp — MCP server container (SPEC-DEPLOY-001 REQ-DEPLOY-003).
+#
+# Identical pattern to Dockerfile.usearch-api: golang:1.25-alpine builder ->
+# distroless static-debian12 nonroot. CGO_ENABLED=0, linux/amd64 only (V1).
+# EXPOSE matches the MCP HTTP transport port (default 8081, configurable via
+# values mcp.service.port). OQ2: 8081 is the assumed default until SPEC-MCP-001
+# fixes the port contract.
+#
+# Build: docker buildx build --platform linux/amd64 \
+#          -f deploy/Dockerfile.usearch-mcp -t usearch-mcp:dev .
+
+FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS builder
+
+RUN apk add --no-cache git
+
+WORKDIR /src
+
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
+
+COPY . .
+
+ARG TARGETOS=linux
+ARG TARGETARCH=amd64
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
+    go build -trimpath -ldflags="-s -w" -o /out/usearch-mcp ./cmd/usearch-mcp
+
+# ── Runtime ──────────────────────────────────────────────────────────────────
+FROM gcr.io/distroless/static-debian12:nonroot
+
+COPY --from=builder /out/usearch-mcp /usr/local/bin/usearch-mcp
+
+USER 65532:65532
+
+# MCP HTTP transport port (matches values.yaml usearch.mcp.service.port default).
+EXPOSE 8081
+
+ENTRYPOINT ["/usr/local/bin/usearch-mcp"]

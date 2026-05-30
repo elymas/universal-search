@@ -1,0 +1,22 @@
+# SPEC-DEPLOY-001 — build context exclusions for the Go image builds.
+# Keep the context small; the Go images only need go source + go.mod/sum and
+# (for migrate) deploy/postgres/migrations.
+
+.git
+.github
+.moai
+.claude
+docs
+web
+node_modules
+*.md
+**/*_test.go
+**/testdata
+.env
+.env.*
+!.env.example
+charts
+services/*/.venv
+**/__pycache__
+**/*.pyc
+.DS_Store

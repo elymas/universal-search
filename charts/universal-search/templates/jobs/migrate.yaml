@@ -1,0 +1,72 @@
+{{/* SPEC-DEPLOY-001 — schema migration Job (REQ-DEPLOY-006, D4).
+Helm pre-install,pre-upgrade hook (weight -5) so the schema exists BEFORE any
+application Deployment starts. Runs the existing EnsureSchema runner via the
+usearch-migrate image (NOT golang-migrate). Idempotent: re-run = no-op + drift
+check. *.down.sql excluded at the runner level (D2). */}}
+{{- if .Values.migrate.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "usearch.fullname" . }}-migrate
+  labels:
+    {{- include "usearch.componentLabels" (dict "root" . "component" "migrate") | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: {{ .Values.migrate.backoffLimit }}
+  # activeDeadlineSeconds caps total runtime (D3: assert completion within budget).
+  activeDeadlineSeconds: 300
+  template:
+    metadata:
+      labels:
+        {{- include "usearch.componentSelectorLabels" (dict "root" . "component" "migrate") | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      {{- include "usearch.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: migrate
+          image: {{ include "usearch.image" (dict "root" . "image" .Values.migrate.image) }}
+          imagePullPolicy: {{ .Values.migrate.image.pullPolicy }}
+          env:
+            - name: MIGRATE_TIMEOUT
+              value: {{ .Values.migrate.timeout | quote }}
+            # DATABASE_URL assembled from config (host/port/db) + secret (password).
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "usearch.secretName" . }}
+                  key: POSTGRES_PASSWORD
+            - name: DATABASE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "usearch.fullname" . }}-config
+                  key: DATABASE_HOST
+            - name: DATABASE_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "usearch.fullname" . }}-config
+                  key: DATABASE_PORT
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "usearch.fullname" . }}-config
+                  key: POSTGRES_USER
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "usearch.fullname" . }}-config
+                  key: POSTGRES_DB
+            - name: DATABASE_URL
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(DATABASE_HOST):$(DATABASE_PORT)/$(POSTGRES_DB)"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
+          {{- with .Values.migrate.resources }}
+          resources: {{ toYaml . | nindent 12 }}
+          {{- end }}
+{{- end }}

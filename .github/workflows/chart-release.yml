@@ -1,0 +1,49 @@
+# SPEC-DEPLOY-001 REQ-DEPLOY-017 — chart package-verify on tag.
+# V1 = `helm package` + verify only. OCI PUSH to oci://ghcr.io/<org>/charts/ and
+# cosign sign-blob are DEFERRED to fast-follow (blocked on the unresolved
+# ghcr.io/<org> placeholder; chart signing owned by SPEC-REL-001's release flow).
+name: chart-release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: helm package (verify only)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.16.3
+
+      - name: Helm dependency build
+        run: helm dependency build charts/universal-search
+
+      - name: Helm package
+        run: |
+          mkdir -p dist
+          helm package charts/universal-search --destination dist
+          ls -l dist
+
+      - name: Verify packaged chart
+        run: |
+          PKG=$(ls dist/universal-search-*.tgz)
+          helm lint "$PKG"
+          helm show chart "$PKG"
+          # DEFERRED (fast-follow, blocked on ghcr.io/<org>):
+          #   helm push "$PKG" oci://ghcr.io/<org>/charts
+          #   cosign sign-blob ...
+          echo "Package verified: $PKG (push + cosign deferred — see REQ-DEPLOY-017)"
+
+      - name: Upload chart artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: helm-chart
+          path: dist/*.tgz

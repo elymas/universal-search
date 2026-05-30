@@ -1,0 +1,50 @@
+# syntax=docker/dockerfile:1
+# usearch-migrate — schema migration runner (SPEC-DEPLOY-001 REQ-DEPLOY-003 / D4).
+#
+# Runs the EXISTING custom Go runner (internal/index/pg.EnsureSchema) via the
+# cmd/usearch-migrate entrypoint — NOT golang-migrate. The migration *.sql files
+# are COPY-ed into /migrations so the runner reads them at run time.
+#
+# D2: the runner already excludes *.down.sql on forward apply (fixed at source in
+# EnsureSchema), so 0002_deep_runs.down.sql is never executed by this image. We
+# COPY the full directory verbatim (no per-file filtering) and rely on that
+# source-level exclusion — keeping the image a byte-faithful copy of the repo
+# migrations and the exclusion logic in one place.
+#
+# V1: linux/amd64 only. Used as a Helm pre-install,pre-upgrade hook Job.
+# Build: docker buildx build --platform linux/amd64 \
+#          -f deploy/Dockerfile.usearch-migrate -t usearch-migrate:dev .
+
+FROM --platform=$BUILDPLATFORM golang:1.25-alpine AS builder
+
+RUN apk add --no-cache git
+
+WORKDIR /src
+
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
+
+COPY . .
+
+ARG TARGETOS=linux
+ARG TARGETARCH=amd64
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
+    go build -trimpath -ldflags="-s -w" -o /out/usearch-migrate ./cmd/usearch-migrate
+
+# ── Runtime ──────────────────────────────────────────────────────────────────
+FROM gcr.io/distroless/static-debian12:nonroot
+
+COPY --from=builder /out/usearch-migrate /usr/local/bin/usearch-migrate
+
+# Migration SQL files. The runner reads MIGRATIONS_DIR (default /migrations).
+# Copied to a world-readable location so the nonroot user can read them.
+COPY --from=builder /src/deploy/postgres/migrations /migrations
+
+USER 65532:65532
+
+ENV MIGRATIONS_DIR=/migrations
+
+ENTRYPOINT ["/usr/local/bin/usearch-migrate"]

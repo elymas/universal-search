@@ -1,0 +1,80 @@
+{{/* SPEC-DEPLOY-001 — in-chart LiteLLM proxy (REQ-DEPLOY-015). Image tag pinned
+to the exact compose tag. config.yaml is supplied by the operator as a ConfigMap
+referenced by litellm.configMapName, or defaults to a minimal inline config. */}}
+{{- if .Values.litellm.enabled }}
+{{- $c := "litellm" }}
+{{- $svc := .Values.litellm }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "usearch.componentName" (dict "root" . "component" $c) }}
+  labels:
+    {{- include "usearch.componentLabels" (dict "root" . "component" $c) | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "usearch.componentSelectorLabels" (dict "root" . "component" $c) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "usearch.componentSelectorLabels" (dict "root" . "component" $c) | nindent 8 }}
+    spec:
+      {{- include "usearch.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: {{ $c }}
+          image: {{ include "usearch.image" (dict "root" . "image" $svc.image) }}
+          imagePullPolicy: {{ $svc.image.pullPolicy }}
+          args: ["--config", "/app/config.yaml", "--port", "{{ $svc.service.port }}"]
+          ports:
+            - name: http
+              containerPort: {{ $svc.service.port }}
+          env:
+            - name: LITELLM_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "usearch.secretName" . }}
+                  key: LITELLM_MASTER_KEY
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "usearch.secretName" . }}
+                  key: OPENAI_API_KEY
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "usearch.secretName" . }}
+                  key: ANTHROPIC_API_KEY
+            - name: LITELLM_BUDGET_USD
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "usearch.fullname" . }}-config
+                  key: LITELLM_BUDGET_USD
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          {{- with $svc.resources }}
+          resources: {{ toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /app/config.yaml
+              subPath: config.yaml
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: {{ $svc.configMapName | default (printf "%s-litellm-config" (include "usearch.fullname" .)) }}
+{{- end }}

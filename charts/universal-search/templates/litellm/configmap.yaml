@@ -1,0 +1,24 @@
+{{/* SPEC-DEPLOY-001 — default LiteLLM config ConfigMap. Rendered only when the
+operator does NOT supply their own via litellm.configMapName. This is a minimal
+placeholder — production operators should create a ConfigMap from
+deploy/litellm/config.yaml (88-line model_list) and set litellm.configMapName to
+avoid byte-drift between compose and chart. */}}
+{{- if and .Values.litellm.enabled (not .Values.litellm.configMapName) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "usearch.fullname" . }}-litellm-config
+  labels:
+    {{- include "usearch.componentLabels" (dict "root" . "component" "litellm") | nindent 4 }}
+data:
+  config.yaml: |
+    # Minimal default. Override by creating a ConfigMap from
+    # deploy/litellm/config.yaml and setting litellm.configMapName.
+    model_list:
+      - model_name: claude-haiku-4-5
+        litellm_params:
+          model: anthropic/claude-haiku-4-5
+          api_key: os.environ/ANTHROPIC_API_KEY
+    litellm_settings:
+      drop_params: true
+{{- end }}

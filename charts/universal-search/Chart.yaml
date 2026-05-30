@@ -1,0 +1,51 @@
+apiVersion: v2
+name: universal-search
+description: >-
+  Helm chart for universal-search — team-scale Kubernetes deployment of the
+  10-service hybrid search stack (Qdrant, Meilisearch, PostgreSQL, Redis,
+  SearXNG, LiteLLM, Prometheus, plus Python sidecars) and the two Go binaries
+  (usearch-api, usearch-mcp). SPEC-DEPLOY-001.
+type: application
+
+# Chart version is independent from the application binary version (appVersion).
+# REQ-DEPLOY-001.
+version: 0.1.0
+appVersion: "0.1.0"
+
+# V1 baseline: Kubernetes >= 1.27 (kubeconform is run against 1.28..1.31 in CI).
+# REQ-DEPLOY-001.
+kubeVersion: ">=1.27.0-0"
+
+home: https://github.com/elymas/universal-search
+sources:
+  - https://github.com/elymas/universal-search
+
+keywords:
+  - search
+  - rag
+  - vector-database
+  - kubernetes
+
+maintainers:
+  - name: limbowl
+
+# Subchart dependencies — pinned to EXACT patch versions (NFR-DEPLOY-005, no ^ or
+# ~ ranges). Each is gated by `<name>.enabled` so operators can opt out and point
+# at an external managed service via `<name>.external.*` (REQ-DEPLOY-014, D3).
+#
+# NOTE: repository URLs and exact pins must be resolved at `helm dependency build`
+# time. The Bitnami catalog versions below are representative pins; the quarterly
+# audit (NFR-DEPLOY-005) records bumps in CHANGELOG.md.
+dependencies:
+  - name: postgresql
+    version: 16.4.5
+    repository: oci://registry-1.docker.io/bitnamicharts
+    condition: postgresql.enabled
+  - name: redis
+    version: 20.6.1
+    repository: oci://registry-1.docker.io/bitnamicharts
+    condition: redis.enabled
+  - name: qdrant
+    version: 1.13.1
+    repository: https://qdrant.github.io/qdrant-helm
+    condition: qdrant.enabled

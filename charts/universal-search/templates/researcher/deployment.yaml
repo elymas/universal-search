@@ -1,0 +1,66 @@
+{{/* SPEC-DEPLOY-001 — researcher Python sidecar (REQ-DEPLOY-011). */}}
+{{- if .Values.researcher.enabled }}
+{{- $c := "researcher" }}
+{{- $svc := .Values.researcher }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "usearch.componentName" (dict "root" . "component" $c) }}
+  labels:
+    {{- include "usearch.componentLabels" (dict "root" . "component" $c) | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "usearch.componentSelectorLabels" (dict "root" . "component" $c) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "usearch.componentSelectorLabels" (dict "root" . "component" $c) | nindent 8 }}
+      annotations:
+        {{- include "usearch.scrapeAnnotations" (dict "root" . "port" $svc.service.port "path" "/metrics") | nindent 8 }}
+    spec:
+      {{- include "usearch.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: {{ $c }}
+          image: {{ include "usearch.image" (dict "root" . "image" $svc.image) }}
+          imagePullPolicy: {{ $svc.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ $svc.service.port }}
+          env:
+            - name: RESEARCHER_PORT
+              value: {{ $svc.service.port | quote }}
+            - name: LITELLM_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "usearch.fullname" . }}-config
+                  key: LITELLM_BASE_URL
+            - name: LITELLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "usearch.secretName" . }}
+                  key: LITELLM_MASTER_KEY
+            {{- range $k, $v := $svc.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          {{- with $svc.resources }}
+          resources: {{ toYaml . | nindent 12 }}
+          {{- end }}
+{{- end }}

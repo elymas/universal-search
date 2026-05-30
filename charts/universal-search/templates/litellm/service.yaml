@@ -1,0 +1,19 @@
+{{/* SPEC-DEPLOY-001 — LiteLLM Service (REQ-DEPLOY-015). */}}
+{{- if .Values.litellm.enabled }}
+{{- $c := "litellm" }}
+{{- $svc := .Values.litellm }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "usearch.componentName" (dict "root" . "component" $c) }}
+  labels:
+    {{- include "usearch.componentLabels" (dict "root" . "component" $c) | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "usearch.componentSelectorLabels" (dict "root" . "component" $c) | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ $svc.service.port }}
+      targetPort: http
+{{- end }}

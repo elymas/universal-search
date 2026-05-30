@@ -1,0 +1,54 @@
+universal-search has been deployed as release "{{ .Release.Name }}" in namespace "{{ .Release.Namespace }}".
+
+Chart version: {{ .Chart.Version }} | App version: {{ .Chart.AppVersion }}
+
+{{- if eq .Values.secrets.backend "values" }}
+
+⚠  SECRET BACKEND = "values" (DEV/CI ONLY)
+   Plaintext secrets were rendered into a chart-managed Secret. DO NOT use this
+   backend in production. Switch to secrets.backend=existingSecret and create the
+   Secret yourself:
+     kubectl create secret generic <name> \
+       --from-literal=POSTGRES_PASSWORD=... --from-literal=MEILI_MASTER_KEY=... \
+       --from-literal=LITELLM_MASTER_KEY=... --from-literal=SEARXNG_SECRET=... \
+       --from-literal=OIDC_CLIENT_SECRET=... --from-literal=JWT_SIGNING_KEY=... \
+       --from-literal=SESSION_SECRET=...
+   then set secrets.existingSecret.name=<name>.
+{{- end }}
+
+1. Access the API (default ClusterIP — use port-forward):
+
+   kubectl --namespace {{ .Release.Namespace }} port-forward \
+     svc/{{ include "usearch.componentName" (dict "root" . "component" "api") }} \
+     {{ .Values.usearch.api.service.port }}:{{ .Values.usearch.api.service.port }}
+
+   Then: curl http://localhost:{{ .Values.usearch.api.service.port }}/healthz
+
+2. Schema migration ran as a pre-install/pre-upgrade hook Job
+   ({{ include "usearch.fullname" . }}-migrate) BEFORE the app pods started.
+   It is idempotent (re-run = no-op + drift check) and never applies *.down.sql.
+
+3. Run the smoke test:
+   helm test {{ .Release.Name }} --namespace {{ .Release.Namespace }}
+
+{{- if .Values.searxng.enabled }}
+
+LICENSE NOTICE — SearXNG is licensed AGPL-3.0. This chart deploys it as a
+separate container (service boundary), not linked into the application. If you
+expose or modify it, review your AGPL obligations. See the chart README.
+{{- end }}
+
+{{- if .Values.observability.serviceMonitor.enabled }}
+
+OBSERVABILITY — ServiceMonitors are emitted only when the Prometheus Operator
+CRD (monitoring.coreos.com/v1) is present. Without it, the chart falls back to
+prometheus.io/scrape pod annotations (no operator required).
+{{- end }}
+
+{{- if .Values.usearch.api.networkPolicy.enabled }}
+
+NETWORK POLICY — NetworkPolicy resources were created but are a NO-OP unless your
+cluster runs a CNI policy controller (Calico, Cilium, etc.).
+{{- end }}
+
+Docs: https://github.com/elymas/universal-search — operators/deployment-helm (DOC-001).

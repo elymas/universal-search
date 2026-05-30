@@ -1,0 +1,24 @@
+{{/* SPEC-DEPLOY-001 — usearch-mcp ServiceMonitor (REQ-DEPLOY-019, D6).
+Operator-optional: emitted only when the CRD is present; pod-annotation fallback
+otherwise. */}}
+{{- $c := "mcp" }}
+{{- $svc := .Values.usearch.mcp }}
+{{- if and $svc.enabled .Values.observability.serviceMonitor.enabled }}
+{{- if .Capabilities.APIVersions.Has "monitoring.coreos.com/v1" }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "usearch.componentName" (dict "root" . "component" $c) }}
+  labels:
+    {{- include "usearch.componentLabels" (dict "root" . "component" $c) | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "usearch.componentSelectorLabels" (dict "root" . "component" $c) | nindent 6 }}
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: {{ .Values.observability.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.observability.serviceMonitor.scrapeTimeout }}
+{{- end }}
+{{- end }}

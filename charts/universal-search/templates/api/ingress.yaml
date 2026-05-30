@@ -1,0 +1,35 @@
+{{/* SPEC-DEPLOY-001 — usearch-api Ingress (REQ-DEPLOY-021, D10).
+Default off; cert-manager + ingress-nginx assumed pre-installed (README). */}}
+{{- $c := "api" }}
+{{- $svc := .Values.usearch.api }}
+{{- if and $svc.enabled $svc.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "usearch.componentName" (dict "root" . "component" $c) }}
+  labels:
+    {{- include "usearch.componentLabels" (dict "root" . "component" $c) | nindent 4 }}
+  annotations:
+    cert-manager.io/cluster-issuer: {{ $svc.ingress.clusterIssuer | quote }}
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "Strict-Transport-Security: max-age=31536000; includeSubDomains";
+spec:
+  ingressClassName: {{ $svc.ingress.className }}
+  {{- with $svc.ingress.tls }}
+  tls:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  rules:
+    {{- range $svc.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          - path: {{ .path | default "/" }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "usearch.componentName" (dict "root" $ "component" $c) }}
+                port:
+                  number: {{ $svc.service.port }}
+    {{- end }}
+{{- end }}

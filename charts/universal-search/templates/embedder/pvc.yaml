@@ -1,0 +1,22 @@
+{{/* SPEC-DEPLOY-001 — embedder HuggingFace model cache PVC (REQ-DEPLOY-011).
+Compose embedder_models named-volume equivalent. */}}
+{{- if and .Values.embedder.enabled .Values.embedder.persistence.enabled }}
+{{- $c := "embedder" }}
+{{- $svc := .Values.embedder }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "usearch.componentName" (dict "root" . "component" $c) }}-models
+  labels:
+    {{- include "usearch.componentLabels" (dict "root" . "component" $c) | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ $svc.persistence.size }}
+  {{- $sc := $svc.persistence.storageClass | default .Values.global.storageClass }}
+  {{- if $sc }}
+  storageClassName: {{ $sc | quote }}
+  {{- end }}
+{{- end }}

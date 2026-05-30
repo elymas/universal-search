@@ -1,0 +1,41 @@
+{{/*
+SPEC-DEPLOY-001 — release-level ConfigMap for non-secret env (REQ-DEPLOY-007).
+Mirrors the non-secret env from .env.example / docker-compose.yml. Per-service
+endpoints (intra-cluster service DNS) and OTLP wiring are injected here so every
+Deployment can envFrom this ConfigMap.
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "usearch.fullname" . }}-config
+  labels:
+    {{- include "usearch.labels" . | nindent 4 }}
+data:
+  {{- /* Operator-overridable non-secret config. */}}
+  {{- range $k, $v := .Values.config }}
+  {{ $k }}: {{ $v | quote }}
+  {{- end }}
+  {{- /* Intra-cluster service endpoints (derived, not user-set). */}}
+  LITELLM_BASE_URL: "http://{{ include "usearch.fullname" . }}-litellm:{{ .Values.litellm.service.port }}"
+  RESEARCHER_BASE_URL: "http://{{ include "usearch.fullname" . }}-researcher:{{ index .Values "researcher" "service" "port" }}"
+  EMBEDDER_BASE_URL: "http://{{ include "usearch.fullname" . }}-embedder:{{ .Values.embedder.service.port }}"
+  TOKENIZER_KO_BASE_URL: "http://{{ include "usearch.fullname" . }}-tokenizer-ko:{{ index .Values "tokenizer-ko" "service" "port" }}"
+  SEARXNG_BASE_URL: {{ .Values.searxng.baseUrl | quote }}
+  {{- /* OTLP observability wiring (REQ-DEPLOY-007). */}}
+  OTLP_ENDPOINT: {{ .Values.observability.otlp.endpoint | quote }}
+  OTLP_SAMPLE_RATIO: {{ .Values.observability.otlp.sampleRatio | quote }}
+  {{- /* DATABASE_URL / REDIS_URL: point at subchart service or external host. */}}
+  {{- if .Values.postgresql.enabled }}
+  DATABASE_HOST: "{{ .Release.Name }}-postgresql"
+  DATABASE_PORT: "5432"
+  {{- else }}
+  DATABASE_HOST: {{ .Values.postgresql.external.host | quote }}
+  DATABASE_PORT: {{ .Values.postgresql.external.port | quote }}
+  {{- end }}
+  {{- if .Values.redis.enabled }}
+  REDIS_HOST: "{{ .Release.Name }}-redis-master"
+  REDIS_PORT: "6379"
+  {{- else }}
+  REDIS_HOST: {{ .Values.redis.external.host | quote }}
+  REDIS_PORT: {{ .Values.redis.external.port | quote }}
+  {{- end }}

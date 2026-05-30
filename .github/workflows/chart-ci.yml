@@ -1,0 +1,110 @@
+# SPEC-DEPLOY-001 REQ-DEPLOY-020 / REQ-DEPLOY-024 — Helm chart CI.
+# helm lint + helm template + kubeconform (1.28..1.31) + kind smoke-test + parity.
+name: chart-ci
+
+on:
+  pull_request:
+    paths:
+      - "charts/universal-search/**"
+      - "deploy/postgres/migrations/**"
+      - "scripts/compose-chart-parity.sh"
+      - ".github/workflows/chart-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "charts/universal-search/**"
+
+permissions:
+  contents: read
+
+env:
+  CHART_DIR: charts/universal-search
+
+jobs:
+  lint-template-conform:
+    name: lint + template + kubeconform
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.16.3
+
+      - name: Helm dependency build
+        run: helm dependency build "${CHART_DIR}"
+
+      - name: Helm lint (strict)
+        run: helm lint --strict "${CHART_DIR}"
+
+      - name: Helm template (default + prod overlays)
+        run: |
+          helm template usearch "${CHART_DIR}" > /tmp/render-default.yaml
+          helm template usearch "${CHART_DIR}" -f "${CHART_DIR}/ci/values-prod.yaml" > /tmp/render-prod.yaml
+
+      - name: Install kubeconform
+        run: |
+          KCV=v0.6.7
+          curl -sSLo /tmp/kc.tar.gz \
+            "https://github.com/yannh/kubeconform/releases/download/${KCV}/kubeconform-linux-amd64.tar.gz"
+          tar -xzf /tmp/kc.tar.gz -C /tmp kubeconform
+          sudo mv /tmp/kubeconform /usr/local/bin/
+
+      - name: kubeconform (k8s 1.28..1.31)
+        run: |
+          for v in 1.28.0 1.29.0 1.30.0 1.31.0; do
+            echo "== kubeconform -kubernetes-version $v =="
+            for f in /tmp/render-default.yaml /tmp/render-prod.yaml; do
+              kubeconform -strict -summary \
+                -kubernetes-version "$v" \
+                -schema-location default \
+                -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' \
+                "$f"
+            done
+          done
+
+  parity:
+    name: compose ↔ chart parity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run parity check
+        run: bash scripts/compose-chart-parity.sh
+
+  kind-smoke:
+    name: kind smoke install
+    runs-on: ubuntu-latest
+    needs: [lint-template-conform]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.16.3
+
+      - name: Create kind cluster (k8s 1.30)
+        uses: helm/kind-action@v1
+        with:
+          node_image: kindest/node:v1.30.4
+
+      - name: Helm dependency build
+        run: helm dependency build "${CHART_DIR}"
+
+      - name: Helm install (smoke profile)
+        run: |
+          helm install usearch "${CHART_DIR}" \
+            -f "${CHART_DIR}/ci/values-test.yaml" \
+            --namespace usearch --create-namespace \
+            --wait --timeout 5m
+
+      - name: Helm test (smoke-test Pod)
+        run: helm test usearch --namespace usearch || (kubectl -n usearch get pods && exit 1)
+
+      - name: Diagnostics on failure
+        if: failure()
+        run: |
+          kubectl -n usearch get all
+          kubectl -n usearch describe pods
+          kubectl -n usearch logs -l app.kubernetes.io/component=migrate --tail=100 || true

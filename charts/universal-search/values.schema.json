@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "universal-search chart values (SPEC-DEPLOY-001)",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["secrets", "usearch", "migrate"],
+  "properties": {
+    "global": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "imageRegistry": { "type": "string" },
+        "imagePullSecrets": { "type": "array" },
+        "storageClass": { "type": "string" }
+      }
+    },
+    "nameOverride": { "type": "string" },
+    "fullnameOverride": { "type": "string" },
+    "secrets": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["backend"],
+      "properties": {
+        "backend": {
+          "type": "string",
+          "enum": ["values", "existingSecret", "externalSecrets"],
+          "description": "externalSecrets is RESERVED (V1.1) and install-blocked in V1 (SEC-001 PR#42)."
+        },
+        "values": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "existingSecret": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "name": { "type": "string" } }
+        }
+      }
+    },
+    "config": {
+      "type": "object",
+      "additionalProperties": { "type": ["string", "number", "boolean"] }
+    },
+    "observability": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "otlp": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "endpoint": { "type": "string" },
+            "sampleRatio": { "type": "string" }
+          }
+        },
+        "serviceMonitor": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "fallback": { "type": "string", "enum": ["annotations", "none"] },
+            "interval": { "type": "string" },
+            "scrapeTimeout": { "type": "string" }
+          }
+        }
+      }
+    },
+    "usearch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "api": { "$ref": "#/definitions/goService" },
+        "mcp": { "$ref": "#/definitions/goService" }
+      }
+    },
+    "migrate": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "backoffLimit": { "type": "integer", "minimum": 0 },
+        "timeout": { "type": "string" }
+      }
+    },
+    "meilisearch": { "type": "object" },
+    "searxng": { "type": "object" },
+    "litellm": { "type": "object" },
+    "postgresql": { "type": "object" },
+    "redis": { "type": "object" },
+    "qdrant": { "type": "object" },
+    "researcher": { "type": "object" },
+    "embedder": { "type": "object" },
+    "tokenizer-ko": { "type": "object" },
+    "storm": { "type": "object" },
+    "koreanews": { "type": "object" }
+  },
+  "definitions": {
+    "goService": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "replicas": { "type": "integer", "minimum": 1 },
+        "service": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "type": { "type": "string" },
+            "port": { "type": "integer", "minimum": 1024, "maximum": 65535 }
+          }
+        },
+        "extraEnv": { "type": "array" },
+        "podAnnotations": { "type": "object" },
+        "podLabels": { "type": "object" },
+        "extraVolumes": { "type": "array" },
+        "extraVolumeMounts": { "type": "array" }
+      }
+    }
+  }
+}

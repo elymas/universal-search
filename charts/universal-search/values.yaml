@@ -1,0 +1,350 @@
+# SPEC-DEPLOY-001 — chart default values (safe minimal, dev-ready).
+# Image tags / ports / env mirror deploy/docker-compose.yml as of chart 0.1.0
+# (compose ↔ chart parity, REQ-DEPLOY-024). Production overlays live in
+# values-prod.yaml; CI smoke profile in values-dev.yaml.
+
+# ── Global ───────────────────────────────────────────────────────────────────
+global:
+  # Override the registry prefix for ALL chart-built images (usearch-api/mcp/
+  # migrate + in-chart services). Leave empty to use repository as-is.
+  # D7: the ghcr.io/<org>/ registry is unresolved; operators set this after
+  # building/pushing images locally or to their own registry.
+  imageRegistry: ""
+  imagePullSecrets: []
+  # Cluster default StorageClass when empty (OQ5: recommend durable SSD-backed
+  # class in production; ephemeral storage causes embedder model reload loops).
+  storageClass: ""
+
+nameOverride: ""
+fullnameOverride: ""
+
+# ── Secrets (V1 2-tier; tier-3 reserved + install-blocked) ───────────────────
+# backend: "values"          → chart authors a K8s Secret from secrets.values.* (DEV/CI ONLY)
+# backend: "existingSecret"  → reference an operator-created Secret (PROD default)
+# backend: "externalSecrets" → RESERVED, V1.1, install-blocked (SEC-001 PR#42)
+# REQ-DEPLOY-008 / REQ-DEPLOY-016 / REQ-DEPLOY-023, D5.
+secrets:
+  backend: values
+  # Tier 1 — plaintext values rendered into a chart-managed Secret. NEVER commit
+  # real production secrets here. Keys map 1:1 to the secret env consumed by
+  # services. OIDC/JWT/SESSION keys are present for AUTH-001..003 (and mirrored
+  # into .env.example per OQ3 so parity passes).
+  values:
+    MEILI_MASTER_KEY: change_me_meilisearch_key
+    POSTGRES_PASSWORD: change_me_postgres_password
+    SEARXNG_SECRET: change_me_searxng_secret
+    LITELLM_MASTER_KEY: change_me_litellm_key
+    OPENAI_API_KEY: ""
+    ANTHROPIC_API_KEY: ""
+    OIDC_CLIENT_SECRET: ""
+    JWT_SIGNING_KEY: ""
+    SESSION_SECRET: ""
+  # Tier 2 — reference an existing Secret. The Secret MUST contain the same keys
+  # listed under secrets.values above.
+  existingSecret:
+    name: ""
+
+# ── Non-secret config (ConfigMap-backed env; REQ-DEPLOY-007) ─────────────────
+# Mirrors the non-secret env from .env.example / docker-compose.yml.
+config:
+  MEILI_ENV: development
+  POSTGRES_USER: usearch
+  POSTGRES_DB: usearch
+  LITELLM_BUDGET_USD: "0.50"
+  OLLAMA_BASE_URL: http://host.docker.internal:11434
+  LOG_LEVEL: info
+  # OIDC issuer / client (non-secret) for AUTH-001. Operators must set these.
+  OIDC_ISSUER_URL: ""
+  OIDC_CLIENT_ID: ""
+  OIDC_REDIRECT_URL: ""
+
+# ── Observability (REQ-DEPLOY-007 OTLP + REQ-DEPLOY-019 ServiceMonitor) ───────
+observability:
+  # OTLP collector endpoint injected as OTLP_ENDPOINT env (chart ships no
+  # collector — operator points at a cluster-internal OTel Collector ClusterIP).
+  otlp:
+    endpoint: ""
+    sampleRatio: "0.1"
+  serviceMonitor:
+    enabled: true
+    # Emitted only when the Prometheus Operator CRD is present. When absent, the
+    # chart falls back to pod annotations (D6, operator-optional).
+    fallback: annotations   # annotations | none
+    interval: 30s
+    scrapeTimeout: 10s
+
+# ── usearch Go binaries (NOT in compose; newly containerized) ────────────────
+usearch:
+  api:
+    enabled: true
+    replicas: 1
+    image:
+      registry: ""
+      repository: usearch-api
+      tag: "0.1.0"
+      pullPolicy: IfNotPresent
+    service:
+      type: ClusterIP
+      port: 8080
+    serviceAccount:
+      create: true
+      name: ""
+    resources: {}
+    podAnnotations: {}
+    podLabels: {}
+    extraEnv: []
+    extraVolumes: []
+    extraVolumeMounts: []
+    probes:
+      liveness:
+        path: /healthz
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        timeoutSeconds: 3
+        failureThreshold: 3
+      readiness:
+        path: /healthz
+        initialDelaySeconds: 5
+        periodSeconds: 10
+        timeoutSeconds: 3
+        failureThreshold: 3
+    hpa:
+      enabled: false   # default off; values-prod enables (D9)
+      minReplicas: 2
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 70
+    pdb:
+      enabled: false
+      minAvailable: 1
+    networkPolicy:
+      enabled: false
+    ingress:
+      enabled: false
+      className: nginx
+      clusterIssuer: letsencrypt-prod
+      hosts: []
+      tls: []
+  mcp:
+    enabled: true
+    replicas: 1
+    image:
+      registry: ""
+      repository: usearch-mcp
+      tag: "0.1.0"
+      pullPolicy: IfNotPresent
+    service:
+      type: ClusterIP
+      port: 8081   # OQ2: assumed MCP HTTP default until SPEC-MCP-001 fixes it
+    serviceAccount:
+      create: true
+      name: ""
+    resources: {}
+    podAnnotations: {}
+    podLabels: {}
+    extraEnv: []
+    probes:
+      liveness:
+        path: /healthz
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        timeoutSeconds: 3
+        failureThreshold: 3
+      readiness:
+        path: /healthz
+        initialDelaySeconds: 5
+        periodSeconds: 10
+        timeoutSeconds: 3
+        failureThreshold: 3
+    hpa:
+      enabled: false
+      minReplicas: 2
+      maxReplicas: 10
+      targetCPUUtilizationPercentage: 70
+    pdb:
+      enabled: false
+      minAvailable: 1
+    networkPolicy:
+      enabled: false
+
+# ── Migration Job (pre-install/pre-upgrade hook; REQ-DEPLOY-006, D4) ──────────
+migrate:
+  enabled: true
+  image:
+    registry: ""
+    repository: usearch-migrate
+    tag: "0.1.0"
+    pullPolicy: IfNotPresent
+  backoffLimit: 3
+  # MIGRATE_TIMEOUT for the runner (NFR-DEPLOY-003: <60s on empty DB).
+  timeout: 120s
+  resources: {}
+
+# ── In-chart custom services (mirror compose images exactly; REQ-DEPLOY-015) ──
+meilisearch:
+  enabled: true
+  image:
+    registry: ""
+    repository: getmeili/meilisearch
+    tag: v1.42.1
+    pullPolicy: IfNotPresent
+  service:
+    port: 7700
+  persistence:
+    enabled: true
+    size: 8Gi
+    storageClass: ""
+  resources: {}
+
+searxng:
+  # AGPL-3.0 — consumed as a service boundary. See NOTES.txt / README.md.
+  enabled: true
+  image:
+    registry: ""
+    repository: searxng/searxng
+    tag: 2026.04.22-74f1ca203
+    pullPolicy: IfNotPresent
+  service:
+    port: 8080
+  baseUrl: http://localhost:8080/
+  # Operator-provided ConfigMap with settings.yml (from deploy/searxng/settings.yml).
+  # Empty → chart renders a minimal default ConfigMap.
+  configMapName: ""
+  resources: {}
+
+litellm:
+  enabled: true
+  image:
+    registry: ""
+    repository: ghcr.io/berriai/litellm
+    tag: v1.83.7-stable.patch.1
+    pullPolicy: IfNotPresent
+  service:
+    port: 4000
+  # Operator-provided ConfigMap with config.yaml (from deploy/litellm/config.yaml).
+  # Empty → chart renders a minimal default ConfigMap.
+  configMapName: ""
+  resources: {}
+
+# ── Prometheus (NOT bundled; operator installs cluster-wide). D3. ─────────────
+# The chart only emits ServiceMonitor / scrape annotations (observability.*).
+
+# ── Subchart deps (Bitnami/official; REQ-DEPLOY-014, D3) ─────────────────────
+postgresql:
+  enabled: true
+  # When enabled:false, set external.* and the chart wires DATABASE_URL to it.
+  external:
+    host: ""
+    port: 5432
+    database: usearch
+    username: usearch
+    existingSecret: ""
+  auth:
+    username: usearch
+    database: usearch
+    # Bitnami reads the password from this existing secret key when set; the
+    # chart-managed secret name is "<fullname>-secrets" key POSTGRES_PASSWORD.
+    existingSecret: ""
+  primary:
+    persistence:
+      size: 8Gi
+
+redis:
+  enabled: true
+  external:
+    host: ""
+    port: 6379
+  architecture: standalone
+  auth:
+    enabled: false
+
+qdrant:
+  enabled: true
+  external:
+    host: ""
+    httpPort: 6333
+    grpcPort: 6334
+
+# ── Python sidecars (reuse services/*/Dockerfile; chart references images) ────
+researcher:
+  enabled: true
+  image:
+    registry: ""
+    repository: usearch-researcher
+    tag: "0.1.0"
+    pullPolicy: IfNotPresent
+  service:
+    port: 8081
+  env:
+    RESEARCHER_MODEL_DEFAULT: claude-haiku-4-5
+    RESEARCHER_TIMEOUT_SECONDS: "8"
+    RESEARCHER_LOG_LEVEL: INFO
+  resources: {}
+
+embedder:
+  enabled: true
+  image:
+    registry: ""
+    repository: usearch-embedder
+    tag: "0.1.0"
+    pullPolicy: IfNotPresent
+  service:
+    port: 8082
+  env:
+    EMBEDDER_MODEL_NAME: BAAI/bge-m3
+    EMBEDDER_DEVICE: cpu
+    EMBEDDER_USE_FP16: "false"
+    EMBEDDER_CACHE_MAX_ENTRIES: "1024"
+    EMBEDDER_LOG_LEVEL: INFO
+  # HuggingFace model cache PVC (compose embedder_models volume equivalent).
+  persistence:
+    enabled: true
+    size: 20Gi
+    storageClass: ""
+    mountPath: /root/.cache/huggingface
+  # GPU is amd64-only (PyTorch+CUDA). nodeAffinity keeps embedder off non-amd64
+  # nodes regardless (NFR-DEPLOY-007).
+  gpu:
+    enabled: false
+    nodeSelector: {}
+    tolerations: []
+  # startupProbe protects long model load (REQ-DEPLOY-013, ≥120s).
+  startupProbe:
+    path: /health
+    failureThreshold: 120
+    periodSeconds: 1
+  resources: {}
+
+tokenizer-ko:
+  enabled: true
+  image:
+    registry: ""
+    repository: usearch-tokenizer-ko
+    tag: "0.1.0"
+    pullPolicy: IfNotPresent
+  service:
+    port: 8083
+  resources: {}
+
+# storm / koreanews exist only as services/ dirs (NOT compose services) →
+# opt-in, disabled by default (OQ1).
+storm:
+  enabled: false
+  image:
+    registry: ""
+    repository: usearch-storm
+    tag: "0.1.0"
+    pullPolicy: IfNotPresent
+  service:
+    port: 8084
+  resources: {}
+
+koreanews:
+  enabled: false
+  image:
+    registry: ""
+    repository: usearch-koreanews
+    tag: "0.1.0"
+    pullPolicy: IfNotPresent
+  service:
+    port: 8085
+  resources: {}

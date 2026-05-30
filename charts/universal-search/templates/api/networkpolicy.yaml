@@ -1,0 +1,63 @@
+{{/* SPEC-DEPLOY-001 — usearch-api NetworkPolicy (REQ-DEPLOY-010, D9).
+Ingress from ingress-nginx + intra-chart; egress to deps + DNS + declared
+cluster-external endpoints. No-op without a CNI policy controller (NOTES.txt). */}}
+{{- $c := "api" }}
+{{- $svc := .Values.usearch.api }}
+{{- if and $svc.enabled $svc.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "usearch.componentName" (dict "root" . "component" $c) }}
+  labels:
+    {{- include "usearch.componentLabels" (dict "root" . "component" $c) | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "usearch.componentSelectorLabels" (dict "root" . "component" $c) | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # From ingress-nginx namespace.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: {{ $svc.service.port }}
+    # From intra-chart pods (same release).
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "usearch.selectorLabels" . | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: {{ $svc.service.port }}
+  egress:
+    # DNS.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Intra-chart dependencies (postgres/redis/qdrant/meili/litellm/sidecars).
+    - to:
+        - podSelector: {}
+    # Cluster-external (OIDC issuer, LLM providers, adapter APIs). Operators
+    # tighten this to specific CIDRs in production overlays.
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - protocol: TCP
+          port: 443
+{{- end }}

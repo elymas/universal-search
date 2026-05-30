@@ -1,0 +1,98 @@
+{{/* SPEC-DEPLOY-001 — in-chart Meilisearch (REQ-DEPLOY-015, D3). StatefulSet for
+stable persistent storage (compose meili_data volume equivalent). Image tag
+pinned to the exact compose tag. */}}
+{{- if .Values.meilisearch.enabled }}
+{{- $c := "meilisearch" }}
+{{- $svc := .Values.meilisearch }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "usearch.componentName" (dict "root" . "component" $c) }}
+  labels:
+    {{- include "usearch.componentLabels" (dict "root" . "component" $c) | nindent 4 }}
+spec:
+  serviceName: {{ include "usearch.componentName" (dict "root" . "component" $c) }}
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "usearch.componentSelectorLabels" (dict "root" . "component" $c) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "usearch.componentSelectorLabels" (dict "root" . "component" $c) | nindent 8 }}
+    spec:
+      {{- include "usearch.imagePullSecrets" . | nindent 6 }}
+      containers:
+        - name: {{ $c }}
+          image: {{ include "usearch.image" (dict "root" . "image" $svc.image) }}
+          imagePullPolicy: {{ $svc.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ $svc.service.port }}
+          env:
+            - name: MEILI_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "usearch.fullname" . }}-config
+                  key: MEILI_ENV
+            - name: MEILI_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "usearch.secretName" . }}
+                  key: MEILI_MASTER_KEY
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+          {{- with $svc.resources }}
+          resources: {{ toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: data
+              mountPath: /meili_data
+      {{- if not $svc.persistence.enabled }}
+      volumes:
+        - name: data
+          emptyDir: {}
+      {{- end }}
+  {{- if $svc.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ $svc.persistence.size }}
+        {{- $sc := $svc.persistence.storageClass | default .Values.global.storageClass }}
+        {{- if $sc }}
+        storageClassName: {{ $sc | quote }}
+        {{- end }}
+  {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "usearch.componentName" (dict "root" . "component" $c) }}
+  labels:
+    {{- include "usearch.componentLabels" (dict "root" . "component" $c) | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "usearch.componentSelectorLabels" (dict "root" . "component" $c) | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ $svc.service.port }}
+      targetPort: http
+{{- end }}
