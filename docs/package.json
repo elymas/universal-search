@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "build:static": "next build && next export",
-    "postbuild": "echo 'Build complete'",
+    "postbuild": "node -e \"const fs=require('fs');const html='<!DOCTYPE html><html><head><meta http-equiv=\\'refresh\\' content=\\'0;url=/en/\\'><link rel=\\'canonical\\' href=\\'/en/\\'/></head><body><p>Redirecting to <a href=\\'/en/\\'>/en/</a></p></body></html>';fs.writeFileSync('out/index.html',html);console.log('Static export complete — out/index.html created')\"",
     "start": "next start",
     "lint": "next lint"
   },
@@ -24,5 +24,10 @@
     "@types/react-dom": "^19.0.0",
     "typescript": "^5.0.0"
   },
-  "packageManager": "pnpm@9.0.0"
+  "packageManager": "pnpm@9.0.0",
+  "pnpm": {
+    "patchedDependencies": {
+      "nextra-theme-docs@4.6.1": "patches/nextra-theme-docs@4.6.1.patch"
+    }
+  }
 }

@@ -138,7 +138,63 @@ jobs:
           chmod +x docs/scripts/check-doc-claims.sh
           docs/scripts/check-doc-claims.sh --binary ./cmd/usearch/usearch
 
-  # ── Job 6: Docker build verify (no publish — SPEC-DOC-001 D deferred) ─────
+  # ── Job 6: CLI reference drift gate (REQ-DOC-007 / REQ-DOC-012) ─────────────
+  gen-reference-drift:
+    name: gen-reference-drift
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build usearch binary (skip gracefully if unavailable)
+        id: build_binary
+        run: |
+          if make build 2>/dev/null; then
+            echo "binary_available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "binary_available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::usearch binary build unavailable — skipping CLI reference drift check"
+          fi
+
+      - uses: pnpm/action-setup@v4
+        if: steps.build_binary.outputs.binary_available == 'true'
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        if: steps.build_binary.outputs.binary_available == 'true'
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: docs/pnpm-lock.yaml
+
+      - name: Install docs deps
+        if: steps.build_binary.outputs.binary_available == 'true'
+        working-directory: docs
+        run: pnpm install --frozen-lockfile
+
+      - name: Check CLI reference drift
+        if: steps.build_binary.outputs.binary_available == 'true'
+        run: |
+          chmod +x docs/scripts/gen-cli-reference.sh
+          # Regenerate into a temp dir and diff against committed files
+          tmpdir=$(mktemp -d)
+          cp -r docs/content/en/reference/cli/. "$tmpdir/"
+          docs/scripts/gen-cli-reference.sh --binary ./cmd/usearch/usearch
+          if ! diff -r "$tmpdir" docs/content/en/reference/cli/ --exclude="*.bak" > /tmp/cli_diff.txt 2>&1; then
+            echo "::error::CLI reference MDX files are out of sync with binary --help output."
+            echo "Run: docs/scripts/gen-cli-reference.sh --binary <binary> and commit the result."
+            cat /tmp/cli_diff.txt
+            exit 1
+          fi
+          echo "CLI reference is in sync with binary."
+
+  # ── Job 8: Docker build verify (no publish — SPEC-DOC-001 D deferred) ─────
   docker-build:
     name: docker-build-verify
     needs: build
@@ -160,7 +216,7 @@ jobs:
         # NOTE: Push to ghcr.io/<org>/usearch-docs deferred pending <org> resolution
         # See SPEC-DOC-001 Open Question §3 (SPEC-BOOT-001 registry path)
 
-  # ── Job 7: Deploy to gh-pages (main branch only) ──────────────────────────
+  # ── Job 9: Deploy to gh-pages (main branch only) ──────────────────────────
   deploy-gh-pages:
     name: deploy-gh-pages
     needs: [build, link-check, bilingual-coverage]

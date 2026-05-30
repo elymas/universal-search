@@ -169,3 +169,68 @@ cd docs && pnpm install && pnpm build
 Manual axe-core a11y audit + Lighthouse score: deferred to V1.1.
 README.md docs-site link: to be added when gh-pages URL confirmed.
 CHANGELOG.md entry: to be added in commit message.
+
+---
+
+## 2026-05-31 — Evaluator FAIL fix (manager-docs, Functionality 55/100)
+
+### Root Cause
+
+Static export (`output: 'export'`) was blocked by `/_not-found` prerender error
+(React Server Components, digest `1872370934`). Root cause: Nextra v4.6.1 bug in
+`nextra-theme-docs/dist/schemas.js` — `LayoutPropsSchema.children` was `required`
+but `safeParse(themeConfig)` receives props with `children` already destructured out,
+so `children` key is missing → Zod v4 `strictObject` throws `expected nonoptional`.
+
+Additionally, the app router structure was wrong (missing `app/[lang]/layout.tsx`
+and `app/[lang]/[[...mdxPath]]/page.tsx` for i18n routing).
+
+### Fix Applied
+
+1. **Static export enabled** (`output: 'export'`, `distDir: 'out'` in next.config.mjs)
+2. **i18n route structure** created:
+   - `app/layout.tsx`: minimal html shell (no getPageMap)
+   - `app/[lang]/layout.tsx`: Nextra Layout with locale-aware getPageMap
+   - `app/[lang]/[[...mdxPath]]/page.tsx`: generateStaticParams + importPage
+   - `app/not-found.tsx`: static, no React context dependency
+3. **nextra-theme-docs patch** via `pnpm patch`: `children: reactNode` → `children: reactNode.optional()`
+   (patch at `docs/patches/nextra-theme-docs@4.6.1.patch`)
+4. **postbuild** generates `out/index.html` redirect → `/en/` for gh-pages root
+5. **i18n config** added to next.config.mjs (`locales: ['en', 'ko']`)
+
+### Build Evidence
+
+```
+cd docs && pnpm build
+→ ✓ Compiled successfully in 7.5s
+→ ✓ TypeScript: 0 errors
+→ ✓ Generating static pages using 4 workers (61/61) — after security subpages added: 63 pages
+→ ✓ Build complete
+find docs/out -name '*.html' | wc -l → 63
+find docs/out -name '*.html' | head → out/index.html, out/en/index.html, out/ko/index.html ...
+```
+
+Bilingual coverage: 21 EN / 21 KO = 100% (PASS, threshold 90%).
+
+### Additional Fixes
+
+- **gen-reference-drift CI job** added to `.github/workflows/docs.yml` (Job 6, REQ-DOC-007/012).
+  Builds binary, regenerates CLI MDX in temp dir, diffs against committed files.
+  Gracefully skips if binary build is unavailable.
+- **CI paths**: `docs/**` already covers `docs/scripts/` — confirmed, no change needed.
+- **security subpages**: `operators/security.mdx` split into `operators/security/`:
+  - `index.mdx` (overview), `runbook.mdx`, `owasp-checklist.mdx`, `threat-model.mdx` (EN + KO)
+  - No ops/security/* cross-links (forward-ref only). `_meta.js` added for both locales.
+- **generated flag**: All 8 CLI reference MDX files: `generated: false` → `generated: true`.
+  `gen-cli-reference.sh` is source of truth; files regenerate from binary `--help`.
+- **Dockerfile.docs**: `test -d ./out` → `test -f ./out/index.html` (fail-loud on missing HTML).
+
+### Residual
+
+- pnpm patch is applied to node_modules; `patchedDependencies` in package.json ensures
+  it re-applies on `pnpm install`. This is the correct pnpm workflow.
+- Nextra upstream bug not yet filed; patch is local workaround until Nextra fixes it.
+- `output: 'export'` + Nextra i18n: official docs warn static export + i18n middleware
+  is unsupported (middleware can't run in static), but page generation itself works fine
+  without middleware (locale is segment-based: `app/[lang]/`).
+- Root `/` redirects via meta-refresh in `out/index.html`; gh-pages will serve correctly.

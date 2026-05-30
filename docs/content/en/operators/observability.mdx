@@ -2,7 +2,6 @@
 title: Observability
 description: Logging, tracing, and metrics for Universal Search operators
 lastUpdated: 2026-05-30
-related: [SPEC-OBS-001]
 ---
 
 import { Callout } from 'nextra/components'
@@ -98,6 +97,6 @@ Universal Search emits JSON logs to stdout — compatible with:
 
 Example Grafana dashboard query (Loki):
 
-```logql
+```text
 {service="usearch"} | json | duration_ms > 5000
 ```
