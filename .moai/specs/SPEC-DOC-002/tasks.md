@@ -15,6 +15,8 @@ These are spec/code contradictions found by grep-verification, not preferences. 
 
 Minor stale ref (auto-resolves): open Q §8.6 says "repo has no `tools/` directory" — it exists (`tools/claude-skill`). `tools/gen-adapter-ref/` is a clean sibling.
 
+## Task status: ALL COMPLETE (2026-05-31 run phase)
+
 ## Task list (≤10 atomic, DDD-ordered, infra-before-content)
 
 | ID | Task | REQ mapping | Depends on | Acceptance (done when) |

@@ -1,0 +1,10 @@
+{
+  "sourceID": "x",
+  "requiresAuth": false,
+  "authEnvVars": [],
+  "rateLimitPerMin": 0,
+  "defaultMaxResults": 0,
+  "sourcePath": "internal/adapters/social/social.go",
+  "sourceLine": 165,
+  "extractedAt": "2026-05-30T22:44:16Z"
+}

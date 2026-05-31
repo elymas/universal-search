@@ -1,0 +1,108 @@
+---
+title: Hacker News Adapter
+description: Reference documentation for the Hacker News adapter (SourceID hackernews)
+lastVerified: 2026-05-31
+sourceID: hackernews
+category: social
+---
+
+import { Callout } from 'nextra/components'
+import { CapabilitiesTable } from '../../../../components/CapabilitiesTable'
+import { StatusBadge } from '../../../../components/StatusBadge'
+import hackernewsCaps from './_generated/hackernews.capabilities.json'
+
+# Hacker News Adapter
+
+<StatusBadge adapter="hackernews" />
+
+The Hacker News adapter queries the public Algolia HN Search API. Go package directory: `internal/adapters/hn/`. **SourceID: `hackernews`** (the package dir is `hn/` but the SourceID and page slug are `hackernews`).
+
+## Status &amp; Compatibility
+
+| Field | Value |
+|-------|-------|
+| SPEC | SPEC-ADP-002 |
+| Source path | `internal/adapters/hn/` |
+| SourceID | `hackernews` |
+| DisplayName | Hacker News |
+| Last verified | 2026-05-31 |
+| Status | <StatusBadge adapter="hackernews" /> |
+
+## Overview
+
+Hacker News (news.ycombinator.com) is a social news site focused on technology and startups. The Universal Search Hacker News adapter queries the Algolia HN Search API at `https://hn.algolia.com/api/v1/search`, returning story-level results. Comments, polls, and job posts are excluded in v0.1.
+
+**Use case:** tech community discussion, startup news, engineering best practices.
+
+## Setup
+
+Authentication: not required — public endpoint.
+
+The Algolia HN Search API is publicly accessible without credentials. No API key or account registration is required.
+
+```bash
+# Verify the adapter is reachable:
+usearch query --source hackernews "Rust async performance"
+```
+
+## Capabilities
+
+The table below is auto-extracted from the Go source via `gen-adapter-ref` — edit the adapter source to change these values.
+
+<CapabilitiesTable data={hackernewsCaps} />
+
+## Query syntax
+
+Hacker News queries map to Algolia's search parameters:
+
+| Universal Search field | Algolia parameter | Notes |
+|------------------------|------------------|-------|
+| `Query.Text` | `query={text}` | Full-text search in story titles and bodies |
+| `Query.Filters["since"]` | `numericFilters=created_at_i>={unix_seconds}` | Unix epoch seconds |
+| `Query.Filters["min_points"]` | `numericFilters=points>={n}` | Minimum upvote count |
+| `Query.MaxResults` | `hitsPerPage={n}` | Capped at `DefaultMaxResults` when zero |
+
+**Tags filter:** `tags=story` is hardcoded — only stories are returned. Comment/poll/job retrieval is deferred.
+
+**Body handling:** `story_text` is HTML-stripped to produce the `Snippet` field. Self-posts use `https://news.ycombinator.com/item?id=...` as the URL.
+
+## Rate limits
+
+- **Advertised limit:** 60 requests/min
+- **Enforcement mechanism:** HTTP 429 response handling — Algolia returns 429 when the rate is exceeded
+- **Upstream quota documentation:** [Hacker News Algolia Search API](https://hn.algolia.com/api)
+- **Exhaustion behaviour:** The adapter reads the `Retry-After` header from Algolia's 429 response and defaults to 5 seconds when the header is absent. The fanout dispatcher ([SPEC-FAN-001](/en/reference/architecture)) returns `CategoryRateLimited`.
+
+## Error reference
+
+See [Error Taxonomy](/en/reference/adapters/errors) for the shared `Category` reference.
+
+**Hacker News-specific status rosetta:**
+
+| HTTP status | Category | Cause | Operator action |
+|-------------|----------|-------|-----------------|
+| 429 | CategoryRateLimited | Algolia rate limit exceeded | Adapter uses 5s default retry; reduce fanout concurrency |
+| 503 | CategoryUnavailable | Algolia HN Search API down | Check https://hn.algolia.com; retry after delay |
+| Network timeout | CategoryTransient | DNS/TCP failure | Verify connectivity to `hn.algolia.com` |
+
+## Troubleshooting
+
+| Symptom | Likely cause | Diagnostic command | Resolution | Related SPECs |
+|---------|-------------|-------------------|------------|---------------|
+| Only recent stories returned | `created_at_i` filter too restrictive | Remove `since` filter | Pass no `since` filter to search all-time | SPEC-ADP-002 |
+| Low-quality results | No `min_points` filter set | Add `Query.Filters["min_points"]="100"` | Filter by minimum points to surface higher-quality stories | SPEC-ADP-002 |
+| `CategoryUnavailable` | Algolia outage | `curl "https://hn.algolia.com/api/v1/search?query=test"` | Wait for Algolia recovery | SPEC-CACHE-001 |
+
+## Version compatibility
+
+| usearch version | Algolia HN Search API | Last verified | Verifier |
+|----------------|----------------------|---------------|----------|
+| v1.0.0 | v1 (https://hn.algolia.com/api/v1) | 2026-05-31 | manager-docs |
+
+## Related
+
+- [SPEC-ADP-002](/en/reference/architecture) — Hacker News adapter specification
+- [End-user surface comparison](/en/end-users/surface-comparison)
+- [Deployment Helm values](/en/operators/deployment-helm)
+- [SPEC-FAN-001 fanout retry semantics](/en/reference/architecture)
+- [SPEC-CACHE-001 5-phase fallback](/en/reference/architecture)

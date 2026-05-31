@@ -59,6 +59,16 @@ exclude = [
 
     # naver.com developer portal (may block bots)
     "^https://developers\\.naver\\.com",
+
+    # SPEC-DOC-002 NFR-ADPDOC-005: known-rate-limited or auth-walled provider documentation
+    "^https://api\\.github\\.com",
+    "^https://docs\\.github\\.com",
+    "^https://reddit\\.com/dev",
+    "^https://hn\\.algolia\\.com",
+    "^https://info\\.arxiv\\.org",
+    "^https://developers\\.google\\.com/youtube",
+    "^https://docs\\.bsky\\.app",
+    "^https://docs\\.searxng\\.org",
 ]
 
 # === INCLUDE ONLY ===

@@ -1,0 +1,154 @@
+---
+title: 오류 분류 체계
+description: Universal Search 모든 어댑터에 공통으로 사용되는 오류 카테고리 레퍼런스
+lastVerified: 2026-05-31
+---
+
+import { Callout } from 'nextra/components'
+
+# 오류 분류 체계
+
+모든 Universal Search 어댑터는 `*types.SourceError`에 `Category` 필드를 포함한 오류를 반환합니다. 팬아웃 디스패처(SPEC-FAN-001)는 이 카테고리를 사용하여 재시도 전략을 결정합니다.
+
+<Callout type="info">
+  소스: `pkg/types/errors.go` — 5개 값을 가진 `Category` 열거형.
+  재시도 의미론은 [SPEC-FAN-001](/ko/reference/architecture)에서 정의됩니다.
+</Callout>
+
+## Status &amp; Compatibility
+
+| 항목 | 값 |
+|------|-----|
+| 소스 파일 | `pkg/types/errors.go` |
+| 적용 대상 | 10개 프로덕션 어댑터 모두 |
+| 최종 확인일 | 2026-05-31 |
+
+## Overview
+
+어댑터 호출이 실패하면 오류는 `*types.SourceError`로 래핑됩니다:
+
+```go
+type SourceError struct {
+    Adapter    string
+    Category   Category
+    HTTPStatus int
+    Cause      error
+    RetryAfter time.Duration
+}
+```
+
+`Category` 필드는 팬아웃 디스패처가 실패를 처리하는 방법을 결정합니다.
+
+## Setup
+
+해당 없음 — 이 페이지는 오류 처리 의미론에 대한 레퍼런스 페이지입니다.
+
+## Capabilities
+
+해당 없음 — 오류 분류 체계는 모든 어댑터에 균일하게 적용됩니다.
+
+## Query syntax
+
+해당 없음.
+
+## Rate limits
+
+해당 없음.
+
+## Error reference
+
+### CategoryUnknown
+
+**값:** `0` (기본 제로 값)
+
+**트리거 HTTP 상태 코드:** 4가지 센티넬과 일치하지 않는 분류되지 않은 오류.
+
+**팬아웃 디스패처 동작:** 영구 오류로 처리 — 재시도 없음. Prometheus 결과 레이블 `"failure"`에 매핑.
+
+**예시 오류 메시지:**
+```
+adapter "searxng": unknown: unexpected EOF
+```
+
+---
+
+### CategoryTransient
+
+**값:** `1`
+
+**트리거 HTTP 상태 코드:** HTTP 5xx 응답, 네트워크 타임아웃(`context.DeadlineExceeded`), 일시적 연결 오류.
+
+**팬아웃 디스패처 동작:** 지수 백오프로 재시도 (SPEC-FAN-001 참조). Prometheus 결과 레이블 `"transient"`에 매핑.
+
+**`RetryAfter` 처리:** `RetryAfter > 0`이면 디스패처가 다음 재시도 전에 해당 지연을 적용합니다.
+
+**예시 오류 메시지:**
+```
+adapter "reddit": transient: dial tcp: i/o timeout
+```
+
+---
+
+### CategoryPermanent
+
+**값:** `2`
+
+**트리거 HTTP 상태 코드:** HTTP 400, 401, 403, 404, 422. 인증 실패 및 잘못된 쿼리 파라미터 포함.
+
+**팬아웃 디스패처 동작:** 재시도 없음 — 즉시 호출자에게 오류 전파. Prometheus 결과 레이블 `"failure"`에 매핑.
+
+**예시 오류 메시지:**
+```
+adapter "github": permanent: 401 Unauthorized — Bad credentials
+```
+
+---
+
+### CategoryRateLimited
+
+**값:** `3`
+
+**트리거 HTTP 상태 코드:** HTTP 429. SearXNG와 x를 제외한 모든 어댑터가 업스트림 속도 제한에 도달하면 이 카테고리를 반환합니다.
+
+**팬아웃 디스패처 동작:** 재시도 전에 `RetryAfter` 시간만큼 대기. Prometheus 결과 레이블 `"rate_limited"`에 매핑.
+
+**`RetryAfter` 처리:** 업스트림 `Retry-After` 응답 헤더에서 파싱됩니다. 헤더가 없는 경우 어댑터별 기본값 적용 (예: HN 5s, GitHub 최대 90s).
+
+**예시 오류 메시지:**
+```
+adapter "hackernews": rate_limited: 429 Too Many Requests (retry-after: 5s)
+```
+
+---
+
+### CategoryUnavailable
+
+**값:** `4`
+
+**트리거 HTTP 상태 코드:** HTTP 503, DNS 확인 실패, TCP 다이얼 타임아웃.
+
+**팬아웃 디스패처 동작:** 동일 어댑터의 반복적인 `CategoryUnavailable` 오류 후 서킷 브레이커가 열릴 수 있습니다. Prometheus 결과 레이블 `"unavailable"`에 매핑.
+
+**예시 오류 메시지:**
+```
+adapter "naver": unavailable: dial tcp: lookup openapi.naver.com: no such host
+```
+
+## Troubleshooting
+
+| 증상 | 원인 가능성 | 진단 명령 | 해결 방법 | 관련 SPEC |
+|------|-----------|----------|----------|----------|
+| 모든 어댑터가 `CategoryUnavailable` 반환 | 네트워크 파티션 또는 DNS 장애 | `ping openapi.naver.com`, 컨테이너 네트워킹 확인 | 네트워크 연결 확인, Docker DNS 설정 점검 | SPEC-DEPLOY-001 |
+| 어댑터가 반복적으로 `CategoryUnknown` 반환 | 어댑터 오류 매핑 코드의 처리되지 않은 오류 유형 | 원시 오류에 대한 어댑터 로그 확인 | 해당 어댑터의 SPEC-ADP-*에 버그 리포트 | SPEC-ADP-001..009 |
+
+## Version compatibility
+
+| usearch 버전 | errors.go Category 열거형 | 최종 확인일 |
+|-------------|--------------------------|------------|
+| v1.0.0 | 5개 값 (Unknown..Unavailable) | 2026-05-31 |
+
+## Related
+
+- [SPEC-FAN-001 팬아웃 디스패처](/ko/reference/architecture) — 재시도 의미론
+- [SPEC-CACHE-001 5단계 폴백](/ko/reference/architecture) — 오류 시 캐시 폴백
+- [pkg/types/errors.go](https://github.com/elymas/universal-search/blob/main/pkg/types/errors.go) — 소스 코드

@@ -1,0 +1,10 @@
+{
+  "sourceID": "searxng",
+  "requiresAuth": false,
+  "authEnvVars": [],
+  "rateLimitPerMin": 0,
+  "defaultMaxResults": 10,
+  "sourcePath": "internal/adapters/searxng/searxng.go",
+  "sourceLine": 137,
+  "extractedAt": "2026-05-30T22:44:16Z"
+}

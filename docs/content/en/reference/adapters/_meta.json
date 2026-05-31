@@ -1,0 +1,14 @@
+{
+  "index": "Adapter Catalog",
+  "errors": "Error Taxonomy",
+  "arxiv": "arXiv",
+  "reddit": "Reddit",
+  "hackernews": "Hacker News",
+  "github": "GitHub",
+  "youtube": "YouTube",
+  "bluesky": "Bluesky",
+  "x": "X (disabled)",
+  "searxng": "SearXNG",
+  "naver": "Naver",
+  "koreanews": "Korean News"
+}
