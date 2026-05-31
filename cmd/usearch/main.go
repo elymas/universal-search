@@ -9,10 +9,6 @@ import (
 	"os"
 )
 
-// Version is the current release version of usearch.
-// Format: semver, e.g. "0.1.0-dev".
-const Version = "0.1.0-dev"
-
 func main() {
 	cmd := newRootCmd(os.Stdout, os.Stderr)
 	code := runCobra(cmd, os.Args[1:])

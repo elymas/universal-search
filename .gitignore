@@ -186,7 +186,6 @@ secret-*.*
 .moai/status_line.sh
 .moai/memory/
 .moai/worktrees/
-.moai/state/session-memo.md
 
 # ===========================================
 # Evolution Telemetry (local-only usage data)
@@ -218,6 +217,5 @@ dist-ssr/
 .netlify/
 .firebase/
 
-# Compiled drift tool / scratch binaries
-/gen-adapter-ref
-/_bin/
+# Compiled main binary (scratch)
+/usearch

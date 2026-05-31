@@ -15,15 +15,14 @@ import (
 	"github.com/elymas/universal-search/internal/adapters"
 	adminapi "github.com/elymas/universal-search/internal/api/admin"
 	"github.com/elymas/universal-search/internal/obs"
+	vver "github.com/elymas/universal-search/internal/version"
 )
-
-const version = "0.1.0-dev"
 
 func main() {
 	ctx := context.Background()
 	o, shutdown, err := obs.Init(ctx, obs.Config{
 		ServiceName:    "usearch-api",
-		ServiceVersion: version,
+		ServiceVersion: vver.Short(),
 		LogLevel:       os.Getenv("LOG_LEVEL"),
 		AdminAddr:      adminAddr(),
 		OTLPEndpoint:   os.Getenv("OTLP_ENDPOINT"),
@@ -34,7 +33,7 @@ func main() {
 	}
 	defer func() { _ = shutdown(ctx) }()
 
-	o.Logger.Info("usearch-api starting", "version", version, "admin_addr", o.AdminAddr)
+	o.Logger.Info("usearch-api starting", "version", vver.Short(), "admin_addr", o.AdminAddr)
 
 	// Register SPEC-SYN-004 streaming endpoint.
 	// Full server mux registration lives in SPEC-IR-001; this is an additive stub.

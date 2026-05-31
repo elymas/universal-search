@@ -1,0 +1,95 @@
+# GoReleaser v2 configuration for SPEC-REL-001 release ceremony.
+# REQ-REL-006: 3 binaries × {linux,darwin} × {amd64,arm64} = 12 archives
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    - go mod download
+
+builds:
+  - id: usearch
+    main: ./cmd/usearch
+    binary: usearch
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/elymas/universal-search/internal/version.Version={{.Version}}
+      - -X github.com/elymas/universal-search/internal/version.Commit={{.FullCommit}}
+      - -X github.com/elymas/universal-search/internal/version.BuildDate={{.Date}}
+
+  - id: usearch-api
+    main: ./cmd/usearch-api
+    binary: usearch-api
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/elymas/universal-search/internal/version.Version={{.Version}}
+      - -X github.com/elymas/universal-search/internal/version.Commit={{.FullCommit}}
+      - -X github.com/elymas/universal-search/internal/version.BuildDate={{.Date}}
+
+  - id: usearch-mcp
+    main: ./cmd/usearch-mcp
+    binary: usearch-mcp
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/elymas/universal-search/internal/version.Version={{.Version}}
+      - -X github.com/elymas/universal-search/internal/version.Commit={{.FullCommit}}
+      - -X github.com/elymas/universal-search/internal/version.BuildDate={{.Date}}
+
+archives:
+  # {{ .Binary }} differentiates the 3 builds (usearch / usearch-api /
+  # usearch-mcp) so they do not collide — yields 3 binaries x 2 OS x 2 arch
+  # = 12 archives (REQ-REL-006).
+  - name_template: "{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format: tar.gz
+    files:
+      - LICENSE
+      - README.md
+
+checksum:
+  name_template: SHA256SUMS
+  algorithm: sha256
+
+# SBOM generation via anchore/syft (Nix-based, no additional dependency)
+# REQ-REL-010: produces SPDX-format SBOM per archive + aggregate
+sboms:
+  - artifacts: archive
+    documents:
+      - "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}.spdx.json"
+
+# REQ-REL-006 rationale: Windows targets deferred post-V1
+# Go cross-compilation to Windows works, but: (1) usearch CLI is Unix-focused
+# (no shell integration on Windows cmd.exe); (2) API/MCP servers target Linux
+# deployment (Kubernetes); (3) Windows users can use WSL + linux/amd64 binary.
+# (research §5.3) Post-V1 Windows support may be added via MSIX or separate SPEC.
+
+# Disable auto-publishing; release.yml workflow handles GitHub Release creation
+release:
+  disable: true
+
+# Snapshot mode for local testing (--snapshot flag)
+snapshot:
+  name_template: "{{ incpatch .Version }}-snapshot"
