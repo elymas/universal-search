@@ -1,164 +1,139 @@
-package events_test
+package events
 
 import (
-	"sync/atomic"
+	"context"
+	"sync"
 	"testing"
 
-	"github.com/elymas/universal-search/internal/security/events"
+	"github.com/elymas/universal-search/internal/audit"
 )
 
-// mockMetrics captures recorded events for verification.
-type mockMetrics struct {
-	recorded atomic.Int32
+// captureStore is a fake audit.EventStore that records inserted events.
+type captureStore struct {
+	mu   sync.Mutex
+	rows []audit.AuditEvent
 }
 
-func (m *mockMetrics) RecordEvent(_ events.EventType, _ events.Severity) {
-	m.recorded.Add(1)
+func (c *captureStore) Insert(_ context.Context, evt audit.AuditEvent) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.rows = append(c.rows, evt)
+	return nil
 }
 
-func TestEventInsertWithPrevHash(t *testing.T) {
+func (c *captureStore) last() audit.AuditEvent {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.rows[len(c.rows)-1]
+}
+
+// recorderSpy records metric increments.
+type recorderSpy struct {
+	mu    sync.Mutex
+	calls [][2]string
+}
+
+func (r *recorderSpy) RecordSecurityEvent(t, sev string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.calls = append(r.calls, [2]string{t, sev})
+}
+
+func TestSecurityEventMapsToAuditEventType(t *testing.T) {
 	t.Parallel()
-	metrics := &mockMetrics{}
-	logger := events.NewEventLogger(metrics)
-
-	// Insert first event.
-	entry1, err := logger.Insert(events.Event{
-		Type:      events.TypeSSRFBlocked,
-		Severity:  events.SeverityMedium,
-		Message:   "blocked private IP",
-		Component: "access",
-	})
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if entry1.PrevHash != "" {
-		t.Fatalf("first entry should have empty prev_hash, got %q", entry1.PrevHash)
-	}
-	if entry1.RowHash == "" {
-		t.Fatal("expected non-empty row hash")
-	}
-
-	// Insert second event.
-	entry2, err := logger.Insert(events.Event{
-		Type:      events.TypeAuthFailed,
-		Severity:  events.SeverityHigh,
-		Message:   "invalid JWT token",
-		Component: "auth",
-	})
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if entry2.PrevHash != entry1.RowHash {
-		t.Fatalf("second entry prev_hash should equal first entry row_hash")
-	}
-}
-
-func TestMerkleChainVerification(t *testing.T) {
-	t.Parallel()
-	logger := events.NewEventLogger(nil)
-
-	// Insert several events.
-	for i := 0; i < 10; i++ {
-		_, err := logger.Insert(events.Event{
-			Type:     events.TypeRateLimitExceeded,
-			Severity: events.SeverityMedium,
-			Message:  "rate limit hit",
-		})
-		if err != nil {
-			t.Fatalf("unexpected error on insert %d: %v", i, err)
+	// Every one of the 7 SEC-001 types must resolve to a valid AUTH-003
+	// EventType that passes the enum-lock validity check.
+	for _, typ := range AllTypes() {
+		et, ok := AuditEventType(typ)
+		if !ok {
+			t.Errorf("type %q has no audit.EventType mapping", typ)
+			continue
+		}
+		if !et.IsValid() {
+			t.Errorf("type %q maps to %q which is not a registered audit EventType (enum lock)", typ, et)
 		}
 	}
-
-	if err := logger.VerifyChain(); err != nil {
-		t.Fatalf("chain verification failed: %v", err)
-	}
 }
 
-func TestChainBreakDetection(t *testing.T) {
+func TestSecurityEventEmittedToAuditStore(t *testing.T) {
 	t.Parallel()
-	logger := events.NewEventLogger(nil)
+	store := &captureStore{}
+	auditEmitter := audit.NewEmitter(store, audit.Config{}, nil)
+	spy := &recorderSpy{}
+	em := NewEmitter(auditEmitter, spy, nil)
 
-	// Insert events.
-	_, _ = logger.Insert(events.Event{Type: events.TypeSSRFBlocked, Severity: events.SeverityMedium, Message: "test"})
-	_, _ = logger.Insert(events.Event{Type: events.TypeAuthFailed, Severity: events.SeverityHigh, Message: "test2"})
-
-	// Tamper with an entry.
-	entries := logger.Entries()
-	if len(entries) < 2 {
-		t.Fatal("expected at least 2 entries")
-	}
-	// The verification should pass before tampering.
-	if err := logger.VerifyChain(); err != nil {
-		t.Fatalf("chain should be valid before tampering: %v", err)
-	}
-
-	// Note: Since entries() returns a copy, we can't directly tamper with
-	// the internal state. This test verifies the VerifyChain function works
-	// correctly on a valid chain. A real chain break test would require
-	// direct field manipulation which is not possible from outside the package.
-}
-
-func TestMetricsRecorded(t *testing.T) {
-	t.Parallel()
-	metrics := &mockMetrics{}
-	logger := events.NewEventLogger(metrics)
-
-	_, err := logger.Insert(events.Event{
-		Type:     events.TypePromptSanitized,
-		Severity: events.SeverityLow,
-		Message:  "sanitized prompt",
+	err := em.Emit(context.Background(), Event{
+		Type:     TypeSSRFBlocked,
+		Severity: SeverityMedium,
+		Audit: audit.AuditEvent{
+			TenantID:  "tenant-a",
+			RequestID: "req-1",
+			Resource:  "http://169.254.169.254",
+		},
 	})
 	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+		t.Fatalf("Emit: %v", err)
 	}
 
-	if metrics.recorded.Load() != 1 {
-		t.Fatalf("expected 1 metric record, got %d", metrics.recorded.Load())
+	// The event reached the AUTH-003 store with the mapped EventType + Decision.
+	got := store.last()
+	if got.EventType != audit.EventSecuritySSRFBlocked {
+		t.Errorf("stored EventType = %q, want %q", got.EventType, audit.EventSecuritySSRFBlocked)
 	}
-}
-
-func TestEventLoggerLen(t *testing.T) {
-	t.Parallel()
-	logger := events.NewEventLogger(nil)
-
-	if logger.Len() != 0 {
-		t.Fatalf("expected 0 entries, got %d", logger.Len())
+	if got.Decision != audit.DecisionDeny {
+		t.Errorf("stored Decision = %q, want deny", got.Decision)
 	}
-
-	_, _ = logger.Insert(events.Event{Type: events.TypeRBACDenied, Severity: events.SeverityMedium, Message: "denied"})
-	_, _ = logger.Insert(events.Event{Type: events.TypeSecretScanFinding, Severity: events.SeverityCritical, Message: "found"})
-
-	if logger.Len() != 2 {
-		t.Fatalf("expected 2 entries, got %d", logger.Len())
+	// The metric was incremented with bounded labels.
+	if len(spy.calls) != 1 || spy.calls[0] != [2]string{"ssrf.blocked", "medium"} {
+		t.Errorf("metric calls = %v, want one [ssrf.blocked medium]", spy.calls)
 	}
 }
 
-func TestAllSevenEventTypes(t *testing.T) {
+func TestSecurityEventDecisionMapping(t *testing.T) {
 	t.Parallel()
-	logger := events.NewEventLogger(nil)
-
-	types := []events.EventType{
-		events.TypeAuthFailed,
-		events.TypeAuthSuccess,
-		events.TypeSSRFBlocked,
-		events.TypeSecretScanFinding,
-		events.TypeRateLimitExceeded,
-		events.TypeRBACDenied,
-		events.TypePromptSanitized,
+	cases := map[Type]audit.Decision{
+		TypeAuthFailed:        audit.DecisionDeny,
+		TypeAuthSuccess:       audit.DecisionAllow,
+		TypeSSRFBlocked:       audit.DecisionDeny,
+		TypeRBACDenied:        audit.DecisionDeny,
+		TypeRateLimitExceeded: audit.DecisionDeny,
+		TypeSecretScanFinding: audit.DecisionNone,
+		TypePromptSanitized:   audit.DecisionNone,
 	}
-
-	for _, et := range types {
-		_, err := logger.Insert(events.Event{Type: et, Severity: events.SeverityMedium, Message: "test"})
-		if err != nil {
-			t.Fatalf("failed to insert event type %q: %v", et, err)
+	for typ, want := range cases {
+		if got := auditDecision(typ); got != want {
+			t.Errorf("auditDecision(%q) = %q, want %q", typ, got, want)
 		}
 	}
+}
 
-	if logger.Len() != 7 {
-		t.Fatalf("expected 7 entries, got %d", logger.Len())
+func TestSecurityEventUnknownTypeIsNoop(t *testing.T) {
+	t.Parallel()
+	store := &captureStore{}
+	em := NewEmitter(audit.NewEmitter(store, audit.Config{}, nil), nil, nil)
+	if err := em.Emit(context.Background(), Event{Type: Type("bogus"), Severity: SeverityLow}); err != nil {
+		t.Errorf("unknown type must be a no-op, got %v", err)
 	}
+	if len(store.rows) != 0 {
+		t.Errorf("unknown type must not write to the audit store; got %d rows", len(store.rows))
+	}
+}
 
-	if err := logger.VerifyChain(); err != nil {
-		t.Fatalf("chain verification failed after all 7 types: %v", err)
+func TestSecurityEventEmitsIntoExistingChain(t *testing.T) {
+	t.Parallel()
+	// Confirm SEC-001 introduces no new chain: the event flows through the
+	// existing audit.Emitter and the row is verifiable by the existing
+	// audit.VerifyChain with hashes computed by the existing audit.ComputeThisHash.
+	store := &captureStore{}
+	em := NewEmitter(audit.NewEmitter(store, audit.Config{}, nil), nil, nil)
+	if err := em.Emit(context.Background(), Event{Type: TypeSecretScanFinding, Severity: SeverityCritical, Audit: audit.AuditEvent{TenantID: "t"}}); err != nil {
+		t.Fatalf("Emit: %v", err)
+	}
+	row := store.last()
+	// Recompute the chain hash for the single-row chain using the EXISTING
+	// AUTH-003 primitive and confirm VerifyChain accepts it.
+	row.ThisHash = audit.ComputeThisHash("", row)
+	if v := audit.VerifyChain([]audit.AuditEvent{row}); v != 0 {
+		t.Errorf("existing audit.VerifyChain reported %d violations on a freshly hashed row", v)
 	}
 }

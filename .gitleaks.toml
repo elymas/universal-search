@@ -1,0 +1,58 @@
+# gitleaks configuration — SPEC-SEC-001 REQ-SEC-004
+#
+# Primary secret scanner baseline. Extends the upstream gitleaks default rule
+# set and adds a project allowlist for known-safe test fixtures and documented
+# sample tokens.
+#
+# Policy:
+#   - New findings NOT covered by this allowlist BLOCK the CI security.yml job.
+#   - Adding a new allowlist entry requires CODEOWNERS approval (.github/CODEOWNERS).
+#   - False positives are recorded in ops/security/gitleaks-fp-log.md (NFR-SEC-003).
+#
+# Local usage:
+#   gitleaks detect --source . --log-opts="--all"   # full git history
+#   gitleaks protect --staged                        # pre-commit (staged diff)
+
+title = "Universal Search gitleaks baseline"
+
+# Inherit the built-in gitleaks rule set (AWS keys, GitHub tokens, JWTs,
+# private keys, generic API keys, etc.). Project-specific allowlisting below.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "SPEC-SEC-001 baseline allowlist for test fixtures and documented samples"
+
+# Path-based allowlist: directories and files that legitimately contain
+# credential-shaped strings used only by tests/docs.
+paths = [
+  # OIDC stub fixtures (SPEC-AUTH-001 test harness).
+  '''internal/auth/testdata/oidc_stub/.*''',
+  # All test-data directories anywhere in the tree.
+  '''.*/testdata/.*''',
+  # Go test files may embed throwaway credentials for table-driven tests.
+  '''.*_test\.go$''',
+  # Operator security docs contain documented PLACEHOLDER sample tokens.
+  '''ops/security/runbook\.md$''',
+  '''ops/security/gitleaks-fp-log\.md$''',
+  # This config itself references rule-shaped strings.
+  '''\.gitleaks\.toml$''',
+]
+
+# Regex-based allowlist: explicit placeholder tokens documented in runbooks.
+# These are intentional non-secrets used in examples and acceptance tests.
+regexes = [
+  '''<AWS_ACCESS_KEY_PLACEHOLDER>''',
+  '''<[A-Z_]+_PLACEHOLDER>''',
+  '''EXAMPLE[_-]?KEY''',
+  '''dummy[_-]?secret''',
+]
+
+# Stopwords reduce generic-rule false positives on obviously non-secret tokens.
+stopwords = [
+  "example",
+  "placeholder",
+  "changeme",
+  "your-token-here",
+  "redacted",
+]

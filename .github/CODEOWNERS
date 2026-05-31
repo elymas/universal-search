@@ -1,0 +1,13 @@
+# CODEOWNERS — SPEC-SEC-001 REQ-SEC-004
+#
+# Security-sensitive files require review by the security owner. In particular,
+# any change to the gitleaks allowlist (.gitleaks.toml) MUST be reviewed so
+# that new allowlist entries are not used to silence real secret findings.
+
+# Secret-scanner baseline and security CI.
+/.gitleaks.toml            @elymas
+/.github/workflows/security.yml  @elymas
+/ops/security/             @elymas
+
+# Vulnerability exception tracking (REQ-SEC-003).
+/ops/security/vuln-exceptions.yaml  @elymas

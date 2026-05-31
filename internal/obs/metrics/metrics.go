@@ -125,6 +125,10 @@ type Registry struct {
 	EvalJudgeCalls     *prometheus.CounterVec
 	EvalJudgeDuration  *prometheus.HistogramVec
 
+	// Security metrics (SPEC-SEC-001 REQ-SEC-009, REQ-SEC-017). New labels:
+	// component, type, severity (reason already present). NFR-SEC-007 bounded.
+	Security *SecurityCollectors
+
 	// labelNames tracks all registered label names for cardinality validation.
 	labelNames []string
 }
@@ -246,6 +250,9 @@ func NewRegistry() *Registry {
 	// Register Eval benchmark metrics (SPEC-EVAL-001).
 	evalMetrics := registerEval(pr)
 
+	// Register Security metrics (SPEC-SEC-001).
+	security := registerSecurity(pr)
+
 	return &Registry{
 		Prometheus:                    pr,
 		HTTPRequests:                  httpRequests,
@@ -291,6 +298,7 @@ func NewRegistry() *Registry {
 		EvalBenchmarkScore:            evalMetrics.benchmarkScore,
 		EvalJudgeCalls:                evalMetrics.judgeCalls,
 		EvalJudgeDuration:             evalMetrics.judgeDuration,
+		Security:                      security,
 		labelNames: []string{
 			"method", "route", "status_class",
 			"adapter_class",
@@ -318,6 +326,15 @@ func NewRegistry() *Registry {
 			// Adapter reliability labels (SPEC-EVAL-002 NFR-EVAL2-001).
 			// state in {closed, open, half_open} (3 values, bounded enum).
 			"state",
+			// Security labels (SPEC-SEC-001 NFR-SEC-007): bounded enums only.
+			// reason already present; component ∈ {access, auth, adapter};
+			// type ∈ 7-event taxonomy; severity ∈ {critical, high, medium, low}.
+			"component",
+			"type",
+			"severity",
+			// Rate-limit label (SPEC-SEC-001 REQ-SEC-014): tenant_id_class ∈
+			// {known, unknown}. Raw tenant_id is NEVER a label.
+			"tenant_id_class",
 		},
 	}
 }

@@ -283,6 +283,15 @@ func TestCardinalityGuardRejectsUnboundedLabels(t *testing.T) {
 		// Adapter reliability labels added by SPEC-EVAL-002 (NFR-EVAL2-001).
 		// state in {closed, open, half_open} (3 values, bounded enum).
 		"state": true,
+		// Security labels added by SPEC-SEC-001 (NFR-SEC-007). reason already
+		// present; component ∈ {access, auth, adapter}; type ∈ 7-event taxonomy;
+		// severity ∈ {critical, high, medium, low}.
+		"component": true,
+		"type":      true,
+		"severity":  true,
+		// Rate-limit label added by SPEC-SEC-001 (REQ-SEC-014).
+		// tenant_id_class ∈ {known, unknown}; raw tenant_id is never a label.
+		"tenant_id_class": true,
 	}
 
 	reg := metrics.NewRegistry()

@@ -1,0 +1,29 @@
+# SPEC-SEC-001 REQ-SEC-010 — semgrep exclusion patterns.
+#
+# Scanned rule sets (configured in .github/workflows/security.yml):
+#   p/golang, p/owasp-top-ten, p/jwt
+#
+# Excludes mirror .gosec.yml: tests and fixtures use intentionally-unsafe
+# patterns that must not block the security gate. Findings outside these
+# patterns are NEW findings and block the merge.
+
+# Go test files and fixtures.
+*_test.go
+**/testdata/**
+
+# Python sidecar test suites.
+services/*/tests/**
+
+# Frontend (covered by eslint + pnpm audit, not semgrep Go rules).
+web/node_modules/**
+web/.next/**
+
+# Vendored / generated.
+vendor/**
+**/*_generated.go
+**/*.pb.go
+
+# Project metadata and docs (no executable code).
+.moai/**
+ops/security/**
+docs/**

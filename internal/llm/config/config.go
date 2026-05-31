@@ -6,9 +6,12 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
+
+	"github.com/elymas/universal-search/internal/security/secretstore"
 )
 
 // Config holds all configuration for the LLM client.
@@ -35,6 +38,12 @@ func Defaults() Config {
 	}
 }
 
+// secretEnv resolves secret-bearing env vars (REQ-SEC-016). It is the default
+// env backend (os.Getenv semantics); deployments override the backend in
+// security.yaml without changing this call site. The resolver is immutable and
+// stateless, so a package-level instance is safe.
+var secretEnv secretstore.Resolver = secretstore.NewEnvResolver()
+
 // Load reads configuration from environment variables, applying defaults
 // for any unset values. Returns error if env values are invalid.
 func Load() (Config, error) {
@@ -43,7 +52,10 @@ func Load() (Config, error) {
 	if v := os.Getenv("LITELLM_BASE_URL"); v != "" {
 		cfg.BaseURL = v
 	}
-	if v := os.Getenv("LITELLM_MASTER_KEY"); v != "" {
+	// REQ-SEC-016: resolve the master key through the secretstore env backend
+	// rather than a bare os.Getenv. The env backend is os.Getenv under the hood,
+	// so behaviour is identical: an unset key leaves the default empty value.
+	if v, err := secretEnv.Get(context.Background(), "LITELLM_MASTER_KEY"); err == nil && v != "" {
 		cfg.MasterKey = v
 	}
 	if v := os.Getenv("LITELLM_TIMEOUT_SECONDS"); v != "" {
