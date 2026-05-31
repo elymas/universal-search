@@ -11,7 +11,8 @@ version/`, hand-curated CHANGELOG → KaC + Section grouping 보강,
 ad-hoc release procedure → release.yml + RELEASE.md runbook), 신규
 release 시스템 발명이 아니다. ANALYZE 단계에서 현 release surface
 inventory 정확히 capture; PRESERVE 단계에서 characterization test
-로 behavior 동일성 보장 (특히 `TestVersionFlag` regex + KaC v1.1.0
+로 behavior 동일성 보장 (특히 `TestVersionFlag` 의 실제 regex
+`^usearch v\d+\.\d+\.\d+` [cmd/usearch/main_test.go:12] + KaC v1.1.0
 format); IMPROVE 단계에서 single-source version + goreleaser +
 SLSA + cosign + SBOM 통합. 신규 코드 (release.yml shell scripts,
 `internal/version/` 패키지) 는 TDD 하위 cycle 로 실행.
@@ -37,10 +38,11 @@ are required when harness level is `thorough`")
    1.0.0 cut 시 3개 binary 가 서로 다른 version 보고 가능) 부터
    해결. `internal/version/` consolidation 이 첫 phase.
 2. **DDD characterization-first** — `cmd/usearch/main_test.go` 의
-   `TestVersionFlag` 가 byte-fidelity HARD preservation 대상. 기존
-   semver regex (`^usearch v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+
-   )?$`) 가 refactor 전후 unchanged passing. `--version` / `-v`
-   semantics 유지.
+   `TestVersionFlag` 가 byte-fidelity HARD preservation 대상. 실제
+   semver regex `^usearch v\d+\.\d+\.\d+` (prefix-anchored, NO `$`,
+   NO prerelease group — `main_test.go:12`) 가 refactor 전후
+   unchanged passing (regex 는 preserve only — 강화 안 함).
+   `--version` / `-v` semantics 유지.
 3. **Dependency-gate awareness** — 본 SPEC PASS 는 7개 dependency
    SPEC (DOC-001, DOC-002, DEPLOY-001, SEC-001, EVAL-001/002/003)
    PASS 조건부. plan 의 Phase 5 (release.yml authoring) 는
@@ -146,12 +148,15 @@ state 를 정확히 capture; Sprint Contract 협상 완료.
 
 **Activities**:
 
-- `cmd/usearch/main.go` 의 `const Version` declaration position,
-  consumer call sites, `--version` switch case 위치 확인
-- `cmd/usearch-api/main.go` + `cmd/usearch-mcp/main.go` 의 `const
-  version` + `obs.Init` consumer 확인
-- `cmd/usearch/main_test.go` 의 `TestVersionFlag` regex pattern
-  byte-fidelity capture (refactor 후 동일 regex 유지 확인용)
+- `cmd/usearch/main.go:14` 의 `const Version` declaration, cobra
+  root command (`newRootCmd`/`runCobra`) 의 `--version`/`-v` 처리
+  경로 확인
+- `cmd/usearch-api/main.go:20` + `cmd/usearch-mcp/main.go:19` 의
+  `const version` + `obs.Init` ServiceVersion consumer 확인 (mcp 는
+  `:28` 에 `--version` flag print 도 존재)
+- `cmd/usearch/main_test.go:12` 의 `semverPattern`
+  (`^usearch v\d+\.\d+\.\d+`) byte-fidelity capture (refactor 후
+  동일 regex 유지 확인용 — main_test.go 미편집)
 - `CHANGELOG.md` 의 `[Unreleased]` section content 의 모든 SPEC
   ID 목록 추출 (`grep -oE 'SPEC-[A-Z]+-[0-9]+' CHANGELOG.md | sort
   -u`); M1..M9 implemented SPEC 와 cross-validate
@@ -210,14 +215,14 @@ consolidate; existing test PASS 유지.
   ```
 - TDD REFACTOR: package documentation + `@MX:ANCHOR` on exported
   variables (fan_in >= 3 across 3 binaries + tests)
-- `cmd/usearch/main.go` modification:
-  - `const Version = "0.1.0-dev"` 삭제
+- `cmd/usearch/main.go` (+ cobra root command file) modification:
+  - `cmd/usearch/main.go:14` 의 `const Version = "0.1.0-dev"` 삭제
   - `import "github.com/elymas/universal-search/internal/version"`
     추가
-  - `fmt.Printf("usearch v%s\n", Version)` →
-    `fmt.Printf("usearch v%s\n", version.Version)`
-  - `obs.Config{ServiceName: "usearch", ServiceVersion: Version, ...}`
-    → `ServiceVersion: version.Version`
+  - cobra root command 의 `--version`/`-v` 출력이 참조하는 `Version`
+    심볼을 `version.Version` 로 교체 (`usearch v%s` 출력 형식 유지 —
+    `main_test.go:12` semverPattern 호환)
+  - obs ServiceVersion 전달 지점도 `version.Version` 로 교체
 - `cmd/usearch-api/main.go` modification:
   - `const version = "0.1.0-dev"` 삭제
   - `import vver "github.com/elymas/universal-search/internal/version"`
@@ -459,7 +464,10 @@ goreleaser + SLSA + cosign + GitHub Release publish 자동화.
     live ...` (EVAL-002 manual sign-off) + `.moai/reports/eval-003-
     korean-benchmark-*.md` 존재 (EVAL-003)
   - G7: `gh run list --workflow=chart-ci.yml ...` (DEPLOY-001) +
-    `cosign verify` on `ghcr.io/elymas/universal-search:1.0.0`
+    `cosign verify` on the REAL app images
+    `ghcr.io/elymas/usearch-api:${TAG#v}` +
+    `ghcr.io/elymas/usearch-mcp:${TAG#v}` (NOT a `universal-search`
+    app image — none is built; `universal-search` is the chart name)
     + `helm pull oci://ghcr.io/elymas/charts/universal-search:
     ${TAG#v}` + `helm show chart` 의 `appVersion` 비교
   - G8: `gh run list --workflow=docs.yml ...` (DOC-001) == `success`
@@ -637,7 +645,7 @@ verify 하는 정확한 mechanism:
 | G6 | SPEC-EVAL-001 | `gh run list --workflow=eval-faithfulness.yml --branch=main --limit=1 --json conclusion` == `success`; faithfulness score artifact ≥ 0.85 | EVAL-001 미PASS 시 본 SPEC release 차단 |
 | G6 | SPEC-EVAL-002 | Adapter reliability dashboard last data timestamp within 24h; `gh api repos/elymas/universal-search/dashboard-status` 가 응답 (EVAL-002 정의의 dashboard API) | EVAL-002 미PASS 시 차단 |
 | G6 | SPEC-EVAL-003 | `.moai/reports/eval-003-korean-benchmark-*.md` 파일 존재 + maintainer sign-off line ("Manual sign-off by limbowl on YYYY-MM-DD") 매칭 | EVAL-003 sign-off 누락 시 차단 |
-| G7 | SPEC-DEPLOY-001 | `cosign verify ghcr.io/elymas/universal-search:1.0.0 --certificate-identity-regexp ...` exit 0; `helm pull oci://ghcr.io/elymas/charts/universal-search:1.0.0 && helm show chart` 의 `appVersion` == git tag (without `v`) | DEPLOY-001 image/chart 미publish 또는 appVersion drift 시 차단 |
+| G7 | SPEC-DEPLOY-001 | `cosign verify ghcr.io/elymas/usearch-api:1.0.0` + `cosign verify ghcr.io/elymas/usearch-mcp:1.0.0` (real app images; `usearch-migrate` when present) exit 0 — NO `universal-search` app image (none built); `helm pull oci://ghcr.io/elymas/charts/universal-search:1.0.0 && helm show chart` 의 `appVersion` == git tag (without `v`) | DEPLOY-001 image/chart 미publish 또는 appVersion drift 시 차단 |
 | G8 | SPEC-DOC-001 | `gh run list --workflow=docs.yml --branch=main --limit=1 --json conclusion` == `success`; link-check 결과 v1.0.0 URL resolvable (post-publish self-reference 는 release 후 검증) | DOC-001 docs site build 실패 시 차단 |
 | G9 | SPEC-DOC-002 | `gh run list --workflow=adapter-reference-drift.yml --branch=main --limit=1 --json conclusion` == `success`; OR chart-ci.yml 의 parity test step PASS (DOC-002 implementation 방식에 따라) | DOC-002 drift detection fail 시 차단 |
 

@@ -1,9 +1,9 @@
 ---
 id: SPEC-REL-001
-version: 0.1.0
-status: draft
+version: 0.2.0
+status: approved
 created: 2026-05-22
-updated: 2026-05-22
+updated: 2026-05-31
 author: limbowl
 priority: P0
 issue_number: 0
@@ -20,6 +20,50 @@ related: [SPEC-BOOT-001, SPEC-DEP-001, SPEC-CLI-001, SPEC-CLI-002, SPEC-MCP-001,
 # SPEC-REL-001: V1 tag + release notes — `v1.0.0` cut, signed tags, SLSA L2 attested binaries / images / chart, migration guide
 
 ## HISTORY
+
+- 2026-05-31 (amend v0.2.0, limbowl via manager-spec — pre-reaudit
+  reconciliation):
+  plan-auditor blocker dispositions + stale-ref / contradiction
+  cleanup. **No scope expansion** — same 18 REQ / 7 NFR / 5 new files.
+  Changes:
+  - **B2 (phantom image)**: REQ-REL-017 + gate G7 verified a
+    `ghcr.io/elymas/universal-search:1.0.0` PRIMARY app image that is
+    **never built**. SPEC-DEPLOY-001 produces exactly three Go images
+    via `Dockerfile.usearch-{api,mcp,migrate}` (the `universal-search`
+    name only ever names the Helm **chart** at `oci://ghcr.io/elymas/
+    charts/universal-search`, not an app image). Fixed REQ-REL-017 +
+    G7 to verify the **real** images — `usearch-api` + `usearch-mcp`
+    as the primary app images (+ `usearch-migrate`) per DEPLOY-001's
+    Dockerfile set. The gate no longer hard-fails on a nonexistent
+    image.
+  - **B1 (`<org>` → `elymas`)**: REL-001 already resolves the registry
+    org to `elymas` throughout (0 `<org>` placeholders remain in this
+    SPEC). Added an explicit PRE-MERGE OPERATIONAL note: the 7
+    dependency SPECs (DEPLOY-001 / SEC-001 / DOC-001 / DOC-002 / EVAL-
+    trio) still carry `ghcr.io/<org>/` placeholders in their deferred
+    publish steps; resolving those to `elymas` is an operational step
+    executed before merge. REL-001 documents the canonical value
+    (`elymas`); it does NOT edit the other SPECs.
+  - **B3 (stale test regex)**: spec.md + acceptance.md cited a strict
+    `^usearch v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$`. The REAL
+    `cmd/usearch/main_test.go:12` uses a looser prefix-anchored
+    `^usearch v\d+\.\d+\.\d+` (no `$`, no prerelease group). Corrected
+    REQ-REL-002 + S2 + AC-001/AC-002 to target the REAL regex as the
+    current characterization-test state (no tightening — preservation
+    only).
+  - **B-doc (MIGRATION ordering)**: spec.md §D4 and acceptance.md
+    AC-005 listed the 12 MIGRATION.md sections in DIFFERENT orders.
+    Reconciled AC-005 to the canonical D4 ordering (§1 Overview … §12
+    Rollback procedure) across both documents.
+  - **Stale line refs**: corrected version-const line numbers —
+    `cmd/usearch/main.go:14` (was :21), `cmd/usearch-api/main.go:20`
+    (was :18), `cmd/usearch-mcp/main.go:19` (was :13).
+  - **Tag-deferral framing**: confirmed REL-001 ships release
+    **machinery + procedure** only; the actual `v1.0.0` git tag +
+    CHANGELOG `[1.0.0]` body + MIGRATION per-section content are
+    OPERATIONAL/post-merge (after all 7 dependency PRs merge to main).
+    Acceptance does NOT require a live tag at implementation time.
+  - Status remains `draft`.
 
 - 2026-05-22 (initial draft v0.1.0, limbowl via manager-spec):
   M9 (V1 release)의 **네 번째이자 terminal SPEC**이며, **본 SPEC은
@@ -53,18 +97,20 @@ related: [SPEC-BOOT-001, SPEC-DEP-001, SPEC-CLI-001, SPEC-CLI-002, SPEC-MCP-001,
   현재 코드베이스에 이미 배치되어 있어 본 SPEC이 의존하는 release
   자산 (research.md §1 inventory):
 
-  - `cmd/usearch/main.go:21` — `const Version = "0.1.0-dev"` (exported,
-    title-case). `cmd/usearch/main.go:50` 에서 `fmt.Printf("usearch
-    v%s\n", Version)` 로 사용. `cmd/usearch/main_test.go:14-29`
-    `TestVersionFlag` + `:33-` `TestVersionShortFlag` 가 semver
-    regex (`^usearch v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$`)
-    매칭으로 보호. REQ-BOOT-012 implementation.
-  - `cmd/usearch-api/main.go:18` — `const version = "0.1.0-dev"`
-    (lowercase, unexported). `:24` `ServiceVersion: version`로
+  - `cmd/usearch/main.go:14` — `const Version = "0.1.0-dev"` (exported,
+    title-case). cobra root command (`newRootCmd`/`runCobra`) 가
+    `usearch v%s` 형식으로 `--version`/`-v` 출력에 사용.
+    `cmd/usearch/main_test.go:12` `semverPattern` =
+    **`^usearch v\d+\.\d+\.\d+`** (prefix-anchored, NO `$`, NO
+    prerelease group) 가 `TestVersionFlag` (`:16-`) +
+    `TestVersionShortFlag` (`:34-`) 에서 매칭으로 보호. REQ-BOOT-012
+    implementation.
+  - `cmd/usearch-api/main.go:20` — `const version = "0.1.0-dev"`
+    (lowercase, unexported). `:27` `ServiceVersion: version`로
     OBS-001 의 obs.Init() 에 전달.
-  - `cmd/usearch-mcp/main.go:13` — `const version = "0.1.0-dev"`
-    (lowercase, unexported). `:19` `ServiceVersion: version`로
-    동일 사용.
+  - `cmd/usearch-mcp/main.go:19` — `const version = "0.1.0-dev"`
+    (lowercase, unexported). `:28` `fmt.Printf("usearch-mcp %s\n",
+    version)` (`--version` flag) + obs.Init ServiceVersion 로 사용.
   - `CHANGELOG.md` (182 lines, Keep-a-Changelog v1.1.0 format,
     SemVer 2.0.0 footer reference): `[Unreleased]` 섹션 하나만
     존재 (zero released versions, zero git tags). M6 (2026-05-22
@@ -319,10 +365,16 @@ related: [SPEC-BOOT-001, SPEC-DEP-001, SPEC-CLI-001, SPEC-CLI-002, SPEC-MCP-001,
          signed-blob `.sig` + `.crt` (keyless OIDC).
        - **Channel B (container images via ghcr.io)**: SPEC-DEPLOY-001
          REQ-DEPLOY-018 의 `build-images.yml` 가 build + sign +
-         push 책임. 본 SPEC은 build-images.yml 결과물의 cosign
-         signature + SLSA provenance 가 v1.0.0 tag 시점 ghcr.io
-         에 존재함을 verify (G7 의 일부) + release notes 에서
-         `docker pull ghcr.io/elymas/usearch:1.0.0` 명시.
+         push 책임. DEPLOY-001 이 실제로 build 하는 image 는 정확히
+         3개 — `usearch-api`, `usearch-mcp` (primary app images) +
+         `usearch-migrate` (migration job) — `Dockerfile.usearch-
+         {api,mcp,migrate}` 로부터. **`universal-search` 라는 app
+         image 는 존재하지 않는다** (`universal-search` 는 Helm
+         **chart** 이름 — Channel C 참조). 본 SPEC은 build-images.yml
+         결과물의 cosign signature + SLSA provenance 가 v1.0.0 tag
+         시점 ghcr.io 에 존재함을 verify (G7 의 일부) + release notes
+         에서 `docker pull ghcr.io/elymas/usearch-api:1.0.0` +
+         `docker pull ghcr.io/elymas/usearch-mcp:1.0.0` 명시.
        - **Channel C (Helm chart via OCI)**: SPEC-DEPLOY-001 REQ-
          DEPLOY-017 의 `chart-release.yml` 가 `oci://ghcr.io/elymas/
          charts/universal-search:1.0.0` 에 push. 본 SPEC은 결과물
@@ -494,7 +546,22 @@ attestation 의 세 축으로 V1 release ceremony 로 묶는다.
 | Docs | `README.md` (MODIFIED) | Add version badge + install snippet referencing v1.0.0 release URL |
 | Build | `.goreleaser.yml` (NEW) | goreleaser v2 config producing linux/darwin × amd64/arm64 × 3 binaries = 12 archives with SHA256SUMS + SBOM per D7 |
 | CI | `.github/workflows/release.yml` (NEW) | Tag-trigger workflow executing pre-tag verification matrix (G1..G12) → goreleaser run → SLSA provenance generation → cosign sign-blob → GitHub Release publish with CHANGELOG section extraction as body per D6, D7, D8 |
-| Process | Annotated GPG-signed `v1.0.0` git tag | Single canonical release marker with tag message containing CHANGELOG `[1.0.0]` first 30 lines summary + maintainer Signed-off-by per D5 |
+| Process | Annotated GPG-signed `v1.0.0` git tag | Single canonical release marker with tag message containing CHANGELOG `[1.0.0]` first 30 lines summary + maintainer Signed-off-by per D5 (OPERATIONAL — see below) |
+
+[HARD framing — machinery vs ceremony]: REL-001 ships the release
+**machinery + procedure** (the `internal/version/` package, `.go`
+refactor, `.goreleaser.yml`, `release.yml` with the G1..G12 pre-tag
+matrix, RELEASE.md runbook, MIGRATION.md / CHANGELOG skeletons +
+format contract). The **actual `v1.0.0` git tag**, the **CHANGELOG
+`[1.0.0]` section body**, and the **MIGRATION per-section breaking-
+change content** are OPERATIONAL/post-merge artifacts produced
+during the release ceremony **after all 7 dependency PRs merge to
+main**. Acceptance at implementation time therefore does NOT require
+a live `v1.0.0` tag, a published GitHub Release, or live cross-SPEC
+gate PASS (those gates — G5..G9 — resolve post-merge via `gh run`
+lookups against the merged dependency workflows). The implementation
+acceptance gates (A1..A13, §6) verify the machinery in dry-run /
+snapshot / lint modes only.
 
 ### 1.2 Motivation
 
@@ -599,6 +666,26 @@ unbacked.
 HISTORY 의 D1..D11 11개 결정은 §2 requirements 를 bind 하는 constraint
 이다. 재논의 대상이 아니며, annotation cycle 에서만 modification 가능.
 
+### 1.5 Registry org resolution + pre-merge operational propagation
+
+본 SPEC 은 registry org 를 **`elymas`** 로 canonical 하게 resolve
+한다 — 본 SPEC 내 모든 `ghcr.io/...` reference 는 `ghcr.io/elymas/`
+를 사용하며 unresolved `<org>` placeholder 는 **0개**다. pre-tag
+matrix 의 registry / cosign verification 은 모두 `ghcr.io/elymas/`
+를 target 한다.
+
+[OPERATIONAL — pre-merge, not a REL-001 edit]: 7개 dependency SPEC
+(SPEC-DEPLOY-001, SPEC-SEC-001, SPEC-DOC-001, SPEC-DOC-002, SPEC-
+EVAL-001/002/003) 은 자신의 deferred publish step 에서 아직
+`ghcr.io/<org>/` placeholder 를 carry 한다 (예: DEPLOY-001 의
+`oci://ghcr.io/<org>/charts/...`, `ghcr.io/<org>/usearch-api`). 이
+placeholder 들을 `elymas` 로 치환하는 것은 **release ceremony 직전
+operational step** (각 dependency PR 의 merge 전 수행) 이다. 본
+SPEC 은 canonical value (`elymas`) 를 **document 만** 하며, 다른
+SPEC 파일을 편집하지 않는다 (scope discipline). G5/G7/G8/G9 gate 는
+이 propagation 이 완료되어 `ghcr.io/elymas/` artifact 가 published
+된 상태를 전제로 verify 한다.
+
 ---
 
 ## 2. EARS Requirements
@@ -631,10 +718,13 @@ X ...BuildDate=<ISO-8601>"`. [Trace: HISTORY D1, research §3]
 `cmd/usearch/main_test.go` regression tests `TestVersionFlag` and
 `TestVersionShortFlag` shall continue to PASS after the REQ-REL-001
 refactor. Specifically, `usearch --version` output shall match the
-existing semver regex `^usearch v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-
-9.-]+)?$` (per `cmd/usearch/main_test.go:29`) for both the
+existing semver regex **`^usearch v\d+\.\d+\.\d+`** (the actual
+`semverPattern` at `cmd/usearch/main_test.go:12` — prefix-anchored,
+NO trailing `$`, NO prerelease capture group) for both the
 unstripped development build (`0.1.0-dev`) and the ldflags-injected
-release build (`1.0.0`). REQ-BOOT-012 `--version` / `-v` flag
+release build (`1.0.0`). This is a HARD characterization constraint:
+the regex is **preserved as-is**, not tightened — the refactor must
+not change `main_test.go`. REQ-BOOT-012 `--version` / `-v` flag
 semantics shall be preserved without modification. [Trace: HISTORY
 D1 HARD constraint, research §3.4]
 
@@ -828,15 +918,25 @@ file or SPEC ID defining its current state at v1.0.0 cut. [Trace:
 HISTORY D9]
 
 **REQ-REL-017 [Ubiquitous, P1]** — The release.yml workflow shall
-verify, as part of gate G7, that the container images at
-`ghcr.io/elymas/universal-search:1.0.0`, `ghcr.io/elymas/usearch-
-api:1.0.0`, `ghcr.io/elymas/usearch-mcp:1.0.0`, `ghcr.io/elymas/
-usearch-migrate:1.0.0` (SPEC-DEPLOY-001 REQ-DEPLOY-018 outputs)
-exist with valid cosign signatures AND the Helm chart at `oci://
-ghcr.io/elymas/charts/universal-search:1.0.0` (SPEC-DEPLOY-001
-REQ-DEPLOY-017 output) exists with `Chart.yaml` `appVersion: 1.0.0`
-matching the git tag. Verification failure shall fail G7 and abort
-the release. [Trace: HISTORY D7]
+verify, as part of gate G7, that the container images **actually
+built by SPEC-DEPLOY-001 REQ-DEPLOY-018** exist with valid cosign
+signatures. DEPLOY-001 produces exactly three Go images from
+`Dockerfile.usearch-{api,mcp,migrate}`:
+`ghcr.io/elymas/usearch-api:1.0.0` and
+`ghcr.io/elymas/usearch-mcp:1.0.0` (the primary application images)
+plus `ghcr.io/elymas/usearch-migrate:1.0.0` (the migration job
+image). There is **no `ghcr.io/elymas/universal-search` application
+image** — `universal-search` is the Helm chart name only (see
+below), so G7 MUST NOT verify a `universal-search` image (doing so
+would hard-fail on a nonexistent artifact). G7 shall additionally
+verify the Helm chart at `oci://ghcr.io/elymas/charts/universal-
+search:1.0.0` (SPEC-DEPLOY-001 REQ-DEPLOY-017 output) exists with
+`Chart.yaml` `appVersion: 1.0.0` matching the git tag. Of the three
+images, `usearch-api` and `usearch-mcp` are the must-verify primary
+app images; `usearch-migrate` is verified when present (it is a
+DEPLOY-001 deliverable). Verification failure on a required image or
+the chart shall fail G7 and abort the release. [Trace: HISTORY D7,
+DEPLOY-001 REQ-DEPLOY-017/018 Dockerfile set]
 
 ### 2.3 P2 — Forward-compatibility (1 REQ)
 
@@ -1039,8 +1139,9 @@ github.com/elymas/universal-search/internal/version.BuildDate=
 **When** `go test -run TestVersionFlag ./cmd/usearch/...` is
 executed without ldflags injection (default `0.1.0-dev`).
 **Then** the test passes, asserting `usearch --version` output
-matches `^usearch v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$`.
-[REQ-REL-002, HARD characterization]
+matches the actual `semverPattern` `^usearch v\d+\.\d+\.\d+`
+(prefix-anchored, no trailing `$`, no prerelease group — per
+`cmd/usearch/main_test.go:12`). [REQ-REL-002, HARD characterization]
 
 ### S3 — Three binaries report identical version
 
@@ -1128,13 +1229,17 @@ REL-004]
 
 ### S11 — Cross-SPEC verification at G7
 
-**Given** SPEC-DEPLOY-001 build-images.yml has published `ghcr.io/
-elymas/universal-search:1.0.0` with valid cosign signature, and
-chart-release.yml has published `oci://ghcr.io/elymas/charts/
-universal-search:1.0.0` with `appVersion: 1.0.0`.
+**Given** SPEC-DEPLOY-001 build-images.yml has published the real
+app images `ghcr.io/elymas/usearch-api:1.0.0` +
+`ghcr.io/elymas/usearch-mcp:1.0.0` (+ `usearch-migrate:1.0.0`) with
+valid cosign signatures, and chart-release.yml has published
+`oci://ghcr.io/elymas/charts/universal-search:1.0.0` with
+`appVersion: 1.0.0`.
 **When** release.yml G7 step executes verification.
-**Then** verification succeeds; if either image is missing or
-chart appVersion mismatches tag, G7 fails. [REQ-REL-017]
+**Then** verification succeeds; if a required app image
+(`usearch-api` / `usearch-mcp`) is missing, or the chart appVersion
+mismatches the tag, G7 fails. G7 does NOT verify any
+`universal-search` app image (none is built). [REQ-REL-017]
 
 ### S12 — Dry-run mode does not publish
 
@@ -1300,16 +1405,17 @@ Internal (project files):
   scope)
 - `.moai/specs/SPEC-CORE-001/spec.md` (adapter contract interface
   — freeze scope)
-- `cmd/usearch/main.go:19-21` (existing `const Version = "0.1.0-
+- `cmd/usearch/main.go:14` (existing `const Version = "0.1.0-
   dev"` — single-source consolidation source)
-- `cmd/usearch/main.go:49-51` (existing `--version` / `-v` switch
-  case)
-- `cmd/usearch-api/main.go:18-24` (existing `const version` +
-  `obs.Init` consumer)
-- `cmd/usearch-mcp/main.go:13-30` (existing `const version` +
-  `obs.Init` consumer)
-- `cmd/usearch/main_test.go:14-39` (`TestVersionFlag` +
-  `TestVersionShortFlag` — HARD preservation)
+- `cmd/usearch/main.go:16-20` (`main()` → cobra `newRootCmd` /
+  `runCobra`; `--version` / `-v` handled inside cobra root)
+- `cmd/usearch-api/main.go:20-30` (existing `const version` at :20 +
+  `obs.Init` ServiceVersion consumer at :27)
+- `cmd/usearch-mcp/main.go:19-30` (existing `const version` at :19 +
+  `--version` flag print at :28 + `obs.Init` consumer)
+- `cmd/usearch/main_test.go:12` (`semverPattern` =
+  `^usearch v\d+\.\d+\.\d+`) + `:16-` `TestVersionFlag` + `:34-`
+  `TestVersionShortFlag` — HARD preservation
 - `CHANGELOG.md` (Keep-a-Changelog v1.1.0 — format source)
 - `.github/workflows/go.yml` (existing CI baseline)
 - `.github/workflows/deps-audit.yml` (existing dependency audit
