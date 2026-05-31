@@ -1,7 +1,7 @@
 ---
 id: SPEC-DOC-002
-version: 0.2.0
-status: approved
+version: 1.0.0
+status: implemented
 created: 2026-05-22
 updated: 2026-05-31
 author: limbowl
@@ -20,6 +20,30 @@ related: [SPEC-DEPLOY-001, SPEC-EVAL-001, SPEC-EVAL-003, SPEC-SEC-001]
 # SPEC-DOC-002: Adapter reference — per-adapter pages with drift-gated Capabilities, status badges, and Korean-locale operator notes
 
 ## HISTORY
+
+- 2026-05-31 (v1.0.0, manager-docs — sync phase; status approved →
+  implemented; 0 fix cycles):
+  DDD ANALYZE-PRESERVE-IMPROVE cycle complete. plan-auditor PASS
+  (0.92, 3 minors: D1 EARS label, D2 EVAL-002 depends_on→related,
+  D3 plan REQ tags — all deferred). DDD impl committed as `835cca0`.
+  evaluator-active PASS (Func 92 / Sec 97 / Craft 82 / Cons 90, 0
+  fix cycles). Branch `feature/SPEC-DOC-002` stacked on
+  `feature/SPEC-DOC-001`.
+
+  Carry-forward documented:
+  - `gen-adapter-ref` tool coverage 81.9% < 85% TRUST 5 threshold
+    (critical paths covered; close-out in follow-up SPEC)
+  - `adapter-status.json` `successRate7d` values are static
+    placeholders — live EVAL-002 feed is a forward-reference
+    (PR #44 unmerged)
+  - 8 adapter KO pages deferred to V1.1 (V1 = Tier-1: index,
+    naver, koreanews, errors)
+  - `deployment-helm.mdx` anchors (#github-pat, #naver-credentials,
+    #knc-endpoint) need DOC-001 owner coordination
+  - bilingual-coverage exclude pattern for reference/adapters
+    needs DOC-001 sign-off
+  - Stacked PR base will be `feature/SPEC-DOC-001` (includes
+    DOC-001 commits)
 
 - 2026-05-31 (v0.2.0, limbowl via manager-spec — code-spec
   reconciliation + V1 scope reduction; status remains draft):
