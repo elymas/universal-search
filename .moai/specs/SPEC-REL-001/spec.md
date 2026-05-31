@@ -1,7 +1,7 @@
 ---
 id: SPEC-REL-001
-version: 0.2.0
-status: approved
+version: 1.0.0
+status: implemented
 created: 2026-05-22
 updated: 2026-05-31
 author: limbowl
@@ -20,6 +20,29 @@ related: [SPEC-BOOT-001, SPEC-DEP-001, SPEC-CLI-001, SPEC-CLI-002, SPEC-MCP-001,
 # SPEC-REL-001: V1 tag + release notes — `v1.0.0` cut, signed tags, SLSA L2 attested binaries / images / chart, migration guide
 
 ## HISTORY
+
+- 2026-05-31 (implemented v1.0.0, limbowl via manager-docs — sync):
+  DDD implementation complete + evaluator-active PASS after 1 fix
+  cycle. Commits: `0849f31` (plan gate), `9d3d732` (impl), `e93dbe4`
+  (goreleaser archive collision fix). Evaluator-active FAIL on first
+  pass (goreleaser archive path collision — two archives mapped same
+  output path); resolved in `e93dbe4` by disambiguating archive name
+  patterns per binary. Final scores: Func 90 / Sec 88 / Craft 85 /
+  Cons 88. Status approved → implemented.
+  Carry-forward (post-merge operational):
+  - Actual `v1.0.0` git tag + CHANGELOG `[1.0.0]` body consolidation
+    per RELEASE.md ceremony (merge PRs #42–#48 → resolve conflicts →
+    verify G5–G9 on main → GPG-sign + push tag → release.yml runs).
+  - `<org>` → `elymas` propagation in 7 dep SPECs (DEPLOY-001 /
+    SEC-001 / DOC-001 / DOC-002 / EVAL trio) before merge.
+  - goreleaser not installed locally; 12-archive output verified in CI
+    via static template analysis (no collision confirmed).
+  - release.yml G5–G9 dep workflows (security.yml / eval-*.yml /
+    chart-ci.yml / docs.yml) land post-merge; graceful gh-run lookups.
+  - LOW: release.yml packages:write permission (no image push —
+    least-privilege); SLSA outputs implicit dependency.
+  - Deferred post-V1: gitsign, Homebrew/apt/Windows, release-please,
+    LTS policy.
 
 - 2026-05-31 (amend v0.2.0, limbowl via manager-spec — pre-reaudit
   reconciliation):
