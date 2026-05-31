@@ -60,7 +60,10 @@ builds:
       - -X github.com/elymas/universal-search/internal/version.BuildDate={{.Date}}
 
 archives:
-  - name_template: usearch_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+  # {{ .Binary }} differentiates the 3 builds (usearch / usearch-api /
+  # usearch-mcp) so they do not collide — yields 3 binaries x 2 OS x 2 arch
+  # = 12 archives (REQ-REL-006).
+  - name_template: "{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     format: tar.gz
     files:
       - LICENSE

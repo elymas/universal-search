@@ -308,7 +308,7 @@ jobs:
 
       - name: Sign archives with cosign
         run: |
-          for archive in dist/usearch_*_{linux,darwin}_{amd64,arm64}.tar.gz; do
+          for archive in dist/usearch*_{linux,darwin}_{amd64,arm64}.tar.gz; do
             if [[ -f "$archive" ]]; then
               cosign sign-blob --yes "$archive" > "$archive.sig" 2>&1 || {
                 echo "Cosign signing failed for $archive; retrying..."
