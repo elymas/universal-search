@@ -25,6 +25,7 @@ volumes:
   pg_data: {}
   redis_data: {}
   prometheus_data: {}
+  grafana_data: {}
   embedder_models: {}
 
 services:
@@ -228,16 +229,72 @@ services:
       - "${PROMETHEUS_PORT:-9091}:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      # SPEC-EVAL-002: recording rules + alert rules.
+      - ./prometheus/recording-rules.yml:/etc/prometheus/recording-rules.yml:ro
+      - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
       - prometheus_data:/prometheus
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
+      # SPEC-EVAL-002 NFR-EVAL2-004: 30-day retention guarantees a full 7d
+      # rolling window survives a Prometheus restart.
+      - "--storage.tsdb.retention.time=30d"
       - "--web.console.libraries=/usr/share/prometheus/console_libraries"
       - "--web.console.templates=/usr/share/prometheus/consoles"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/healthy || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - app
+
+  # ── Grafana dashboard (SPEC-EVAL-002) ───────────────────────────────────────
+  # Adapter reliability dashboard, auto-provisioned from deploy/grafana/.
+  # REQ-EVAL2-006/007. Bound to localhost only.
+  grafana:
+    image: grafana/grafana:11.3.0
+    ports:
+      - "127.0.0.1:${GRAFANA_PORT:-3000}:3000"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
+      GF_SECURITY_ALLOW_EMBEDDING: "true"
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+    networks:
+      - app
+
+  # ── Alertmanager (SPEC-EVAL-002) ─────────────────────────────────────────────
+  # Routes fired Prometheus alerts. Default null receiver (silent) until the
+  # operator wires a channel. REQ-EVAL2-009. Optional: gate behind the `alerts`
+  # compose profile so operators who do not want alerting can skip it.
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    profiles: ["alerts"]
+    ports:
+      - "127.0.0.1:${ALERTMANAGER_PORT:-9093}:9093"
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9093/-/healthy || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5

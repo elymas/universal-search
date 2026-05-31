@@ -6,7 +6,23 @@
 
 global:
   scrape_interval: 15s
-  evaluation_interval: 15s
+  # SPEC-EVAL-002 NFR-EVAL2-003 / amendment A4: recording-rule + alert `for:`
+  # durations assume a 1m evaluation cadence. scrape_interval stays 15s
+  # (scrape and rule evaluation are independent).
+  evaluation_interval: 1m
+
+# SPEC-EVAL-002: load recording rules + alert rules.
+rule_files:
+  - "recording-rules.yml"
+  - "alerts.yml"
+
+# SPEC-EVAL-002 REQ-EVAL2-008: route fired alerts to Alertmanager.
+# The alertmanager hostname resolves within the docker-compose network.
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - "alertmanager:9093"
 
 scrape_configs:
   - job_name: "usearch"

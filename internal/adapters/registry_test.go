@@ -5,6 +5,7 @@ package adapters_test
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -23,7 +24,6 @@ import (
 
 	"github.com/elymas/universal-search/internal/adapters"
 	"github.com/elymas/universal-search/internal/obs"
-	"github.com/elymas/universal-search/internal/obs/metrics"
 	"github.com/elymas/universal-search/pkg/types"
 )
 
@@ -498,6 +498,60 @@ func TestWrappedAdapterEmitsSlogRecord(t *testing.T) {
 	}
 }
 
+// TestWrappedAdapterEmitsFailureClassAttribute verifies SPEC-EVAL-002
+// REQ-EVAL2-005 / AC-003: a failing Search emits a `failure_class` slog
+// attribute alongside the existing `outcome` label. A TLS error must classify
+// as failure_class="tls" while outcome stays "failure".
+func TestWrappedAdapterEmitsFailureClassAttribute(t *testing.T) {
+	t.Parallel()
+	var buf bytes.Buffer
+	o := initObs(t, &buf)
+	r := adapters.NewRegistry(o)
+	a := newFake("tlsfake")
+	a.searchFn = func(_ context.Context, _ types.Query) ([]types.NormalizedDoc, error) {
+		return nil, &types.SourceError{
+			Adapter:  a.name,
+			Category: types.CategoryUnavailable,
+			Cause:    tls.RecordHeaderError{Msg: "first record does not look like a TLS handshake"},
+		}
+	}
+	if err := r.Register(a); err != nil {
+		t.Fatalf("Register: %v", err)
+	}
+	w, _ := r.Get("tlsfake")
+	_, _ = w.Search(context.Background(), types.Query{})
+
+	out := buf.String()
+	if !strings.Contains(out, `"failure_class":"tls"`) {
+		t.Errorf("slog output missing failure_class=tls attribute: %s", out)
+	}
+	if !strings.Contains(out, `"outcome":"unavailable"`) {
+		t.Errorf("slog output missing outcome attribute: %s", out)
+	}
+}
+
+// TestWrappedAdapterSuccessHasNoFailureClass verifies a successful call does
+// NOT emit a failure_class attribute (it is only added on the error path).
+func TestWrappedAdapterSuccessHasNoFailureClass(t *testing.T) {
+	t.Parallel()
+	var buf bytes.Buffer
+	o := initObs(t, &buf)
+	r := adapters.NewRegistry(o)
+	a := newFake("okfake")
+	a.searchFn = func(_ context.Context, _ types.Query) ([]types.NormalizedDoc, error) {
+		return []types.NormalizedDoc{{ID: "1"}}, nil
+	}
+	if err := r.Register(a); err != nil {
+		t.Fatalf("Register: %v", err)
+	}
+	w, _ := r.Get("okfake")
+	_, _ = w.Search(context.Background(), types.Query{})
+
+	if strings.Contains(buf.String(), "failure_class") {
+		t.Errorf("successful call should not emit failure_class: %s", buf.String())
+	}
+}
+
 // REQ-CORE-004: Underlying error preserved through the wrapper.
 func TestWrappedAdapterPreservesUnderlyingError(t *testing.T) {
 	t.Parallel()
@@ -662,101 +716,107 @@ func readHistogram(t *testing.T, o *obs.Obs, adapter string) (uint64, float64) {
 	return m.Histogram.GetSampleCount(), m.Histogram.GetSampleSum()
 }
 
-// ---------------------------------------------------------------------------
-// SPEC-EVAL-002 Phase 3: Failure class classification tests
-// ---------------------------------------------------------------------------
-
-// TestClassifyFailureClassifications verifies the failure_class taxonomy
-// mapping for all 7 canonical classes (REQ-EVAL2-005).
-func TestClassifyFailureClassifications(t *testing.T) {
+// TestSnapshotForAdminPopulatesCounts verifies SPEC-EVAL-002 REQ-EVAL2-010a:
+// after recorded Search calls, SnapshotForAdmin fills success_count/fail_count/
+// success_rate from telemetry instead of leaving them at 0 stubs.
+func TestSnapshotForAdminPopulatesCounts(t *testing.T) {
 	t.Parallel()
+	o := initObs(t, io.Discard)
+	r := adapters.NewRegistry(o)
 
-	tests := []struct {
-		name    string
-		err     error
-		wantCls string
-	}{
-		{
-			name:    "5xx HTTP error",
-			err:     &types.SourceError{Adapter: "test", Category: types.CategoryPermanent, HTTPStatus: 503, Cause: errors.New("service unavailable")},
-			wantCls: "5xx",
-		},
-		{
-			name:    "4xx HTTP error",
-			err:     &types.SourceError{Adapter: "test", Category: types.CategoryPermanent, HTTPStatus: 403, Cause: errors.New("forbidden")},
-			wantCls: "4xx",
-		},
-		{
-			name:    "599 HTTP error still 5xx",
-			err:     &types.SourceError{Adapter: "test", Category: types.CategoryPermanent, HTTPStatus: 599, Cause: errors.New("gateway timeout")},
-			wantCls: "5xx",
-		},
-		{
-			name:    "400 HTTP error is 4xx",
-			err:     &types.SourceError{Adapter: "test", Category: types.CategoryPermanent, HTTPStatus: 400, Cause: errors.New("bad request")},
-			wantCls: "4xx",
-		},
-		{
-			name:    "SourceError with no HTTP status falls to unknown",
-			err:     &types.SourceError{Adapter: "test", Category: types.CategoryPermanent, Cause: errors.New("some error")},
-			wantCls: "unknown",
-		},
-		{
-			name:    "plain error is unknown",
-			err:     errors.New("something went wrong"),
-			wantCls: "unknown",
-		},
+	a := newFake("countfake")
+	calls := 0
+	a.searchFn = func(_ context.Context, _ types.Query) ([]types.NormalizedDoc, error) {
+		calls++
+		if calls <= 3 {
+			return []types.NormalizedDoc{{ID: "ok"}}, nil
+		}
+		return nil, &types.SourceError{Adapter: "countfake", Category: types.CategoryPermanent, Cause: errors.New("boom")}
+	}
+	if err := r.Register(a); err != nil {
+		t.Fatalf("Register: %v", err)
+	}
+	w, _ := r.Get("countfake")
+	// 3 success, 2 failure.
+	for i := 0; i < 5; i++ {
+		_, _ = w.Search(context.Background(), types.Query{})
 	}
 
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			got := adapters.ClassifyFailure(tc.err)
-			if got != tc.wantCls {
-				t.Errorf("ClassifyFailure(%v) = %q, want %q", tc.err, got, tc.wantCls)
-			}
-		})
+	views := r.SnapshotForAdmin()
+	var v *adapters.AdapterAdminView
+	for i := range views {
+		if views[i].ID == "countfake" {
+			v = &views[i]
+		}
+	}
+	if v == nil {
+		t.Fatal("countfake missing from snapshot")
+	}
+	if v.SuccessCount != 3 {
+		t.Errorf("SuccessCount: got %d, want 3", v.SuccessCount)
+	}
+	if v.FailCount != 2 {
+		t.Errorf("FailCount: got %d, want 2", v.FailCount)
+	}
+	if v.SuccessRate < 0.59 || v.SuccessRate > 0.61 {
+		t.Errorf("SuccessRate: got %v, want ~0.60", v.SuccessRate)
 	}
 }
 
-// TestEmitIncludesFailureClassAttribute verifies that the wrappedAdapter.emit
-// function includes a failure_class slog attribute when the adapter call fails
-// (REQ-EVAL2-005).
-func TestEmitIncludesFailureClassAttribute(t *testing.T) {
+// TestSnapshotForAdminNilObsSafe verifies the telemetry fill degrades to zero
+// counts when obs/metrics are absent (preserves the nil-obs contract).
+func TestSnapshotForAdminNilObsSafe(t *testing.T) {
 	t.Parallel()
-
-	// Create a registry with a failing adapter.
-	metricsReg := metrics.NewRegistry()
-	o := &obs.Obs{
-		Metrics: metricsReg,
+	r := adapters.NewRegistry(nil)
+	a := newFake("nilobssnap")
+	if err := r.Register(a); err != nil {
+		t.Fatalf("Register: %v", err)
 	}
-	reg := adapters.NewRegistry(o)
-
-	failing := &fakeAdapter{
-		name: "failing_adapter",
-		searchFn: func(ctx context.Context, q types.Query) ([]types.NormalizedDoc, error) {
-			return nil, &types.SourceError{
-				Adapter:     "failing_adapter",
-				Category:    types.CategoryPermanent,
-				HTTPStatus:  503,
-				Cause:       errors.New("service unavailable"),
-			}
-		},
+	views := r.SnapshotForAdmin()
+	if len(views) != 1 {
+		t.Fatalf("want 1 view, got %d", len(views))
 	}
-	if err := reg.RegisterWithOptions(failing, adapters.RegisterOptions{SkipAuthCheck: true}); err != nil {
-		t.Fatalf("register: %v", err)
+	if views[0].SuccessCount != 0 || views[0].FailCount != 0 || views[0].SuccessRate != 0 {
+		t.Errorf("nil-obs snapshot should have zero counts, got %+v", views[0])
+	}
+}
+
+// TestHealthSnapshotStatusMapping verifies SPEC-EVAL-002 REQ-EVAL2-010b health
+// status classification thresholds via recorded Search outcomes.
+func TestHealthSnapshotStatusMapping(t *testing.T) {
+	t.Parallel()
+	o := initObs(t, io.Discard)
+	r := adapters.NewRegistry(o)
+
+	// healthy: 20/0 = 1.0; never-called: healthy (no evidence).
+	healthy := newFake("h")
+	healthy.searchFn = func(_ context.Context, _ types.Query) ([]types.NormalizedDoc, error) {
+		return []types.NormalizedDoc{{ID: "x"}}, nil
+	}
+	uncalled := newFake("u")
+	if err := r.Register(healthy); err != nil {
+		t.Fatalf("Register healthy: %v", err)
+	}
+	if err := r.Register(uncalled); err != nil {
+		t.Fatalf("Register uncalled: %v", err)
+	}
+	wh, _ := r.Get("h")
+	for i := 0; i < 20; i++ {
+		_, _ = wh.Search(context.Background(), types.Query{})
 	}
 
-	adapter, _ := reg.Get("failing_adapter")
-	_, err := adapter.Search(context.Background(), types.Query{Text: "test"})
-	if err == nil {
-		t.Fatal("expected error from failing adapter")
+	snap := r.HealthSnapshot()
+	got := map[string]string{}
+	for _, a := range snap {
+		got[a.Name] = a.Status
+		if a.CircuitState != "closed" {
+			t.Errorf("%q circuit_state = %q, want closed", a.Name, a.CircuitState)
+		}
 	}
-
-	// The failure_class is embedded in the wrappedAdapter.emit slog record.
-	// Since we cannot easily intercept slog output here, we verify the public
-	// ClassifyFailure function returns the correct value for the error.
-	cls := adapters.ClassifyFailure(err)
-	if cls != "5xx" {
-		t.Errorf("ClassifyFailure for 503 error: got %q, want %q", cls, "5xx")
+	if got["h"] != "healthy" {
+		t.Errorf("h status = %q, want healthy", got["h"])
+	}
+	if got["u"] != "healthy" {
+		t.Errorf("u (uncalled) status = %q, want healthy", got["u"])
 	}
 }

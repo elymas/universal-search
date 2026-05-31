@@ -70,6 +70,10 @@ func registerAdminRoutes(mux *http.ServeMux, reg *adapters.Registry) {
 	adaptersHandler := adminapi.LoopbackOnly(adminapi.NewAdaptersHandler(reg))
 	mux.Handle("/api/admin/adapters", adaptersHandler)
 
+	// SPEC-EVAL-002 REQ-EVAL2-010b: adapter health surface on the SAME mux,
+	// behind the same LoopbackOnly middleware (no new server/port).
+	mux.Handle("/api/admin/adapters/health", adminapi.LoopbackOnly(adminapi.NewAdaptersHealthHandler(reg)))
+
 	// SPEC-UI-002 Phase B: adapter actions.
 	mux.Handle("POST /api/admin/adapters/{id}/resync", adminapi.LoopbackOnly(adminapi.NewResyncHandler(reg)))
 	mux.Handle("POST /api/admin/adapters/{id}/toggle", adminapi.LoopbackOnly(adminapi.NewToggleHandler(reg)))

@@ -12,6 +12,9 @@ package adapters
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -214,6 +217,10 @@ type AdapterAdminView struct {
 	// FailCount is the number of failed Search calls. Zero until
 	// per-adapter call tracking is implemented.
 	FailCount int64 `json:"fail_count"`
+	// SuccessRate is the derived ratio SuccessCount/(SuccessCount+FailCount)
+	// in [0.0, 1.0]. Zero when there have been no calls. Added by
+	// SPEC-EVAL-002 REQ-EVAL2-010a (additive to the SPEC-UI-002 struct).
+	SuccessRate float64 `json:"success_rate"`
 	// LastError is the error message from the most recent failed call.
 	// Empty string until per-adapter error tracking is implemented.
 	LastError string `json:"last_error"`
@@ -242,6 +249,10 @@ type AdapterAdminView struct {
 // Leaking secrets here would expose them via the admin API.
 // @MX:SPEC: SPEC-UI-002 REQ-AS-001, REQ-AK-001
 func (r *Registry) SnapshotForAdmin() []AdapterAdminView {
+	// SPEC-EVAL-002 REQ-EVAL2-010a: read per-adapter call telemetry once before
+	// taking the lock to fill the success_count/fail_count/success_rate fields.
+	stats := r.callStats()
+
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -270,13 +281,18 @@ func (r *Registry) SnapshotForAdmin() []AdapterAdminView {
 			status = "disabled"
 		}
 
+		st := stats[name]
 		views = append(views, AdapterAdminView{
 			ID:           name,
 			Status:       status,
 			SecretSource: secretSource,
 			KeySet:       keySet,
-			// LastSync, SuccessCount, FailCount, LastError: zero values
-			// until per-adapter call tracking is implemented.
+			// SPEC-EVAL-002 REQ-EVAL2-010a: populated from adapter telemetry.
+			SuccessCount: st.success,
+			FailCount:    st.fail,
+			SuccessRate:  st.successRate(),
+			// LastSync, LastError: zero values until per-call timestamp/error
+			// tracking is implemented (separate from aggregate counts).
 		})
 	}
 
@@ -285,6 +301,89 @@ func (r *Registry) SnapshotForAdmin() []AdapterAdminView {
 	})
 
 	return views
+}
+
+// AdapterHealth is a read-only health view of one adapter for the
+// /api/admin/adapters/health endpoint (SPEC-EVAL-002 REQ-EVAL2-010b).
+//
+// @MX:SPEC: SPEC-EVAL-002 REQ-EVAL2-010
+type AdapterHealth struct {
+	// Name is the adapter identifier (matches Adapter.Name()).
+	Name string `json:"name"`
+	// Status is one of {healthy, degraded, unhealthy}, derived from the same
+	// thresholds as the REQ-EVAL2-008 alerts (>=0.95 healthy, 0.85-0.95
+	// degraded, <0.85 unhealthy). Adapters with zero calls are reported
+	// healthy (no evidence of failure).
+	Status string `json:"status"`
+	// SuccessRate24h is the in-process success ratio. Reliable over the
+	// process lifetime; equals the 24h rate only when uptime >= 24h.
+	SuccessRate24h float64 `json:"success_rate_24h"`
+	// SuccessRate7d is best-effort: the process counter is the same source as
+	// 24h, so for uptime < 7d this mirrors SuccessRate24h. The authoritative
+	// 7d figure comes from the Prometheus recording rule, not this endpoint.
+	SuccessRate7d float64 `json:"success_rate_7d"`
+	// LastCallAt is the time of the last recorded call. Zero when never called.
+	LastCallAt time.Time `json:"last_call_at"`
+	// CircuitState is always "closed" in V1 (deferred per amendment A2).
+	CircuitState string `json:"circuit_state"`
+}
+
+// Health status thresholds (SPEC-EVAL-002 REQ-EVAL2-008 / REQ-EVAL2-010).
+const (
+	healthyThreshold  = 0.95
+	degradedThreshold = 0.85
+)
+
+// classifyHealth maps a success rate to a health status string. Adapters with
+// no calls (total == 0) are treated as healthy — absence of evidence is not
+// evidence of failure, and a brand-new adapter should not page an operator.
+func classifyHealth(stats adapterCallStats) string {
+	if stats.success+stats.fail == 0 {
+		return "healthy"
+	}
+	rate := stats.successRate()
+	switch {
+	case rate >= healthyThreshold:
+		return "healthy"
+	case rate >= degradedThreshold:
+		return "degraded"
+	default:
+		return "unhealthy"
+	}
+}
+
+// HealthSnapshot returns a per-adapter health view derived from in-process call
+// telemetry. The returned slice is sorted by adapter name. Used by the
+// /api/admin/adapters/health endpoint (SPEC-EVAL-002 REQ-EVAL2-010b).
+//
+// @MX:NOTE: [AUTO] Adapter health snapshot; sole data source for the
+// /api/admin/adapters/health status mapping. (Not promoted to ANCHOR to respect
+// the per-file ANCHOR limit; the file already has its load-bearing anchors.)
+// @MX:SPEC: SPEC-EVAL-002 REQ-EVAL2-010
+func (r *Registry) HealthSnapshot() []AdapterHealth {
+	stats := r.callStats()
+
+	r.mu.RLock()
+	names := make([]string, 0, len(r.adapters))
+	for name := range r.adapters {
+		names = append(names, name)
+	}
+	r.mu.RUnlock()
+	sort.Strings(names)
+
+	out := make([]AdapterHealth, 0, len(names))
+	for _, name := range names {
+		st := stats[name]
+		rate := st.successRate()
+		out = append(out, AdapterHealth{
+			Name:           name,
+			Status:         classifyHealth(st),
+			SuccessRate24h: rate,
+			SuccessRate7d:  rate, // best-effort: same in-process source (see godoc)
+			CircuitState:   "closed",
+		})
+	}
+	return out
 }
 
 // Resync refreshes the status of a single adapter by running its Healthcheck.
@@ -429,68 +528,6 @@ func (w *wrappedAdapter) Search(ctx context.Context, q types.Query) ([]types.Nor
 	return docs, err
 }
 
-// ClassifyFailure maps an error to a coarse failure_class string for slog
-// drilldown (SPEC-EVAL-002 REQ-EVAL2-005). The taxonomy is intentionally
-// open-set; new classes can be added without breaking existing consumers.
-//
-// Canonical classes:
-//   - "5xx":  HTTP 500-599 via *types.SourceError
-//   - "4xx":  HTTP 400-499 via *types.SourceError
-//   - "dns":  *net.DNSError
-//   - "tls":  tls.RecordHeaderError, tls.AlertError, x509 errors
-//   - "parse": JSON/XML unmarshal errors (heuristic)
-//   - "transcript": adapter-specific transcript extraction failure (heuristic)
-//   - "unknown": anything else
-//
-// @MX:NOTE: [AUTO] SPEC-EVAL-002 REQ-EVAL2-005 failure_class taxonomy. Open-set; add new classes as adapter failure modes are discovered.
-func ClassifyFailure(err error) string {
-	if err == nil {
-		return ""
-	}
-
-	// Check for *types.SourceError with HTTP status.
-	var srcErr *types.SourceError
-	if errors.As(err, &srcErr) && srcErr.HTTPStatus > 0 {
-		if srcErr.HTTPStatus >= 500 && srcErr.HTTPStatus < 600 {
-			return "5xx"
-		}
-		if srcErr.HTTPStatus >= 400 && srcErr.HTTPStatus < 500 {
-			return "4xx"
-		}
-	}
-
-	// DNS errors.
-	var dnsErr *net.DNSError
-	if errors.As(err, &dnsErr) {
-		return "dns"
-	}
-
-	// TLS errors — check for common TLS error types by string matching
-	// since Go's TLS errors are not all exported types.
-	errMsg := err.Error()
-	if strings.Contains(errMsg, "tls:") ||
-		strings.Contains(errMsg, "certificate") ||
-		strings.Contains(errMsg, "x509:") {
-		return "tls"
-	}
-
-	// Parse errors — heuristic check for JSON/XML unmarshal errors.
-	if strings.Contains(errMsg, "invalid character") ||
-		strings.Contains(errMsg, "unexpected end of JSON") ||
-		strings.Contains(errMsg, "xml:") ||
-		strings.Contains(errMsg, "unmarshal") {
-		return "parse"
-	}
-
-	// Transcript extraction errors — heuristic for yt-dlp or similar.
-	if strings.Contains(errMsg, "transcript") ||
-		strings.Contains(errMsg, "yt-dlp") {
-		return "transcript"
-	}
-
-	return "unknown"
-}
-
 // emit records the per-call metrics + slog event. Pulled into a helper so
 // nil-guard noise stays out of Search.
 func (w *wrappedAdapter) emit(ctx context.Context, name, outcome string, elapsed float64, count int, err error) {
@@ -519,12 +556,83 @@ func (w *wrappedAdapter) emit(ctx context.Context, name, outcome string, elapsed
 		slog.Int("result_count", count),
 	}
 	if err != nil {
-		attrs = append(attrs, slog.String("error", err.Error()))
-		// SPEC-EVAL-002 REQ-EVAL2-005: failure_class for slog/Loki drilldown.
-		// NOT promoted to Prometheus label (cardinality budget NFR-EVAL2-001).
-		attrs = append(attrs, slog.String("failure_class", ClassifyFailure(err)))
+		attrs = append(attrs,
+			slog.String("error", err.Error()),
+			// SPEC-EVAL-002 REQ-EVAL2-005: finer-grained failure cut as a slog
+			// ATTRIBUTE only — never promoted to a Prometheus label (the
+			// outcome label stays the canonical 6-tuple; failure_class is an
+			// open-set drilldown dimension surfaced via logs/Loki).
+			slog.String("failure_class", classifyFailure(err)),
+		)
 	}
 	w.obs.Logger.LogAttrs(ctx, level, "adapter call", attrs...)
+}
+
+// classifyFailure maps an adapter error to a fine-grained failure class for the
+// slog `failure_class` attribute (SPEC-EVAL-002 REQ-EVAL2-005). The taxonomy is
+// an OPEN SET: unrecognised errors fall through to "unknown" so new error modes
+// degrade gracefully without breaking callers (EC-003).
+//
+// Classes: 5xx / 4xx / dns / tls / parse / transcript / unknown. This is NOT a
+// Prometheus label — promoting it would blow the cardinality budget
+// (12 × 6 × 7 = 504 series, HISTORY D6 / NFR-EVAL2-001).
+//
+// @MX:NOTE: [AUTO] SPEC-EVAL-002 REQ-EVAL2-005 failure_class taxonomy mapping;
+// open-set, slog-only (never a Prometheus label).
+// @MX:SPEC: SPEC-EVAL-002
+func classifyFailure(err error) string {
+	if err == nil {
+		return ""
+	}
+
+	// HTTP status from the canonical *SourceError envelope.
+	var se *types.SourceError
+	if errors.As(err, &se) && se.HTTPStatus != 0 {
+		switch {
+		case se.HTTPStatus >= 500 && se.HTTPStatus < 600:
+			return "5xx"
+		case se.HTTPStatus >= 400 && se.HTTPStatus < 500:
+			return "4xx"
+		}
+	}
+
+	// DNS resolution failures.
+	var dnsErr *net.DNSError
+	if errors.As(err, &dnsErr) {
+		return "dns"
+	}
+
+	// TLS handshake / certificate failures.
+	var recordErr tls.RecordHeaderError
+	var certErr *tls.CertificateVerificationError
+	var x509UnknownAuth x509.UnknownAuthorityError
+	var x509Hostname x509.HostnameError
+	var x509Invalid x509.CertificateInvalidError
+	if errors.As(err, &recordErr) ||
+		errors.As(err, &certErr) ||
+		errors.As(err, &x509UnknownAuth) ||
+		errors.As(err, &x509Hostname) ||
+		errors.As(err, &x509Invalid) {
+		return "tls"
+	}
+
+	// JSON / XML unmarshal failures.
+	var jsonSyntax *json.SyntaxError
+	var jsonType *json.UnmarshalTypeError
+	if errors.As(err, &jsonSyntax) || errors.As(err, &jsonType) {
+		return "parse"
+	}
+	msg := strings.ToLower(err.Error())
+	if strings.Contains(msg, "xml") && (strings.Contains(msg, "unmarshal") || strings.Contains(msg, "syntax")) {
+		return "parse"
+	}
+
+	// Transcript-extraction failures (YouTube/yt-dlp adapter family).
+	if strings.Contains(msg, "transcript") {
+		return "transcript"
+	}
+
+	return "unknown"
 }
 
 // tracer returns the OTel tracer for this wrapper. When obs is nil we fall

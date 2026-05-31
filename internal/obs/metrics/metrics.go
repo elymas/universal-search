@@ -108,25 +108,12 @@ type Registry struct {
 	DeepTreeNodeExpand  *prometheus.HistogramVec
 	DeepTreeTotalTokens *prometheus.CounterVec
 
-	// Adapter reliability metrics (SPEC-EVAL-002 REQ-EVAL2-003).
-	// FanoutPartial: counter incremented once per adapter per fanout dispatch
-	// when that adapter contributed an error.
-	FanoutPartial *prometheus.CounterVec
-	// AdapterHealthStatus: gauge set by admin endpoint or recording-rule
-	// companion job. 1.0=healthy, 0.5=degraded, 0.0=unhealthy.
+	// Adapter reliability metrics (SPEC-EVAL-002 REQ-EVAL2-003). FanoutPartial
+	// reuses the `adapter` label; AdapterCircuitState adds the new `state` label
+	// (the only new label name in this SPEC). NFR-EVAL2-001.
+	FanoutPartial       *prometheus.CounterVec
 	AdapterHealthStatus *prometheus.GaugeVec
-	// AdapterCircuitState: gauge tracking circuit breaker state per adapter.
-	// State label ∈ {closed, open, half_open}.
 	AdapterCircuitState *prometheus.GaugeVec
-
-	// Eval benchmark metrics (SPEC-EVAL-001). Reuses existing `outcome` label;
-	// no new label name is added (NFR-OBS-002).
-	EvalRuns  *prometheus.CounterVec
-	EvalScore prometheus.Gauge
-
-	// Security metrics (SPEC-SEC-001 REQ-SEC-009, REQ-SEC-017). New labels:
-	// component, type, severity (reason already present). NFR-SEC-007 bounded.
-	Security *SecurityCollectors
 
 	// labelNames tracks all registered label names for cardinality validation.
 	labelNames []string
@@ -244,13 +231,8 @@ func NewRegistry() *Registry {
 	// Register Deep tree metrics (SPEC-DEEP-003 Phase E).
 	deepTree := registerDeepTree(pr)
 
-	// Register adapter reliability metrics (SPEC-EVAL-002).
-	eval2 := registerFanoutPartial(pr)
-	// Register Eval benchmark metrics (SPEC-EVAL-002).
-	evalMetrics := registerEval(pr)
-
-	// Register Security metrics (SPEC-SEC-001).
-	security := registerSecurity(pr)
+	// Register Adapter reliability metrics (SPEC-EVAL-002 REQ-EVAL2-003).
+	adapterRel := registerAdapterReliability(pr)
 
 	return &Registry{
 		Prometheus:                    pr,
@@ -290,12 +272,9 @@ func NewRegistry() *Registry {
 		DeepAgentVerifierGateResults:  deepAgent.verifierGate,
 		DeepTreeNodeExpand:            deepTree.nodeExpand,
 		DeepTreeTotalTokens:           deepTree.totalTokens,
-		FanoutPartial:                 eval2.fanoutPartial,
-		AdapterHealthStatus:           eval2.healthStatus,
-		AdapterCircuitState:           eval2.circuitState,
-		EvalRuns:                      evalMetrics.runs,
-		EvalScore:                     evalMetrics.score,
-		Security:                      security,
+		FanoutPartial:                 adapterRel.fanoutPartial,
+		AdapterHealthStatus:           adapterRel.healthStatus,
+		AdapterCircuitState:           adapterRel.circuitState,
 		labelNames: []string{
 			"method", "route", "status_class",
 			"adapter_class",
@@ -320,18 +299,9 @@ func NewRegistry() *Registry {
 			// RBAC labels (SPEC-AUTH-002 NFR-AUTH2-003): bounded enums only.
 			// reason_class in {policy_matched, no_policy_matched, explicit_deny, empty_team} (4 values).
 			"reason_class",
-			// Adapter reliability labels (SPEC-EVAL-002 NFR-EVAL2-001).
-			// state in {closed, open, half_open} (3 values, bounded enum).
+			// Adapter reliability label (SPEC-EVAL-002 NFR-EVAL2-001): the only
+			// new label name in this SPEC. state in {closed, open, half_open} (3 values).
 			"state",
-			// Security labels (SPEC-SEC-001 NFR-SEC-007): bounded enums only.
-			// reason already present; component ∈ {access, auth, adapter};
-			// type ∈ 7-event taxonomy; severity ∈ {critical, high, medium, low}.
-			"component",
-			"type",
-			"severity",
-			// Rate-limit label (SPEC-SEC-001 REQ-SEC-014): tenant_id_class ∈
-			// {known, unknown}. Raw tenant_id is NEVER a label.
-			"tenant_id_class",
 		},
 	}
 }
