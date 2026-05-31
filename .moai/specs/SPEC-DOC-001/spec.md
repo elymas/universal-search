@@ -1,9 +1,9 @@
 ---
 id: SPEC-DOC-001
-version: 0.2.0
-status: in-progress
+version: 1.0.0
+status: implemented
 created: 2026-05-22
-updated: 2026-05-28
+updated: 2026-05-31
 author: limbowl
 priority: P1
 issue_number: 0
@@ -21,12 +21,60 @@ related: [SPEC-DOC-002, SPEC-DEPLOY-001]
 
 ## HISTORY
 
-- 2026-05-28 (Phase 1 complete, status draft → in-progress, v0.1.0 → v0.2.0):
-  Nextra 3.1.1 + Next.js 14.2.21 site scaffold shipped (docs/). Migration
-  map (docs/MIGRATION_MAP.md) prepared for Phase 2 content port.
-  Note: Nextra 4.x + Next.js 16 Turbopack incompatibility forced
-  downgrade — documented in progress.md. Phases 2-N (content migration,
-  bilingual KO pages, gh-pages CI deploy, link-check gate) pending.
+- 2026-05-31 (implementation v1.0.0, manager-docs via DDD):
+  DDD ANALYZE-PRESERVE-IMPROVE 완료. plan-auditor PASS (0.90) →
+  manager-docs DDD impl (commit `af99d28`) → evaluator-active FAIL
+  (iteration 1: static-export `_not-found` page crash, nextra-theme-docs@4.6.1
+  LayoutPropsSchema upstream bug) → pnpm patch 적용 + static-export fix
+  (commit `2c35523`) → evaluator-active PASS (Func 92 / Sec 82 / Craft 80 /
+  Cons 85). 63 HTML pages 생성, Tier-1 EN+KO bilingual coverage 100%,
+  build/lint clean. 상태 approved → implemented, version 0.2.0 → 1.0.0.
+  Carry-forward: (1) nextra-theme-docs pnpm patch — Nextra 업그레이드 시
+  재검증 필요 (Dependabot); (2) next.config.mjs i18n.locales non-App-Router
+  패턴 — Next.js 메이저 업그레이드 시 제거 검토 (LOW); (3) Docker publish
+  + gh-pages deploy 경로 확정은 SPEC-REL-001/SPEC-BOOT-001에서 처리;
+  (4) full reference-section KO 번역 + KO reviewer pool → V1.1;
+  (5) a11y/Lighthouse/Playwright CI → V1.1; (6) Tier-1 page-count
+  freeze + frontmatter label 검증은 link-check CI 유지.
+
+- 2026-05-30 (amendment v0.2.0, limbowl via manager-spec):
+  plan-auditor re-audit 대응 — 3개 stale infra/feature assumption
+  수정 + manager-strategy proportionality 권고 적용:
+  - **B1 (docs/ not greenfield)**: `docs/`는 빈 폴더가 아니라 STALE
+    Nextra v3 / Next 14 build artifact (`.next/`, `out/`,
+    `node_modules/`, v3-style `pages/` — 모두 gitignored)와
+    git-tracked dependency 문서 (`dependencies.md`, `_deps-*.md`,
+    `licenses/`)가 공존한다. REQ-DOC-001 + §1.1 + plan T2를
+    수정: T2가 stale v3 artifact를 먼저 정리한 뒤 Nextra v4 /
+    Next 16 (`^16.2.6`, `web/`와 일치)을 pin. Nextra v4는
+    `content/{locale}/` 구조 사용 (v3 `pages/` 아님). git-tracked
+    dependency 문서는 보존.
+  - **B2 (SEC-001 forward-reference)**: `ops/security/*`는 main에
+    존재하지 않는다 (SPEC-SEC-001 PR #42 미머지). REQ-DOC-005 +
+    §1 inventory + §7 + plan T3.10을 수정: security operator
+    페이지는 FORWARD-REFERENCE (placeholder + SPEC-SEC-001 링크)이며,
+    SEC-001 머지 전까지 존재하지 않는 `ops/security/*` 파일 cross-
+    link 금지. link-check CI는 이 forward-ref에서 fail하지 않음
+    (lychee exclude/allowlist 처리).
+  - **B3 (CLI surface underestimated)**: 실제 CLI는 7개 subcommand
+    (`query`, `config`, `history`, `deep`, `sources`, `login`,
+    `repl` — `cmd/usearch/root.go`). REQ-DOC-007의 "currently
+    query"를 7개 subcommand 전체로 수정.
+  - **Proportionality 축소** (manager-strategy 권고 자율 적용):
+    (a) KO 번역 — V1은 Tier-1 (key operator + getting-started)
+        KO만 ship; full reference-section KO는 V1.1로 연기. 90%
+        KO-coverage gate는 Tier-1 한정으로 scope.
+    (b) automated a11y CI (Pa11y/axe-core), automated Lighthouse
+        CI, Playwright auto-screenshot은 V1.1로 연기 — V1은 manual
+        audit + freshness gate만.
+    (c) Docker container live-publish는 CI job은 작성하되 실제
+        publish는 `<org>`/registry 경로 확정 (Open Question §3/§4)
+        전까지 conditional/deferred — V1 gate 아님.
+    (d) `check-doc-claims.sh` (P2)는 lowest priority / optional
+        유지.
+    V1-essential 유지: Nextra 사이트 build + gh-pages deploy,
+    link-check CI (internal fail / external warn), Tier-1 EN+KO
+    콘텐츠, CLI/MCP/config reference 페이지.
 
 - 2026-05-22 (initial draft v0.1.0, limbowl via manager-spec):
   M9 (V1 release) 첫 번째 SPEC이자 V1.0.0 태깅의 release-blocking
@@ -71,16 +119,31 @@ related: [SPEC-DOC-002, SPEC-DEPLOY-001]
     repo layout + milestone map. Internal references; not directly
     user-facing but inform IA decisions.
   - `docs/dependencies.md` + `docs/_deps-header.md` + `docs/_deps-
-    compose-table.md` (existing per `ls /docs`): auto-generated
-    dependency manifest from SPEC-DEP-001 (scripts/gen-deps-
-    manifest.sh). Docs site links to this; does NOT re-render.
+    compose-table.md` + `docs/licenses/` (git-tracked per
+    `git ls-files docs/`): auto-generated dependency manifest from
+    SPEC-DEP-001 (scripts/gen-deps-manifest.sh). Docs site links to
+    this; does NOT re-render. **These git-tracked files MUST be
+    preserved** — they are NOT removed during the v3-artifact cleanup
+    below.
+  - **STALE Nextra v3 / Next 14 build artifacts in `docs/`** (all
+    gitignored, NOT tracked): `docs/.next/`, `docs/out/`,
+    `docs/node_modules/`, `docs/pages/` (v3-convention page tree),
+    `docs/content/` (partial v3-era scratch). These are leftovers
+    from an abandoned Nextra v3 spike — `docs/` is therefore NOT a
+    greenfield folder. They MUST be cleaned (plan T2) before the
+    Nextra v4 app is bootstrapped, so v3 conventions (`pages/`) do
+    not collide with v4 conventions (`content/{locale}/`).
   - `.moai/docs/MCP_OAUTH_SETUP.md`: M6 operator-facing OAuth/OIDC
     setup walk-through. Migration target — moves to `docs/operators/
     auth-setup.md` (or KO mirror).
   - `ops/security/runbook.md`, `ops/security/owasp-asvs-checklist
     .md`, `ops/security/threat-model.md` (SPEC-SEC-001 deliverables,
-    M8): operator-facing security incident response + ASVS
-    evidence + STRIDE model. Migration target — moves into docs
+    M8 — **NOT on main; SPEC-SEC-001 PR #42 unmerged**): operator-
+    facing security incident response + ASVS evidence + STRIDE model.
+    **Forward-reference target** — until SEC-001 merges, the docs
+    security pages are placeholders linking to SPEC-SEC-001 status;
+    no cross-link to nonexistent `ops/security/*` files is emitted.
+    On SEC-001 merge, these become cross-link targets in docs
     `Operators › Security` section.
   - `web/README.md` (Next.js UI scaffold notes): developer-facing,
     not migrated to public docs site.
@@ -91,10 +154,17 @@ related: [SPEC-DOC-002, SPEC-DEPLOY-001]
   본 SPEC이 신규로 도입하는 것:
 
   - `docs/` Nextra v4 application (separate Next.js sub-app, distinct
-    from `web/` query UI). Path: `docs/` at repo root — current
-    `docs/` flat folder (dependencies.md + licenses/) absorbed
-    into Nextra `content/en/reference/dependencies.mdx` route +
-    `content/en/legal/licenses.mdx`.
+    from `web/` query UI). Path: `docs/` at repo root. **`docs/` is
+    NOT greenfield**: it currently holds stale Nextra v3 / Next 14
+    build artifacts (gitignored `.next/`, `out/`, `node_modules/`,
+    `pages/`, scratch `content/`) plus git-tracked dependency docs
+    (`dependencies.md`, `_deps-*.md`, `licenses/`). The v3 artifacts
+    are cleaned first (plan T2); the git-tracked dependency docs are
+    preserved and absorbed as link targets into Nextra `content/en/
+    reference/dependencies.mdx` route + `content/en/legal/licenses
+    .mdx`. The Nextra v4 app pins **Next.js `^16.2.6`** (matching
+    `web/package.json`) and uses the v4 `content/{locale}/` content
+    convention (NOT the v3 `pages/` convention).
   - Bilingual content tree: `content/en/` (authoritative for
     technical reference) + `content/ko/` (authoritative for
     Korean-specific operations — Naver setup, mecab-ko, Korean
@@ -156,7 +226,8 @@ related: [SPEC-DOC-002, SPEC-DEPLOY-001]
        - **GENERATE**: from completed SPECs via scripts.
          `scripts/gen-cli-reference.sh` reads `usearch --help` per
          subcommand → MDX. CLI commands documented in `reference/
-         cli/{query,deep,sources,history,config,login}.mdx`. MCP
+         cli/{query,config,history,deep,sources,login,repl}.mdx`
+         (7 subcommands per `cmd/usearch/root.go`). MCP
          tool catalog generated from SPEC-MCP-001 OpenAPI/JSON
          schema if available (else hand-curated initial draft).
        - **HAND-WRITE**: net-new narrative content with no source.
@@ -333,7 +404,7 @@ closure, (c) Nextra 사이트로 publish**의 세 축으로 정리한다.
 | Docs | `docs/content/en/CONTRIBUTING.md`, `docs/content/ko/CONTRIBUTING.md` (NEW) | contribution + translation workflow |
 | Migration | `README.md` (modified) | retain quickstart; add prominent docs site link at top |
 | Migration | `.moai/docs/MCP_OAUTH_SETUP.md` (preserved + cross-linked) | move content to `docs/content/en/operators/auth-setup.mdx`; original retained as agent-facing memo |
-| Migration | `ops/security/runbook.md`, `owasp-asvs-checklist.md`, `threat-model.md` (preserved + cross-linked) | cross-linked from `docs/content/en/operators/security/*`; originals retained as canonical SPEC-SEC-001 deliverables |
+| Forward-ref | `ops/security/runbook.md`, `owasp-asvs-checklist.md`, `threat-model.md` (NOT on main — SEC-001 PR #42 unmerged) | `docs/content/en/operators/security/*` are placeholders linking SPEC-SEC-001 status; cross-link to `ops/security/*` deferred until SEC-001 merges |
 
 ### 1.2 Motivation
 
@@ -404,11 +475,16 @@ Helm chart는 본 SPEC의 `operators/deployment-helm.mdx`로
 - **SPEC-OBS-001 (implemented)** — Prometheus + slog + OTel
   운영 가이드가 `operators/observability.mdx`로 신규 작성.
   metric 카탈로그는 OBS-001의 cardinality allowlist에서 추출.
-- **SPEC-SEC-001 (M8, drafted)** — `ops/security/runbook.md` +
-  `owasp-asvs-checklist.md` + `threat-model.md`가 docs
-  `operators/security/` 서브트리에 cross-link. 원본은 ops/
-  디렉토리에 canonical 위치 유지 (SPEC-SEC-001 deliverable); docs
-  사이트는 MDX wrapper + locale context로 surface.
+- **SPEC-SEC-001 (M8, drafted — PR #42 UNMERGED, NOT on main)** —
+  `ops/security/runbook.md` + `owasp-asvs-checklist.md` +
+  `threat-model.md`는 현재 main에 존재하지 않는다. 따라서 docs
+  `operators/security/` 서브트리는 V1.0.0 ship 시점에
+  **forward-reference**: placeholder + SPEC-SEC-001 상태 링크만
+  surface하고, SEC-001 머지 전까지 존재하지 않는 `ops/security/*`
+  파일로의 cross-link은 **금지** (link-check CI fail 방지 —
+  REQ-DOC-005 + REQ-DOC-013 참조). SEC-001 머지 후 별도 PR에서
+  placeholder를 MDX wrapper + locale context로 교체하여 canonical
+  `ops/security/*` 파일을 cross-link한다.
 - **SPEC-EVAL-001/002/003 (M8 sibling)** — eval methodology +
   Korean benchmark protocol을 `reference/evaluation.mdx`로 surface
   (선택적, V1.0.0 시점 우선순위 낮음).
@@ -426,7 +502,7 @@ HISTORY의 D1..D8 8개 결정은 §2 requirements를 bind하는 constraint이다
 
 | ID | Pattern | Requirement | Priority | Acceptance Summary |
 |----|---------|-------------|----------|--------------------|
-| **REQ-DOC-001** | Ubiquitous | The repository SHALL contain a standalone Next.js 16 + Nextra v4 documentation application under `docs/` at the repo root, distinct from the `web/` query UI application. The docs app SHALL use the `nextra-theme-docs` theme, `pnpm` as the package manager (matching `web/`), Node.js 22 LTS, and TypeScript 5+ strict mode. `docs/package.json` SHALL declare a `build`, `dev`, `lint`, and `start` script. The static export output SHALL be written to `docs/out/`. | P0 | `docs/package.json` exists with declared scripts; `pnpm --dir docs install` succeeds; `pnpm --dir docs build` produces `docs/out/index.html`; the app boots at `pnpm --dir docs dev` and serves the introduction page. |
+| **REQ-DOC-001** | Ubiquitous | The repository SHALL contain a standalone Next.js + Nextra v4 documentation application under `docs/` at the repo root, distinct from the `web/` query UI application. BECAUSE `docs/` already holds stale Nextra v3 / Next 14 build artifacts (gitignored `.next/`, `out/`, `node_modules/`, v3-convention `pages/`, scratch `content/`), the bootstrap SHALL FIRST remove these v3 artifacts AND SHALL preserve the git-tracked dependency docs (`docs/dependencies.md`, `docs/_deps-*.md`, `docs/licenses/`). The docs app SHALL pin Next.js `^16.2.6` (matching `web/package.json`), use the `nextra-theme-docs` theme, `pnpm` as the package manager (matching `web/`), Node.js 22 LTS, and TypeScript 5+ strict mode. The app SHALL use the Nextra v4 `content/{locale}/` content convention (NOT the v3 `pages/` convention). `docs/package.json` SHALL declare a `build`, `dev`, `lint`, and `start` script. The static export output SHALL be written to `docs/out/`. | P0 | Stale `docs/pages/` (v3) is absent after bootstrap; git-tracked `docs/dependencies.md` + `docs/licenses/` still present; `docs/package.json` exists with declared scripts and Next `^16.2.6`; `pnpm --dir docs install` succeeds; `pnpm --dir docs build` produces `docs/out/index.html`; the app boots at `pnpm --dir docs dev` and serves the introduction page. |
 | **REQ-DOC-002** | Ubiquitous | The Nextra docs app SHALL be configured for static export (`output: 'export'` in `next.config.mjs`) AND file-system based i18n with locales `en` (default) and `ko`. The locale switcher SHALL appear in the top navigation. URL routing SHALL be `/en/<path>` and `/ko/<path>` with `/` redirecting to `/en/` by default. The Pagefind-based zero-config search SHALL be enabled and SHALL index both locale subtrees separately, switching index based on the active locale. | P0 | `docs/next.config.mjs` contains `output: 'export'` AND i18n config with `locales: ['en', 'ko']`; site navigation includes a working locale switcher; search bar functional on both `/en/` and `/ko/` paths; building produces separate `_pagefind/` indexes per locale. |
 
 ### 2.2 Information Architecture + Content Sections (D2)
@@ -435,14 +511,14 @@ HISTORY의 D1..D8 8개 결정은 §2 requirements를 bind하는 constraint이다
 |----|---------|-------------|----------|--------------------|
 | **REQ-DOC-003** | Ubiquitous | The docs site SHALL implement a 7-section top-level information architecture: (1) Introduction (`/introduction/`), (2) Getting Started (`/getting-started/`), (3) End Users (`/end-users/`), (4) Operators (`/operators/`), (5) Reference (`/reference/`), (6) Troubleshooting (`/troubleshooting/`), (7) Legal (`/legal/`). Each section SHALL have a landing page (`index.mdx`) plus the subpages enumerated in §7.1. The sidebar SHALL render this hierarchy with collapsible groups; the active page MUST be highlighted. | P0 | All 7 sections exist as folders under both `content/en/` and `content/ko/`; each has an `index.mdx`; sidebar navigation renders the hierarchy correctly; clicking any section reveals its subpages. |
 | **REQ-DOC-004** | Event-Driven | WHEN a user (new operator persona per `.moai/project/product.md` §3) lands on the Getting Started landing page, the docs SHALL present a 30-minute path to first successful query covering: (a) prerequisites checklist (Docker / Go / Node / Python — sourced from `README.md` prerequisites table), (b) `make compose-up` + `make build` walkthrough, (c) first `usearch query "hello"` execution and expected output, (d) troubleshooting links for the three most common first-run failures (compose port conflict, missing env vars, LLM provider unconfigured). The path SHALL be navigable via "Next" buttons at the bottom of each page. | P0 | Getting Started landing page exists; the four sub-pages exist in order; "Next" buttons present and functional; manual trace test asserts a new user can reach a successful first query following only this section. |
-| **REQ-DOC-005** | Ubiquitous | The Operators section SHALL contain at minimum the following sub-pages: `deployment-helm.mdx` (cross-links SPEC-DEPLOY-001), `auth-setup.mdx` (sourced from `.moai/docs/MCP_OAUTH_SETUP.md` + SPEC-AUTH-001), `team-rbac.mdx` (SPEC-AUTH-002), `audit-log.mdx` (SPEC-AUTH-003), `observability.mdx` (SPEC-OBS-001), `security/runbook.mdx`, `security/owasp-checklist.mdx`, `security/threat-model.mdx` (all cross-linking `ops/security/*` canonical files). Each operator page SHALL include a "Last updated" date in frontmatter AND a "Related SPECs" footer linking the underlying SPEC IDs. | P0 | All listed operator pages exist in `content/en/operators/`; each page has frontmatter with `lastUpdated` date; each page footer renders "Related SPECs" with valid SPEC ID links. |
+| **REQ-DOC-005** | Ubiquitous | The Operators section SHALL contain at minimum the following sub-pages: `deployment-helm.mdx` (cross-links SPEC-DEPLOY-001), `auth-setup.mdx` (sourced from `.moai/docs/MCP_OAUTH_SETUP.md` + SPEC-AUTH-001), `team-rbac.mdx` (SPEC-AUTH-002), `audit-log.mdx` (SPEC-AUTH-003), `observability.mdx` (SPEC-OBS-001), `security/runbook.mdx`, `security/owasp-checklist.mdx`, `security/threat-model.mdx`. BECAUSE the `ops/security/*` canonical files do NOT yet exist on main (SPEC-SEC-001 PR #42 unmerged), the three `security/*` pages SHALL be FORWARD-REFERENCE placeholders at V1.0.0: each links to SPEC-SEC-001 status and SHALL NOT cross-link any `ops/security/*` path until SEC-001 merges. [HARD] No docs page SHALL emit a link to a nonexistent `ops/security/*` file — such links would break the link-check gate (REQ-DOC-013). On SEC-001 merge, a follow-up PR replaces the placeholders with MDX wrappers cross-linking the now-present canonical files. Each operator page SHALL include a "Last updated" date in frontmatter AND a "Related SPECs" footer linking the underlying SPEC IDs. | P0 | All listed operator pages exist in `content/en/operators/`; the three `security/*` pages are placeholders linking SPEC-SEC-001 (no `ops/security/*` link present); each page has frontmatter with `lastUpdated` date; each page footer renders "Related SPECs" with valid SPEC ID links; link-check passes (no broken `ops/security/*` reference). |
 | **REQ-DOC-006** | Ubiquitous | The End Users section SHALL contain at minimum: `cli-tour.mdx` (SPEC-CLI-001 + SPEC-CLI-002 narrative), `web-ui-tour.mdx` (SPEC-UI-001 screenshots + narrative), `skill-claude.mdx` (SPEC-SKILL-001 install + usage), `mcp-integration.mdx` (SPEC-MCP-001 host configuration for Claude Code / Codex / Gemini CLI), and `surface-comparison.mdx` (when-to-use-which decision matrix). Each surface page SHALL include at least one screenshot or terminal cast tagged appropriately for screenshot-freshness gating per REQ-DOC-014. | P0 | All listed end-user pages exist in `content/en/end-users/`; each contains at least one tagged screenshot reference; manual review confirms screenshots match the current UI/CLI state. |
 
 ### 2.3 Reference + Auto-generation (D2)
 
 | ID | Pattern | Requirement | Priority | Acceptance Summary |
 |----|---------|-------------|----------|--------------------|
-| **REQ-DOC-007** | Ubiquitous | The repository SHALL provide `scripts/gen-cli-reference.sh` that builds the `usearch` binary (via `make build` if not present), invokes `usearch --help` AND `usearch <subcommand> --help` for each subcommand defined in SPEC-CLI-001 + SPEC-CLI-002 implemented set, captures the output, AND writes one MDX file per subcommand to `docs/content/en/reference/cli/{subcommand}.mdx`. Each MDX file SHALL include frontmatter `{title, generated: true, source: "usearch --help", lastGenerated: <ISO-8601 timestamp>}` AND the help text rendered inside an MDX `<CodeBlock>` component. The CI workflow SHALL invoke this script on every push to `main` AND assert the generated content matches the committed files (drift = CI fail). | P0 | `scripts/gen-cli-reference.sh` exists and is executable; running it against the current binary produces files for each implemented subcommand (currently `query`); CI workflow contains a `gen-cli-reference` job that fails when committed reference drifts from generated output. |
+| **REQ-DOC-007** | Ubiquitous | The repository SHALL provide `scripts/gen-cli-reference.sh` that builds the `usearch` binary (via `make build` if not present), invokes `usearch --help` AND `usearch <subcommand> --help` for each subcommand defined in SPEC-CLI-001 + SPEC-CLI-002 implemented set, captures the output, AND writes one MDX file per subcommand to `docs/content/en/reference/cli/{subcommand}.mdx`. The current implemented subcommand set (per `cmd/usearch/root.go`) is **7 subcommands: `query`, `config`, `history`, `deep`, `sources`, `login`, `repl`** — the script SHALL generate one MDX per subcommand AND auto-track additions/removals as the CLI surface evolves (no hardcoded subcommand list). Each MDX file SHALL include frontmatter `{title, generated: true, source: "usearch --help", lastGenerated: <ISO-8601 timestamp>}` AND the help text rendered inside an MDX `<CodeBlock>` component. The CI workflow SHALL invoke this script on every push to `main` AND assert the generated content matches the committed files (drift = CI fail). | P0 | `scripts/gen-cli-reference.sh` exists and is executable; running it against the current binary produces files for all 7 implemented subcommands (`query`, `config`, `history`, `deep`, `sources`, `login`, `repl`); CI workflow contains a `gen-cli-reference` job that fails when committed reference drifts from generated output. |
 | **REQ-DOC-008** | Optional | WHERE SPEC-DOC-002 (adapter reference) has shipped, the docs site SHALL include a `reference/adapters/` subtree owned by SPEC-DOC-002 with cross-links from `end-users/surface-comparison.mdx` (intent router category routing) AND `operators/deployment-helm.mdx` (per-adapter env-var setup). The IA slot SHALL be reserved at SPEC-DOC-001 ship time with a placeholder landing page `reference/adapters/index.mdx` linking to SPEC-DOC-002 status. The placeholder SHALL be replaced by SPEC-DOC-002 content; SPEC-DOC-001 does NOT pre-author per-adapter content. | P1 | `reference/adapters/index.mdx` exists with placeholder + link to SPEC-DOC-002; cross-links present in surface-comparison and deployment-helm; merging SPEC-DOC-002 does not require modifying SPEC-DOC-001 IA. |
 | **REQ-DOC-009** | Ubiquitous | The Troubleshooting section SHALL contain at minimum top-10 entries derived from: SPEC-CACHE-001 5-phase fallback failure modes, SPEC-AUTH-001 OIDC discovery failures, SPEC-SEC-001 SSRF block triage, SPEC-IDX-003 Korean tokenizer health-check failures, LLM provider connection errors (SPEC-LLM-001), Docker compose port conflicts (SPEC-BOOT-001), missing env vars (SPEC-BOOT-001), Qdrant/Meilisearch/Postgres connectivity (SPEC-IDX-001), adapter API key acquisition (placeholder linking SPEC-DOC-002), AND rate-limit-exceeded errors (SPEC-SEC-001 ratelimit). Each entry SHALL follow the format: Symptom → Likely Cause → Diagnostic Command → Resolution → Related SPEC IDs. | P1 | `troubleshooting/index.mdx` exists; at least 10 entries each following the 5-field format; each entry has at least one Related SPEC ID with valid link. |
 
@@ -458,10 +534,10 @@ HISTORY의 D1..D8 8개 결정은 §2 requirements를 bind하는 constraint이다
 | ID | Pattern | Requirement | Priority | Acceptance Summary |
 |----|---------|-------------|----------|--------------------|
 | **REQ-DOC-012** | Ubiquitous | The repository SHALL provide `.github/workflows/docs.yml` executing on every pull request affecting `docs/**`, `scripts/gen-cli-reference.sh`, `scripts/check-screenshot-freshness.sh`, OR `scripts/check-bilingual-coverage.sh`. The workflow SHALL contain jobs: (a) `build` — `pnpm --dir docs build` zero errors, (b) `link-check` — lychee link-check per REQ-DOC-013, (c) `gen-reference-drift` — gen-cli-reference drift check per REQ-DOC-007, (d) `screenshot-freshness` — per REQ-DOC-014, (e) `bilingual-coverage` — per REQ-DOC-016. The workflow SHALL complete within 5 minutes wall-clock on `ubuntu-24.04` hosted runner per NFR-DOC-001. | P0 | `.github/workflows/docs.yml` exists with all 5 jobs; CI run on a PR modifying `docs/content/en/introduction/index.mdx` executes all jobs; total runtime ≤ 5 min observed. |
-| **REQ-DOC-013** | Event-Driven | WHEN the docs CI workflow runs, the `link-check` job SHALL execute `lycheeverse/lychee-action@v2` using `docs/lychee.toml` config. Internal links (relative MDX references, internal anchor links, intra-site routes) SHALL be 100% resolvable — ANY broken internal link SHALL fail the job. External links (https://...) SHALL be polled with retry (3 attempts, exponential backoff) AND configurable allowlist for known-rate-limited domains (github.com API, twitter/x.com, anthropic.com); broken external link SHALL warn (not fail) the job AND post an annotation to the PR. The external-link allowlist SHALL be reviewed quarterly. | P0 | `docs/lychee.toml` exists with internal-strict + external-warn config; injected broken internal link `[bad](./does-not-exist)` fails CI; injected unreachable external link `https://this-does-not-exist.invalid` produces PR annotation but does not fail; allowlisted domain (`https://api.github.com/`) returning 403 does NOT fail. |
+| **REQ-DOC-013** | Event-Driven | WHEN the docs CI workflow runs, the `link-check` job SHALL execute `lycheeverse/lychee-action@v2` using `docs/lychee.toml` config. Internal links (relative MDX references, internal anchor links, intra-site routes) SHALL be 100% resolvable — ANY broken internal link SHALL fail the job. To keep the gate green while SPEC-SEC-001 is unmerged, the docs SHALL NOT emit any link to a nonexistent `ops/security/*` file (per REQ-DOC-005 forward-reference rule); the security placeholders link to in-site SPEC-SEC-001 status pages only. Should any deferred/forward-reference path be unavoidable, it SHALL be added to a `docs/lychee.toml` exclude allowlist with a comment naming the unblocking SPEC — the link-check job MUST NOT fail on these deferred references. External links (https://...) SHALL be polled with retry (3 attempts, exponential backoff) AND configurable allowlist for known-rate-limited domains (github.com API, twitter/x.com, anthropic.com); broken external link SHALL warn (not fail) the job AND post an annotation to the PR. The external-link allowlist SHALL be reviewed quarterly. | P0 | `docs/lychee.toml` exists with internal-strict + external-warn config + a deferred-reference exclude section (SEC-001 `ops/security/*` until merged); injected broken internal link `[bad](./does-not-exist)` fails CI; security placeholder pages do NOT produce a broken-link failure; injected unreachable external link `https://this-does-not-exist.invalid` produces PR annotation but does not fail; allowlisted domain (`https://api.github.com/`) returning 403 does NOT fail. |
 | **REQ-DOC-014** | Event-Driven | WHEN the docs CI workflow runs, the `screenshot-freshness` job SHALL execute `scripts/check-screenshot-freshness.sh`. The script SHALL scan all MDX files for image references AND parse a frontmatter or sibling-metadata tag classifying each image as `screenshot:ui:*`, `screenshot:terminal:*`, `screenshot:diagram:*`, OR untagged. Images tagged `screenshot:ui:*` OR `screenshot:terminal:*` SHALL have file mtime ≤ 90 days OR a `lastVerified` date in MDX frontmatter ≤ 90 days. Stale images SHALL produce a CI warning AND auto-create a GitHub Issue tagged `docs/stale-screenshot` referencing the affected page. Diagrams (`screenshot:diagram:*`) and untagged images are exempt. | P1 | Script exists; UI screenshot with mtime > 90 days produces warning + Issue; freshly-updated `lastVerified` overrides mtime check; diagram tag exempts the image. |
-| **REQ-DOC-015** | Ubiquitous | The docs CI workflow SHALL deploy on every push to `main` to TWO targets: (a) gh-pages via `actions/upload-pages-artifact@v3` + `actions/deploy-pages@v4` to `https://<org>.github.io/universal-search/` (public canonical URL); (b) container image built from `Dockerfile.docs` (multi-stage Node 22 build → Caddy serve, image size ≤ 100 MB per NFR-DOC-004) pushed to `ghcr.io/<org>/usearch-docs:<sha>` AND `ghcr.io/<org>/usearch-docs:latest`. Tagged releases (v1.x.y per SPEC-REL-001) SHALL additionally push `ghcr.io/<org>/usearch-docs:v1.x.y`. | P0 | On main push, gh-pages deploys; container image available at `ghcr.io/<org>/usearch-docs:latest`; image pulls successfully and `docker run -p 8080:80 ghcr.io/<org>/usearch-docs:latest` serves the docs index. |
-| **REQ-DOC-016** | State-Driven | IF the `bilingual-coverage` CI job runs, THEN the script `scripts/check-bilingual-coverage.sh` SHALL enumerate all `*.mdx` files under `docs/content/en/` EXCLUDING the `reference/cli/` and `reference/api/` subtrees (EN-only per D3), compute the set of expected KO paths, AND assert `≥ 90%` of expected KO paths exist under `docs/content/ko/`. The script SHALL produce a coverage report (`docs/coverage-report.md`) listing missing KO translations. Coverage `< 90%` SHALL fail the job. The 90% threshold SHALL NOT be lowered without explicit SPEC amendment. | P0 | Script exists; coverage report generated on every CI run; deliberate removal of one KO page in the Tier-1 set drops coverage below threshold and fails CI; report lists the specific missing KO paths. |
+| **REQ-DOC-015** | Ubiquitous | The docs CI workflow SHALL, on every push to `main`, deploy the **V1 gate target**: (a) gh-pages via `actions/upload-pages-artifact@v3` + `actions/deploy-pages@v4` to `https://<org>.github.io/universal-search/` (public canonical URL). The workflow SHALL ALSO contain a `build-and-push-container` job that builds the image from `Dockerfile.docs` (multi-stage Node 22 build → Caddy serve, image size ≤ 100 MB per NFR-DOC-004); HOWEVER the actual **publish** to `ghcr.io/<org>/usearch-docs:<sha>` / `:latest` (and `:v1.x.y` on tagged releases) is **DEFERRED and conditional** on resolution of the `<org>` / container-registry path (Open Questions §8.3, §8.4). Until resolved, the container job SHALL build-and-verify-only (no push) — image push is NOT a V1.0.0 ship gate. | P0 | On main push, gh-pages deploys (V1 gate). The `build-and-push-container` job builds `Dockerfile.docs` successfully and `docker run -p 8080:80 <local-image>` serves the docs index; the push step is gated behind a resolved-registry condition and does NOT block V1 when `<org>` is unresolved. |
+| **REQ-DOC-016** | State-Driven | IF the `bilingual-coverage` CI job runs, THEN the script `scripts/check-bilingual-coverage.sh` SHALL enumerate the **Tier-1 EN page set** (all Introduction, all Getting Started, all End Users, Operators core path, Troubleshooting top-10 — per REQ-DOC-010) and assert `≥ 90%` of corresponding KO paths exist under `docs/content/ko/`. The entire `reference/` subtree is EXCLUDED from the V1 gate: `reference/cli/` + `reference/api/` are EN-only per D3, AND full reference-section KO translation is **DEFERRED to V1.1** (not part of the V1 Tier-1 coverage gate). The script SHALL produce a coverage report (`docs/coverage-report.md`) listing missing KO translations AND the V1.1-deferred reference subtree (informational, not counted). Tier-1 coverage `< 90%` SHALL fail the job. The 90% Tier-1 threshold SHALL NOT be lowered without explicit SPEC amendment. | P0 | Script exists; coverage report generated on every CI run; the gate counts only the Tier-1 set; deliberate removal of one KO page in the Tier-1 set drops coverage below threshold and fails CI; removal of a `reference/` KO page does NOT affect the gate; report lists the specific missing Tier-1 KO paths. |
 
 ### 2.6 Accessibility + Content Quality (D7, D8)
 
@@ -560,6 +636,26 @@ known destination, rationale, 또는 follow-up이 기록되어 있다.
 - **GitHub Issue tracking on this SPEC** (`issue_number: 0`). → M8/
   M9 polish SPEC 패턴.
 
+- **Automated a11y CI (Pa11y / axe-core CLI)**. → V1.1로 연기 (D7).
+  V1은 V1.0.0 freeze gate에서 manual axe-core 브라우저 확장 audit만
+  (REQ-DOC-017). 자동화된 CI-time a11y 게이트는 가치 입증 후 V1.1.
+
+- **Automated Lighthouse CI**. → V1.1로 연기 (NFR-DOC-003). V1은
+  freeze gate에서 manual Lighthouse mobile audit만. CI 자동 perf
+  회귀 게이트는 V1.1.
+
+- **Full reference-section KO translation**. → V1.1로 연기 (D3).
+  V1.0.0은 Tier-1 (introduction / getting-started / end-users /
+  operators core / troubleshooting) KO만 ship. `reference/*` KO
+  번역은 90% Tier-1 coverage gate (REQ-DOC-016) 범위 밖 — V1.1
+  minor release에서 추가.
+
+- **Docs container image live-publish to `ghcr.io/<org>/...`**. →
+  V1.0.0 gate에서 제외 (REQ-DOC-015). `build-and-push-container`
+  job은 작성하되 실제 push는 `<org>` / registry 경로 확정 (Open
+  Question §8.3, §8.4) 전까지 conditional/deferred. V1 gate는
+  gh-pages deploy + 로컬 image build-verify까지.
+
 - **Automated screenshot generation via Playwright**. → V1은 수동
   스크린샷 + freshness gate (REQ-DOC-014). Playwright 기반 auto-
   capture는 SPEC-EVAL-002 dashboard infrastructure 재사용 가능
@@ -594,7 +690,7 @@ cycle에서 작성). scenario index:
 | §5.9 | Search functionality: run search "한국어 토크나이저" on `/ko/` → returns mecab-ko setup page; run "MCP server" on `/en/` → returns MCP integration page; DevTools network confirms zero third-party requests. | REQ-DOC-011 |
 | §5.10 | Link-check enforcement: open PR adding `[broken](./does-not-exist)` → CI link-check job fails; PR with allowlisted-rate-limited external link returning 429 → job warns but passes. | REQ-DOC-012, REQ-DOC-013 |
 | §5.11 | Screenshot freshness: backdate one `screenshot:ui:*` image to 100 days ago → CI screenshot-freshness job produces warning + auto-creates GitHub Issue tagged `docs/stale-screenshot`. | REQ-DOC-014 |
-| §5.12 | Dual deployment: push to `main` triggers gh-pages deploy AND `ghcr.io/<org>/usearch-docs:<sha>` push; both reachable; container size ≤ 100 MB. | REQ-DOC-015, NFR-DOC-004 |
+| §5.12 | Deployment: push to `main` triggers gh-pages deploy (V1 gate); `build-and-push-container` job builds `Dockerfile.docs` and serves it locally (size ≤ 100 MB); actual `ghcr.io/<org>/usearch-docs:<sha>` push is conditional/deferred until `<org>`/registry resolved. | REQ-DOC-015, NFR-DOC-004 |
 | §5.13 | Bilingual coverage gate: delete one Tier-1 KO page in a PR → coverage drops below 90% → CI bilingual-coverage job fails with report listing the missing path. | REQ-DOC-016 |
 | §5.14 | Accessibility manual audit at V1.0.0 freeze: axe-core extension run on introduction + 3 random reference pages produces audit report in `legal/accessibility.mdx` with zero AA-level violations. | REQ-DOC-017 |
 | §5.15 | Marketing-claim lint: insert "the fastest search" into draft `introduction/what-is-usearch.mdx` → `scripts/check-doc-claims.sh` warns; remove → clean. | REQ-DOC-018 |
@@ -642,9 +738,12 @@ cycle에서 작성). scenario index:
   Source for `operators/observability.mdx` (metric catalog from
   cardinality allowlist, slog conventions, OTel wiring).
 
-- **SPEC-SEC-001 (drafted, M8)** — Security hardening. Source
-  for `operators/security/{runbook,owasp-checklist,threat-model}
-  .mdx` (cross-link to `ops/security/*` canonical files).
+- **SPEC-SEC-001 (drafted, M8 — PR #42 UNMERGED, not on main)** —
+  Security hardening. `ops/security/*` canonical files do NOT yet
+  exist on main. `operators/security/{runbook,owasp-checklist,
+  threat-model}.mdx` are forward-reference placeholders linking
+  SPEC-SEC-001 status until SEC-001 merges; cross-link to
+  `ops/security/*` is added by a follow-up PR post-merge.
 
 ### 6.2 Related but soft (related)
 
@@ -678,7 +777,7 @@ cycle에서 작성). scenario index:
 
 | Dependency | Pinned version | Source | License |
 |------------|---------------|--------|---------|
-| Next.js | 16.x (matching `web/`) | Vercel | MIT |
+| Next.js | `^16.2.6` (matching `web/package.json`) | Vercel | MIT |
 | React | 19.x | Meta | MIT |
 | Nextra | 4.x (latest stable) | shuding/nextra | MIT |
 | nextra-theme-docs | 4.x (matching Nextra) | shuding/nextra | MIT |
@@ -739,9 +838,9 @@ REQ-DEP-007 pin policy 준수.
 | [NEW] | `docs/content/en/operators/audit-log.mdx` | audit log ops (AUTH-003) |
 | [NEW] | `docs/content/en/operators/observability.mdx` | Prom + slog + OTel (OBS-001) |
 | [NEW] | `docs/content/en/operators/security/index.mdx` | security ops landing |
-| [NEW] | `docs/content/en/operators/security/runbook.mdx` | cross-links `ops/security/runbook.md` |
-| [NEW] | `docs/content/en/operators/security/owasp-checklist.mdx` | cross-links `ops/security/owasp-asvs-checklist.md` |
-| [NEW] | `docs/content/en/operators/security/threat-model.mdx` | cross-links `ops/security/threat-model.md` |
+| [NEW] | `docs/content/en/operators/security/runbook.mdx` | forward-ref placeholder → SPEC-SEC-001 (no `ops/security/*` link until SEC-001 merges) |
+| [NEW] | `docs/content/en/operators/security/owasp-checklist.mdx` | forward-ref placeholder → SPEC-SEC-001 (deferred cross-link) |
+| [NEW] | `docs/content/en/operators/security/threat-model.mdx` | forward-ref placeholder → SPEC-SEC-001 (deferred cross-link) |
 | [NEW] | `docs/content/en/reference/index.mdx` | section landing |
 | [NEW] | `docs/content/en/reference/architecture.mdx` | tech.md surface |
 | [NEW] | `docs/content/en/reference/dependencies.mdx` | links to auto-generated docs/dependencies.md |
@@ -799,6 +898,7 @@ REQ-DEP-007 pin policy 준수.
 
 | Path | Change |
 |------|--------|
+| `docs/` (stale v3 artifacts) | REMOVE gitignored Nextra v3 / Next 14 leftovers (`docs/.next/`, `docs/out/`, `docs/node_modules/`, `docs/pages/`, scratch `docs/content/`) before v4 bootstrap. PRESERVE git-tracked `docs/dependencies.md`, `docs/_deps-*.md`, `docs/licenses/` (REQ-DOC-001) |
 | `README.md` | Add prominent docs site link at top ("Full documentation: https://<org>.github.io/universal-search/"); retain existing quickstart |
 | `docs/dependencies.md` | NO content change; Nextra MDX wrapper at `docs/content/en/reference/dependencies.mdx` links here as canonical |
 | `docs/_deps-header.md`, `docs/_deps-compose-table.md` | NO content change; same wrapping pattern |
@@ -815,8 +915,10 @@ REQ-DEP-007 pin policy 준수.
   reference auto-generation; no behavior change.
 - `internal/**` Go packages — domain code unchanged.
 - `services/**` Python sidecars — unchanged.
-- `ops/security/**` SEC-001 deliverables — canonical location
-  preserved; docs site cross-links to these.
+- `ops/security/**` SEC-001 deliverables — NOT on main yet (SEC-001
+  PR #42 unmerged). This SPEC does NOT create or modify them; docs
+  security pages forward-reference SPEC-SEC-001 until it merges, at
+  which point a follow-up PR adds the cross-links.
 - `.moai/specs/SPEC-*/` — internal SPEC docs unchanged; docs site
   does NOT surface SPEC bodies (only SPEC IDs as anchors).
 
@@ -937,4 +1039,4 @@ Internal (project files):
 
 ---
 
-*End of SPEC-DOC-001 v0.1.0 (draft).*
+*End of SPEC-DOC-001 v0.2.0 (draft).*

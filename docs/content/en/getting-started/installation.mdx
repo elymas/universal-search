@@ -1,0 +1,129 @@
+---
+title: Installation
+description: Step-by-step installation guide for Universal Search
+lastUpdated: 2026-05-30
+---
+
+import { Callout, Steps, Tabs } from 'nextra/components'
+
+# Installation
+
+<Steps>
+
+### Clone the Repository
+
+```bash
+git clone <repo-url>
+cd universal-search
+```
+
+<Callout type="info">
+  The working directory is named `univesal-search` (typo) while the canonical GitHub repository name is `universal-search`. The Go module path (`github.com/elymas/universal-search`) is unaffected.
+</Callout>
+
+### Configure Environment
+
+```bash
+cp .env.example .env
+```
+
+Open `.env` and fill in the required values:
+
+```bash
+# Required
+MEILI_MASTER_KEY=your-secret-key-here
+POSTGRES_PASSWORD=your-postgres-password
+
+# Optional but recommended
+ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
+BRAVE_SEARCH_API_KEY=BSA...
+NAVER_CLIENT_ID=...      # for Korean-locale results
+NAVER_CLIENT_SECRET=...
+```
+
+See [Configuration Reference](/en/reference/configuration) for the complete list.
+
+### Start Dependencies
+
+```bash
+make compose-up
+```
+
+This starts:
+- **Qdrant** (vector database) on port 6333
+- **Meilisearch** (full-text search) on port 7700
+- **PostgreSQL** (relational data) on port 5432
+- **SearXNG** (metasearch engine) on port 8080
+- **LiteLLM proxy** (LLM routing) on port 4000
+- **Redis** (caching) on port 6379
+
+Wait for all services to be healthy:
+
+```bash
+docker compose ps     # all services should show "healthy" or "running"
+```
+
+### Build the Binary
+
+```bash
+make build
+```
+
+This produces `./cmd/usearch/usearch` (or `usearch.exe` on Windows).
+
+### Verify
+
+```bash
+./cmd/usearch/usearch --version
+# Expected output: usearch v0.1.0-dev
+
+./cmd/usearch/usearch --help
+# Shows all 7 subcommands: query, config, history, deep, sources, login, repl
+```
+
+</Steps>
+
+## Common Build Targets
+
+```bash
+make compose-up    # Start all docker-compose services
+make compose-down  # Stop all services
+make build         # Build cmd/usearch/usearch binary
+make test          # Run Go + Python + Node tests
+make lint          # Run all linters
+make fmt           # Format all code
+make tidy          # go mod tidy
+make install-py    # uv sync (Python workspace)
+make clean         # Remove build artifacts
+```
+
+## Verify Services
+
+<Tabs items={['Qdrant', 'Meilisearch', 'SearXNG', 'LiteLLM']}>
+  <Tabs.Tab>
+    ```bash
+    curl http://localhost:6333/health
+    # {"status":"ok"}
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```bash
+    curl http://localhost:7700/health
+    # {"status":"available"}
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+    Open [http://localhost:8080](http://localhost:8080) in your browser.
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```bash
+    curl http://localhost:4000/health
+    # {"status":"healthy"}
+    ```
+  </Tabs.Tab>
+</Tabs>
+
+## Next Step
+
+Run [Your First Query](/en/getting-started/first-query).

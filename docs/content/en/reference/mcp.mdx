@@ -1,0 +1,181 @@
+---
+title: MCP Tools Reference
+description: Model Context Protocol tools provided by usearch-mcp server
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# MCP Tools Reference
+
+Universal Search exposes a Model Context Protocol (MCP) server (`usearch-mcp`) with 4 tools for integration with Claude for Desktop and other MCP-compatible clients.
+
+## Configuration
+
+Add to Claude for Desktop's `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "usearch": {
+      "command": "usearch-mcp",
+      "args": ["--transport", "stdio"],
+      "env": {
+        "USEARCH_SERVER_URL": "http://localhost:8081",
+        "USEARCH_MCP_TOKEN": "your-token-here"
+      }
+    }
+  }
+}
+```
+
+See [MCP Integration](/en/end-users/mcp-integration) for the full setup guide.
+
+## Tools
+
+### `search`
+
+Run a search query across configured adapters and synthesize results with citations.
+
+**Input schema:**
+
+```json
+{
+  "query": "string (required) — the search query",
+  "source": "string (optional) — comma-separated adapter names to restrict search"
+}
+```
+
+**Output:**
+
+```json
+{
+  "summary": "string — synthesized answer in Markdown",
+  "citations": [
+    {
+      "doc_id": "string",
+      "title": "string",
+      "url": "string",
+      "source": "string"
+    }
+  ],
+  "latency_ms": 1240
+}
+```
+
+**Example usage (Claude prompt):**
+
+```
+Use the usearch search tool to find recent papers about Raft consensus.
+```
+
+---
+
+### `get_citation`
+
+Retrieve the full document for a citation returned by a prior `search` call.
+
+**Input schema:**
+
+```json
+{
+  "doc_id": "string (required) — doc_id from a search citation"
+}
+```
+
+**Output:**
+
+```json
+{
+  "doc_id": "string",
+  "title": "string",
+  "url": "string",
+  "source": "string",
+  "content": "string — full document text (may be truncated for large documents)"
+}
+```
+
+**Notes:**
+- Documents are cached in-process for the duration of the MCP session
+- `doc_id` values are only valid within the same session that produced the `search` result
+
+---
+
+### `list_sources`
+
+List all registered search adapters and their capabilities.
+
+**Input schema:** None (takes no parameters)
+
+**Output:**
+
+```json
+{
+  "sources": [
+    {
+      "name": "searxng",
+      "category": "web",
+      "language": ["en", "ko", "*"],
+      "auth_required": false,
+      "description": "SearXNG metasearch (70+ engines)"
+    },
+    {
+      "name": "naver",
+      "category": "korean",
+      "language": ["ko"],
+      "auth_required": true,
+      "description": "Naver Search (Korean-locale)"
+    }
+  ]
+}
+```
+
+---
+
+### `deep_research`
+
+Run multi-agent deep research (Researcher → Reviewer → Writer → Verifier pipeline).
+
+<Callout type="warning">
+  `deep_research` is significantly more expensive than `search` — 5–20x more LLM tokens. The `cost_limit_usd` cap prevents runaway costs. Default cap: $1.00 per call.
+</Callout>
+
+**Input schema:**
+
+```json
+{
+  "query": "string (required) — the research question",
+  "cost_limit_usd": "number (optional, default 1.0) — maximum LLM cost cap"
+}
+```
+
+**Output:**
+
+```json
+{
+  "report": "string — long-form Markdown report with per-claim citations",
+  "citations": [...],
+  "cost_usd": 0.84,
+  "latency_ms": 62400
+}
+```
+
+**Notes:**
+- Only registered when `capCheck` and `pipeline` are provided to the server (requires full server configuration)
+- Returns partial results if `cost_limit_usd` is reached during the pipeline
+
+## Error Codes
+
+| Code | Meaning |
+|---|---|
+| `ADAPTER_ERROR` | One or more adapters failed |
+| `SYNTHESIS_ERROR` | LLM synthesis failed |
+| `DOC_NOT_FOUND` | `doc_id` not found in session cache |
+| `CAP_EXCEEDED` | Cost limit reached |
+| `AUTH_ERROR` | Missing or invalid MCP token |
+
+## Related
+
+- [MCP Integration](/en/end-users/mcp-integration) — setup guide for Claude for Desktop
+- [Authentication Setup](/en/operators/auth-setup) — MCP token configuration
+- SPEC-MCP-001: full MCP server specification

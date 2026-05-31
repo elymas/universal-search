@@ -1,0 +1,127 @@
+---
+title: 인증 설정
+description: Universal Search의 OAuth/OIDC 및 MCP 토큰 구성
+lastUpdated: 2026-05-30
+---
+
+import { Callout, Tabs, Steps } from 'nextra/components'
+
+# 인증 설정
+
+Universal Search는 두 가지 인증 모드를 지원합니다:
+
+1. **OAuth/OIDC** — 웹 UI 및 CLI 로그인용
+2. **MCP 토큰** — Claude for Desktop 및 기타 MCP 클라이언트용
+
+## OAuth/OIDC 설정
+
+<Tabs items={['Google', 'GitHub', '커스텀 OIDC']}>
+  <Tabs.Tab>
+    <Steps>
+    ### Google OAuth 앱 생성
+
+    1. [console.cloud.google.com](https://console.cloud.google.com) 접속
+    2. 새 OAuth 2.0 클라이언트 ID 생성 (웹 애플리케이션)
+    3. 승인된 리디렉션 URI 추가: `http://localhost:8081/auth/callback`
+
+    ### 환경 변수 구성
+
+    ```bash
+    OAUTH_PROVIDER=google
+    OAUTH_CLIENT_ID=<your-client-id>.apps.googleusercontent.com
+    OAUTH_CLIENT_SECRET=<your-client-secret>
+    OAUTH_REDIRECT_URL=http://localhost:8081/auth/callback
+    ```
+
+    ### 로그인 테스트
+
+    ```bash
+    usearch login --provider google
+    # Google OAuth 플로우를 위해 브라우저가 열림
+    ```
+    </Steps>
+  </Tabs.Tab>
+  <Tabs.Tab>
+    <Steps>
+    ### GitHub OAuth 앱 생성
+
+    1. GitHub 설정 → 개발자 설정 → OAuth Apps로 이동
+    2. 새 OAuth 앱 생성
+    3. Authorization callback URL 설정: `http://localhost:8081/auth/callback`
+
+    ### 환경 변수 구성
+
+    ```bash
+    OAUTH_PROVIDER=github
+    OAUTH_CLIENT_ID=<your-github-client-id>
+    OAUTH_CLIENT_SECRET=<your-github-client-secret>
+    OAUTH_REDIRECT_URL=http://localhost:8081/auth/callback
+    ```
+    </Steps>
+  </Tabs.Tab>
+  <Tabs.Tab>
+    커스텀 OIDC 제공자 (Keycloak, Auth0, Okta 등):
+
+    ```bash
+    OAUTH_PROVIDER=oidc
+    OAUTH_CLIENT_ID=<client-id>
+    OAUTH_CLIENT_SECRET=<client-secret>
+    OAUTH_ISSUER_URL=https://your-idp.example.com
+    OAUTH_REDIRECT_URL=http://localhost:8081/auth/callback
+    ```
+  </Tabs.Tab>
+</Tabs>
+
+## MCP 토큰 설정
+
+MCP 토큰은 Claude for Desktop 및 CI 파이프라인을 위한 비인터랙티브 접근을 가능하게 합니다.
+
+### 토큰 생성
+
+관리자 패널 또는 CLI를 통해:
+
+```bash
+# 관리자 전용
+usearch admin token create --name "claude-desktop" --expires 90d
+# 출력: eyJ... (이 토큰을 복사하세요)
+```
+
+### Claude for Desktop 구성
+
+`~/.config/claude-desktop/config.json` 파일에 추가:
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "usearch": {
+      "command": "usearch-mcp",
+      "args": ["--transport", "stdio"],
+      "env": {
+        "USEARCH_SERVER_URL": "http://localhost:8081",
+        "USEARCH_MCP_TOKEN": "eyJ..."
+      }
+    }
+  }
+}
+```
+
+<Callout type="info">
+  OAuth 시크릿은 `.mcp.json`에 절대 저장되지 않습니다. 첫 번째 인증 후 OS 키체인(macOS Keychain, Linux Secret Service, Windows Credential Manager)에 저장됩니다.
+</Callout>
+
+## 토큰 수명 주기
+
+| 작업 | 명령어 |
+|---|---|
+| 로그인 상태 확인 | `usearch login --status` |
+| 로그아웃 | `usearch login --logout` |
+| 토큰 갱신 | `usearch login --refresh` |
+| 활성 토큰 목록 (관리자) | `usearch admin token list` |
+| 토큰 취소 (관리자) | `usearch admin token revoke --id <token-id>` |
+
+## 관련 SPEC
+
+- SPEC-AUTH-001: JWT 인증
+- SPEC-AUTH-002: OAuth/OIDC 통합
+- SPEC-AUTH-003: MCP 토큰 관리

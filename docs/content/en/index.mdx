@@ -1,0 +1,39 @@
+---
+title: Universal Search Documentation
+description: Operator and end-user documentation for Universal Search — a hybrid AI-powered search engine
+---
+
+# Universal Search
+
+**Universal Search** is a team-scale, source-grounded research meta-agent. It unifies web, social, academic, technical, and Korean-locale retrieval behind a single query plane, then routes results through hybrid LLM synthesis.
+
+## Quick Navigation
+
+- [What is Universal Search?](/en/introduction/what-is) — Overview, problem statement, personas
+- [Getting Started](/en/getting-started/prerequisites) — Prerequisites, installation, first query
+- [CLI Reference](/en/reference/cli) — All 7 subcommands: query, config, history, deep, sources, login, repl
+- [MCP Tools](/en/reference/mcp) — search, get_citation, list_sources, deep_research
+- [Operator Guide](/en/operators/deployment) — Deployment, auth setup, observability
+- [Troubleshooting](/en/troubleshooting) — Common issues and solutions
+
+## Key Features
+
+| Feature | Description |
+|---|---|
+| **Multi-source retrieval** | Web, social, academic, technical, Korean-locale |
+| **Hybrid synthesis** | Default summarize-and-cite; `/deep` for multi-agent deep research |
+| **CLI + MCP + Web UI** | Three surfaces for different workflows |
+| **Bilingual EN/KO** | Documentation and Korean-locale search support |
+| **Self-hosted** | Docker Compose deployment for teams |
+
+## Get Started in 5 Minutes
+
+```bash
+git clone <repo-url> && cd universal-search
+cp .env.example .env        # fill in MEILI_MASTER_KEY, POSTGRES_PASSWORD, etc.
+make compose-up             # start Qdrant, Meilisearch, PG, SearXNG, LiteLLM
+make build                  # build the usearch binary
+./cmd/usearch/usearch query "what is universal search?"
+```
+
+See [Installation](/en/getting-started/installation) for the full setup guide.

@@ -1,0 +1,72 @@
+---
+title: usearch config
+description: Manage usearch configuration
+generated: true
+lastUpdated: 2026-05-30
+---
+
+# usearch config
+
+Manage the usearch configuration file (TOML, XDG-compliant).
+
+## Synopsis
+
+```
+usearch config <subcommand> [flags]
+```
+
+## Subcommands
+
+| Subcommand | Description |
+|---|---|
+| `path` | Print the resolved config file path |
+| `show` | Print current configuration (TOML) |
+| `init` | Create default config file |
+| `get <key>` | Get a specific config value |
+| `set <key> <value>` | Set a config value |
+
+## Configuration Precedence
+
+1. Command-line flags (highest priority)
+2. Environment variables (`USEARCH_*` prefix)
+3. Config file (`~/.config/usearch/config.toml`)
+4. Built-in defaults (lowest priority)
+
+## Examples
+
+```bash
+# Show config file path
+usearch config path
+# Output: /Users/you/.config/usearch/config.toml
+
+# Create default config
+usearch config init
+
+# Show full config
+usearch config show
+
+# Get a specific value
+usearch config get server.endpoint
+
+# Set a value
+usearch config set server.endpoint http://localhost:9090
+usearch config set llm.model claude-3-5-sonnet-20241022
+usearch config set search.timeout 60s
+```
+
+## Key Configuration Values
+
+| Key | Default | Description |
+|---|---|---|
+| `server.endpoint` | `http://localhost:8081` | usearch server URL |
+| `llm.model` | `claude-3-5-sonnet-20241022` | LLM model for synthesis |
+| `llm.provider` | `anthropic` | LLM provider (anthropic, openai, ollama) |
+| `search.timeout` | `30s` | Default query timeout |
+| `search.locale` | `en` | Default search locale |
+| `output.format` | `markdown` | Default output format (markdown, json) |
+
+See [Configuration Reference](/en/reference/configuration) for the full list.
+
+## Related
+
+- [Configuration Reference](/en/reference/configuration) — all config options

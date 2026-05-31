@@ -1,0 +1,68 @@
+---
+title: What is Universal Search?
+description: Overview of Universal Search — a team-scale, source-grounded research meta-agent
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# What is Universal Search?
+
+**Universal Search** is a team-scale, source-grounded research meta-agent. It unifies web, social, academic, technical, and Korean-locale retrieval behind a single query plane, then routes results through hybrid LLM synthesis (basic summarization by default, `/deep` multi-agent deep-research on demand).
+
+It is a composition — not a fork — of three proven open-source lineages:
+
+- **Access layer**: inspired by `fivetaku/insane-search` (5-phase adaptive scheduler, TLS fingerprint spoofing, Playwright fallback)
+- **Research orchestration**: built on `assafelovic/gpt-researcher` (Apache-2.0 planner-executor-publisher workflow, citation tracking, MCP server `gptr-mcp`)
+- **Breadth / real-time signal**: inspired by `mvanhorn/last30days-skill` (social-engagement-scored aggregation across Reddit / X / YouTube / HN / Polymarket / GitHub)
+- **Citation report generation**: inspired by Stanford **STORM** (long-form knowledge curation with per-claim provenance)
+- **Metasearch fanout**: **SearXNG** (70+ engine providers, privacy-preserving, self-hostable)
+
+## Problem Statement
+
+Research work today is fragmented:
+
+- Users context-switch across 5–10 tabs (Google, Reddit, arXiv, GitHub, Naver, YouTube, internal docs)
+- Each search returns raw links — synthesis is manual and slow
+- Existing "AI search" products (Perplexity, ChatGPT Search) are **single-tenant, closed, non-auditable**, and weak on Korean-locale sources and long-tail social platforms
+- Teams have no shared, auditable research trail — the same questions get re-asked, answers drift, provenance disappears
+
+Universal Search solves this by giving a team **one query → many sources → one cited synthesis → one shared, re-queryable memory**.
+
+## Architecture
+
+```
+cmd/usearch     → Go CLI binary (7 subcommands: query, config, history, deep, sources, login, repl)
+internal/       → Domain packages (adapters, LLM routing, MCP server, auth, observability)
+services/       → Python sidecars (researcher, storm, embedder)
+web/            → Next.js 16 App Router frontend
+deploy/         → docker-compose dev stack (Qdrant, Meilisearch, PG, SearXNG, LiteLLM, Redis)
+```
+
+## V1 Scope
+
+**In scope for V1**:
+- 4 source categories: web+social, academic+technical, Korean-locale, personal-context (read-only, opt-in per user — scoped for V1.1 gate)
+- Hybrid synthesis: default summarize-and-cite, `/deep` escalates to multi-agent pipeline (Researcher → Reviewer → Writer → Verifier)
+- Team auth + shared hybrid index (Qdrant Tiered Multitenancy + Meilisearch + Postgres)
+- Multiple surfaces: CLI, MCP server, Claude Skill, Web UI
+- Mixed LLM routing via LiteLLM proxy (Claude primary, OpenAI-compatible, local Ollama/vLLM fallback)
+- Observability: query log, citation-faithfulness eval, per-source success rate
+
+**Out of scope for V1**:
+- SaaS / public multi-tenant hosting (organization-scale self-hosted only)
+- Write-back to external systems (purely read / retrieve / synthesize)
+- Image / video generation
+- Agentic task execution beyond retrieval
+
+<Callout type="info">
+  Universal Search runs SearXNG (AGPL-3.0) as a separate Docker container. No SearXNG source code is bundled, modified, or redistributed. See [Licenses](/en/legal/licenses) for full attribution.
+</Callout>
+
+## Related SPECs
+
+- SPEC-CLI-001, SPEC-CLI-002: CLI surface
+- SPEC-MCP-001: MCP server and tools
+- SPEC-UI-001: Web UI
+- SPEC-AUTH-001/002/003: Authentication
+- SPEC-OBS-001: Observability

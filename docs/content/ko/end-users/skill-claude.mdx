@@ -1,0 +1,47 @@
+---
+title: Claude Skill
+description: Claude Skill로 Universal Search 사용하기
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# Claude Skill
+
+Universal Search는 Claude Skill(SPEC-SKILL-001)로 사용할 수 있습니다 — Claude for Desktop이나 claude.ai에서 직접 호출할 수 있는 슬래시 명령어입니다.
+
+## 설정
+
+<Callout type="info">
+  Claude Skill 통합은 SPEC-SKILL-001이 병합되어야 합니다. 현재 상태는 해당 SPEC을 참조하세요.
+</Callout>
+
+스킬 호출 방법:
+
+```
+/usearch <쿼리>
+```
+
+또는 심층 연구 모드:
+
+```
+/usearch-deep <연구 질문>
+```
+
+## 동작 방식
+
+`/usearch`를 호출하면:
+
+1. 쿼리가 usearch MCP 서버로 전송됨
+2. `search` MCP 도구 호출
+3. 결과가 인용이 포함된 마크다운으로 반환
+4. Claude가 추가 추론에 인용 사용 가능
+
+## 설정
+
+Claude for Desktop에 usearch MCP 서버를 추가하세요([MCP 통합](/en/end-users/mcp-integration) 참조, *영어*), 그러면 `/usearch` 스킬이 자동으로 사용 가능해집니다.
+
+## 관련 항목
+
+- [MCP 통합](/en/end-users/mcp-integration) — Claude for Desktop MCP 설정 *(영어)*
+- SPEC-SKILL-001: Claude Skill 명세

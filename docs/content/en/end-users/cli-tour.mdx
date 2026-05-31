@@ -1,0 +1,114 @@
+---
+title: CLI Tour
+description: A guided walkthrough of the usearch command-line interface
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# CLI Tour
+
+This guide walks you through the `usearch` CLI from installation verification to advanced research workflows.
+
+## Step 1: Verify Installation
+
+```bash
+usearch --version
+# usearch v0.1.0-dev
+
+usearch --help
+# Shows all subcommands
+```
+
+## Step 2: Run Your First Query
+
+```bash
+usearch query "what is Raft consensus?"
+```
+
+Output (Markdown):
+```markdown
+## Raft Consensus Algorithm
+
+Raft is a consensus algorithm designed for understandability...
+
+### Sources
+1. [Raft Paper](https://raft.github.io/raft.pdf) — arXiv, 2014
+2. [etcd Docs](https://etcd.io/docs/learning/why/) — etcd.io, 2024
+
+Citation confidence: 0.94
+```
+
+## Step 3: JSON Output for Scripting
+
+```bash
+usearch query --json "Raft vs Paxos" | jq '.citations[].url'
+# "https://raft.github.io/raft.pdf"
+# "https://lamport.azurewebsites.net/pubs/paxos-simple.pdf"
+```
+
+## Step 4: Korean-Locale Query
+
+```bash
+usearch query --locale ko "네이버 클라우드 서비스 비교"
+# Returns Naver News + Korean blog posts ranked first
+```
+
+<Callout type="info">
+  Korean-locale search requires Naver API credentials. See [Korean Locale Setup](/en/operators/korean-locale-setup).
+</Callout>
+
+## Step 5: Deep Research
+
+```bash
+usearch deep "compare AI search products: Perplexity, ChatGPT Search, Universal Search"
+# Multi-agent research, 30-120 seconds, comprehensive citations
+```
+
+## Step 6: Query History
+
+```bash
+usearch history list          # list recent queries
+usearch history show --id q_abc123  # show a specific result
+usearch history search "raft" # full-text search history
+```
+
+## Step 7: Manage Sources
+
+```bash
+usearch sources list           # list all adapters
+usearch sources enable naver   # enable Korean locale adapter
+usearch sources test arxiv --query "raft" # test an adapter
+```
+
+## Step 8: Interactive REPL
+
+```bash
+usearch repl
+# usearch> what is Raft?
+# ...result...
+# usearch> /deep compare to Paxos
+# ...deep research...
+# usearch> /quit
+```
+
+## Quick Reference
+
+| Task | Command |
+|---|---|
+| Basic search | `usearch query "..."` |
+| JSON output | `usearch query --json "..."` |
+| Korean search | `usearch query --locale ko "..."` |
+| Deep research | `usearch deep "..."` |
+| View history | `usearch history list` |
+| List sources | `usearch sources list` |
+| Login | `usearch login` |
+| Interactive | `usearch repl` |
+| Get config path | `usearch config path` |
+| Show config | `usearch config show` |
+
+## Next Steps
+
+- [CLI Reference](/en/reference/cli) — full flag documentation for all 7 subcommands
+- [MCP Integration](/en/end-users/mcp-integration) — use from Claude for Desktop
+- [Deep Research](/en/reference/cli/deep) — deep research mode details

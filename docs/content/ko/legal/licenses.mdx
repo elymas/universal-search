@@ -1,0 +1,47 @@
+---
+title: 라이선스
+description: Universal Search 및 의존성의 라이선스 정보
+lastUpdated: 2026-05-30
+---
+
+# 라이선스
+
+Universal Search는 **Apache License 2.0** 하에 라이선스됩니다.
+
+## 프로젝트 라이선스
+
+```
+Copyright 2026 Universal Search Contributors
+
+Apache License, Version 2.0에 따라 라이선스됩니다.
+http://www.apache.org/licenses/LICENSE-2.0
+```
+
+## SearXNG 서비스 경계 참고
+
+Universal Search는 SearXNG(AGPL-3.0)를 **별도 Docker 컨테이너**로 실행합니다.
+
+- SearXNG 소스 코드는 번들에 포함, 수정 또는 재배포되지 않음
+- 서비스 경계를 가로지르는 네트워크 통신은 AGPL-3.0 하에 파생 저작물을 생성하지 않음
+- Universal Search가 호스팅 SaaS 제품으로 제공되는 경우 이 관계를 재검토해야 함
+
+## 의존성 라이선스
+
+전체 목록은 자동 생성된 의존성 매니페스트를 참조하세요:
+
+- [docs/dependencies.md](https://github.com/elymas/universal-search/blob/main/docs/dependencies.md)
+
+주요 의존성 라이선스:
+
+| 패키지 | 라이선스 |
+|---|---|
+| SearXNG | AGPL-3.0 (별도 컨테이너) |
+| Qdrant | Apache-2.0 |
+| Meilisearch | MIT / SSPL |
+| PostgreSQL | PostgreSQL License |
+| Redis | BSD-3-Clause |
+| LiteLLM | MIT |
+| gpt-researcher | Apache-2.0 |
+| Next.js | MIT |
+| Cobra | Apache-2.0 |
+| Nextra | MIT |

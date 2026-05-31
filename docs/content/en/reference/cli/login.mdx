@@ -1,0 +1,67 @@
+---
+title: usearch login
+description: Authenticate to a usearch server
+generated: true
+lastUpdated: 2026-05-30
+---
+
+# usearch login
+
+Authenticate to a usearch server and store the session token.
+
+## Synopsis
+
+```
+usearch login [flags]
+```
+
+## Flags
+
+| Flag | Default | Description |
+|---|---|---|
+| `--url <url>` | `http://localhost:8081` | usearch server URL |
+| `--provider <name>` | — | OAuth provider (google, github, custom) |
+| `--token <token>` | — | Use a pre-existing MCP token directly |
+
+## Examples
+
+```bash
+# Interactive browser-based login
+usearch login --url http://localhost:8081
+
+# Login with specific OAuth provider
+usearch login --url https://usearch.example.com --provider google
+
+# Login with MCP token (non-interactive)
+usearch login --url http://localhost:8081 --token "eyJ..."
+```
+
+## Flow
+
+1. `usearch login` opens the configured OAuth provider in the system browser
+2. User authenticates with the provider (Google, GitHub, custom OIDC)
+3. Token is stored in the OS keychain (macOS Keychain / Linux Secret Service / Windows Credential Manager)
+4. Subsequent `usearch` commands use the stored token automatically
+
+## Token Storage
+
+Session tokens are stored securely in the OS keychain:
+
+```bash
+# Verify login status
+usearch login --status
+
+# Logout (remove stored token)
+usearch login --logout
+```
+
+## Notes
+
+- For non-interactive environments (CI, scripts), use `--token` with an MCP token from the admin panel
+- Tokens expire per the server's configured session duration (default 24h)
+- See [Authentication Setup](/en/operators/auth-setup) for server-side configuration
+
+## Related
+
+- [Authentication Setup](/en/operators/auth-setup) — OAuth/OIDC server configuration
+- SPEC-AUTH-001, SPEC-AUTH-002, SPEC-AUTH-003

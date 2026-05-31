@@ -1,0 +1,86 @@
+---
+title: 첫 번째 쿼리
+description: Universal Search로 첫 번째 검색 실행하기
+lastUpdated: 2026-05-30
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# 첫 번째 쿼리
+
+[설치](/ko/getting-started/installation)를 완료했다면 이제 첫 번째 검색을 실행할 준비가 되었습니다.
+
+<Steps>
+
+### 기본 쿼리
+
+```bash
+usearch query "Raft 합의 알고리즘이란 무엇인가?"
+```
+
+예상 출력:
+
+```
+검색 중... [web, academic, technical]
+
+## Raft 합의 알고리즘
+
+Raft는 Paxos보다 이해하기 쉽도록 설계된 합의 알고리즘입니다...
+
+### 출처
+1. [Raft Paper](https://raft.github.io/raft.pdf) — arXiv 2014
+2. [etcd 문서](https://etcd.io/docs/current/learning/why/) — etcd.io
+
+인용 신뢰도: 0.94
+```
+
+### JSON 출력으로 쿼리
+
+스크립팅 및 통합에 유용합니다:
+
+```bash
+usearch query --json "Raft 합의란?" | jq .
+```
+
+### 한국어 로케일 쿼리
+
+```bash
+usearch query --locale ko "네이버 클라우드 서비스 비교"
+# 네이버 뉴스 + 한국어 블로그가 우선 반환됨
+```
+
+### 심층 연구 모드
+
+포괄적인 연구를 위한 멀티 에이전트 합성:
+
+```bash
+usearch deep "Raft vs Paxos 합의 알고리즘 비교"
+```
+
+<Callout type="info">
+  `usearch deep`은 멀티 에이전트 파이프라인(Researcher → Reviewer → Writer → Verifier)을 실행하며 30–120초 소요될 수 있습니다. 인용 품질이 중요한 복잡한 연구 작업에 사용하세요.
+</Callout>
+
+### 쿼리 이력 확인
+
+```bash
+usearch history list              # 최근 쿼리 목록
+usearch history show --id <id>    # 특정 쿼리의 전체 결과
+```
+
+</Steps>
+
+## 쿼리 팁
+
+| 팁 | 예시 |
+|---|---|
+| 구체적으로 질문하세요 | `"Raft 합의 분할 브레인 처리"` vs `"합의"` |
+| 한국어는 `--locale ko` 사용 | `usearch query --locale ko "AI 검색 시장 현황"` |
+| 심층 연구는 `deep` 사용 | `usearch deep "AI 검색 시장 분석 2026"` |
+| `jq`와 조합 | `usearch query --json "..." \| jq '.citations[].url'` |
+
+## 다음 단계
+
+- [CLI 가이드](/ko/end-users/cli-tour) — 모든 7개 서브커맨드 설명
+- [운영자 빠른 시작](/ko/getting-started/operator-quickstart) — 프로덕션 배포 체크리스트
+- [MCP 통합](/en/end-users/mcp-integration) — Claude for Desktop과 함께 사용 *(영어)*

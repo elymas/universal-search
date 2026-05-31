@@ -1,29 +1,33 @@
 {
   "name": "usearch-docs",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "private": true,
+  "description": "Universal Search documentation site — Nextra v4 bilingual EN+KO",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:static": "next build && next export",
+    "postbuild": "node -e \"const fs=require('fs');const html='<!DOCTYPE html><html><head><meta http-equiv=\\'refresh\\' content=\\'0;url=/en/\\'><link rel=\\'canonical\\' href=\\'/en/\\'/></head><body><p>Redirecting to <a href=\\'/en/\\'>/en/</a></p></body></html>';fs.writeFileSync('out/index.html',html);console.log('Static export complete — out/index.html created')\"",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "next": "14.2.21",
-    "nextra": "3.1.1",
-    "nextra-theme-docs": "3.1.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "next": "^16.2.6",
+    "nextra": "^4.0.0",
+    "nextra-theme-docs": "^4.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@types/node": "^22.10.2",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "typescript": "^5.7.3"
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.0.0"
   },
-  "engines": {
-    "node": ">=22.0.0",
-    "pnpm": ">=9.0.0"
-  },
-  "packageManager": "pnpm@9.15.0"
+  "packageManager": "pnpm@9.0.0",
+  "pnpm": {
+    "patchedDependencies": {
+      "nextra-theme-docs@4.6.1": "patches/nextra-theme-docs@4.6.1.patch"
+    }
+  }
 }

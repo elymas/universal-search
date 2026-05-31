@@ -1,0 +1,75 @@
+---
+title: usearch sources
+description: Manage search source adapters
+generated: true
+lastUpdated: 2026-05-30
+---
+
+# usearch sources
+
+Manage the search adapter registry — list, enable, disable, and test source adapters.
+
+## Synopsis
+
+```
+usearch sources <subcommand> [flags]
+```
+
+## Subcommands
+
+| Subcommand | Description |
+|---|---|
+| `list` | List all registered adapters and their status |
+| `enable <name>` | Enable an adapter |
+| `disable <name>` | Disable an adapter |
+| `test <name>` | Test an adapter with a sample query |
+| `info <name>` | Show detailed adapter information |
+
+## Examples
+
+```bash
+# List all adapters
+usearch sources list
+
+# Enable Naver adapter (for Korean-locale)
+usearch sources enable naver
+
+# Disable an adapter
+usearch sources disable youtube
+
+# Test an adapter
+usearch sources test arxiv --query "raft consensus"
+
+# Get adapter details
+usearch sources info naver
+```
+
+## Adapter List
+
+```
+NAME         STATUS    TYPE       LOCALE  NOTES
+searxng      enabled   web        any     Primary metasearch (70+ engines)
+arxiv        enabled   academic   any     arXiv preprints + Semantic Scholar
+github       enabled   technical  any     GitHub repos + issues
+hn           enabled   social     any     Hacker News discussions
+reddit       enabled   social     any     Reddit top posts
+youtube      enabled   social     any     YouTube transcripts
+naver        disabled  korean     ko      Requires NAVER_CLIENT_ID env var
+koreanews    disabled  korean     ko      Korean news RSS aggregator
+social       enabled   social     any     Cross-platform social aggregator
+```
+
+## list Output Format
+
+```
+NAME         STATUS    QUERIES   SUCCESS%   AVG_MS
+searxng      enabled   1,234     98.2%      340
+arxiv        enabled   456       99.1%      520
+naver        disabled  —         —          —
+```
+
+## Related
+
+- [Configuration Reference](/en/reference/configuration) — adapter configuration
+- [Korean Locale Setup](/en/operators/korean-locale-setup) — enabling Naver + Korean adapters
+- [MCP: list_sources](/en/reference/mcp) — same registry via MCP tool

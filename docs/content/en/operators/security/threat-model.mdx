@@ -1,0 +1,41 @@
+---
+title: STRIDE Threat Model
+description: Threat analysis for all surfaces — SPEC-SEC-001 forward reference
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# STRIDE Threat Model
+
+<Callout type="warning">
+  **Forward Reference — SPEC-SEC-001 Pending**
+
+  The full STRIDE threat model for Universal Search is delivered by **SPEC-SEC-001** (PR #42, pending merge into main).
+
+  This page is a placeholder. It will be expanded when SPEC-SEC-001 merges.
+</Callout>
+
+## Surfaces in Scope
+
+Universal Search exposes four attack surfaces:
+
+| Surface | Protocol | Authentication |
+|---------|----------|---------------|
+| CLI (`usearch`) | Local subprocess | OS user |
+| MCP Server (`usearch-mcp`) | stdio / SSE | MCP token |
+| Web UI | HTTPS | OAuth/OIDC |
+| REST API | HTTPS | JWT |
+
+## What the Threat Model Will Cover
+
+When SPEC-SEC-001 merges, this page will include full STRIDE analysis:
+
+- **Spoofing** — identity threats for each surface
+- **Tampering** — data integrity threats (query results, citations)
+- **Repudiation** — audit log and non-repudiation controls
+- **Information Disclosure** — sensitive data exposure risks
+- **Denial of Service** — rate limiting and resource exhaustion
+- **Elevation of Privilege** — privilege escalation vectors
+
+Attack trees and mitigation controls will be documented per surface.

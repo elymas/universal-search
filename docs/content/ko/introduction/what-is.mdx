@@ -1,0 +1,62 @@
+---
+title: Universal Search란?
+description: Universal Search 개요 — 팀 규모의 소스 기반 연구 메타 에이전트
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# Universal Search란?
+
+**Universal Search**는 팀 규모의 소스 기반 연구 메타 에이전트입니다. 웹, 소셜, 학술, 기술, 한국어 로케일 검색을 단일 쿼리 플레인으로 통합하고, 결과를 하이브리드 LLM 합성으로 제공합니다 (기본: 요약+인용, `/deep` 사용 시: 멀티 에이전트 심층 연구).
+
+세 가지 검증된 오픈소스 계보의 조합입니다:
+
+- **접근 레이어**: `fivetaku/insane-search` 기반 (5단계 적응형 스케줄러, TLS 핑거프린트 스푸핑, Playwright 폴백)
+- **연구 오케스트레이션**: `assafelovic/gpt-researcher` 기반 (Apache-2.0 플래너-실행자-퍼블리셔 워크플로, 인용 추적, MCP 서버)
+- **광범위/실시간 신호**: `mvanhorn/last30days-skill` 기반 (Reddit/X/YouTube/HN/Polymarket/GitHub 소셜 참여 점수 집계)
+- **인용 보고서 생성**: Stanford **STORM** 기반 (주장별 출처를 포함한 장형 지식 큐레이션)
+- **메타검색 팬아웃**: **SearXNG** (70개 이상 엔진 제공자, 프라이버시 보호, 자체 호스팅 가능)
+
+## 문제 정의
+
+현재 연구 작업의 문제점:
+
+- 사용자가 5–10개 탭을 오가며 작업 (Google, Reddit, arXiv, GitHub, 네이버, YouTube, 내부 문서 등)
+- 각 검색이 원시 링크를 반환 — 합성은 수동으로 해야 함
+- 기존 "AI 검색" 제품(Perplexity, ChatGPT Search)은 **단일 테넌트, 폐쇄적, 감사 불가**이며, 한국어 로케일 소스와 롱테일 소셜 플랫폼에 취약
+- 팀에게 공유, 감사 가능한 연구 경로 없음 — 같은 질문이 반복되고, 답변이 변동되며, 출처가 사라짐
+
+Universal Search는 팀에게 **단일 쿼리 → 다중 소스 → 단일 인용 합성 → 단일 공유·재검색 가능한 메모리**를 제공합니다.
+
+## 아키텍처
+
+```
+cmd/usearch     → Go CLI 바이너리 (7개 서브커맨드: query, config, history, deep, sources, login, repl)
+internal/       → 도메인 패키지 (어댑터, LLM 라우팅, MCP 서버, 인증, 관측가능성)
+services/       → Python 사이드카 (researcher, storm, embedder)
+web/            → Next.js 16 App Router 웹 프론트엔드
+deploy/         → docker-compose 개발 스택
+```
+
+## V1 범위
+
+**V1 포함 기능**:
+- 4가지 소스 카테고리: 웹+소셜, 학술+기술, 한국어 로케일, 개인 컨텍스트 (읽기 전용, V1.1)
+- 하이브리드 합성: 기본 요약+인용, `/deep`은 멀티 에이전트 파이프라인 (Researcher → Reviewer → Writer → Verifier)
+- 팀 인증 + 공유 하이브리드 인덱스 (Qdrant 계층형 멀티테넌시 + Meilisearch + Postgres)
+- 다중 인터페이스: CLI, MCP 서버, Claude Skill, 웹 UI
+- LiteLLM 프록시를 통한 혼합 LLM 라우팅 (Claude 기본, OpenAI 호환, 로컬 Ollama/vLLM 폴백)
+- 관측가능성: 쿼리 로그, 인용 충실도 평가, 소스별 성공률
+
+<Callout type="info">
+  Universal Search는 SearXNG(AGPL-3.0)를 별도 Docker 컨테이너로 실행합니다. SearXNG 소스 코드는 번들에 포함되지 않으며, 수정 또는 재배포되지 않습니다. 전체 기여 내역은 [라이선스](/ko/legal/licenses)를 참조하세요.
+</Callout>
+
+## 관련 SPEC
+
+- SPEC-CLI-001, SPEC-CLI-002: CLI 인터페이스
+- SPEC-MCP-001: MCP 서버와 도구
+- SPEC-UI-001: 웹 UI
+- SPEC-AUTH-001/002/003: 인증
+- SPEC-OBS-001: 관측가능성

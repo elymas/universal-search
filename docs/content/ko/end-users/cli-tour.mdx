@@ -1,0 +1,113 @@
+---
+title: CLI 가이드
+description: usearch 커맨드라인 인터페이스 단계별 가이드
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# CLI 가이드
+
+이 가이드는 설치 확인부터 고급 연구 워크플로까지 `usearch` CLI를 안내합니다.
+
+## 1단계: 설치 확인
+
+```bash
+usearch --version
+# usearch v0.1.0-dev
+
+usearch --help
+# 모든 서브커맨드 표시
+```
+
+## 2단계: 첫 번째 쿼리 실행
+
+```bash
+usearch query "Raft 합의란 무엇인가?"
+```
+
+출력 (마크다운):
+```markdown
+## Raft 합의 알고리즘
+
+Raft는 이해하기 쉽도록 설계된 합의 알고리즘입니다...
+
+### 출처
+1. [Raft Paper](https://raft.github.io/raft.pdf) — arXiv, 2014
+2. [etcd 문서](https://etcd.io/docs/learning/why/) — etcd.io, 2024
+
+인용 신뢰도: 0.94
+```
+
+## 3단계: 스크립팅을 위한 JSON 출력
+
+```bash
+usearch query --json "Raft vs Paxos" | jq '.citations[].url'
+# "https://raft.github.io/raft.pdf"
+# "https://lamport.azurewebsites.net/pubs/paxos-simple.pdf"
+```
+
+## 4단계: 한국어 로케일 쿼리
+
+```bash
+usearch query --locale ko "네이버 클라우드 서비스 비교"
+# 네이버 뉴스 + 한국어 블로그 게시물이 우선 반환됨
+```
+
+<Callout type="info">
+  한국어 로케일 검색은 네이버 API 자격 증명이 필요합니다. [한국어 로케일 설정](/ko/operators/korean-locale-setup)을 참조하세요.
+</Callout>
+
+## 5단계: 심층 연구
+
+```bash
+usearch deep "AI 검색 제품 비교: Perplexity, ChatGPT Search, Universal Search"
+# 멀티 에이전트 연구, 30-120초, 포괄적인 인용
+```
+
+## 6단계: 쿼리 이력
+
+```bash
+usearch history list                     # 최근 쿼리 목록
+usearch history show --id q_abc123       # 특정 결과 표시
+usearch history search "raft"            # 이력 전문 검색
+```
+
+## 7단계: 소스 관리
+
+```bash
+usearch sources list                     # 모든 어댑터 목록
+usearch sources enable naver             # 한국어 로케일 어댑터 활성화
+usearch sources test arxiv --query "raft" # 어댑터 테스트
+```
+
+## 8단계: 인터랙티브 REPL
+
+```bash
+usearch repl
+# usearch> Raft란 무엇인가?
+# ...결과...
+# usearch> /deep Paxos와 비교해줘
+# ...심층 연구...
+# usearch> /quit
+```
+
+## 빠른 참조
+
+| 작업 | 명령어 |
+|---|---|
+| 기본 검색 | `usearch query "..."` |
+| JSON 출력 | `usearch query --json "..."` |
+| 한국어 검색 | `usearch query --locale ko "..."` |
+| 심층 연구 | `usearch deep "..."` |
+| 이력 보기 | `usearch history list` |
+| 소스 목록 | `usearch sources list` |
+| 로그인 | `usearch login` |
+| 인터랙티브 | `usearch repl` |
+| 설정 경로 | `usearch config path` |
+| 설정 표시 | `usearch config show` |
+
+## 다음 단계
+
+- [CLI 레퍼런스](/en/reference/cli) — 7개 서브커맨드 전체 플래그 문서 *(영어)*
+- [심층 연구](/en/reference/cli/deep) — 심층 연구 모드 상세 *(영어)*

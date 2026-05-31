@@ -1,16 +1,21 @@
 import nextra from 'nextra'
 
 const withNextra = nextra({
-  theme: 'nextra-theme-docs',
-  themeConfig: './theme.config.tsx',
   defaultShowCopyCode: true,
-  // Note: Nextra 3 doesn't support file-system i18n like v4
-  // Locale routing will be handled through page structure
 })
 
-export default withNextra({
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   output: 'export',
+  distDir: 'out',
   images: {
     unoptimized: true,
   },
-})
+  trailingSlash: true,
+  i18n: {
+    locales: ['en', 'ko'],
+    defaultLocale: 'en',
+  },
+}
+
+export default withNextra(nextConfig)

@@ -1,0 +1,53 @@
+---
+title: 웹 UI 가이드
+description: Universal Search 웹 인터페이스 개요
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# 웹 UI 가이드
+
+<Callout type="info">
+  **스크린샷 플레이스홀더** — 웹 UI가 배포되면 스크린샷이 추가됩니다.
+
+  웹 UI는 `web/`(Next.js 16 App Router)에 구현되어 있습니다. 전체 UI 명세는 SPEC-UI-001을 참조하세요.
+</Callout>
+
+## 웹 UI 접근
+
+스택 시작 후(`make compose-up`):
+
+```
+http://localhost:3000
+```
+
+## 기능
+
+### 검색 인터페이스
+- 자동 완성이 있는 쿼리 입력
+- 로케일 선택기 (EN / KO)
+- 소스 필터 (웹, 학술, 소셜, 한국어)
+- 심층 연구 토글
+
+### 결과 보기
+- 인라인 인용이 있는 합성 답변
+- 인용 패널 (각 소스 확장 가능)
+- 신뢰도 점수 표시기
+- 마크다운 / JSON 내보내기
+
+### 쿼리 이력
+- 공유 팀 이력 타임라인
+- 과거 쿼리 전문 검색
+- 과거 쿼리 재실행
+
+### 관리자 패널 (운영자)
+- 사용자 관리
+- 토큰 관리
+- 어댑터 구성
+- 시스템 상태 대시보드
+
+## 관련 항목
+
+- SPEC-UI-001: 웹 UI 명세
+- [운영자 빠른 시작](/ko/getting-started/operator-quickstart) — 배포 설정

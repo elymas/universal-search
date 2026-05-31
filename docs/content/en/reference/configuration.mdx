@@ -1,0 +1,103 @@
+---
+title: Configuration Reference
+description: Complete reference for all usearch configuration options
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# Configuration Reference
+
+Universal Search uses a layered configuration system with the following precedence (highest first):
+
+1. Command-line flags
+2. Environment variables (`USEARCH_*` prefix)
+3. Config file (`~/.config/usearch/config.toml`)
+4. Built-in defaults
+
+## Environment Variables
+
+### Core Services
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `MEILI_MASTER_KEY` | Yes | — | Meilisearch master key (min 32 chars) |
+| `POSTGRES_PASSWORD` | Yes | — | PostgreSQL password |
+| `JWT_SECRET` | Yes (prod) | — | JWT signing secret (min 32 chars) |
+| `SESSION_SECRET` | Yes (prod) | — | Session cookie signing secret |
+
+### LLM Providers
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `ANTHROPIC_API_KEY` | Recommended | — | Anthropic Claude API key |
+| `OPENAI_API_KEY` | Optional | — | OpenAI API key |
+| `LITELLM_MASTER_KEY` | Optional | — | LiteLLM proxy master key |
+| `LITELLM_MODEL` | No | `claude-3-5-sonnet-20241022` | Default synthesis model |
+
+### Search Adapters
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `BRAVE_SEARCH_API_KEY` | Optional | — | Brave Search API key |
+| `NAVER_CLIENT_ID` | Optional | — | Naver API client ID (Korean locale) |
+| `NAVER_CLIENT_SECRET` | Optional | — | Naver API client secret |
+
+### Server
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `USEARCH_SERVER_PORT` | No | `8081` | HTTP server port |
+| `USEARCH_SERVER_URL` | No | `http://localhost:8081` | Public server URL (for OAuth callbacks) |
+| `LOG_LEVEL` | No | `info` | Log level (debug, info, warn, error) |
+| `LOG_FORMAT` | No | `json` | Log format (json, text) |
+
+### Auth (OAuth/OIDC)
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `OAUTH_PROVIDER` | No | — | OAuth provider (google, github, custom) |
+| `OAUTH_CLIENT_ID` | No | — | OAuth client ID |
+| `OAUTH_CLIENT_SECRET` | No | — | OAuth client secret |
+| `OAUTH_REDIRECT_URL` | No | — | OAuth callback URL |
+
+See [Authentication Setup](/en/operators/auth-setup) for OAuth configuration.
+
+## Config File (TOML)
+
+Location: `~/.config/usearch/config.toml`
+
+Create with: `usearch config init`
+
+```toml
+[server]
+endpoint = "http://localhost:8081"
+
+[llm]
+model = "claude-3-5-sonnet-20241022"
+provider = "anthropic"
+
+[search]
+timeout = "30s"
+locale = "en"
+
+[output]
+format = "markdown"   # or "json"
+```
+
+## Docker Compose Variables
+
+For the deployment stack (`deploy/docker-compose.yml`):
+
+| Variable | Description |
+|---|---|
+| `QDRANT_PORT` | Qdrant HTTP port (default 6333) |
+| `MEILI_PORT` | Meilisearch port (default 7700) |
+| `POSTGRES_PORT` | PostgreSQL port (default 5432) |
+| `SEARXNG_PORT` | SearXNG port (default 8080) |
+| `LITELLM_PORT` | LiteLLM proxy port (default 4000) |
+| `REDIS_PORT` | Redis port (default 6379) |
+
+<Callout type="warning">
+  Never commit `.env` or `.env.production` to version control. Use your secrets manager (Vault, AWS SSM, Kubernetes Secrets).
+</Callout>

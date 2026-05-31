@@ -1,0 +1,67 @@
+---
+title: Configuration
+description: Operator configuration guide for Universal Search
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# Configuration
+
+This page covers operator-level configuration. For the full list of environment variables, see [Configuration Reference](/en/reference/configuration).
+
+## Quick Setup
+
+```bash
+# 1. Copy the example env file
+cp .env.example .env
+
+# 2. Edit required values
+nano .env
+
+# 3. Verify with the CLI
+usearch config show
+```
+
+## Configuration Layers
+
+| Layer | Precedence | Example |
+|---|---|---|
+| CLI flags | Highest | `usearch query --timeout 60s` |
+| Environment variables | High | `USEARCH_SEARCH_TIMEOUT=60s` |
+| Config file (TOML) | Medium | `~/.config/usearch/config.toml` |
+| Built-in defaults | Lowest | `30s` |
+
+## Essential Config File
+
+Create `~/.config/usearch/config.toml` with `usearch config init`, then customize:
+
+```toml
+[server]
+endpoint = "http://localhost:8081"
+
+[llm]
+model = "claude-3-5-sonnet-20241022"
+provider = "anthropic"
+
+[search]
+timeout = "30s"
+locale = "en"
+default_sources = ["searxng", "arxiv", "github", "hn"]
+
+[output]
+format = "markdown"
+```
+
+## Production Checklist
+
+- [ ] All secrets use strong random values (`openssl rand -hex 32`)
+- [ ] `.env` is in `.gitignore`
+- [ ] Auth configured (OAuth or static token)
+- [ ] Persistent volumes for Qdrant, Meilisearch, PostgreSQL
+- [ ] Log level set to `info` (not `debug` in production)
+- [ ] LLM API key rate limits verified
+
+<Callout type="info">
+  See [Configuration Reference](/en/reference/configuration) for the complete environment variable list.
+</Callout>

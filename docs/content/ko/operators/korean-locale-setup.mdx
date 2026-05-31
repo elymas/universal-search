@@ -1,0 +1,124 @@
+---
+title: 한국어 로케일 설정
+description: 네이버 API와 mecab-ko를 사용한 한국어 로케일 검색 설정
+lastUpdated: 2026-05-30
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# 한국어 로케일 설정
+
+Universal Search는 네이버 Search API와 한국어 RSS 어댑터를 통해 한국어 우선 검색을 지원합니다. 이 가이드는 한국어 분석가 페르소나를 위한 운영자 설정을 다룹니다.
+
+## 네이버 API 설정
+
+<Steps>
+
+### 네이버 개발자 계정 생성
+
+1. [developers.naver.com](https://developers.naver.com) 접속
+2. 애플리케이션 등록
+3. **검색** API 선택
+4. `CLIENT_ID`와 `CLIENT_SECRET` 메모
+
+### 환경 변수 구성
+
+```bash
+NAVER_CLIENT_ID=<your-client-id>
+NAVER_CLIENT_SECRET=<your-client-secret>
+```
+
+### 네이버 어댑터 활성화
+
+```bash
+usearch sources enable naver
+usearch sources enable koreanews   # 선택 사항: 한국어 뉴스 RSS
+
+# 확인
+usearch sources list
+# naver    enabled   korean   ko   ...
+```
+
+### 한국어 검색 테스트
+
+```bash
+usearch query --locale ko "네이버 클라우드 서비스"
+# 네이버 결과가 우선 반환되어야 함
+```
+
+</Steps>
+
+## 네이버 API 제한
+
+| 플랜 | 일일 요청 수 | 비고 |
+|---|---|---|
+| 무료 티어 | 25,000 | 소규모 팀에 충분 |
+| 유료 | 커스텀 | 네이버에 문의 |
+
+<Callout type="info">
+  네이버 Search API는 네이버 뉴스, 네이버 블로그, 네이버 지식iN, 네이버 쇼핑 결과를 제공합니다. 한국어 분석가들은 네이버 뉴스와 블로그 어댑터가 연구에 가장 유용하다고 보고합니다.
+</Callout>
+
+## mecab-ko 토크나이저
+
+Meilisearch에서 한국어 전문 검색을 위해서는 정확한 토크나이징을 위한 mecab-ko가 필요합니다.
+
+### mecab-ko 설치 (Meilisearch 호스트에서)
+
+```bash
+# Ubuntu/Debian
+apt-get install -y mecab mecab-ipadic-utf8
+
+# macOS
+brew install mecab mecab-ipadic
+
+# 한국어 사전 설치
+git clone https://bitbucket.org/eunjeon/mecab-ko-dic.git
+cd mecab-ko-dic && ./configure && make && make install
+```
+
+### Meilisearch 구성
+
+Meilisearch 인덱스 설정에서 한국어 세그멘터 설정:
+
+```bash
+# Meilisearch 실행 후
+curl -X PATCH http://localhost:7700/indexes/usearch/settings \
+  -H "Authorization: Bearer $MEILI_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"nonSeparatorTokens": ["·"], "separatorTokens": [" "]}'
+```
+
+<Callout type="warning">
+  mecab-ko 토크나이징은 한국어 검색 품질을 크게 향상시킵니다. 설치하지 않으면 다음절 한국어 단어가 제대로 토크나이징되지 않아 검색 재현율이 낮아질 수 있습니다.
+</Callout>
+
+## 한국어 우선 순위 지정
+
+`usearch query --locale ko`를 사용하면 어댑터 라우터가 한국어 우선 순위를 적용합니다:
+
+1. 네이버 결과: 관련성 2배 가중치
+2. 한국어 뉴스 RSS 결과: 1.5배 가중치
+3. 한국어 메타데이터가 있는 SearXNG 결과: 1.2배 가중치
+4. 비한국어 결과: 동일 관련성 임계값 이후 표시
+
+## 한국어 로케일 문제 해결
+
+| 문제 | 원인 | 해결 방법 |
+|---|---|---|
+| 네이버 결과 없음 | API 키 미설정 | `NAVER_CLIENT_ID` + `NAVER_CLIENT_SECRET` 설정 |
+| 한국어 어댑터 비활성화 | 레지스트리에서 활성화 안 됨 | `usearch sources enable naver` 실행 |
+| 한국어 토크나이징 불량 | mecab-ko 미설치 | Meilisearch 호스트에 mecab-ko 설치 |
+| 속도 제한 초과 | 네이버 할당량 초과 | 네이버 API 플랜 업그레이드 |
+
+더 많은 문제는 [문제 해결](/ko/troubleshooting)을 참조하세요.
+
+## Naver API 키 취득 가이드 (상세)
+
+1. **네이버 개발자 센터** (https://developers.naver.com) 접속
+2. 우측 상단 **로그인** → 네이버 계정으로 로그인
+3. **내 애플리케이션** → **애플리케이션 등록** 클릭
+4. 애플리케이션 이름 입력 (예: "Universal Search")
+5. **사용 API** 섹션에서 **검색** 체크
+6. 웹 서비스 URL에 `http://localhost` 입력 (개발용)
+7. **등록하기** 클릭 → Client ID와 Client Secret 확인

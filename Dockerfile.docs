@@ -1,0 +1,64 @@
+# Dockerfile.docs — Universal Search documentation site
+# Multi-stage: Node 22 + pnpm → Nextra static export → Caddy serve
+# SPEC-DOC-001 REQ-DOC-015
+#
+# Build:  docker build -f Dockerfile.docs -t usearch-docs .
+# Run:    docker run -p 8080:80 usearch-docs
+#
+# NOTE: Container live publish to ghcr.io/<org>/usearch-docs:<tag> is DEFERRED
+#       pending <org> registry path resolution (SPEC-BOOT-001 Open Q3).
+#       This Dockerfile supports build-verify only in CI (V1).
+# ────────────────────────────────────────────────────────────────────────────
+
+# ── Stage 1: Install dependencies ───────────────────────────────────────────
+FROM node:22-alpine AS deps
+WORKDIR /app
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@9 --activate
+
+COPY docs/package.json docs/pnpm-lock.yaml* ./
+RUN pnpm install --frozen-lockfile
+
+# ── Stage 2: Build static export ─────────────────────────────────────────────
+FROM node:22-alpine AS builder
+WORKDIR /app
+
+# Re-enable pnpm in builder stage
+RUN corepack enable && corepack prepare pnpm@9 --activate
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY docs/ ./
+
+# Build the Nextra site (static export to ./out/)
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN pnpm build
+
+# Verify the build produced servable HTML (not just directory structure)
+RUN test -f ./out/index.html && echo "Build output verified: ./out/index.html exists" || (echo "ERROR: ./out/index.html not found — static export incomplete" && exit 1)
+
+# ── Stage 3: Caddy static server ─────────────────────────────────────────────
+FROM caddy:2-alpine AS runner
+
+# Copy static export
+COPY --from=builder /app/out /srv
+
+# Caddy config: serve /srv, gzip, cache headers
+RUN printf 'http://:80 {\n\
+    root * /srv\n\
+    encode gzip\n\
+    file_server {\n\
+        browse\n\
+    }\n\
+    header Cache-Control "public, max-age=3600, must-revalidate"\n\
+    # SPA fallback for Next.js static export\n\
+    try_files {path} {path}.html {path}/index.html /404.html\n\
+}\n' > /etc/caddy/Caddyfile
+
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD wget -qO- http://localhost:80/ || exit 1
+
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]

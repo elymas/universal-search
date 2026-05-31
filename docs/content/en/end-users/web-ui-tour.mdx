@@ -1,0 +1,53 @@
+---
+title: Web UI Tour
+description: Overview of the Universal Search web interface
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# Web UI Tour
+
+<Callout type="info">
+  **Screenshot placeholder** — Screenshots will be added when the web UI is deployed.
+
+  Web UI is implemented in `web/` (Next.js 16 App Router). See SPEC-UI-001 for the full UI specification.
+</Callout>
+
+## Accessing the Web UI
+
+After starting the stack (`make compose-up`), open:
+
+```
+http://localhost:3000
+```
+
+## Features
+
+### Search Interface
+- Query input with autocomplete
+- Locale selector (EN / KO)
+- Source filter (web, academic, social, Korean)
+- Deep research toggle
+
+### Results View
+- Synthesized answer with inline citations
+- Citation panel (expand each source)
+- Confidence score indicator
+- Export to Markdown / JSON
+
+### Query History
+- Shared team history timeline
+- Full-text search across past queries
+- Re-run any past query
+
+### Admin Panel (Operator)
+- User management
+- Token management
+- Adapter configuration
+- System health dashboard
+
+## Related
+
+- SPEC-UI-001: Web UI specification
+- [Operator Quickstart](/en/getting-started/operator-quickstart) — deployment setup

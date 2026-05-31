@@ -1,0 +1,114 @@
+---
+title: Korean Locale Setup
+description: Configure Korean-locale search with Naver API and mecab-ko
+lastUpdated: 2026-05-30
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Korean Locale Setup
+
+Universal Search supports Korean-first search via Naver Search API and Korean RSS adapters. This guide covers setup for operators who need to serve the Korean analyst persona.
+
+## Naver API Setup
+
+<Steps>
+
+### Create a Naver Developer Account
+
+1. Go to [developers.naver.com](https://developers.naver.com)
+2. Register an application
+3. Select the **Search** API
+4. Note your `CLIENT_ID` and `CLIENT_SECRET`
+
+### Configure Environment Variables
+
+```bash
+NAVER_CLIENT_ID=<your-client-id>
+NAVER_CLIENT_SECRET=<your-client-secret>
+```
+
+### Enable the Naver Adapter
+
+```bash
+usearch sources enable naver
+usearch sources enable koreanews   # optional: Korean news RSS
+
+# Verify
+usearch sources list
+# naver    enabled   korean   ko   ...
+```
+
+### Test Korean Search
+
+```bash
+usearch query --locale ko "네이버 클라우드 서비스"
+# Should return Naver results ranked first
+```
+
+</Steps>
+
+## Naver API Limits
+
+| Plan | Requests/day | Notes |
+|---|---|---|
+| Free tier | 25,000 | Sufficient for small teams |
+| Paid | Custom | Contact Naver for quotas |
+
+<Callout type="info">
+  Naver's Search API provides results from Naver News, Naver Blog, Naver Knowledge iN, and Naver Shopping. Korean analysts report the Naver News and Blog adapters are most useful for research.
+</Callout>
+
+## mecab-ko Tokenization
+
+Korean full-text search in Meilisearch requires mecab-ko for accurate tokenization.
+
+### Install mecab-ko (on the Meilisearch host)
+
+```bash
+# Ubuntu/Debian
+apt-get install -y mecab mecab-ipadic-utf8
+
+# macOS
+brew install mecab mecab-ipadic
+
+# Install Korean dictionary
+git clone https://bitbucket.org/eunjeon/mecab-ko-dic.git
+cd mecab-ko-dic && ./configure && make && make install
+```
+
+### Configure Meilisearch
+
+Set the Korean segmenter in your Meilisearch index configuration:
+
+```bash
+# After Meilisearch is running
+curl -X PATCH http://localhost:7700/indexes/usearch/settings \
+  -H "Authorization: Bearer $MEILI_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"nonSeparatorTokens": ["·"], "separatorTokens": [" "]}'
+```
+
+<Callout type="warning">
+  mecab-ko tokenization significantly improves Korean search quality. Without it, multi-character Korean words may not be tokenized correctly, leading to poor recall.
+</Callout>
+
+## Korean-First Ranking
+
+When `--locale ko` is passed to `usearch query`, the adapter router applies Korean-first ranking:
+
+1. Naver results get 2x relevance boost
+2. Korean news RSS results get 1.5x boost
+3. SearXNG results with Korean metadata get 1.2x boost
+4. Non-Korean results appear after Korean results at the same relevance threshold
+
+## Troubleshooting Korean Locale
+
+| Issue | Cause | Fix |
+|---|---|---|
+| Naver results missing | API key not set | Set `NAVER_CLIENT_ID` + `NAVER_CLIENT_SECRET` |
+| Korean adapter disabled | Not enabled in registry | `usearch sources enable naver` |
+| Poor Korean tokenization | mecab-ko not installed | Install mecab-ko on the Meilisearch host |
+| Rate limit exceeded | Exceeded Naver quota | Upgrade Naver API plan |
+
+See [Troubleshooting](/en/troubleshooting) for more issues.
