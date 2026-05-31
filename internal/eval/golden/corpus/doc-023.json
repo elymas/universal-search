@@ -1,15 +1,20 @@
 {
   "id": "doc-023",
-  "source_id": "korea_news",
-  "url": "https://example.com/korea_news/0023",
-  "title": "robotics simulation-to-real transfer - study 23",
-  "body": "This document discusses robotics simulation-to-real transfer. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of robotics simulation-to-real transfer. Key findings include improved accuracy, reduced latency, and better scalability. The study 23 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on robotics simulation-to-real transfer.",
-  "published_at": "2025-01-24T00:00:00+00:00",
-  "retrieved_at": "2026-05-01T23:00:00+00:00",
-  "author": "author-23",
-  "score": 0.73,
-  "lang": "en",
-  "doc_type": "other",
-  "hash": "c750440034c5cfc8"
+  "source_id": "arxiv",
+  "url": "https://example.test/arxiv/raft-ko-a",
+  "title": "래프트 합의 알고리즘",
+  "body": "래프트는 이해하기 쉽도록 설계된 합의 알고리즘이다. 복제 로그를 관리하는 리더를 선출하고 팔로워는 리더로부터 항목을 복제한다. 안전성은 임기 번호와 로그 매칭으로 보장된다.",
+  "snippet": "래프트 합의 알고리즘",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "ko",
+  "doc_type": "paper",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

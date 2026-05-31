@@ -1,15 +1,20 @@
 {
   "id": "doc-011",
-  "source_id": "rss",
-  "url": "https://example.com/rss/0011",
-  "title": "diffusion models for image generation - study 11",
-  "body": "This document discusses diffusion models for image generation. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of diffusion models for image generation. Key findings include improved accuracy, reduced latency, and better scalability. The study 11 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on diffusion models for image generation.",
-  "published_at": "2025-01-12T00:00:00+00:00",
-  "retrieved_at": "2026-05-01T11:00:00+00:00",
-  "author": "author-11",
-  "score": 0.61,
-  "lang": "en",
-  "doc_type": "video",
-  "hash": "e21606835f0e3bbf"
+  "source_id": "github",
+  "url": "https://example.test/github/rustgc-ko-a",
+  "title": "GC 없는 러스트 메모리 모델",
+  "body": "러스트는 컴파일 시점에 검사하는 소유권과 빌림 시스템으로 가비지 컬렉터 없이 메모리 안전성을 달성한다. 각 값은 단일 소유자를 가지며 참조는 빌림 검사기가 검증한다. 이는 전체 메모리 버그 부류를 제거한다.",
+  "snippet": "GC 없는 러스트 메모리 모델",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "ko",
+  "doc_type": "repo",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

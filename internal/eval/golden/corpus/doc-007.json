@@ -1,15 +1,20 @@
 {
   "id": "doc-007",
-  "source_id": "searxng",
-  "url": "https://example.com/searxng/0007",
-  "title": "neural network pruning and quantization - study 7",
-  "body": "This document discusses neural network pruning and quantization. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of neural network pruning and quantization. Key findings include improved accuracy, reduced latency, and better scalability. The study 7 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on neural network pruning and quantization.",
-  "published_at": "2025-01-08T00:00:00+00:00",
-  "retrieved_at": "2026-05-01T07:00:00+00:00",
-  "author": "author-7",
-  "score": 0.57,
-  "lang": "en",
-  "doc_type": "other",
-  "hash": "fbb2903024155941"
+  "source_id": "arxiv",
+  "url": "https://example.test/arxiv/transformer-ko-a",
+  "title": "어텐션이 전부다",
+  "body": "트랜스포머 구조는 순환을 자기어텐션으로 대체하여 시퀀스를 병렬로 학습할 수 있게 했다. 이는 대규모 언어 모델의 기초가 되었다. 원 논문은 멀티헤드 어텐션과 위치 인코딩을 도입했다.",
+  "snippet": "어텐션이 전부다",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "ko",
+  "doc_type": "paper",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

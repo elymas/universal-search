@@ -1,15 +1,20 @@
 {
   "id": "doc-020",
-  "source_id": "searxng",
-  "url": "https://example.com/searxng/0020",
-  "title": "\ud55c\uad6d\uc5b4 \uc790\uc5f0\uc5b4 \ucc98\ub9ac \ubaa8\ub378 \ubc1c\uc804 - study 20",
-  "body": "This document discusses \ud55c\uad6d\uc5b4 \uc790\uc5f0\uc5b4 \ucc98\ub9ac \ubaa8\ub378 \ubc1c\uc804. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of \ud55c\uad6d\uc5b4 \uc790\uc5f0\uc5b4 \ucc98\ub9ac \ubaa8\ub378 \ubc1c\uc804. Key findings include improved accuracy, reduced latency, and better scalability. The study 20 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on \ud55c\uad6d\uc5b4 \uc790\uc5f0\uc5b4 \ucc98\ub9ac \ubaa8\ub378 \ubc1c\uc804.",
-  "published_at": "2025-01-21T00:00:00+00:00",
-  "retrieved_at": "2026-05-01T20:00:00+00:00",
-  "author": "author-20",
-  "score": 0.7,
+  "source_id": "arxiv",
+  "url": "https://example.test/arxiv/crispr-ko-b",
+  "title": "크리스퍼 유전자 편집 개요 (심화)",
+  "body": "크리스퍼-Cas9는 가이드 RNA를 사용하여 Cas9 핵산분해효소를 특정 DNA 서열로 유도해 이중 가닥 절단을 만든다. 세포의 복구 기구가 편집을 도입한다. 2012년 이후 유전 연구를 변혁했다. 후속 연구는 더 광범위한 실험으로 이러한 발견을 확장했다.",
+  "snippet": "크리스퍼 유전자 편집 개요 (심화)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
   "lang": "ko",
-  "doc_type": "repo",
-  "hash": "7a0272a8a4291f5e"
+  "doc_type": "paper",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

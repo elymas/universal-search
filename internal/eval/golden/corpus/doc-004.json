@@ -1,15 +1,20 @@
 {
   "id": "doc-004",
-  "source_id": "youtube",
-  "url": "https://example.com/youtube/0004",
-  "title": "vector database indexing strategies - study 4",
-  "body": "This document discusses vector database indexing strategies. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of vector database indexing strategies. Key findings include improved accuracy, reduced latency, and better scalability. The study 4 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on vector database indexing strategies.",
-  "published_at": "2025-01-05T00:00:00+00:00",
-  "retrieved_at": "2026-05-01T04:00:00+00:00",
-  "author": "author-4",
-  "score": 0.54,
-  "lang": "en",
-  "doc_type": "repo",
-  "hash": "531cd5d59567ad59"
+  "source_id": "arxiv",
+  "url": "https://example.test/arxiv/quantum-ko-b",
+  "title": "2019년 양자 우월성 이정표 (심화)",
+  "body": "구글은 양자 프로세서가 200초 만에 표본 추출 작업을 완료했다고 발표했다. 고전 슈퍼컴퓨터로는 약 1만 년이 걸린다고 주장했다. 이 결과는 최초의 양자 우월성 시연으로 널리 인용된다. 후속 연구는 더 광범위한 실험으로 이러한 발견을 확장했다.",
+  "snippet": "2019년 양자 우월성 이정표 (심화)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "ko",
+  "doc_type": "paper",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

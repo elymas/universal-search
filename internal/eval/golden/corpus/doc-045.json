@@ -1,15 +1,20 @@
 {
   "id": "doc-045",
-  "source_id": "x",
-  "url": "https://example.com/x/0045",
-  "title": "\ud55c\uad6d\uc5b4 \ud14d\uc2a4\ud2b8 \ubd84\ub958 \uae30\ubc95 - study 45",
-  "body": "This document discusses \ud55c\uad6d\uc5b4 \ud14d\uc2a4\ud2b8 \ubd84\ub958 \uae30\ubc95. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of \ud55c\uad6d\uc5b4 \ud14d\uc2a4\ud2b8 \ubd84\ub958 \uae30\ubc95. Key findings include improved accuracy, reduced latency, and better scalability. The study 45 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on \ud55c\uad6d\uc5b4 \ud14d\uc2a4\ud2b8 \ubd84\ub958 \uae30\ubc95.",
-  "published_at": "2025-02-15T00:00:00+00:00",
-  "retrieved_at": "2026-05-02T21:00:00+00:00",
-  "author": "author-45",
-  "score": 0.95,
-  "lang": "ko",
-  "doc_type": "issue",
-  "hash": "3f0adfd6d262524c"
+  "source_id": "rss",
+  "url": "https://example.test/rss/sqlindex-a",
+  "title": "SQL index internals",
+  "body": "A B-tree index speeds up lookups by keeping keys sorted on disk pages. The query planner chooses an index when selectivity is high. Composite indexes follow the leftmost-prefix rule.",
+  "snippet": "SQL index internals",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "en",
+  "doc_type": "article",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

@@ -1,15 +1,20 @@
 {
   "id": "doc-026",
-  "source_id": "reddit",
-  "url": "https://example.com/reddit/0026",
-  "title": "GPU cluster scheduling optimization - study 26",
-  "body": "This document discusses GPU cluster scheduling optimization. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of GPU cluster scheduling optimization. Key findings include improved accuracy, reduced latency, and better scalability. The study 26 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on GPU cluster scheduling optimization.",
-  "published_at": "2025-01-27T00:00:00+00:00",
-  "retrieved_at": "2026-05-02T02:00:00+00:00",
-  "author": "author-26",
-  "score": 0.76,
+  "source_id": "rss",
+  "url": "https://example.test/rss/httpcache-b",
+  "title": "HTTP caching semantics (deep dive)",
+  "body": "HTTP caching uses Cache-Control directives such as max-age and no-store to control freshness. Conditional requests with ETag and If-None-Match enable revalidation. A 304 Not Modified response saves bandwidth. Subsequent work expanded on these findings with broader experiments.",
+  "snippet": "HTTP caching semantics (deep dive)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
   "lang": "en",
-  "doc_type": "paper",
-  "hash": "6bfeefdaf75423e5"
+  "doc_type": "article",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

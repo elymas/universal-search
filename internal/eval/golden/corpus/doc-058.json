@@ -1,15 +1,20 @@
 {
   "id": "doc-058",
-  "source_id": "x",
-  "url": "https://example.com/x/0058",
-  "title": "zero-shot and few-shot learning - study 58",
-  "body": "This document discusses zero-shot and few-shot learning. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of zero-shot and few-shot learning. Key findings include improved accuracy, reduced latency, and better scalability. The study 58 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on zero-shot and few-shot learning.",
-  "published_at": "2025-02-28T00:00:00+00:00",
-  "retrieved_at": "2026-05-03T10:00:00+00:00",
-  "author": "author-8",
-  "score": 0.58,
+  "source_id": "arxiv",
+  "url": "https://example.test/arxiv/llmquant-b",
+  "title": "LLM quantization tradeoffs (deep dive)",
+  "body": "Quantization reduces model weights to lower precision such as int8 or int4, shrinking memory and speeding inference. It can degrade accuracy, mitigated by techniques like GPTQ and AWQ. The tradeoff depends on the task. Subsequent work expanded on these findings with broader experiments.",
+  "snippet": "LLM quantization tradeoffs (deep dive)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
   "lang": "en",
   "doc_type": "paper",
-  "hash": "ade846f760fea3b4"
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

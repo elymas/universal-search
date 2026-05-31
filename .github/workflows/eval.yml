@@ -1,55 +1,138 @@
-# SPEC-EVAL-001: Citation faithfulness benchmark — PR gate.
-#
-# Triggers on PRs touching synthesis, researcher, LLM, fanout, or golden set.
-# Skips on docs-only changes (EC-001).
-# Exit codes: 0=pass, 1=score fail, 2=judge error, 3=parse error.
-name: eval-benchmark
+name: Eval CI (SPEC-EVAL-001)
+
+# PR-gating citation faithfulness benchmark. Boots the researcher sidecar
+# (DeepEval + LiteLLM judge), runs the 50-query golden set, and gates the PR
+# at an aggregate mean >= 0.85 (REQ-EVAL1-008/009). Budget <= 15 min
+# (NFR-EVAL1-004). The nightly cron (REQ-EVAL1-010) is deferred to V1.1.
 
 on:
   pull_request:
+    branches: [main]
     paths:
-      - 'internal/synthesis/**'
-      - 'services/researcher/**'
-      - 'internal/llm/**'
-      - 'internal/fanout/**'
-      - 'internal/eval/**'
-      - '.github/workflows/eval.yml'
-      - '.github/workflows/eval-nightly.yml'
+      - "internal/synthesis/**"
+      - "services/researcher/**"
+      - "internal/llm/**"
+      - "internal/fanout/**"
+      - "internal/eval/**"
+      - "cmd/eval/**"
+      - ".github/workflows/eval.yml"
+      - ".moai/specs/SPEC-EVAL-001/**"
+      - "!**/*.md"
+      - "!**/docs/**"
+
+# One in-flight eval run per PR; cancel superseded runs.
+concurrency:
+  group: eval-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   eval:
+    name: Citation faithfulness gate
     runs-on: ubuntu-latest
+    # NFR-EVAL1-004: 15 min budget, hard-fail at 25 min.
     timeout-minutes: 25
 
-    steps:
-      - uses: actions/checkout@v4
+    env:
+      EVAL_JUDGE_MODEL: claude-haiku-4-5
+      EVAL_CONCURRENCY: "5"
+      EVAL_REPORTS_DIR: .moai/eval/reports
+      RESEARCHER_BASE_URL: http://127.0.0.1:8081
+      EVAL_JUDGE_BASE_URL: http://127.0.0.1:8081
+      RESEARCHER_REQUEST_TIMEOUT_SECONDS: "30"
+      # LiteLLM routing for the judge (NFR-EVAL1-005). Provided via repo secrets.
+      LITELLM_BASE_URL: ${{ secrets.LITELLM_BASE_URL }}
+      LITELLM_API_KEY: ${{ secrets.LITELLM_API_KEY }}
 
-      - uses: actions/setup-go@v5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+          cache: true
 
-      - uses: actions/setup-python@v5
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v3
         with:
-          python-version: '3.13'
+          version: latest
 
-      - name: Install Python deps
+      - name: Set up Python 3.11
+        run: uv python install 3.11
+
+      - name: Install researcher (with deepeval + dev group)
+        run: uv sync --group dev --directory services/researcher
+
+      - name: Boot researcher sidecar (DeepEval judge + faithfulness)
         run: |
-          cd services/researcher
-          pip install -e .
+          uv run --directory services/researcher \
+            uvicorn researcher.app:app --host 127.0.0.1 --port 8081 \
+            > researcher.log 2>&1 &
+          echo "RESEARCHER_PID=$!" >> "$GITHUB_ENV"
 
-      - name: Run golden set integrity tests
-        run: go test ./internal/eval/golden/... -v -race -count=1
-
-      - name: Run Go eval unit tests
-        run: go test ./internal/eval/... -v -race -count=1 -cover
-
-      - name: Run Python judge tests
+      - name: Health-check sidecar
         run: |
-          cd services/researcher
-          PYTHONPATH=src pytest tests/test_eval_judge.py -v
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8081/health > /dev/null; then
+              echo "sidecar healthy after ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "sidecar failed health check"; cat researcher.log; exit 1
 
-      # The full 50-query benchmark requires EVAL_JUDGE_API key.
-      # In CI this runs against the real judge service.
-      # For now, the unit tests above validate the pipeline.
-      # Full benchmark execution will be enabled once the judge service
-      # is deployed and the API key is configured as a repo secret.
+      - name: Run benchmark + gate
+        id: eval
+        run: |
+          set +e
+          go run ./cmd/eval | tee eval-summary.txt
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Post report as PR comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let body = '## SPEC-EVAL-001 Citation Faithfulness\n\n';
+            try {
+              body += fs.readFileSync('.moai/eval/reports/latest.md', 'utf8');
+            } catch (e) {
+              body += '_Report not generated (sidecar or gate error)._\n';
+            }
+            try {
+              body += '\n\n```\n' + fs.readFileSync('eval-summary.txt', 'utf8') + '```\n';
+            } catch (e) { /* no summary */ }
+            const marker = '<!-- eval-001-comment -->';
+            body += '\n' + marker;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                comment_id: existing.id, body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: context.issue.number, body,
+              });
+            }
+
+      - name: Stop sidecar
+        if: always()
+        run: kill "$RESEARCHER_PID" || true
+
+      - name: Enforce gate exit code
+        run: |
+          code="${{ steps.eval.outputs.exit_code }}"
+          echo "eval gate exit code: $code"
+          exit "$code"

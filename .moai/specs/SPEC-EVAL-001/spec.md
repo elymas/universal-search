@@ -3,7 +3,7 @@ id: SPEC-EVAL-001
 version: 1.0.0
 status: implemented
 created: 2026-05-22
-updated: 2026-05-28
+updated: 2026-05-29
 author: limbowl
 priority: P1
 issue_number: 0
@@ -12,7 +12,7 @@ milestone: M8 — Eval + polish
 owner: expert-testing
 methodology: tdd
 coverage_target: 85
-depends_on: [SPEC-SYN-002, SPEC-OBS-001, SPEC-CLI-002]
+depends_on: [SPEC-SYN-002, SPEC-DEEP-002, SPEC-OBS-001, SPEC-CLI-002]
 blocks: [SPEC-REL-001]
 related: [SPEC-EVAL-002, SPEC-EVAL-003]
 ---
@@ -21,25 +21,76 @@ related: [SPEC-EVAL-002, SPEC-EVAL-003]
 
 ## HISTORY
 
-- 2026-05-28 (status flip draft → implemented, v0.1.0 → v1.0.0, limbowl via /moai sync):
-  Phases 1-4 complete per progress.md. Shipped: 50-query golden set
-  (35 EN + 15 KO) + 210 NormalizedDoc corpus fixtures, Go-side runner
-  + DeepEval HTTP bridge + ≥0.85 CI gate, Python judge router
-  (eval_judge.py with deepeval~=1.0), 4 new Prometheus collectors
-  (EvalBenchmark*/EvalJudge*) reusing outcome label, and CI workflows
-  (eval.yml per-PR + eval-nightly.yml scheduled). All tests PASS.
-  Commit pending push (this branch).
+- 2026-05-29 (implementation v1.0.0, limbowl via manager-tdd + evaluator-active):
+  TDD implementation complete. plan-auditor PASS (score 0.88, 5 minor findings — see
+  carry-forward below). evaluator-active PASS: Func 88/Sec 95/Craft 86/Cons 97, 0 fix
+  cycles. Commits: `8d11d68` (plan gate), `008b1a0` (impl). Branch:
+  `feature/SPEC-EVAL-001`. Artifacts: `internal/eval/` (Go runner + ci.Decide gate),
+  `services/researcher/src/researcher/eval_judge.py` (DeepEval/Haiku bridge),
+  `internal/eval/golden/queries.jsonl` (50 queries: 35 EN + 15 KO),
+  `internal/eval/golden/corpus/` (60 NormalizedDoc fixtures), `.github/workflows/eval.yml`
+  (PR-gate CI, mean ≥ 0.85 threshold). Quality: `go build ./...` PASS, `go vet ./...`
+  PASS, `go test ./internal/eval/...` PASS (52 Go tests), `pytest services/researcher/`
+  PASS (6 Python tests); coverage: `internal/eval/ci/` 100%, `internal/eval/scorer/` 87%,
+  `internal/eval/runner/` 91% (WriteLatest 0% — file I/O sink, see carry-forward).
+  Metrics: `usearch_eval_run_total{outcome}`, `usearch_eval_query_score` (Histogram),
+  `usearch_eval_override_count`. Status transition: approved → implemented, 0.2.0 → 1.0.0.
+  Carry-forward (LOW priority, non-blocking for M8):
+  (CF-1) gate.Decide reason message omits violating query ID (AC-007 expects "Q017 scored
+  0.40 < 0.50"); debuggable via report Lowest-Scoring Queries section.
+  (CF-2) internal/eval/runner WriteLatest() 0% coverage; add t.TempDir() test in V1.1.
+  (CF-3) Real DeepEval judge runs in CI only (local binary absent); ~$0.45/run; requires
+  LITELLM_API_KEY secret.
+  (CF-4) Nightly cron + regression history deferred to V1.1 per D9 (HISTORY amendment
+  v0.2.0).
+  (CF-5) 5 plan-auditor minor findings remain open: priority tally wording, NFR-003 cost
+  wording ("30 nightly"), AC-005 xref, REQ-010 label, research.md staleness.
+
+- 2026-05-29 (amendment v0.2.0, limbowl via manager-spec):
+  Stale-codebase corrections + user-approved scope reductions to
+  pass plan-auditor. (C1) Corrected the structural-faithfulness
+  artifact reference: the planned `faithfulness.py` path does NOT
+  exist on disk; the live structural checker is
+  `services/researcher/src/researcher/faithfulness_endpoint.py`
+  (`POST /faithfulness_check`) + its Go wrapper
+  `internal/synthesis/faithfulness.go` (`CheckFaithfulness`), both
+  owned by **SPEC-DEEP-002 REQ-DEEP2-006** (status: implemented).
+  Added SPEC-DEEP-002 to `depends_on`. (C2) Corrected the sentence /
+  marker regex claims: the live checker uses marker regex
+  `\[(\d+)\]` and ASCII-only sentence split `(?<=[.!?])\s+` — there
+  is NO CJK-aware sentence segmentation in the structural checker.
+  Korean sentence segmentation is therefore an **EVAL-001 benchmark
+  design requirement** (the harness must segment Korean itself), not
+  an inherited capability. (C3) Corrected Go type references:
+  `synthesis.Result{Text, Citations}` with
+  `Citation{Marker int, DocID, URL, Title}` (`internal/synthesis/types.go`)
+  replaces the non-existent `SynthesizeResponse`. (R1) Corpus size
+  reduced from ≥200 to a V1 size sufficient to score the 50 queries
+  (50–80 docs); ≥200 reframed as a post-V1 expansion goal. (R2)
+  Nightly cron (REQ-EVAL1-010) + regression history deferred to
+  V1.1; the PR-gate (REQ-EVAL1-008/009) remains the V1 release gate.
+  (R3) Override mechanism (REQ-EVAL1-003) reduced from automated
+  30-day auto-expiry + 6-cap enforcement to a manual override list
+  with a simple cap check; the escape hatch is kept, the automation
+  dropped. Harness wording corrected to standard (Sprint Contract
+  optional, not required). Version 0.1.0 → 0.2.0. Status stays
+  `draft` pending re-audit.
 
 - 2026-05-22 (initial draft v0.1.0, limbowl via manager-spec):
   First EARS-formatted SPEC for the M8 evaluation gate that closes
   the citation-faithfulness loop opened by SPEC-SYN-002. SPEC-SYN-002
-  delivered **structural** faithfulness (every sentence carries a
-  valid `[N]` marker) inline at the Python sidecar
-  (`services/researcher/src/researcher/faithfulness.py` —
-  implemented 2026-05-09). SPEC-EVAL-001 closes the **semantic**
-  half — does the cited document actually *support* the claim — via
-  an out-of-band benchmark suite that runs against a frozen
-  50-query golden set, scores each response with DeepEval's
+  defined the synthesis citation contract (the `Citation` shape and
+  per-sentence `[N]` marker enforcement at synthesis time). The
+  **structural** faithfulness checker (every sentence carries a
+  valid `[N]` marker) is implemented inline at the Python sidecar
+  `services/researcher/src/researcher/faithfulness_endpoint.py`
+  (`POST /faithfulness_check`) with the Go wrapper
+  `internal/synthesis/faithfulness.go` (`CheckFaithfulness`), owned
+  by SPEC-DEEP-002 REQ-DEEP2-006 (the `faithfulness.py` path the
+  original draft cited was never created). SPEC-EVAL-001 closes the
+  **semantic** half — does the cited document actually *support* the
+  claim — via an out-of-band benchmark suite that runs against a
+  frozen golden set, scores each response with DeepEval's
   `FaithfulnessMetric`, and gates merges in CI at an aggregate
   ≥0.85 mean score per the M8 exit criterion in
   `.moai/project/roadmap.md` §5 ("DeepEval CI gate at ≥0.85").
@@ -63,13 +114,27 @@ related: [SPEC-EVAL-002, SPEC-EVAL-003]
        Splitting now avoids double-counting Korean coverage between
        the two evals. See research.md §3.1.
   (D3) **Faithfulness metric definition: claim-level entailment**
-       per DeepEval's default. A "claim" is a sentence segmented by
-       SPEC-SYN-002's regex (`[.!?。！？]\s+|[.!?。！？]$`). The metric
-       returns `score ∈ [0, 1]` per query, computed as
-       `(supported_claims / total_claims)`. A claim is **supported**
-       iff the LLM judge confirms the cited `doc_id`'s body text
-       entails the claim. The aggregate benchmark score is the
-       arithmetic mean across all 50 queries. See research.md §2.
+       per DeepEval's default. The metric returns `score ∈ [0, 1]`
+       per query, computed as `(supported_claims / total_claims)`. A
+       claim is **supported** iff the LLM judge confirms the cited
+       `doc_id`'s body text entails the claim. The aggregate
+       benchmark score is the arithmetic mean across all 50 queries.
+       See research.md §2.
+
+       **Claim segmentation (corrected, v0.2.0)**: the live
+       structural checker
+       (`services/researcher/src/researcher/faithfulness_endpoint.py`,
+       SPEC-DEEP-002) segments sentences with the ASCII-only regex
+       `(?<=[.!?])\s+` and detects markers with `\[(\d+)\]`. It does
+       **NOT** segment CJK/Korean sentence boundaries (e.g. `다.`
+       endings without trailing whitespace, or `。！？`). Because
+       EVAL-001 scores 15 Korean queries, **Korean sentence
+       segmentation is an EVAL-001 benchmark design requirement, not
+       an inherited capability** — the benchmark harness MUST perform
+       its own Korean-aware claim segmentation before invoking the
+       judge (see REQ-EVAL1-005(a)). The original draft's claim that
+       SPEC-SYN-002 ships a CJK-aware split regex
+       (`[.!?。！？]\s+|...`) was incorrect.
   (D4) **LLM judge: Claude Haiku 4.5 via LiteLLM** (the same router
        SPEC-LLM-001 already wires for synthesis cost-optimization).
        Haiku is the cost-quality sweet spot for binary entailment
@@ -105,23 +170,32 @@ related: [SPEC-EVAL-002, SPEC-EVAL-003]
        ±0.02 of the recorded baseline; outliers trigger a
        "calibration drift" alert but do not block CI. See
        research.md §2.3.
-  (D8) **False-positive escape hatch**: every query in the golden
-       set carries a `manual_override` field. Setting
-       `manual_override: pass` (with mandatory `override_reason`
-       text) marks a query as known-flaky and excludes it from the
-       aggregate score. Maximum 5 overrides allowed simultaneously;
-       overrides expire after 30 days unless re-confirmed. Override
-       history is committed to git for audit. This prevents
-       judge-model false negatives from blocking unrelated PRs.
-       See research.md §2.4.
-  (D9) **Out-of-band nightly regression run**: in addition to the
-       PR-gating CI, a nightly cron runs the full benchmark and
-       writes the result to `.moai/eval/history/EVAL-001-{date}.json`.
-       This populates the regression baseline for the
-       `evaluator-active` Mechanism 2 (regression baseline) per
-       `.claude/rules/moai/design/constitution.md` §12. Score
-       drops > 0.05 day-over-day trigger a Slack alert (operator
-       contact list owned by SPEC-OBS-001). See research.md §6.3.
+  (D8) **False-positive escape hatch (manual, simplified v0.2.0)**:
+       a manually-maintained override list at
+       `internal/eval/golden/overrides.json` lets an operator mark a
+       query as known-flaky (with mandatory `override_reason` text),
+       excluding it from the aggregate score. A simple cap check
+       enforces a maximum of 5 active overrides — exceeding the cap
+       fails CI. The override list is committed to git for audit.
+       **Scope reduction (v0.2.0)**: V1 does NOT implement automated
+       30-day auto-expiry or automated entry removal — operators
+       prune stale entries by hand (`expires_at` is advisory
+       metadata only). Time-based auto-expiry automation is deferred
+       to a follow-up patch SPEC. This keeps the escape hatch while
+       dropping the automation surface. See research.md §2.4.
+  (D9) **Out-of-band nightly regression run — DEFERRED to V1.1
+       (v0.2.0)**: the original plan added a nightly cron that runs
+       the full benchmark and writes
+       `.moai/eval/history/EVAL-001-{date}.json` to populate the
+       `evaluator-active` Mechanism 2 regression baseline. **This is
+       deferred to V1.1.** Rationale: the PR-gate
+       (REQ-EVAL1-008/009) is the core M8 release gate and is
+       sufficient to block regressions on the synthesis path; the
+       nightly regression-history feature adds CI surface, a cron
+       workflow, a history-file schema, and day-over-day alerting
+       that are not required for the V1 release gate and can land
+       incrementally. See REQ-EVAL1-010 (marked deferred) and
+       research.md §6.3.
 
   M8 release gate: this SPEC is the **last gate** between M7
   surface completion and M9 V1.0.0 tag — `.moai/project/roadmap.md`
@@ -138,11 +212,18 @@ related: [SPEC-EVAL-002, SPEC-EVAL-003]
 
   11 EARS REQs (4 × P0 + 5 × P1 + 2 × P2) + 5 NFRs covering golden
   set schema, DeepEval scorer wiring, judge model abstraction, CI
-  gate, nightly regression, escape hatch, and report artifact.
+  gate, manual escape hatch, and report artifact. REQ-EVAL1-010
+  (nightly regression run) is marked **deferred to V1.1** per
+  HISTORY D9 — it remains documented for forward-compatibility but
+  is out of V1 scope.
   Methodology: TDD per `.moai/config/sections/quality.yaml`
-  `development_mode: tdd`. Coverage target 85%. Harness: standard
-  (Sprint Contract recommended — judge prompt stability is a
-  cross-iteration concern). Owner: expert-testing.
+  `development_mode: tdd`. Coverage target 85%. Harness: **standard**
+  (per `.moai/config/sections/harness.yaml` auto-routing — a
+  net-new feature spanning multiple files but no security/payment/
+  auth keywords). Sprint Contract is OPTIONAL at the standard
+  harness level (not required); judge prompt stability is tracked
+  as an NFR-EVAL1-001 determinism concern rather than via a
+  mandatory Sprint Contract. Owner: expert-testing.
 
 ---
 
@@ -197,11 +278,11 @@ A complete benchmark harness consisting of:
 internal/eval/
 ├── golden/
 │   ├── queries.jsonl                 [50 queries: 35 EN + 15 KO]
-│   ├── corpus/                       [frozen NormalizedDoc fixture corpus]
+│   ├── corpus/                       [frozen NormalizedDoc fixture corpus, V1: 50-80 docs]
 │   │   ├── doc-001.json
 │   │   ├── doc-002.json
 │   │   └── ...
-│   └── overrides.json                [manual_override registry, ≤5 active]
+│   └── overrides.json                [manual override list, ≤5 entries, hand-pruned]
 ├── scorer/
 │   ├── deepeval_bridge.go            [Go → Python deepeval HTTP bridge]
 │   └── deepeval_bridge_test.go
@@ -221,10 +302,9 @@ services/researcher/src/researcher/
 └── eval.yml                          [CI workflow]
 
 .moai/eval/
-├── history/
-│   └── EVAL-001-2026-MM-DD.json     [nightly regression history]
 └── reports/
     └── latest.md                     [most recent run report]
+    (history/ + nightly cron deferred to V1.1 — see REQ-EVAL1-010)
 ```
 
 The Go runner orchestrates the query path (intent router → fanout
@@ -249,11 +329,16 @@ exits 0 / 1 per the CI gate threshold.
 
 ### 1.4 Forward-compatibility commitments
 
-- **SPEC-SYN-002**: EVAL-001 consumes SPEC-SYN-002's `Citation`
-  schema (`pkg/types/normalized_doc.go` — already declared) and
-  the `SynthesizeResponse` shape unchanged. The benchmark
-  exercises the already-shipped faithfulness path including the
-  retry-once policy.
+- **SPEC-SYN-002 / SPEC-DEEP-002**: EVAL-001 consumes the synthesis
+  result shape `synthesis.Result{Text, Citations}` with
+  `Citation{Marker int, DocID, URL, Title}`
+  (`internal/synthesis/types.go`) unchanged, and exercises the
+  structural-faithfulness path implemented at
+  `services/researcher/src/researcher/faithfulness_endpoint.py` +
+  `internal/synthesis/faithfulness.go` (`CheckFaithfulness`, owned by
+  SPEC-DEEP-002 REQ-DEEP2-006). Corpus fixtures deserialize into
+  `pkg/types.NormalizedDoc` (already declared). The benchmark
+  exercises the already-shipped faithfulness path read-only.
 - **SPEC-OBS-001**: EVAL-001 emits two new Prometheus metrics
   (`usearch_eval_runs_total`, `usearch_eval_score_gauge`) following
   the OBS-001 cardinality allowlist discipline (no new
@@ -277,15 +362,15 @@ exits 0 / 1 per the CI gate threshold.
 | ID | Pattern | Requirement | Priority | Acceptance Summary |
 |----|---------|-------------|----------|--------------------|
 | **REQ-EVAL1-001** | Ubiquitous | The system SHALL maintain a versioned golden set at `internal/eval/golden/queries.jsonl` containing exactly 50 query records. Each record SHALL be a single-line JSON object with required fields `id` (string, format `EVAL-001-Q{NNN}`), `query` (string, user-facing query text), `locale` (string ∈ `{"en", "ko"}`), `expected_sources` (string[], optional — `doc_id`s the response SHOULD cite), `category` (string ∈ `{"factual", "comparison", "synthesis", "korean", "edge"}`), `notes` (string, optional). The 50 queries SHALL be partitioned as 35 `locale: "en"` + 15 `locale: "ko"` (per HISTORY D2). The file SHALL be append-only between releases — query records can be added (with a follow-up SPEC) but never silently rewritten. Schema changes require a SPEC amendment. | P0 | `TestGoldenSetSchema` — parse every line, assert all required fields present and locale partition matches 35/15; `TestGoldenSetCount` asserts exactly 50 records. |
-| **REQ-EVAL1-002** | Ubiquitous | The system SHALL maintain a frozen document corpus at `internal/eval/golden/corpus/*.json` containing the `NormalizedDoc` fixtures the benchmark's mocked adapter pool returns. Each fixture file SHALL deserialize cleanly into `pkg/types.NormalizedDoc` per its existing schema. The corpus SHALL contain at minimum 200 distinct docs to ensure realistic fanout sizes; per-query expected_sources MUST be subsets of the corpus's `doc_id` set. The corpus SHALL be reproducibility-pinned: any addition or modification commits the new fixture to git and bumps a `corpus_revision` field in `.moai/eval/golden/manifest.json`. | P0 | `TestCorpusDeserializes` (every fixture parses); `TestCorpusSize ≥ 200`; `TestExpectedSourcesResolveToCorpus` (all `expected_sources` are valid `doc_id`s in the corpus). |
-| **REQ-EVAL1-003** | Optional | WHERE a query exhibits a known judge-model false-positive pattern (LLM judge mis-scores a faithful response as un-faithful), the operator MAY add an entry to `internal/eval/golden/overrides.json` with required fields `query_id` (must match REQ-EVAL1-001 `id`), `manual_override` (∈ `{"pass", "skip"}`), `override_reason` (string, non-empty), `expires_at` (ISO-8601 date, ≤ 30 days from `created_at`), `created_at` (ISO-8601 timestamp), `created_by` (GitHub handle). The total number of active (non-expired) overrides SHALL NOT exceed 5 at any time (per HISTORY D8); CI SHALL fail if this cap is exceeded. Expired overrides SHALL be auto-removed by the runner before scoring. | P1 | `TestOverridesSchemaValid`; `TestOverridesCapEnforced` (>5 active triggers CI failure); `TestExpiredOverridesAutoRemoved`. |
+| **REQ-EVAL1-002** | Ubiquitous | The system SHALL maintain a frozen document corpus at `internal/eval/golden/corpus/*.json` containing the `NormalizedDoc` fixtures the benchmark's mocked adapter pool returns. Each fixture file SHALL deserialize cleanly into `pkg/types.NormalizedDoc` per its existing schema. The corpus SHALL contain enough distinct docs to produce realistic fanout sizes for all 50 queries — **V1 target 50–80 docs** (sufficient because each query's expected_sources is a small subset; the 35 EN + 15 KO queries collectively reference a bounded doc set). Per-query expected_sources MUST be subsets of the corpus's `doc_id` set. The corpus SHALL be reproducibility-pinned: any addition or modification commits the new fixture to git and bumps a `corpus_revision` field in `.moai/eval/golden/manifest.json`. **Post-V1 expansion goal**: grow the corpus to ≥200 docs once the benchmark is stable, to stress larger fanout windows. | P0 | `TestCorpusDeserializes` (every fixture parses); `TestCorpusSize` (≥ 50, V1 floor); `TestExpectedSourcesResolveToCorpus` (all `expected_sources` are valid `doc_id`s in the corpus). |
+| **REQ-EVAL1-003** | Optional | WHERE a query exhibits a known judge-model false-positive pattern (LLM judge mis-scores a faithful response as un-faithful), the operator MAY add an entry to a **manually-maintained** override list at `internal/eval/golden/overrides.json` with required fields `query_id` (must match REQ-EVAL1-001 `id`), `manual_override` (∈ `{"pass", "skip"}`), `override_reason` (string, non-empty), `created_at` (ISO-8601 timestamp), `created_by` (GitHub handle), and optional advisory field `expires_at` (ISO-8601 date — documentation only in V1, NOT enforced). The total number of override entries in the list SHALL NOT exceed 5 (simple cap check, per HISTORY D8); CI SHALL fail if this cap is exceeded. **Scope (v0.2.0)**: V1 does NOT auto-expire or auto-remove entries — operators prune stale entries by hand. Automated time-based expiry is deferred. | P1 | `TestOverridesSchemaValid`; `TestOverridesCapEnforced` (>5 entries triggers CI failure). |
 
 ### 2.2 Scorer & Judge Module
 
 | ID | Pattern | Requirement | Priority | Acceptance Summary |
 |----|---------|-------------|----------|--------------------|
 | **REQ-EVAL1-004** | Ubiquitous | The system SHALL expose a Python service `services/researcher/src/researcher/eval_judge.py` providing a single HTTP POST endpoint `/judge/faithfulness` that accepts a JSON body `{query_id, claims: [{text, cited_doc_ids: string[]}], corpus: {doc_id: doc_body_text}}` and returns `{query_id, claim_scores: [{text, supported: bool, judge_rationale: string}], faithfulness_score: float ∈ [0, 1], total_claims: int, supported_claims: int}`. The endpoint SHALL wrap DeepEval's `FaithfulnessMetric` (per HISTORY D1) configured with judge model from `EVAL_JUDGE_MODEL` env var (default `claude-haiku-4-5` per HISTORY D4). The endpoint SHALL pass `temperature=0, top_p=1, seed=42` through LiteLLM to enforce determinism per HISTORY D7. | P0 | `test_judge_endpoint_returns_per_claim_scores`; `test_judge_uses_deterministic_params`; `test_judge_score_formula` (supported_claims/total_claims). |
-| **REQ-EVAL1-005** | Ubiquitous | The system SHALL expose a Go bridge `internal/eval/scorer/deepeval_bridge.go` that calls the Python `eval_judge` endpoint via HTTP, marshalling the synthesis response into the judge's expected schema. The bridge SHALL: (a) split the synthesis output into claims using the SPEC-SYN-002 sentence regex (`[.!?。！？]\s+|[.!?。！？]$`); (b) extract `cited_doc_ids` per claim from the trailing `[N]` markers and the response's `Citations` array; (c) build the `corpus` map by reading the docs the fanout returned (NOT the full golden corpus — only what was actually retrieved for this query); (d) POST to `/judge/faithfulness`; (e) return `{score, per_claim, judge_rationales}` to the runner. The bridge SHALL respect a 30s per-query timeout (NFR-EVAL1-002). | P0 | `TestBridgeMarshalsClaims`; `TestBridgeExtractsCitations`; `TestBridgeTimeoutEnforced`; `TestBridgeReturnsPerClaimRationale`. |
+| **REQ-EVAL1-005** | Ubiquitous | The system SHALL expose a Go bridge `internal/eval/scorer/deepeval_bridge.go` that calls the Python `eval_judge` endpoint via HTTP, marshalling the synthesis response into the judge's expected schema. The bridge SHALL: (a) split the synthesis output into claims using **EVAL-001's own locale-aware sentence segmentation** — for `locale: "en"` an ASCII split equivalent to the live checker's `(?<=[.!?])\s+`, and for `locale: "ko"` a **Korean-aware segmentation** that handles `다.`/`요.`-style endings and CJK punctuation `。！？`, because the structural checker (`faithfulness_endpoint.py`) provides NO CJK segmentation (see HISTORY D3); (b) extract `cited_doc_ids` per claim from the trailing `[N]` markers (marker regex `\[(\d+)\]`) and resolve them via the `synthesis.Result.Citations` array (`Citation{Marker int, DocID, URL, Title}`); (c) build the `corpus` map by reading the docs the fanout returned (NOT the full golden corpus — only what was actually retrieved for this query); (d) POST to `/judge/faithfulness`; (e) return `{score, per_claim, judge_rationales}` to the runner. The bridge SHALL respect a 30s per-query timeout (NFR-EVAL1-002). | P0 | `TestBridgeMarshalsClaims`; `TestBridgeExtractsCitations` (Marker int → DocID); `TestBridgeKoreanSegmentation` (KO claims split correctly without trailing whitespace); `TestBridgeTimeoutEnforced`; `TestBridgeReturnsPerClaimRationale`. |
 | **REQ-EVAL1-006** | State-Driven | WHILE the judge model is unavailable (HTTP 5xx, connection refused, or timeout > 30s), the runner SHALL: (a) log an ERROR-level record with `{query_id, judge_model, error_class}`; (b) mark the query's score as `null` (NOT zero — null preserves the distinction between "judge could not score" and "judge confidently scored zero"); (c) continue with the next query (no fail-fast); (d) on benchmark completion, if any query has a `null` score, the runner SHALL exit with code 2 (judge availability error) — distinct from code 1 (score below threshold) and code 0 (pass). The aggregate mean SHALL be computed over non-null scores only; the count of null scores SHALL be reported in the run summary. | P1 | `TestJudgeUnavailableMarksNullNotZero`; `TestRunnerExitCode2OnJudgeError`; `TestAggregateMeanExcludesNullScores`. |
 | **REQ-EVAL1-007** | Event-Driven | WHEN the judge model returns a per-claim `supported: false` verdict on a structurally faithful claim (i.e. the claim has a `[N]` marker that SPEC-SYN-002 accepted), the runner SHALL record the full judge rationale text in the per-query report record. The report SHALL surface the top 10 lowest-scoring queries with their judge rationales in a `## Lowest-Scoring Queries` section of the markdown report. This is the operator's primary debugging surface — un-explained low scores must never appear in the report. | P1 | `TestReportContainsJudgeRationalesForLowScores`; `TestReportTopTenLowestQueriesSection`. |
 
@@ -295,7 +380,7 @@ exits 0 / 1 per the CI gate threshold.
 |----|---------|-------------|----------|--------------------|
 | **REQ-EVAL1-008** | Ubiquitous | The system SHALL provide a CI gate at `internal/eval/ci/gate.go` that consumes the runner's report and exits with code `0` iff (a) aggregate mean score ≥ 0.85 AND (b) every individual non-null query score ≥ 0.50 AND (c) no judge-availability errors occurred AND (d) active overrides count ≤ 5. Exit code mapping: `0` = pass, `1` = score below threshold (a, b, or d failed), `2` = judge availability error (c failed), `3` = malformed input (report parse error). The gate SHALL print a one-line summary to stdout matching `EVAL-001 result=PASS|FAIL mean=<X.XXX> floor=<X.XX> overrides=<N> nulls=<N>` for grep-friendly CI log parsing. | P0 | `TestGatePassesAt085MeanAnd050Floor`; `TestGateFailsBelowMean`; `TestGateFailsBelowFloor`; `TestGateExitCodeMapping`; `TestGateStdoutSummaryFormat`. |
 | **REQ-EVAL1-009** | Event-Driven | WHEN a PR touches any file matching `internal/synthesis/**`, `services/researcher/**`, `internal/llm/**`, `internal/fanout/**`, `internal/eval/**`, or `.moai/specs/SPEC-EVAL-001/**`, the `.github/workflows/eval.yml` GitHub Actions workflow SHALL run the full 50-query benchmark and gate the PR on the result via REQ-EVAL1-008. The workflow SHALL use the frozen corpus (no live adapter calls) and SHALL post the report markdown as a PR comment (overwriting any prior EVAL-001 comment from the same PR). The workflow SHALL be skipped for documentation-only PRs (paths matching `**.md`, `**/docs/**`) per the path-filters config. | P1 | `TestWorkflowTriggersOnSynthesisChange`; `TestWorkflowSkipsOnDocsOnly`; manual `ManualPRCommentRendersReport`. |
-| **REQ-EVAL1-010** | Ubiquitous | The system SHALL run the full benchmark as a nightly cron job at 03:00 UTC and write the result to `.moai/eval/history/EVAL-001-{YYYY-MM-DD}.json`. The historical file SHALL include `{date, commit_sha, branch, mean_score, per_query_scores, judge_model, override_count, null_count, runtime_seconds}`. The runner SHALL also update `.moai/eval/reports/latest.md` with the most recent human-readable report. The nightly run SHALL NOT gate any merge — its purpose is regression baseline establishment per HISTORY D9. | P1 | `TestNightlyHistoryFileSchema`; `TestNightlyDoesNotGateMerge`; `TestNightlyUpdatesLatestReport`. |
+| **REQ-EVAL1-010** | Ubiquitous | **[DEFERRED to V1.1 — out of V1 scope, per HISTORY D9]** The system WILL (in V1.1) run the full benchmark as a nightly cron job at 03:00 UTC and write the result to `.moai/eval/history/EVAL-001-{YYYY-MM-DD}.json` (`{date, commit_sha, branch, mean_score, per_query_scores, judge_model, override_count, null_count, runtime_seconds}`), and update `.moai/eval/reports/latest.md`. The nightly run will NOT gate any merge — its purpose is regression baseline establishment. **This requirement is documented for forward-compatibility only; V1 does NOT implement the nightly cron, the history-file writer, or the `eval-nightly.yml` workflow.** The PR-gate (REQ-EVAL1-008/009) is the V1 release gate. | — (deferred) | Deferred — no V1 acceptance tests; will be re-scoped in the V1.1 amendment. |
 | **REQ-EVAL1-011** | Optional | WHERE the operator wants to run the benchmark locally, a `usearch eval [--queries=<id-pattern>]` CLI subcommand (delegated to SPEC-CLI-002 Phase 8) SHALL invoke the same Go runner used by CI and print the report to stdout. The `--queries` flag MAY filter to a subset (e.g., `EVAL-001-Q001..Q010` or `category=korean`). The CLI SHALL exit with the same code mapping as the CI gate (REQ-EVAL1-008). | P2 | `TestCLIInvokesSameRunner`; `TestCLIQueryFilterWorks`; manual `ManualLocalEvalRun`. |
 
 ---
@@ -382,9 +467,11 @@ scope creep into EVAL-001.
   question), a follow-up SPEC may introduce a per-locale judge
   override.
 
-- **Schema-breaking changes to `Citation`, `NormalizedDoc`, or
-  `SynthesizeResponse`** — V1 reuses the shapes SPEC-SYN-002 and
-  SPEC-CORE-001 already established. The benchmark consumes these
+- **Schema-breaking changes to `synthesis.Citation`,
+  `pkg/types.NormalizedDoc`, or `synthesis.Result`** — V1 reuses the
+  shapes SPEC-SYN-002 / SPEC-DEEP-002 and SPEC-CORE-001 already
+  established (`internal/synthesis/types.go`,
+  `pkg/types/normalized_doc.go`). The benchmark consumes these
   contracts read-only.
 
 - **Score persistence in a database** — V1 stores history as flat
@@ -423,7 +510,7 @@ alongside the plan-auditor cycle). The scenario index:
 
 | Scenario | Description | Coverage |
 |----------|-------------|----------|
-| §5.1 | Golden set load: runner reads `queries.jsonl`, parses 50 records, partitions 35 EN + 15 KO; corpus loads ≥ 200 docs; `expected_sources` resolve. | REQ-EVAL1-001, REQ-EVAL1-002 |
+| §5.1 | Golden set load: runner reads `queries.jsonl`, parses 50 records, partitions 35 EN + 15 KO; corpus loads ≥ 50 docs (V1 floor); `expected_sources` resolve. | REQ-EVAL1-001, REQ-EVAL1-002 |
 | §5.2 | Single-query happy path: query Q001 (factual EN) runs through synthesis with frozen corpus, judge scores 3/3 claims supported, query score = 1.0, recorded in report. | REQ-EVAL1-004, REQ-EVAL1-005 |
 | §5.3 | Single-query partial faithfulness: query Q010 (synthesis EN) returns 4 claims; judge marks 3 supported, 1 unsupported; query score = 0.75; judge rationale captured for the unsupported claim. | REQ-EVAL1-005, REQ-EVAL1-007 |
 | §5.4 | Korean query: query Q036 (`locale: "ko"`) routes through Korean adapters (mocked); synthesis returns Korean text; judge scores in Korean entailment context; score recorded. | REQ-EVAL1-001 (locale partition), REQ-EVAL1-004 |
@@ -431,9 +518,9 @@ alongside the plan-auditor cycle). The scenario index:
 | §5.6 | Aggregate fail (mean): mean = 0.82 < 0.85; gate exits 1; PR comment shows top 10 lowest queries with rationales. | REQ-EVAL1-008, REQ-EVAL1-007 |
 | §5.7 | Aggregate fail (floor): mean = 0.87 but Q017 scores 0.40 < 0.50; gate exits 1 with reason "floor violation". | REQ-EVAL1-008 |
 | §5.8 | Judge unavailable: deepeval HTTP returns 503 on 3 queries; runner marks scores null; gate exits 2; report shows 3 null scores. | REQ-EVAL1-006, NFR-EVAL1-002 |
-| §5.9 | Override applied: Q023 has active override (`pass`, expires 2026-06-20); runner excludes Q023 from aggregate; report logs override usage. | REQ-EVAL1-003 |
-| §5.10 | Override cap exceeded: overrides.json has 6 active entries; runner pre-check fails; exit 1 with reason "override cap exceeded". | REQ-EVAL1-003 |
-| §5.11 | Nightly cron run: scheduled workflow fires at 03:00 UTC; writes `.moai/eval/history/EVAL-001-2026-MM-DD.json`; does not gate any merge; updates `latest.md`. | REQ-EVAL1-010 |
+| §5.9 | Override applied: Q023 has an override entry (`pass`); runner excludes Q023 from aggregate; report logs override usage. | REQ-EVAL1-003 |
+| §5.10 | Override cap exceeded: overrides.json has 6 entries; runner pre-check fails; exit 1 with reason "override cap exceeded". | REQ-EVAL1-003 |
+| §5.11 | _(removed in v0.2.0 — nightly cron deferred to V1.1 per REQ-EVAL1-010 deferral)_ | — |
 | §5.12 | Determinism re-run: 3 consecutive runs on same revision; variance ≤ 0.02; passes NFR-EVAL1-001. | NFR-EVAL1-001 |
 | §5.13 | Cost report: run summary includes total LLM judge cost ≤ $0.50; per-query cost breakdown available in report. | NFR-EVAL1-003 |
 | §5.14 | Runtime budget: 50-query run completes in ≤ 15 min on standard GitHub runner. | NFR-EVAL1-004 |
@@ -446,12 +533,27 @@ alongside the plan-auditor cycle). The scenario index:
 
 ### 6.1 Upstream SPEC dependencies (depends_on)
 
-- **SPEC-SYN-002** (implemented 2026-05-09) — provides the
-  structural citation-faithfulness path that EVAL-001 exercises.
-  EVAL-001 consumes `SynthesizeResponse.text + Citations` per
-  SPEC-SYN-002's contract. The benchmark would have no
-  faithfulness invariant to score against without SPEC-SYN-002
-  having shipped first.
+- **SPEC-SYN-002** (implemented) — provides the synthesis citation
+  contract: the `synthesis.Result{Text, Citations}` shape and
+  `Citation{Marker int, DocID, URL, Title}`
+  (`internal/synthesis/types.go`) plus the per-sentence `[N]` marker
+  enforcement at synthesis time. EVAL-001 consumes
+  `synthesis.Result.Text + Citations` read-only.
+
+- **SPEC-DEEP-002** (implemented, REQ-DEEP2-006) — provides the live
+  **structural** citation-faithfulness checker that EVAL-001
+  exercises: the Python sidecar endpoint
+  `services/researcher/src/researcher/faithfulness_endpoint.py`
+  (`POST /faithfulness_check`, marker regex `\[(\d+)\]`, ASCII
+  sentence split `(?<=[.!?])\s+`) and its Go wrapper
+  `internal/synthesis/faithfulness.go` (`CheckFaithfulness`). The
+  original draft attributed this to a non-existent
+  `faithfulness.py`; the implemented artifact is owned by
+  SPEC-DEEP-002. EVAL-001 would have no structural faithfulness
+  path to build its semantic layer on without DEEP-002 shipped.
+  Note: the structural checker does NOT segment Korean sentences,
+  so EVAL-001 supplies its own Korean-aware segmentation
+  (REQ-EVAL1-005(a)).
 
 - **SPEC-OBS-001** (implemented) — provides the Prometheus metrics
   endpoint the runner emits to (`usearch_eval_runs_total`,
@@ -498,8 +600,8 @@ alongside the plan-auditor cycle). The scenario index:
   per existing project workflow constraints.
 
 No new runtime dependencies in the production query path
-(EVAL-001 runs only in CI and the nightly cron — never per user
-request).
+(EVAL-001 runs only in PR-gating CI — never per user request; the
+nightly cron is deferred to V1.1 per REQ-EVAL1-010).
 
 ---
 
@@ -510,14 +612,14 @@ request).
 | Marker | Path | Purpose |
 |--------|------|---------|
 | [NEW] | `internal/eval/golden/queries.jsonl` | 50-query golden set per REQ-EVAL1-001. |
-| [NEW] | `internal/eval/golden/corpus/*.json` | ≥ 200 `NormalizedDoc` fixtures per REQ-EVAL1-002. |
+| [NEW] | `internal/eval/golden/corpus/*.json` | 50–80 `NormalizedDoc` fixtures (V1) per REQ-EVAL1-002. |
 | [NEW] | `internal/eval/golden/overrides.json` | Manual override registry per REQ-EVAL1-003. |
 | [NEW] | `internal/eval/golden/manifest.json` | Corpus revision pin per REQ-EVAL1-002. |
 | [NEW] | `internal/eval/scorer/deepeval_bridge.go` | Go→Python judge bridge per REQ-EVAL1-005. |
 | [NEW] | `internal/eval/scorer/deepeval_bridge_test.go` | Bridge tests. |
 | [NEW] | `internal/eval/runner/runner.go` | Orchestrator per REQ-EVAL1-004..007. |
 | [NEW] | `internal/eval/runner/runner_test.go` | Runner tests. |
-| [NEW] | `internal/eval/runner/report.go` | Report writer per REQ-EVAL1-007, REQ-EVAL1-010. |
+| [NEW] | `internal/eval/runner/report.go` | Report writer (markdown + `latest.md`) per REQ-EVAL1-007. (JSON history writer deferred to V1.1 with REQ-EVAL1-010.) |
 | [NEW] | `internal/eval/runner/report_test.go` | Report tests. |
 | [NEW] | `internal/eval/ci/gate.go` | CI gate logic per REQ-EVAL1-008. |
 | [NEW] | `internal/eval/ci/gate_test.go` | Gate tests. |
@@ -538,10 +640,10 @@ request).
 | Marker | Path | Purpose |
 |--------|------|---------|
 | [NEW] | `.github/workflows/eval.yml` | PR-gating workflow per REQ-EVAL1-009. |
-| [NEW] | `.github/workflows/eval-nightly.yml` | Cron workflow per REQ-EVAL1-010. |
-| [NEW] | `.moai/eval/history/.gitkeep` | History directory placeholder. |
+| [DEFERRED V1.1] | `.github/workflows/eval-nightly.yml` | Cron workflow per REQ-EVAL1-010 — NOT built in V1. |
+| [DEFERRED V1.1] | `.moai/eval/history/.gitkeep` | History directory — only needed by the deferred nightly cron. |
 | [NEW] | `.moai/eval/reports/.gitkeep` | Reports directory placeholder. |
-| [NEW] | `.moai/eval/README.md` | Operator guide for reading reports + applying overrides. |
+| [NEW] | `.moai/eval/README.md` | Operator guide for reading reports + applying manual overrides. |
 
 ### 7.4 Modified
 
@@ -553,10 +655,16 @@ request).
 
 ### 7.5 Existing — Unchanged (read-only consumers)
 
-- `internal/synthesis/*` — benchmark exercises the path read-only.
-- `services/researcher/src/researcher/synthesis.py` — same.
-- `services/researcher/src/researcher/faithfulness.py` — same.
-- `pkg/types/normalized_doc.go` — schema consumed as-is.
+- `internal/synthesis/*` — benchmark exercises the path read-only
+  (incl. `types.go` `synthesis.Result`/`Citation`,
+  `faithfulness.go` `CheckFaithfulness`).
+- `services/researcher/src/researcher/synthesis.py` — same
+  (`_MARKER_RE = \[(\d+)\]`).
+- `services/researcher/src/researcher/faithfulness_endpoint.py` —
+  same (structural checker, `POST /faithfulness_check`, owned by
+  SPEC-DEEP-002 REQ-DEEP2-006).
+- `pkg/types/normalized_doc.go` — corpus fixture schema consumed
+  as-is.
 - `internal/llm/router.go` — judge invoked via the existing router.
 
 ---
@@ -660,4 +768,4 @@ Internal (project files):
 
 ---
 
-*End of SPEC-EVAL-001 v0.1.0 (draft).*
+*End of SPEC-EVAL-001 v0.2.0 (draft).*

@@ -1,15 +1,20 @@
 {
   "id": "doc-056",
-  "source_id": "youtube",
-  "url": "https://example.com/youtube/0056",
-  "title": "knowledge distillation methods - study 56",
-  "body": "This document discusses knowledge distillation methods. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of knowledge distillation methods. Key findings include improved accuracy, reduced latency, and better scalability. The study 56 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on knowledge distillation methods.",
-  "published_at": "2025-02-26T00:00:00+00:00",
-  "retrieved_at": "2026-05-03T08:00:00+00:00",
-  "author": "author-6",
-  "score": 0.56,
-  "lang": "en",
+  "source_id": "rss",
+  "url": "https://example.test/rss/oauth-ko-b",
+  "title": "OAuth 2.0 인가 코드 흐름 (심화)",
+  "body": "인가 코드 흐름은 토큰 엔드포인트에서 단명 코드를 액세스 토큰으로 교환한다. PKCE는 공개 클라이언트를 가로채기로부터 보호한다. 갱신 토큰은 장기 세션을 가능하게 한다. 후속 연구는 더 광범위한 실험으로 이러한 발견을 확장했다.",
+  "snippet": "OAuth 2.0 인가 코드 흐름 (심화)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "ko",
   "doc_type": "article",
-  "hash": "8d49ef857c5d34e8"
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

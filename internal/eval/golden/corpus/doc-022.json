@@ -1,15 +1,20 @@
 {
   "id": "doc-022",
-  "source_id": "daum",
-  "url": "https://example.com/daum/0022",
-  "title": "speech recognition end-to-end models - study 22",
-  "body": "This document discusses speech recognition end-to-end models. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of speech recognition end-to-end models. Key findings include improved accuracy, reduced latency, and better scalability. The study 22 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on speech recognition end-to-end models.",
-  "published_at": "2025-01-23T00:00:00+00:00",
-  "retrieved_at": "2026-05-01T22:00:00+00:00",
-  "author": "author-22",
-  "score": 0.72,
+  "source_id": "arxiv",
+  "url": "https://example.test/arxiv/raft-b",
+  "title": "Raft consensus algorithm (deep dive)",
+  "body": "Raft is a consensus algorithm designed to be understandable. It elects a leader that manages a replicated log, and followers replicate entries from the leader. Safety is guaranteed through term numbers and log matching. Subsequent work expanded on these findings with broader experiments.",
+  "snippet": "Raft consensus algorithm (deep dive)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
   "lang": "en",
-  "doc_type": "social",
-  "hash": "0334cb47e10f508f"
+  "doc_type": "paper",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

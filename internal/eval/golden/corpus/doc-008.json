@@ -1,15 +1,20 @@
 {
   "id": "doc-008",
-  "source_id": "naver",
-  "url": "https://example.com/naver/0008",
-  "title": "federated learning privacy guarantees - study 8",
-  "body": "This document discusses federated learning privacy guarantees. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of federated learning privacy guarantees. Key findings include improved accuracy, reduced latency, and better scalability. The study 8 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on federated learning privacy guarantees.",
-  "published_at": "2025-01-09T00:00:00+00:00",
-  "retrieved_at": "2026-05-01T08:00:00+00:00",
-  "author": "author-8",
-  "score": 0.58,
-  "lang": "en",
-  "doc_type": "article",
-  "hash": "f81d35cb74415f03"
+  "source_id": "arxiv",
+  "url": "https://example.test/arxiv/transformer-ko-b",
+  "title": "어텐션이 전부다 (심화)",
+  "body": "트랜스포머 구조는 순환을 자기어텐션으로 대체하여 시퀀스를 병렬로 학습할 수 있게 했다. 이는 대규모 언어 모델의 기초가 되었다. 원 논문은 멀티헤드 어텐션과 위치 인코딩을 도입했다. 후속 연구는 더 광범위한 실험으로 이러한 발견을 확장했다.",
+  "snippet": "어텐션이 전부다 (심화)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "ko",
+  "doc_type": "paper",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

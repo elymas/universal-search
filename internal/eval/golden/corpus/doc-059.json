@@ -1,15 +1,20 @@
 {
   "id": "doc-059",
-  "source_id": "searxng",
-  "url": "https://example.com/searxng/0059",
-  "title": "neural architecture search automation - study 59",
-  "body": "This document discusses neural architecture search automation. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of neural architecture search automation. Key findings include improved accuracy, reduced latency, and better scalability. The study 59 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on neural architecture search automation.",
-  "published_at": "2025-03-01T00:00:00+00:00",
-  "retrieved_at": "2026-05-03T11:00:00+00:00",
-  "author": "author-9",
-  "score": 0.59,
-  "lang": "en",
-  "doc_type": "video",
-  "hash": "4c04afb818692e7f"
+  "source_id": "arxiv",
+  "url": "https://example.test/arxiv/llmquant-ko-a",
+  "title": "LLM 양자화 트레이드오프",
+  "body": "양자화는 모델 가중치를 int8이나 int4 같은 낮은 정밀도로 줄여 메모리를 축소하고 추론을 가속한다. 정확도를 떨어뜨릴 수 있으나 GPTQ와 AWQ 같은 기법으로 완화한다. 트레이드오프는 작업에 따라 다르다.",
+  "snippet": "LLM 양자화 트레이드오프",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "ko",
+  "doc_type": "paper",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }
