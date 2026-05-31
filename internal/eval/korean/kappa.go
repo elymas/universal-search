@@ -1,183 +1,159 @@
 package korean
 
 import (
+	"errors"
 	"fmt"
-	"math"
+	"sort"
 )
 
-// CohenKappa computes Cohen's kappa coefficient for inter-rater agreement
-// on ordinal rankings (1-5 scale).
-// REQ-EVAL-004: Round validity gate uses Light's mean-kappa >= 0.6.
+// KappaGateThreshold is the Light's mean-κ pass line for a scoring round to be
+// marked valid (REQ-EVAL-004, Landis-Koch 1977 "substantial agreement").
+const KappaGateThreshold = 0.6
+
+// MinRaters is the minimum independent rater count required to compute Light's
+// mean-κ (REQ-EVAL-004, EC-001). Below this the round is rejected outright.
+const MinRaters = 3
+
+// ErrTooFewRaters is returned when fewer than MinRaters rater score vectors are
+// supplied (EC-001 single-rater bypass guard).
+var ErrTooFewRaters = errors.New("korean eval: fewer than 3 raters; Light's mean-κ requires at least 3 independent rater sheets")
+
+// ErrRaterLengthMismatch is returned when rater score vectors differ in length
+// (they must cover the same golden-set queries in the same order).
+var ErrRaterLengthMismatch = errors.New("korean eval: rater score vectors have mismatched lengths")
+
+// ErrEmptyScores is returned when rater vectors contain no items.
+var ErrEmptyScores = errors.New("korean eval: rater score vectors are empty")
+
+// RaterScores is one rater's ordinal relevance scores over a fixed,
+// position-aligned set of golden-set queries. Each score is the 1–5
+// ranking_score for the corresponding query.
+type RaterScores struct {
+	RaterID string
+	Scores  []int
+}
+
+// KappaResult is the output of MeanKappa: the per-pair Cohen κ values plus the
+// Light's mean-κ aggregate and the round validity verdict.
+type KappaResult struct {
+	// Pairwise holds one Cohen κ per unordered rater pair, in stable
+	// (i<j) order.
+	Pairwise []PairKappa
+	// MeanKappa is Light's mean-κ: the arithmetic mean of all pairwise κ.
+	MeanKappa float64
+	// Valid reports whether MeanKappa >= KappaGateThreshold (REQ-EVAL-004).
+	Valid bool
+}
+
+// PairKappa is a single rater-pair Cohen κ value.
+type PairKappa struct {
+	RaterA string
+	RaterB string
+	Kappa  float64
+}
+
+// CohenKappa computes Cohen's κ for two raters' ordinal scores over the same
+// items (position-aligned). Returns ErrRaterLengthMismatch / ErrEmptyScores on
+// malformed input.
 //
-// @MX:ANCHOR: [AUTO] Round validity decision function; consumers: snapshot writer, calibration protocol
-// @MX:REASON: fan_in >= 3; REQ-EVAL-004 and REQ-EVAL-009 both consume this
-func CohenKappa(r1, r2 []int) (float64, error) {
-	if len(r1) == 0 || len(r2) == 0 {
-		return 0, fmt.Errorf("empty rater data")
+// κ = (po - pe) / (1 - pe), where po is observed agreement and pe is the
+// chance-expected agreement from each rater's marginal label distribution.
+// When raters agree perfectly AND pe == 1 (both gave a single constant label),
+// κ is defined as 1.0 (perfect agreement) rather than 0/0.
+func CohenKappa(a, b []int) (float64, error) {
+	if len(a) != len(b) {
+		return 0, ErrRaterLengthMismatch
 	}
-	if len(r1) != len(r2) {
-		return 0, fmt.Errorf("rater length mismatch: %d vs %d", len(r1), len(r2))
+	if len(a) == 0 {
+		return 0, ErrEmptyScores
 	}
+	n := float64(len(a))
 
-	n := len(r1)
-
-	// Find the rating scale range.
-	minVal, maxVal := r1[0], r1[0]
-	for _, v := range r1 {
-		if v < minVal {
-			minVal = v
+	var agree int
+	marginA := make(map[int]int)
+	marginB := make(map[int]int)
+	for i := range a {
+		if a[i] == b[i] {
+			agree++
 		}
-		if v > maxVal {
-			maxVal = v
-		}
+		marginA[a[i]]++
+		marginB[b[i]]++
 	}
-	for _, v := range r2 {
-		if v < minVal {
-			minVal = v
-		}
-		if v > maxVal {
-			maxVal = v
-		}
+	po := float64(agree) / n
+
+	var pe float64
+	for label, ca := range marginA {
+		cb := marginB[label]
+		pe += (float64(ca) / n) * (float64(cb) / n)
 	}
 
-	categories := maxVal - minVal + 1
-
-	// Build confusion matrix.
-	matrix := make([][]int, categories)
-	for i := range matrix {
-		matrix[i] = make([]int, categories)
-	}
-	for i := range n {
-		matrix[r1[i]-minVal][r2[i]-minVal]++
-	}
-
-	// Observed agreement (Po).
-	po := 0.0
-	for i := range categories {
-		po += float64(matrix[i][i]) / float64(n)
-	}
-
-	// Expected agreement (Pe) by chance.
-	pe := 0.0
-	for i := range categories {
-		rowSum := 0
-		colSum := 0
-		for j := range categories {
-			rowSum += matrix[i][j]
-			colSum += matrix[j][i]
-		}
-		pe += float64(rowSum) * float64(colSum) / float64(n*n)
-	}
-
-	if math.Abs(pe-1.0) < 1e-10 {
-		// Perfect expected agreement means both raters use only one category.
-		// If observed is also perfect, kappa is 1.0; otherwise undefined (return 0).
-		if math.Abs(po-1.0) < 1e-10 {
+	if pe == 1.0 {
+		// Both raters used a single constant label. If they agree on it,
+		// κ = 1.0; otherwise po would be < 1 and pe < 1, so this branch only
+		// hits on identical constant vectors.
+		if po == 1.0 {
 			return 1.0, nil
 		}
-		return 0.0, nil
 	}
-
-	kappa := (po - pe) / (1.0 - pe)
-	return kappa, nil
+	return (po - pe) / (1.0 - pe), nil
 }
 
-// LightMeanKappa computes Light's mean kappa across all pairwise rater combinations.
-// REQ-EVAL-004: Round is valid iff mean-kappa >= 0.6 (substantial agreement).
+// MeanKappa computes Light's mean-κ across all unordered rater pairs. It
+// requires at least MinRaters (3) raters and position-aligned, equal-length
+// score vectors. Returns ErrTooFewRaters / ErrRaterLengthMismatch on bad input.
 //
-// @MX:ANCHOR: [AUTO] Round-level validity aggregator; consumers: snapshot, calibration, CI reporting
-// @MX:REASON: fan_in >= 3; single entry point for round validity determination
-func LightMeanKappa(sheets [][]int) (float64, error) {
-	if len(sheets) < 2 {
-		return 0, fmt.Errorf("need at least 2 raters, got %d", len(sheets))
+// @MX:ANCHOR: [AUTO] Inter-rater agreement gate. A scoring round is marked
+// valid IFF MeanKappa >= 0.6; only valid rounds may produce a baseline
+// snapshot (REQ-EVAL-004, REQ-EVAL-009). The snapshot writer and round
+// orchestration depend on this verdict.
+// @MX:REASON: Releasing a baseline from a low-agreement round would enshrine
+// noise as the Korean-ranking ground truth and let real regressions hide
+// behind rater disagreement. The 0.6 gate + ≥3-rater requirement is a
+// release-gate invariant (EC-001 single-rater bypass is rejected here).
+// @MX:SPEC: SPEC-EVAL-003
+func MeanKappa(raters []RaterScores) (KappaResult, error) {
+	if len(raters) < MinRaters {
+		return KappaResult{}, fmt.Errorf("%w: got %d", ErrTooFewRaters, len(raters))
+	}
+	n := len(raters[0].Scores)
+	if n == 0 {
+		return KappaResult{}, ErrEmptyScores
+	}
+	for _, r := range raters {
+		if len(r.Scores) != n {
+			return KappaResult{}, ErrRaterLengthMismatch
+		}
 	}
 
-	// Validate all sheets have the same length.
-	length := len(sheets[0])
-	for i, s := range sheets {
-		if len(s) != length {
-			return 0, fmt.Errorf("sheet %d length mismatch: %d vs %d", i, len(s), length)
-		}
-		if len(s) == 0 {
-			return 0, fmt.Errorf("sheet %d is empty", i)
-		}
-	}
-
-	// Compute pairwise kappa for all unique pairs.
+	var pairs []PairKappa
 	var sum float64
-	var count int
-	for i := range sheets {
-		for j := i + 1; j < len(sheets); j++ {
-			k, err := CohenKappa(sheets[i], sheets[j])
+	for i := 0; i < len(raters); i++ {
+		for j := i + 1; j < len(raters); j++ {
+			k, err := CohenKappa(raters[i].Scores, raters[j].Scores)
 			if err != nil {
-				return 0, fmt.Errorf("pair (%d,%d): %w", i, j, err)
+				return KappaResult{}, err
 			}
+			pairs = append(pairs, PairKappa{
+				RaterA: raters[i].RaterID,
+				RaterB: raters[j].RaterID,
+				Kappa:  k,
+			})
 			sum += k
-			count++
 		}
 	}
 
-	return sum / float64(count), nil
-}
-
-// KrippendorffAlphaOrdinal computes Krippendorff's alpha for ordinal data
-// as a supplementary reliability metric.
-// REQ-EVAL-004: Krippendorff alpha is auxiliary; the gate uses Light's mean-kappa.
-func KrippendorffAlphaOrdinal(sheets [][]int) (float64, error) {
-	if len(sheets) < 2 {
-		return 0, fmt.Errorf("need at least 2 raters, got %d", len(sheets))
-	}
-
-	nItems := len(sheets[0])
-	for i, s := range sheets {
-		if len(s) != nItems {
-			return 0, fmt.Errorf("sheet %d length mismatch", i)
+	// Stable ordering for deterministic serialization.
+	sort.Slice(pairs, func(x, y int) bool {
+		if pairs[x].RaterA != pairs[y].RaterA {
+			return pairs[x].RaterA < pairs[y].RaterA
 		}
-	}
+		return pairs[x].RaterB < pairs[y].RaterB
+	})
 
-	nRaters := len(sheets)
-
-	// Compute observed disagreement (D_o).
-	// For ordinal data, the difference metric is (c1 - c2)^2.
-	var dObs float64
-	pairCount := 0
-	for item := range nItems {
-		for i := range nRaters {
-			for j := i + 1; j < nRaters; j++ {
-				diff := float64(sheets[i][item] - sheets[j][item])
-				dObs += diff * diff
-				pairCount++
-			}
-		}
-	}
-	if pairCount == 0 {
-		return 1.0, nil
-	}
-	dObs /= float64(pairCount)
-
-	// Compute expected disagreement (D_e).
-	// Pool all values and compute pairwise squared differences.
-	var allValues []int
-	for _, s := range sheets {
-		allValues = append(allValues, s...)
-	}
-	totalPairs := len(allValues) * (len(allValues) - 1) / 2
-	if totalPairs == 0 {
-		return 1.0, nil
-	}
-	var dExp float64
-	for i := range allValues {
-		for j := i + 1; j < len(allValues); j++ {
-			diff := float64(allValues[i] - allValues[j])
-			dExp += diff * diff
-		}
-	}
-	dExp /= float64(totalPairs)
-
-	if dExp < 1e-10 {
-		return 1.0, nil
-	}
-
-	alpha := 1.0 - dObs/dExp
-	return alpha, nil
+	mean := sum / float64(len(pairs))
+	return KappaResult{
+		Pairwise:  pairs,
+		MeanKappa: mean,
+		Valid:     mean >= KappaGateThreshold,
+	}, nil
 }

@@ -1,0 +1,25 @@
+{
+  "_comment": "PLACEHOLDER EXAMPLE — NOT a real baseline. The numeric metrics below are illustrative only. A real v1.0.0.json is produced exclusively by a valid 3-rater offline scoring round (mean-kappa >= 0.6) on the M3 stack per SPEC-EVAL-003 REQ-EVAL-008/009 (task T09, operational). Do not treat these values as the V1 ranking baseline.",
+  "release_tag": "v1.0.0-example",
+  "round_date": "2026-05-30",
+  "rater_ids": ["R1", "R2", "R3"],
+  "mean_kappa": 0.0,
+  "top3_naver_recall": 0.0,
+  "top3_naver_recall_per_category": {
+    "news": 0.0,
+    "blog": 0.0,
+    "shopping": 0.0,
+    "academic-tech": 0.0,
+    "code-mixed": 0.0,
+    "cultural": 0.0
+  },
+  "mrr_top10": 0.0,
+  "mean_ranking_score": 0.0,
+  "router_class_accuracy_mixed": 0.0,
+  "tokenizer_version": "mecab-ko 0.0.0-placeholder",
+  "adapter_versions": {
+    "naver": "v0.0.0-placeholder",
+    "koreanews": "v0.0.0-placeholder"
+  },
+  "golden_set_sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+}

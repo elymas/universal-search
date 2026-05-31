@@ -2,231 +2,170 @@ package korean
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"sort"
-	"strings"
-	"time"
 )
 
-// KappaThreshold is the minimum Light's mean-kappa for a valid round.
-// REQ-EVAL-004: 0.6 (substantial agreement per Landis-Koch 1977).
-const KappaThreshold = 0.6
+// SnapshotRetention is the number of most-recent baseline snapshots kept in the
+// live directory; older snapshots are archived, never deleted (NFR-EVAL-003).
+const SnapshotRetention = 4
 
-// MaxRetainedSnapshots is the maximum number of snapshots kept in the main directory.
-// NFR-EVAL-003: 4 most recent. Older snapshots are archived.
-const MaxRetainedSnapshots = 4
+// ErrSnapshotExists is returned when a snapshot for the same release tag
+// already exists. Snapshots are append-only — never overwritten (REQ-EVAL-008).
+var ErrSnapshotExists = errors.New("korean eval: snapshot already exists for this release tag (append-only)")
 
-// SnapshotMeta contains metadata passed by the caller for the snapshot.
-type SnapshotMeta struct {
-	TokenizerVersion string            `json:"tokenizer_version"`
-	AdapterVersions  map[string]string `json:"adapter_versions"`
-	GoldenSetSHA256  string            `json:"golden_set_sha256"`
+// ErrRoundInvalid is returned when WriteSnapshot is asked to persist a round
+// that did not reach the κ gate (REQ-EVAL-009: invalid rounds produce no
+// snapshot).
+var ErrRoundInvalid = errors.New("korean eval: cannot snapshot an invalid round (mean-κ < 0.6)")
+
+// ErrPhantomAdapterID is returned when adapter_versions contains a SourceID
+// that is not a registered adapter (REQ-EVAL-008).
+var ErrPhantomAdapterID = errors.New("korean eval: adapter_versions contains an unregistered/phantom SourceID")
+
+// Snapshot is a release-tagged baseline of one valid scoring round
+// (REQ-EVAL-008). All numeric metrics are recorded; per-category recall is
+// observational. The struct serializes to the append-only baseline JSON.
+type Snapshot struct {
+	ReleaseTag               string               `json:"release_tag"`
+	RoundDate                string               `json:"round_date"`
+	RaterIDs                 []string             `json:"rater_ids"`
+	MeanKappa                float64              `json:"mean_kappa"`
+	Top3NaverRecall          float64              `json:"top3_naver_recall"`
+	Top3NaverRecallPerCat    map[Category]float64 `json:"top3_naver_recall_per_category"`
+	MRRTop10                 float64              `json:"mrr_top10"`
+	MeanRankingScore         float64              `json:"mean_ranking_score"`
+	RouterClassAccuracyMixed float64              `json:"router_class_accuracy_mixed"`
+	TokenizerVersion         string               `json:"tokenizer_version"`
+	AdapterVersions          map[string]string    `json:"adapter_versions"`
+	GoldenSetSHA256          string               `json:"golden_set_sha256"`
 }
 
-// BaselineSnapshot represents a complete baseline snapshot JSON.
-// REQ-EVAL-008: All fields are required.
-type BaselineSnapshot struct {
-	ReleaseTag             string            `json:"release_tag"`
-	RoundDate              string            `json:"round_date"`
-	RaterIDs               []string          `json:"rater_ids"`
-	MeanKappa              float64           `json:"mean_kappa"`
-	Top3NaverRecall        float64           `json:"top3_naver_recall"`
-	PerCategory            map[string]float64 `json:"per_category"`
-	MRRTop10               float64           `json:"mrr_top10"`
-	MeanRankingScore       float64           `json:"mean_ranking_score"`
-	RouterClassAccuracyMixed float64         `json:"router_class_accuracy_mixed"`
-	TokenizerVersion       string            `json:"tokenizer_version"`
-	AdapterVersions        map[string]string `json:"adapter_versions"`
-	GoldenSetSHA256        string            `json:"golden_set_sha256"`
-}
-
-// computeMeanRankingScore computes the average ranking score across all raters and queries.
-func computeMeanRankingScore(round Round) float64 {
-	var sum int
-	var count int
-	for _, sheet := range round.RaterSheets {
-		for _, score := range sheet {
-			sum += score.RankingScore
-			count++
+// validate ensures the snapshot carries the required gate-bearing fields and
+// only registered adapter SourceIDs in adapter_versions.
+func (s *Snapshot) validate() error {
+	if s.ReleaseTag == "" {
+		return errors.New("korean eval: snapshot missing release_tag")
+	}
+	if s.GoldenSetSHA256 == "" {
+		return errors.New("korean eval: snapshot missing golden_set_sha256")
+	}
+	if s.TokenizerVersion == "" {
+		return errors.New("korean eval: snapshot missing tokenizer_version")
+	}
+	for src := range s.AdapterVersions {
+		if _, ok := registeredSourceIDs[src]; !ok {
+			return fmt.Errorf("%w: %q", ErrPhantomAdapterID, src)
 		}
 	}
-	if count == 0 {
-		return 0
-	}
-	return float64(sum) / float64(count)
-}
-
-// computeRouterClassAccuracyMixed computes the percentage of code-mixed queries
-// where IR-001 correctly classified as "mixed".
-// REQ-EVAL-007: Router-classification-accuracy@code-mixed.
-func computeRouterClassAccuracyMixed(round Round, gold []GoldenQuery) float64 {
-	// Find code-mixed queries.
-	var codeMixedQueries []GoldenQuery
-	for _, q := range gold {
-		if q.Category == "code-mixed" {
-			codeMixedQueries = append(codeMixedQueries, q)
-		}
-	}
-	if len(codeMixedQueries) == 0 {
-		return 0
-	}
-
-	// Count code_switching_handling scores (proxy for correct classification).
-	// If a code-mixed query has a non-nil code_switching_handling, it was
-	// evaluated, meaning the rater observed the mixed content.
-	if len(round.RaterSheets) == 0 {
-		return 0
-	}
-
-	evaluated := 0
-	for _, q := range codeMixedQueries {
-		for _, score := range round.RaterSheets[0] {
-			if score.QueryID == q.QueryID && score.CodeSwitchingHandling != nil {
-				evaluated++
-				break
-			}
-		}
-	}
-
-	return float64(evaluated) / float64(len(codeMixedQueries))
-}
-
-// extractRaterIDs extracts unique rater IDs from the round.
-func extractRaterIDs(round Round) []string {
-	seen := make(map[string]bool)
-	var ids []string
-	for _, sheet := range round.RaterSheets {
-		if len(sheet) > 0 {
-			id := sheet[0].RaterID
-			if !seen[id] {
-				seen[id] = true
-				ids = append(ids, id)
-			}
-		}
-	}
-	return ids
-}
-
-// WriteSnapshot creates a baseline snapshot JSON file for a valid scoring round.
-//
-// @MX:WARN: [AUTO] Append-only policy violation rejects write
-// @MX:REASON: snapshots are immutable evidence; overwrite is rejected to prevent baseline tampering
-func WriteSnapshot(round Round, gold []GoldenQuery, tag, dir string, meta SnapshotMeta) error {
-	// Compute kappa from rater sheets.
-	raterData := extractRaterScores(round)
-	meanKappa, err := LightMeanKappa(raterData)
-	if err != nil {
-		return fmt.Errorf("compute kappa: %w", err)
-	}
-
-	// Check if round is valid (kappa >= threshold).
-	if meanKappa < KappaThreshold {
-		// Invalid round — do not write snapshot.
-		return nil
-	}
-
-	// Check append-only: reject if file already exists.
-	snapshotPath := filepath.Join(dir, tag+".json")
-	if _, err := os.Stat(snapshotPath); err == nil {
-		return fmt.Errorf("snapshot %s already exists (append-only policy)", tag)
-	}
-
-	// Compute all metrics.
-	top3Recall := Top3NaverRecall(round, gold)
-	perCat := PerCategoryRecall(round, gold)
-	mrr := MRRAt10(round, gold)
-	meanScore := computeMeanRankingScore(round)
-	routerAccMixed := computeRouterClassAccuracyMixed(round, gold)
-
-	snapshot := BaselineSnapshot{
-		ReleaseTag:               tag,
-		RoundDate:                time.Now().UTC().Format(time.RFC3339),
-		RaterIDs:                 extractRaterIDs(round),
-		MeanKappa:                meanKappa,
-		Top3NaverRecall:          top3Recall,
-		PerCategory:              perCat,
-		MRRTop10:                 mrr,
-		MeanRankingScore:         meanScore,
-		RouterClassAccuracyMixed: routerAccMixed,
-		TokenizerVersion:         meta.TokenizerVersion,
-		AdapterVersions:          meta.AdapterVersions,
-		GoldenSetSHA256:          meta.GoldenSetSHA256,
-	}
-
-	data, err := json.MarshalIndent(snapshot, "", "  ")
-	if err != nil {
-		return fmt.Errorf("marshal snapshot: %w", err)
-	}
-
-	if err := os.WriteFile(snapshotPath, data, 0o644); err != nil {
-		return fmt.Errorf("write snapshot: %w", err)
-	}
-
-	// Enforce retention policy.
-	enforceRetentionPolicy(dir)
-
 	return nil
 }
 
-// extractRaterScores extracts ranking score arrays from rater sheets for kappa computation.
-func extractRaterScores(round Round) [][]int {
-	var result [][]int
-	for _, sheet := range round.RaterSheets {
-		var scores []int
-		for _, score := range sheet {
-			scores = append(scores, score.RankingScore)
-		}
-		result = append(result, scores)
+// GoldenSetSHA256 computes the hex SHA256 of the golden-set bytes read from r.
+// Recorded in each snapshot so a golden-set change is detectable (REQ-EVAL-008).
+func GoldenSetSHA256(r io.Reader) (string, error) {
+	h := sha256.New()
+	if _, err := io.Copy(h, r); err != nil {
+		return "", fmt.Errorf("hash golden set: %w", err)
 	}
-	return result
+	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-// enforceRetentionPolicy ensures at most MaxRetainedSnapshots snapshots in the main dir.
-// Older snapshots are moved to the archive/ subdirectory.
-// NFR-EVAL-003: Keep 4 most recent, archive older.
-func enforceRetentionPolicy(dir string) {
+// WriteSnapshot persists a snapshot for a VALID round to dir as
+// {release_tag}.json. It refuses to overwrite an existing file (append-only)
+// and refuses invalid rounds. After writing, it enforces the 4-snapshot
+// retention policy, archiving older snapshots into dir/archive.
+//
+// @MX:NOTE: [AUTO] Append-only baseline writer. A snapshot is the immutable
+// evidence of one valid Korean-ranking round; once written it is never
+// modified (REQ-EVAL-008). Overwrite attempts return ErrSnapshotExists.
+// @MX:SPEC: SPEC-EVAL-003
+func WriteSnapshot(dir string, s Snapshot, roundValid bool) (string, error) {
+	if !roundValid {
+		return "", ErrRoundInvalid
+	}
+	if err := s.validate(); err != nil {
+		return "", err
+	}
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return "", fmt.Errorf("create snapshot dir: %w", err)
+	}
+
+	path := filepath.Join(dir, s.ReleaseTag+".json")
+	if _, err := os.Stat(path); err == nil {
+		return "", fmt.Errorf("%w: %s", ErrSnapshotExists, path)
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return "", fmt.Errorf("stat snapshot: %w", err)
+	}
+
+	data, err := json.MarshalIndent(s, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("marshal snapshot: %w", err)
+	}
+	data = append(data, '\n')
+	// 0o444: read-only on disk reinforces the append-only invariant.
+	if err := os.WriteFile(path, data, 0o444); err != nil {
+		return "", fmt.Errorf("write snapshot: %w", err)
+	}
+
+	if err := enforceRetention(dir); err != nil {
+		return path, fmt.Errorf("snapshot written but retention failed: %w", err)
+	}
+	return path, nil
+}
+
+// enforceRetention keeps the SnapshotRetention most-recent snapshots in dir and
+// moves older ones into dir/archive. Recency is determined by file modification
+// time, then by name for determinism. Archived snapshots are never deleted.
+func enforceRetention(dir string) error {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return
+		return fmt.Errorf("read snapshot dir: %w", err)
 	}
 
-	// Collect snapshot files.
-	var snapshots []string
+	type snap struct {
+		name string
+		mod  int64
+	}
+	var snaps []snap
 	for _, e := range entries {
-		if !e.IsDir() && strings.HasSuffix(e.Name(), ".json") {
-			snapshots = append(snapshots, e.Name())
+		if e.IsDir() || filepath.Ext(e.Name()) != ".json" {
+			continue
+		}
+		info, err := e.Info()
+		if err != nil {
+			return fmt.Errorf("stat %s: %w", e.Name(), err)
+		}
+		snaps = append(snaps, snap{name: e.Name(), mod: info.ModTime().UnixNano()})
+	}
+	if len(snaps) <= SnapshotRetention {
+		return nil
+	}
+
+	// Newest first: most recent mod time wins; tie-break by name descending.
+	sort.Slice(snaps, func(i, j int) bool {
+		if snaps[i].mod != snaps[j].mod {
+			return snaps[i].mod > snaps[j].mod
+		}
+		return snaps[i].name > snaps[j].name
+	})
+
+	archiveDir := filepath.Join(dir, "archive")
+	if err := os.MkdirAll(archiveDir, 0o755); err != nil {
+		return fmt.Errorf("create archive dir: %w", err)
+	}
+	for _, s := range snaps[SnapshotRetention:] {
+		src := filepath.Join(dir, s.name)
+		dst := filepath.Join(archiveDir, s.name)
+		if err := os.Rename(src, dst); err != nil {
+			return fmt.Errorf("archive %s: %w", s.name, err)
 		}
 	}
-
-	if len(snapshots) <= MaxRetainedSnapshots {
-		return
-	}
-
-	// Sort by name (assuming version tags sort correctly).
-	sort.Strings(snapshots)
-
-	// Archive the oldest ones.
-	archiveDir := filepath.Join(dir, "archive")
-	os.MkdirAll(archiveDir, 0o755)
-
-	toArchive := len(snapshots) - MaxRetainedSnapshots
-	for i := range toArchive {
-		src := filepath.Join(dir, snapshots[i])
-		dst := filepath.Join(archiveDir, snapshots[i])
-		os.Rename(src, dst)
-	}
-}
-
-// ComputeGoldenSetSHA256 computes the SHA256 hash of a golden set JSONL file.
-// Deterministic: same file content always produces the same hash.
-func ComputeGoldenSetSHA256(path string) (string, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return "", fmt.Errorf("read golden set for SHA256: %w", err)
-	}
-	hash := sha256.Sum256(data)
-	return fmt.Sprintf("%x", hash), nil
+	return nil
 }

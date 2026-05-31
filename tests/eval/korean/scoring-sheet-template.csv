@@ -1,4 +1,5 @@
 query_id,rater_id,ranking_score,source_relevance,code_switching_handling,tokenization_quality,top3_naver_hit,mrr_top10,notes
+<<<<<<< HEAD
 KR-001,,1-5,1-5,,1-5,true/false,0.0-1.0,
 KR-002,,1-5,1-5,,1-5,true/false,0.0-1.0,
 KR-003,,1-5,1-5,,1-5,true/false,0.0-1.0,
@@ -49,3 +50,8 @@ KR-047,,1-5,1-5,,1-5,true/false,0.0-1.0,
 KR-048,,1-5,1-5,,1-5,true/false,0.0-1.0,
 KR-049,,1-5,1-5,,1-5,true/false,0.0-1.0,
 KR-050,,1-5,1-5,,1-5,true/false,0.0-1.0,
+=======
+KR-001,R1,,,,,,,
+KR-001,R2,,,,,,,
+KR-001,R3,,,,,,,
+>>>>>>> origin/feature/SPEC-EVAL-003
