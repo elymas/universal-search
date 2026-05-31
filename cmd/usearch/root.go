@@ -17,6 +17,7 @@ import (
 	"github.com/elymas/universal-search/internal/llm"
 	llmconfig "github.com/elymas/universal-search/internal/llm/config"
 	"github.com/elymas/universal-search/internal/obs"
+	"github.com/elymas/universal-search/internal/version"
 )
 
 // rootCmd is the cobra root command for the usearch CLI.
@@ -26,7 +27,7 @@ import (
 var rootCmd = &cobra.Command{
 	Use:     "usearch",
 	Short:   "Universal Search CLI",
-	Version: Version,
+	Version: version.Short(),
 	// No RunE — when invoked with zero args and no subcommand, cobra shows help
 	// (unless REPL mode is active, which is handled in PersistentPostRun).
 }
@@ -42,7 +43,7 @@ func newRootCmd(stdout, stderr io.Writer) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:           "usearch",
 		Short:         "Universal Search CLI",
-		Version:       Version,
+		Version:       version.Short(),
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}
@@ -142,7 +143,7 @@ and LLM synthesis. Output goes to stdout; progress/errors to stderr.`,
 			if !noObs {
 				o, shutdown, err := obs.Init(ctx, obs.Config{
 					ServiceName:    "usearch",
-					ServiceVersion: Version,
+					ServiceVersion: version.Short(),
 					LogLevel:       os.Getenv("LOG_LEVEL"),
 					AdminAddr:      adminAddr(),
 					OTLPEndpoint:   os.Getenv("OTLP_ENDPOINT"),

@@ -1,11 +1,36 @@
 # Universal Search
 
+[![Release](https://img.shields.io/github/v/release/elymas/universal-search)](https://github.com/elymas/universal-search/releases/latest)
+
 Hybrid AI-powered search engine — Go orchestration plane + Python sidecars + Next.js web UI.
 
 > Note: The working directory is named `univesal-search` (typo) while the canonical
 > GitHub repository name is `universal-search`. The Go module path
 > (`github.com/elymas/universal-search`) is unaffected. A rename will happen at
 > repository creation time (see SPEC-BOOT-001 Open Questions §3).
+
+## Installation
+
+### Released binaries (v1.0.0+)
+
+Download pre-built binaries for macOS and Linux:
+
+```bash
+# Linux amd64
+curl -L https://github.com/elymas/universal-search/releases/download/v1.0.0/usearch_1.0.0_linux_amd64.tar.gz \
+  | tar xz -C /usr/local/bin/
+
+# macOS amd64
+curl -L https://github.com/elymas/universal-search/releases/download/v1.0.0/usearch_1.0.0_darwin_amd64.tar.gz \
+  | tar xz -C /usr/local/bin/
+
+# Verify installation
+usearch --version  # Should print: usearch v1.0.0
+```
+
+For other architectures (arm64, Linux), see [releases](https://github.com/elymas/universal-search/releases).
+
+### From source (development)
 
 ## Quickstart
 
@@ -26,7 +51,7 @@ make build
 
 # 5. Verify the binary
 ./cmd/usearch/usearch --version
-# Expected: usearch v0.1.0-dev
+# Expected: usearch v0.1.0-dev (development) or usearch v1.0.0+ (released)
 ```
 
 ## Prerequisites
