@@ -142,40 +142,13 @@ func TestAdapterCircuitStateGauge(t *testing.T) {
 	}
 }
 
-// TestStateEnumBoundedThreeValues verifies the state label only has the three
-// allowed values: closed, open, half_open. This enforces the cardinality budget
-// from NFR-EVAL2-001.
-func TestStateEnumBoundedThreeValues(t *testing.T) {
-	t.Parallel()
-
-	reg := metrics.NewRegistry()
-
-	// Pre-initialise all three state values to verify they register cleanly.
-	for _, state := range []string{"closed", "open", "half_open"} {
-		reg.AdapterCircuitState.WithLabelValues("test_adapter", state).Set(0)
-	}
-
-	srv := httptest.NewServer(metrics.Handler(reg))
-	defer srv.Close()
-
-	resp, err := http.Get(srv.URL + "/metrics")
-	if err != nil {
-		t.Fatalf("GET /metrics: %v", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatalf("read body: %v", err)
-	}
-	bodyStr := string(body)
-
-	for _, state := range []string{"closed", "open", "half_open"} {
-		if !strings.Contains(bodyStr, state) {
-			t.Errorf("circuit state value %q not found in /metrics output", state)
-		}
-	}
-}
+// NOTE: TestStateEnumBoundedThreeValues (NFR-EVAL2-001) lives in
+// adapter_reliability_test.go, which asserts the stronger invariant that the
+// circuit_state `state` label exposes EXACTLY three distinct values. The
+// duplicate definition that previously lived here was removed during the
+// v1.0.0 integration merge; the bounded values are still exercised end-to-end
+// via TestFanoutPartialMetricFamiliesRegister and TestAdapterCircuitStateGauge
+// above.
 
 // TestCardinalityBudget12AdaptersUnder200Series verifies the cardinality budget
 // for the three new metric families with 12 adapters (NFR-EVAL2-001).

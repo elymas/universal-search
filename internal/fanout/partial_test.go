@@ -2,7 +2,6 @@ package fanout_test
 
 import (
 	"context"
-	"errors"
 	"io"
 	"testing"
 
@@ -54,46 +53,11 @@ func partialCounterValue(t *testing.T, reg *metrics.Registry, adapter string) fl
 	return m.GetCounter().GetValue()
 }
 
-// TestFanoutPartialCounterEmission verifies REQ-EVAL2-004 / AC-002: with 3
-// adapters where 1 fails, the failing adapter's partial counter increments by
-// exactly 1 and the passing adapters' counters are unchanged.
-func TestFanoutPartialCounterEmission(t *testing.T) {
-	t.Parallel()
-
-	o := newTestObs(t)
-
-	failing := &stubAdapter{name: "failing", err: errors.New("boom")}
-	ok1 := &stubAdapter{name: "ok1", docs: makeDocs("ok1", 2)}
-	ok2 := &stubAdapter{name: "ok2", docs: makeDocs("ok2", 2)}
-	reg := buildTestRegistryWithObs(o, failing, ok1, ok2)
-
-	f, err := fanout.New(fanout.Options{Registry: reg, Obs: o})
-	if err != nil {
-		t.Fatalf("fanout.New: %v", err)
-	}
-
-	beforeFailing := partialCounterValue(t, o.Metrics, "failing")
-	beforeOK1 := partialCounterValue(t, o.Metrics, "ok1")
-	beforeOK2 := partialCounterValue(t, o.Metrics, "ok2")
-
-	result, err := f.Dispatch(context.Background(), makeDecision("failing", "ok1", "ok2"), types.Query{Text: "q"})
-	if err != nil {
-		t.Fatalf("Dispatch: %v", err)
-	}
-	if result.Stats.ErrorCount != 1 {
-		t.Fatalf("want ErrorCount==1, got %d", result.Stats.ErrorCount)
-	}
-
-	if got := partialCounterValue(t, o.Metrics, "failing"); got != beforeFailing+1 {
-		t.Errorf("failing partial counter: got %v, want %v", got, beforeFailing+1)
-	}
-	if got := partialCounterValue(t, o.Metrics, "ok1"); got != beforeOK1 {
-		t.Errorf("ok1 partial counter changed: got %v, want %v", got, beforeOK1)
-	}
-	if got := partialCounterValue(t, o.Metrics, "ok2"); got != beforeOK2 {
-		t.Errorf("ok2 partial counter changed: got %v, want %v", got, beforeOK2)
-	}
-}
+// NOTE: TestFanoutPartialCounterEmission (REQ-EVAL2-004 / AC-002) lives in
+// dispatch_test.go alongside TestFanoutPartialCounterMultipleFailures (the
+// SPEC-EVAL-002 Phase 2 block). The duplicate definition that previously lived
+// here was removed during the v1.0.0 integration merge; the obs-bundle helpers
+// below remain in use by TestFanoutPartialCounterFullSuccessNoIncrement.
 
 // TestFanoutPartialCounterFullSuccessNoIncrement verifies that a dispatch with
 // no adapter errors leaves all partial counters untouched (AdapterErrors nil).

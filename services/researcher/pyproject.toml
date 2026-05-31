@@ -9,11 +9,8 @@ dependencies = [
     "pydantic>=2.9",
     "httpx>=0.27",
     "openai>=1.50",
-<<<<<<< HEAD
-=======
     # SPEC-EVAL-001 REQ-EVAL1-004: DeepEval FaithfulnessMetric judge.
     # Compatible-release pin (~=) allows patch upgrades without breaking changes.
->>>>>>> origin/feature/SPEC-EVAL-001
     "deepeval~=1.0",
 ]
 

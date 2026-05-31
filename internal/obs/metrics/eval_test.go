@@ -67,6 +67,10 @@ func TestEvalCollectorsAddNoNewLabel(t *testing.T) {
 		"store": true, "op": true, "shard": true,
 		"agent": true, "result": true, "reason": true,
 		"trigger": true, "reason_class": true,
+		// SPEC-EVAL-002 (state) + SPEC-SEC-001 (component/type/severity/tenant_id_class);
+		// all bounded enums, pre-existing in the allowlist before eval registration.
+		"state": true, "component": true, "type": true,
+		"severity": true, "tenant_id_class": true,
 	}
 	for _, label := range reg.AllLabelNames() {
 		if !allowed[label] {
