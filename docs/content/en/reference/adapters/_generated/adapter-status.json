@@ -1,0 +1,51 @@
+{
+  "arxiv": {
+    "lifecycle": "stable",
+    "successRate7d": 0.97,
+    "verifiedAt": "2026-05-31T00:00:00Z"
+  },
+  "reddit": {
+    "lifecycle": "stable",
+    "successRate7d": 0.96,
+    "verifiedAt": "2026-05-31T00:00:00Z"
+  },
+  "hackernews": {
+    "lifecycle": "stable",
+    "successRate7d": 0.98,
+    "verifiedAt": "2026-05-31T00:00:00Z"
+  },
+  "github": {
+    "lifecycle": "stable",
+    "successRate7d": 0.95,
+    "verifiedAt": "2026-05-31T00:00:00Z"
+  },
+  "youtube": {
+    "lifecycle": "beta",
+    "successRate7d": 0.88,
+    "verifiedAt": "2026-05-31T00:00:00Z"
+  },
+  "bluesky": {
+    "lifecycle": "beta",
+    "successRate7d": 0.85,
+    "verifiedAt": "2026-05-31T00:00:00Z"
+  },
+  "x": {
+    "lifecycle": "disabled",
+    "verifiedAt": "2026-05-31T00:00:00Z"
+  },
+  "searxng": {
+    "lifecycle": "stable",
+    "successRate7d": 0.97,
+    "verifiedAt": "2026-05-31T00:00:00Z"
+  },
+  "naver": {
+    "lifecycle": "stable",
+    "successRate7d": 0.96,
+    "verifiedAt": "2026-05-31T00:00:00Z"
+  },
+  "koreanews": {
+    "lifecycle": "beta",
+    "successRate7d": 0.82,
+    "verifiedAt": "2026-05-31T00:00:00Z"
+  }
+}

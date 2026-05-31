@@ -1,0 +1,131 @@
+---
+title: Korean News Adapter
+description: Reference documentation for the Korean News (RSS + KNC) composite adapter
+lastVerified: 2026-05-31
+sourceID: koreanews
+category: news
+koreanLocaleOptimized: true
+---
+
+import { Callout } from 'nextra/components'
+import { CapabilitiesTable } from '../../../../components/CapabilitiesTable'
+import { StatusBadge } from '../../../../components/StatusBadge'
+import koreanewesCaps from './_generated/koreanews.capabilities.json'
+
+# Korean News Adapter
+
+<StatusBadge adapter="koreanews" />
+
+The Korean News adapter is a composite adapter aggregating Korean news from three sources: RSS feeds (default-ON), KoreaNewsCrawler (KNC) sidecar (default-OFF), and Daum (stub — disabled in v0.1 per robots.txt). Supports Korean (`ko`) only.
+
+## Status &amp; Compatibility
+
+| Field | Value |
+|-------|-------|
+| SPEC | SPEC-ADP-009 |
+| Source path | `internal/adapters/koreanews/` |
+| SourceID | `koreanews` |
+| Korean-locale optimized | Yes |
+| Last verified | 2026-05-31 |
+| Status | <StatusBadge adapter="koreanews" /> |
+
+## Overview
+
+The `koreanews` adapter aggregates Korean news from multiple sources. The default configuration activates RSS feeds from major Korean outlets. The optional KoreaNewsCrawler (KNC) Python sidecar provides additional crawling capability. `locale.go` handles EUC-KR legacy feed transcoding; `dedup.go` performs mecab-ko-aware near-duplicate detection to de-duplicate stories syndicated across Daum, KNC, and direct RSS feeds.
+
+**Use case:** Korean news monitoring, Korean media aggregation, Korean content trend analysis.
+
+<Callout type="info">
+  **Korean-locale prerequisites:**
+  - EUC-KR legacy feeds are automatically transcoded to UTF-8 (`koreanews/locale.go`)
+  - mecab-ko-aware dedup is active by default — some stories may appear deduplicated across sources
+  - KNC sidecar requires `USEARCH_KNC_ENDPOINT` if enabled
+  - See [Korean Locale Setup](/en/operators/korean-locale-setup) for mecab-ko + Meili plugin configuration
+</Callout>
+
+## Setup
+
+Authentication: not required — public RSS endpoint.
+
+The adapter uses public RSS feeds by default. No API credentials are needed for the RSS component. The KNC sidecar requires an additional endpoint configuration if activated.
+
+```bash
+# Verify the adapter is reachable (RSS-only mode):
+usearch query --source koreanews "한국 AI 연구"
+```
+
+**Optional KNC sidecar configuration:**
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `USEARCH_KNC_ENDPOINT` | — | Base URL of the KNC Python sidecar (`services/storm/koreanewscrawler/`) |
+| `USEARCH_ADP009_ENABLE_KNC` | `false` | Enable KNC sidecar integration |
+
+**Korean-locale prerequisites:**
+- mecab-ko morphological analysis is used for near-duplicate detection in `dedup.go`
+- For index-side Korean tokenization, see [Korean Locale Setup](/en/operators/korean-locale-setup)
+- EUC-KR legacy RSS feeds are automatically transcoded; no operator configuration needed
+
+## Capabilities
+
+<CapabilitiesTable data={koreanewesCaps} />
+
+**Note:** `RateLimitPerMin: 0` reflects that the rate is governed by the operator-configured RSS feed count × per-feed crawl interval, not a single upstream-enforced limit.
+
+## Query syntax
+
+Korean news queries are matched against article titles and bodies from RSS feed content:
+
+| Universal Search field | Adapter behaviour | Notes |
+|------------------------|-------------------|-------|
+| `Query.Text` | Korean text matched in feed content | mecab-ko tokenization applied in dedup layer |
+| `Query.MaxResults` | Limits result count | Defaults to 20 |
+
+**Source selection:** The adapter aggregates all enabled sources (RSS + KNC if enabled). The `Daum` source always returns `ErrDaumDisabled` in v0.1 per robots.txt compliance.
+
+## Rate limits
+
+- **Advertised limit:** 0 (operator-configured per-feed rate)
+- **Enforcement mechanism:** Operator-configured per-feed crawl interval; no external quota enforced
+- **Upstream quota documentation:** Individual Korean news outlet RSS feed terms of service (varies by outlet)
+- **Exhaustion behaviour:** If an RSS fetch returns HTTP 429, the adapter returns `CategoryRateLimited` for that source and proceeds with results from other sources.
+
+## Error reference
+
+See [Error Taxonomy](/en/reference/adapters/errors) for the shared `Category` reference.
+
+**Korean News-specific status rosetta:**
+
+| HTTP status | Category | Cause | Operator action |
+|-------------|----------|-------|-----------------|
+| ErrDaumDisabled | — | Daum source always disabled in v0.1 | Expected — do not configure Daum as a primary source |
+| KNC timeout | CategoryTransient | KNC sidecar unreachable | Check `USEARCH_KNC_ENDPOINT`; verify sidecar is running |
+| RSS 429 | CategoryRateLimited | Outlet rate limit | Reduce feed polling frequency |
+| RSS 503 | CategoryUnavailable | Outlet temporarily down | Adapter continues with other sources; one outlet being down does not fail the whole query |
+
+## Troubleshooting
+
+| Symptom | Likely cause | Diagnostic command | Resolution | Related SPECs |
+|---------|-------------|-------------------|------------|---------------|
+| Fewer results than expected for a major story | mecab-ko dedup collapsing syndicated articles | Check dedup logs | Expected behaviour — Hankyoreh + Daum + KNC syndicate the same story; dedup retains one | SPEC-ADP-009 |
+| KNC-enriched articles missing | KNC sidecar not running or not enabled | `curl $USEARCH_KNC_ENDPOINT/health` | Enable KNC: set `USEARCH_ADP009_ENABLE_KNC=true`; start sidecar | SPEC-ADP-009 |
+| EUC-KR encoding errors in old RSS feeds | Legacy feed not transcoded correctly | Check adapter logs for encoding errors | `locale.go` should auto-transcode; file a bug if a feed is failing | SPEC-ADP-009 |
+| Zero results for Korean query | mecab-ko tokenizer not installed | Check `dedup.go` for mecab-ko errors | Follow [Korean Locale Setup](/en/operators/korean-locale-setup) | SPEC-IDX-003 |
+| All results from a single outlet | Other outlets' RSS feeds not reachable | Check each feed URL manually | Verify network access to Korean news outlet domains | SPEC-DEPLOY-001 |
+
+## Version compatibility
+
+| usearch version | KNC sidecar version | Last verified | Verifier |
+|----------------|---------------------|---------------|----------|
+| v1.0.0 | Python sidecar (services/storm/koreanewscrawler/) | 2026-05-31 | manager-docs |
+
+## Related
+
+- [SPEC-ADP-009](/en/reference/architecture) — Korean News adapter specification
+- [Korean Locale Setup](/en/operators/korean-locale-setup) — mecab-ko + Meili plugin
+- [Naver adapter](/en/reference/adapters/naver) — alternative Korean-locale adapter
+- [End-user surface comparison](/en/end-users/surface-comparison)
+- [Deployment Helm values — KNC endpoint](/en/operators/deployment-helm#knc-endpoint)
+- [SPEC-IDX-003 Korean tokenization](/en/reference/architecture)
+- [SPEC-FAN-001 fanout retry semantics](/en/reference/architecture)
+- [SPEC-EVAL-003 Korean benchmark](/en/reference/architecture)

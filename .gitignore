@@ -217,3 +217,7 @@ dist-ssr/
 .vercel/
 .netlify/
 .firebase/
+
+# Compiled drift tool / scratch binaries
+/gen-adapter-ref
+/_bin/

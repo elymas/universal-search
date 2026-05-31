@@ -1,0 +1,129 @@
+---
+title: Korean News 어댑터
+description: Korean News (RSS + KNC) 복합 어댑터 레퍼런스 문서
+lastVerified: 2026-05-31
+sourceID: koreanews
+category: news
+---
+
+import { Callout } from 'nextra/components'
+import { CapabilitiesTable } from '../../../../components/CapabilitiesTable'
+import { StatusBadge } from '../../../../components/StatusBadge'
+import koreanewesCaps from '../../../en/reference/adapters/_generated/koreanews.capabilities.json'
+
+# Korean News 어댑터
+
+<StatusBadge adapter="koreanews" />
+
+Korean News 어댑터는 RSS 피드(기본 활성화), KoreaNewsCrawler(KNC) 사이드카(기본 비활성화), Daum(v0.1에서 robots.txt로 인해 비활성화)의 세 소스에서 한국어 뉴스를 집계하는 복합 어댑터입니다.
+
+## Status &amp; Compatibility
+
+| 항목 | 값 |
+|------|-----|
+| SPEC | SPEC-ADP-009 |
+| 소스 경로 | `internal/adapters/koreanews/` |
+| SourceID | `koreanews` |
+| 한국어 로케일 최적화 | 예 |
+| 최종 확인일 | 2026-05-31 |
+| 상태 | <StatusBadge adapter="koreanews" /> |
+
+## Overview
+
+`koreanews` 어댑터는 여러 소스에서 한국 뉴스를 집계합니다. 기본 설정은 주요 한국 언론사의 RSS 피드를 활성화합니다. 선택적 KoreaNewsCrawler(KNC) Python 사이드카로 추가 크롤링이 가능합니다.
+
+**핵심 특징:**
+- `locale.go`: EUC-KR 레거시 피드를 UTF-8로 자동 변환
+- `dedup.go`: mecab-ko 형태소 분석 기반 근접 중복 감지 (Daum + KNC + 직접 RSS 3중 신디케이션 중복 제거)
+- `knc.go`: Python 사이드카 브리지 (`USEARCH_KNC_ENDPOINT`)
+
+**활용 사례:** 한국 뉴스 모니터링, 한국 미디어 집계, 한국어 콘텐츠 트렌드 분석.
+
+<Callout type="info">
+  **한국어 로케일 사전 요구사항:**
+  - EUC-KR 레거시 피드는 자동으로 UTF-8로 변환됩니다 (`koreanews/locale.go`)
+  - mecab-ko 기반 중복 감지가 기본 활성화됩니다 — 여러 소스에서 발행된 기사가 하나로 통합될 수 있습니다
+  - KNC 사이드카를 활성화하려면 `USEARCH_KNC_ENDPOINT` 필요
+  - 인덱스 사이드 설정은 [한국어 로케일 설정](/ko/operators/korean-locale-setup) 참고
+</Callout>
+
+## Setup
+
+인증: 불필요 — 공개 RSS 엔드포인트.
+
+어댑터는 기본적으로 공개 RSS 피드를 사용합니다. RSS 컴포넌트에는 API 자격증명이 필요하지 않습니다.
+
+```bash
+# 어댑터 연결 확인 (RSS 전용 모드):
+usearch query --source koreanews "한국 AI 연구"
+```
+
+**선택적 KNC 사이드카 설정:**
+
+| 변수 | 기본값 | 목적 |
+|------|--------|------|
+| `USEARCH_KNC_ENDPOINT` | — | KNC Python 사이드카 기본 URL (`services/storm/koreanewscrawler/`) |
+| `USEARCH_ADP009_ENABLE_KNC` | `false` | KNC 사이드카 통합 활성화 |
+
+**한국어 로케일 사전 요구사항:**
+- mecab-ko 형태소 분석은 `dedup.go`에서 중복 감지에 사용됩니다
+- 인덱스 사이드 한국어 토크나이징은 [한국어 로케일 설정](/ko/operators/korean-locale-setup) 참고
+- EUC-KR 레거시 RSS 피드는 자동 변환됩니다; 별도 설정 불필요
+
+## Capabilities
+
+<CapabilitiesTable data={koreanewesCaps} />
+
+**참고:** `RateLimitPerMin: 0`은 운영자가 설정한 RSS 피드 수 × 피드당 크롤링 간격으로 속도가 결정됨을 의미합니다.
+
+## Query syntax
+
+| Universal Search 필드 | 어댑터 동작 | 비고 |
+|-----------------------|-----------|------|
+| `Query.Text` | RSS 피드 콘텐츠에서 한국어 텍스트 매칭 | mecab-ko 토크나이징이 중복 감지 레이어에 적용됨 |
+| `Query.MaxResults` | 결과 수 제한 | 기본값 20 |
+
+## Rate limits
+
+- **광고 제한:** 0 (운영자 설정 피드 속도)
+- **적용 메커니즘:** 운영자 설정 피드 크롤링 간격; 외부 할당량 없음
+- **업스트림 할당량 문서:** 각 한국 언론사 RSS 피드 이용 약관 (언론사별 상이)
+- **소진 동작:** RSS 피드에서 HTTP 429 반환 시 해당 소스에 `CategoryRateLimited` 반환, 다른 소스의 결과로 계속 진행
+
+## Error reference
+
+공유 `Category` 참조는 [오류 분류 체계](/ko/reference/adapters/errors)를 확인하세요.
+
+| 오류 유형 | Category | 원인 | 운영자 조치 |
+|----------|----------|------|------------|
+| ErrDaumDisabled | — | Daum 소스가 v0.1에서 항상 비활성화 | 정상 동작 — Daum을 주요 소스로 설정하지 마세요 |
+| KNC 타임아웃 | CategoryTransient | KNC 사이드카 연결 불가 | `USEARCH_KNC_ENDPOINT` 확인; 사이드카 실행 여부 확인 |
+| RSS 429 | CategoryRateLimited | 언론사 속도 제한 | 피드 폴링 빈도 줄이기 |
+| RSS 503 | CategoryUnavailable | 언론사 일시적 다운 | 어댑터는 다른 소스 결과로 계속 진행; 한 언론사 다운이 전체 쿼리 실패로 이어지지 않음 |
+
+## Troubleshooting
+
+| 증상 | 원인 가능성 | 진단 명령 | 해결 방법 | 관련 SPEC |
+|------|-----------|----------|----------|----------|
+| 주요 기사가 1건만 표시됨 | mecab-ko 중복 감지가 신디케이션 기사를 통합 | 중복 감지 로그 확인 | 정상 동작 — 한겨레 + Daum + KNC에서 같은 기사를 신디케이션; 중복 감지가 하나만 남김 | SPEC-ADP-009 |
+| KNC 보강 기사 없음 | KNC 사이드카 미실행 또는 미활성화 | `curl $USEARCH_KNC_ENDPOINT/health` | `USEARCH_ADP009_ENABLE_KNC=true` 설정 후 사이드카 시작 | SPEC-ADP-009 |
+| 구형 RSS 피드의 EUC-KR 인코딩 오류 | 레거시 피드 변환 실패 | 어댑터 로그에서 인코딩 오류 확인 | `locale.go`가 자동 변환해야 함; 피드 실패 시 버그 리포트 | SPEC-ADP-009 |
+| 한국어 쿼리 결과 없음 | mecab-ko 토크나이저 미설치 | `dedup.go`에서 mecab-ko 오류 확인 | [한국어 로케일 설정](/ko/operators/korean-locale-setup) 따라하기 | SPEC-IDX-003 |
+| 한 언론사에서만 결과 | 다른 언론사 RSS 피드 연결 불가 | 각 피드 URL 수동 확인 | 한국 언론사 도메인으로의 네트워크 접근 확인 | SPEC-DEPLOY-001 |
+
+## Version compatibility
+
+| usearch 버전 | KNC 사이드카 버전 | 최종 확인일 | 확인자 |
+|-------------|----------------|------------|--------|
+| v1.0.0 | Python 사이드카 (services/storm/koreanewscrawler/) | 2026-05-31 | manager-docs |
+
+## Related
+
+- [SPEC-ADP-009](/ko/reference/architecture) — Korean News 어댑터 명세
+- [한국어 로케일 설정](/ko/operators/korean-locale-setup) — mecab-ko + Meili 플러그인
+- [Naver 어댑터](/ko/reference/adapters/naver) — 대체 한국어 로케일 어댑터
+- [서비스 비교](/ko/end-users/surface-comparison)
+- [배포 Helm 값 — KNC 엔드포인트](/ko/operators/deployment-helm#knc-endpoint)
+- [SPEC-IDX-003 한국어 토크나이징](/ko/reference/architecture)
+- [SPEC-FAN-001 팬아웃 재시도 의미론](/ko/reference/architecture)
+- [SPEC-EVAL-003 한국어 벤치마크](/ko/reference/architecture)

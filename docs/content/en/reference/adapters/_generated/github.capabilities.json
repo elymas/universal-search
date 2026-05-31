@@ -1,0 +1,12 @@
+{
+  "sourceID": "github",
+  "requiresAuth": true,
+  "authEnvVars": [
+    "USEARCH_GITHUB_TOKEN"
+  ],
+  "rateLimitPerMin": 30,
+  "defaultMaxResults": 25,
+  "sourcePath": "internal/adapters/github/github.go",
+  "sourceLine": 138,
+  "extractedAt": "2026-05-30T22:44:16Z"
+}

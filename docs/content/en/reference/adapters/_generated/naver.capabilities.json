@@ -1,0 +1,13 @@
+{
+  "sourceID": "naver",
+  "requiresAuth": true,
+  "authEnvVars": [
+    "NAVER_CLIENT_ID",
+    "NAVER_CLIENT_SECRET"
+  ],
+  "rateLimitPerMin": 10,
+  "defaultMaxResults": 25,
+  "sourcePath": "internal/adapters/naver/naver.go",
+  "sourceLine": 180,
+  "extractedAt": "2026-05-30T22:44:16Z"
+}

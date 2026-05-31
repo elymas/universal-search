@@ -1,0 +1,120 @@
+---
+title: SearXNG Adapter
+description: Reference documentation for the SearXNG self-hosted meta-search bridge adapter
+lastVerified: 2026-05-31
+sourceID: searxng
+category: search-engine
+---
+
+import { Callout } from 'nextra/components'
+import { CapabilitiesTable } from '../../../../components/CapabilitiesTable'
+import { StatusBadge } from '../../../../components/StatusBadge'
+import searxngCaps from './_generated/searxng.capabilities.json'
+
+# SearXNG Adapter
+
+<StatusBadge adapter="searxng" />
+
+The SearXNG adapter bridges to a self-hosted SearXNG instance. No external rate limit applies — rate governance is internal to the SearXNG instance itself.
+
+## Status &amp; Compatibility
+
+| Field | Value |
+|-------|-------|
+| SPEC | SPEC-ADP-007 |
+| Source path | `internal/adapters/searxng/` |
+| SourceID | `searxng` |
+| Last verified | 2026-05-31 |
+| Status | <StatusBadge adapter="searxng" /> |
+
+## Overview
+
+SearXNG is a free, open-source meta-search engine that aggregates results from 70+ search providers (Google, Bing, DuckDuckGo, and many others). The Universal Search SearXNG adapter proxies queries to an operator-deployed SearXNG instance. All results are normalised to `DocTypeArticle`.
+
+**Use case:** general web search, privacy-preserving multi-engine aggregation, self-hosted search infrastructure.
+
+<Callout type="info">
+  SearXNG runs as a separate Docker container. See the deployment guide for setup instructions.
+</Callout>
+
+## Setup
+
+Authentication: not required — self-hosted endpoint.
+
+SearXNG does not require authentication for the search endpoint. The adapter connects to the operator-deployed SearXNG instance. Configure the base URL via the `USEARCH_SEARXNG_URL` environment variable.
+
+```bash
+# Default URL (Docker Compose):
+# USEARCH_SEARXNG_URL=http://searxng:8080
+
+# Verify connectivity:
+curl "http://localhost:8080/search?q=test&format=json"
+
+# Test via usearch:
+usearch query --source searxng "best practices microservices"
+```
+
+**Environment variables:**
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `USEARCH_SEARXNG_URL` | `http://searxng:8080` | Base URL of the SearXNG instance |
+
+## Capabilities
+
+<CapabilitiesTable data={searxngCaps} />
+
+**Note:** `RateLimitPerMin: 0` means no externally-visible rate limit. Individual backing-engine limits are handled server-side by SearXNG itself (H3 audit fix).
+
+## Query syntax
+
+SearXNG queries are forwarded as free-text strings:
+
+| Universal Search field | SearXNG parameter | Notes |
+|------------------------|------------------|-------|
+| `Query.Text` | `q={text}` | Forwarded verbatim to SearXNG |
+| `Query.MaxResults` | `pageno` calculation | SearXNG paginates; adapter maps MaxResults to page requests |
+
+**Categories:** SearXNG's engine categories (general, images, news, etc.) can be configured in the SearXNG instance itself, not via per-query parameters at V1.
+
+## Rate limits
+
+- **Advertised limit:** 0 (no external rate limit)
+- **Enforcement mechanism:** None — self-hosted. SearXNG internally rate-limits its backing engines.
+- **Upstream quota documentation:** [SearXNG admin docs](https://docs.searxng.org/admin/engines/) — configure per-engine limits in `settings.yml`
+- **Exhaustion behaviour:** If the SearXNG instance returns 429 (unusual for self-hosted), the adapter returns `CategoryRateLimited`. Normally responses are 200 even when some backing engines fail.
+
+## Error reference
+
+See [Error Taxonomy](/en/reference/adapters/errors) for the shared `Category` reference.
+
+**SearXNG-specific status rosetta:**
+
+| HTTP status | Category | Cause | Operator action |
+|-------------|----------|-------|-----------------|
+| 503 | CategoryUnavailable | SearXNG container not running | Start SearXNG: `docker compose up searxng` |
+| 400 | CategoryPermanent | Malformed query sent to SearXNG | Check query string encoding |
+| Network timeout | CategoryTransient | SearXNG container unreachable | Verify `USEARCH_SEARXNG_URL` and container networking |
+
+## Troubleshooting
+
+| Symptom | Likely cause | Diagnostic command | Resolution | Related SPECs |
+|---------|-------------|-------------------|------------|---------------|
+| `CategoryUnavailable` on all SearXNG queries | SearXNG container not running | `docker compose ps searxng` | Start SearXNG container; check logs | SPEC-ADP-007 |
+| Low-quality results | SearXNG engines not configured | Check `deploy/searxng/settings.yml` | Enable high-quality engines in SearXNG settings | SPEC-ADP-007 |
+| Rate errors from backing engines | Individual engine quotas exceeded | Check SearXNG logs for engine-specific errors | Disable high-volume engines or add delays in SearXNG settings | SPEC-DEPLOY-001 |
+
+## Version compatibility
+
+| usearch version | SearXNG version | Last verified | Verifier |
+|----------------|----------------|---------------|----------|
+| v1.0.0 | 2024.x (docker image pinned) | 2026-05-31 | manager-docs |
+
+## Related
+
+- [SPEC-ADP-007](/en/reference/architecture) — SearXNG adapter specification
+- [End-user surface comparison](/en/end-users/surface-comparison)
+- [Deployment Helm values](/en/operators/deployment-helm)
+- [SearXNG official docs](https://docs.searxng.org/)
+- [SPEC-FAN-001 fanout retry semantics](/en/reference/architecture)
+- [SPEC-CACHE-001 5-phase fallback](/en/reference/architecture)

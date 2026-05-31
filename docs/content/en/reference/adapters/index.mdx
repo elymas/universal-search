@@ -1,92 +1,44 @@
 ---
 title: Adapter Catalog
-description: Search source adapters available in Universal Search
-lastUpdated: 2026-05-30
+description: Filterable catalog of all 10 Universal Search production adapters with status badges
+lastVerified: 2026-05-31
 ---
 
-import { Callout } from 'nextra/components'
+import { AdapterCatalog } from '../../../../components/AdapterCatalog'
 
 # Adapter Catalog
 
-Universal Search uses a pluggable adapter system. Each adapter wraps a search source and implements the common `Adapter` interface (see [Architecture](/en/reference/architecture)).
+Universal Search includes 10 production adapters. Each adapter wraps a search source and implements the common `Adapter` interface (`pkg/types.Adapter`).
 
-<Callout type="info">
-  This page documents the V1 adapter set. A plugin system for third-party adapters is planned in **SPEC-DOC-002**. See that SPEC for the adapter API contract and plugin development guide.
-</Callout>
+Use the category filter below to narrow the list. For shared error categories, see the [Error Taxonomy](/en/reference/adapters/errors) page.
 
-## Built-in Adapters
+<AdapterCatalog />
 
-| Name | Category | Locale | Auth Required | Description |
-|---|---|---|---|---|
-| `searxng` | web | any | No | SearXNG metasearch engine (70+ providers) |
-| `arxiv` | academic | any | No | arXiv preprints + Semantic Scholar |
-| `github` | technical | any | No | GitHub repositories and issues |
-| `hn` | social | any | No | Hacker News discussions |
-| `reddit` | social | any | No | Reddit top posts |
-| `youtube` | social | any | No | YouTube video transcripts |
-| `naver` | korean | ko | Yes | Naver Search (Korean-locale) |
-| `koreanews` | korean | ko | No | Korean news RSS aggregator |
-| `social` | social | any | No | Cross-platform social aggregator |
+## Adapter Lifecycle
 
-## Adapter Details
+Status badges reflect the adapter's lifecycle classification (SPEC-DOC-002 D5):
 
-### searxng
+| Badge | Meaning |
+|-------|---------|
+| **stable** | success rate ≥ 0.95 (7-day rolling) |
+| **beta** | success rate 0.80–0.94 |
+| **disabled** | compile/flag-gated stub — no live path in V1 (currently: `x`) |
+| **deprecated** | reserved for post-V1 adapter removal |
 
-The primary web search adapter. Routes queries to SearXNG, which fans out to 70+ search engines including Google, Bing, DuckDuckGo, and specialized academic/technical engines.
+Status data is sourced from the EVAL-002 reliability dashboard. For live reliability metrics, see [SPEC-EVAL-002 Adapter Reliability Dashboard](/en/reference/architecture).
 
-- **Engine**: SearXNG (AGPL-3.0, runs as separate Docker container)
-- **Rate limits**: Configured in SearXNG settings (see `deploy/searxng/`)
-- **Configuration**: `SEARXNG_URL` environment variable
+## Korean-Locale Adapters
 
-### arxiv
+Two adapters are optimised for Korean-language content:
 
-Academic paper retrieval from arXiv and Semantic Scholar.
+- **[Naver](/en/reference/adapters/naver)** — requires `NAVER_CLIENT_ID` + `NAVER_CLIENT_SECRET`; Korean UTF-8 queries forwarded verbatim
+- **[Korean News](/en/reference/adapters/koreanews)** — public RSS + optional KNC sidecar; mecab-ko-aware dedup
 
-- **Sources**: arXiv preprint server, Semantic Scholar API
-- **Best for**: Computer science, physics, mathematics, biology papers
-
-### github
-
-GitHub repository and issue search.
-
-- **Sources**: GitHub REST API v3 (public repositories)
-- **Rate limits**: 60 req/hour unauthenticated; set `GITHUB_TOKEN` for 5000 req/hour
-
-### hn (Hacker News)
-
-Hacker News discussions via Algolia HN Search API.
-
-- **Sources**: Hacker News (news.ycombinator.com)
-- **Best for**: Tech community discussions, startup news
-
-### naver
-
-Korean-locale search via Naver Search API.
-
-- **Requires**: `NAVER_CLIENT_ID` + `NAVER_CLIENT_SECRET` environment variables
-- **Sources**: Naver News, Naver Blog, Naver Knowledge iN
-- **Locale**: Korean (`ko`) only
-
-See [Korean Locale Setup](/en/operators/korean-locale-setup) for configuration.
-
-### koreanews
-
-Korean news RSS aggregator (Naver-independent).
-
-- **Sources**: Major Korean news outlets via RSS (조선일보, 한겨레, 경향신문, etc.)
-- **Requires**: No API key
-- **Locale**: Korean (`ko`) only
-
-## Plugin System (Planned — SPEC-DOC-002)
-
-A third-party adapter plugin system is planned for V1.1. See **SPEC-DOC-002** for:
-- Adapter interface contract (`internal/adapters/Adapter`)
-- Plugin registration API
-- Testing requirements for contributed adapters
-- Example adapter skeleton
+See [Korean Locale Setup](/en/operators/korean-locale-setup) for index-side tokenization prerequisites.
 
 ## Related
 
-- [`usearch sources`](/en/reference/cli/sources) — CLI adapter management
-- [MCP: list_sources](/en/reference/mcp) — adapter list via MCP
-- [Korean Locale Setup](/en/operators/korean-locale-setup) — Naver adapter configuration
+- [Error Taxonomy](/en/reference/adapters/errors) — shared `Category` reference
+- [Architecture reference](/en/reference/architecture) — adapter interface contract
+- [Korean Locale Setup](/en/operators/korean-locale-setup)
+- [Deployment guide](/en/operators/deployment-helm)

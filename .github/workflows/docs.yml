@@ -194,6 +194,50 @@ jobs:
           fi
           echo "CLI reference is in sync with binary."
 
+  # ── Job 7b: Adapter capabilities drift gate (SPEC-DOC-002 REQ-ADPDOC-007) ────
+  gen-adapter-ref-drift:
+    name: gen-adapter-ref-drift
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Check adapter Capabilities drift
+        run: |
+          go run ./tools/gen-adapter-ref/ -root . --check
+        # Fails if committed _generated/*.capabilities.json differs from freshly extracted
+
+  # ── Job 7c: Adapter page completeness gate (SPEC-DOC-002 REQ-ADPDOC-002) ────
+  adapter-page-completeness:
+    name: adapter-page-completeness
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check adapter page completeness
+        run: |
+          chmod +x scripts/check-adapter-page-completeness.sh
+          scripts/check-adapter-page-completeness.sh
+
+  # ── Job 7d: Credential placeholder lint (SPEC-DOC-002 REQ-ADPDOC-018) ───────
+  check-doc-credentials:
+    name: check-doc-credentials
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Credential shape lint
+        run: |
+          chmod +x scripts/check-doc-credentials.sh
+          scripts/check-doc-credentials.sh
+
   # ── Job 8: Docker build verify (no publish — SPEC-DOC-001 D deferred) ─────
   docker-build:
     name: docker-build-verify

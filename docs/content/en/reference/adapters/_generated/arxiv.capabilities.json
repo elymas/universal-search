@@ -1,0 +1,10 @@
+{
+  "sourceID": "arxiv",
+  "requiresAuth": false,
+  "authEnvVars": [],
+  "rateLimitPerMin": 20,
+  "defaultMaxResults": 25,
+  "sourcePath": "internal/adapters/arxiv/arxiv.go",
+  "sourceLine": 114,
+  "extractedAt": "2026-05-30T22:44:16Z"
+}

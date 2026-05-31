@@ -2,7 +2,18 @@
 
 Status: draft companion to spec.md
 Author: limbowl via manager-spec
-Date: 2026-05-22
+Date: 2026-05-22 (updated 2026-05-31, v0.2.0)
+Version: 0.2.0
+
+> v0.2.0 reconciliation (2026-05-31): aligned this plan with the 4
+> code-spec corrections in spec.md HISTORY v0.2.0 — (A1) HN page slug
+> is `hackernews` (SourceID), not `hn`; (A2) the AST tool resolves the
+> `social.go` switch-dispatch helper funcs `blueskyCapabilities()`/
+> `xCapabilities()` (no `bluesky.go`/`x.go`); (A3) `x` is documented as
+> a DISABLED v0 stub (not "alpha"/"degraded"); (A4) the V1
+> `adapter-status.json` is STATIC + hand-curated (EVAL-002 ships no
+> export / no `lifecycle` field) — the live cron export, schema
+> validation, and `adapter-status-staleness` automation are deferred.
 Methodology: **DDD** (ANALYZE-PRESERVE-IMPROVE per `.claude/rules/
 moai/workflow/workflow-modes.md`). DDD-mode justification: 본 SPEC은
 10개 production 어댑터의 **이미 작동하는 행위를 describe**하는
@@ -71,12 +82,14 @@ required).
    Table>` 컴포넌트로 JSON을 import 가능. 인프라가 콘텐츠 의존성
    순서.
 
-3. **Status badge data feed parallel** — `<StatusBadge>` 컴포넌트
-   + JSON Schema + EVAL-002 dashboard amendment 협의는 Phase 2와
-   parallel. EVAL-002 export job이 아직 실장되지 않은 경우 (open
-   question §8.4 → likely scenario) Phase 2 끝에 static 초기
-   `adapter-status.json` 작성 → Phase 5 정도에서 EVAL-002 cron
-   교체. blocking이 아닌 graceful degradation.
+3. **Status badge data feed — static at V1 (A4)** — `<StatusBadge>`
+   컴포넌트는 STATIC, hand-curated `adapter-status.json`에서
+   렌더링. EVAL-002 (PR #44)는 `adapter-status.json` export도
+   `lifecycle` 필드도 제공하지 않으므로, manager-docs가 EVAL-002
+   dashboard를 읽어 JSON을 직접 채운다. live cron export + JSON
+   schema validation + staleness 자동화는 post-V1 EVAL-002
+   amendment로 deferred. V1 path는 static feed 단일 경로
+   (이전의 "static→live 교체" 시나리오 제거).
 
 4. **EN-first content authoring, KO Tier-1 parallel** — Phase 3
    (auto-generated infra-light pages: reddit, hn, arxiv,
@@ -122,8 +135,9 @@ Contract draft (run phase에서 evaluator-active와 finalize):
 - [ ] 12개 EN MDX 페이지 작성 — 모두 10-section 강제 통과
 - [ ] 4개 KO Tier-1 MDX 페이지 + native reviewer 검수 기록
       (`docs/content/ko/CONTRIBUTING.md`)
-- [ ] CI `adapter-page-completeness` + `adapter-status-staleness`
-      + `check-doc-credentials` job 활성화 + green baseline
+- [ ] CI `adapter-page-completeness` + `check-doc-credentials` job
+      활성화 + green baseline (A4: `adapter-status-staleness`는
+      static V1 feed에는 deferred)
 - [ ] `docs/lychee.toml` 에 NFR-ADPDOC-005 provider URL allowlist
       추가, internal links 100% 해결
 - [ ] `scripts/check-bilingual-coverage.sh` exclude pattern 확장
@@ -133,9 +147,10 @@ Contract draft (run phase에서 evaluator-active와 finalize):
       `docs/content/en/operators/deployment-helm.mdx` 에 본 SPEC의
       페이지로 향하는 cross-link 추가 (DOC-001 페이지 modification,
       DOC-001 owner 협의)
-- [ ] 어댑터 status badge data: EVAL-002 dashboard export job 실장
-      OR static 초기 `adapter-status.json` 작성 (open question
-      §8.4 resolution)
+- [ ] 어댑터 status badge data: STATIC, hand-curated
+      `adapter-status.json` 작성 (manager-docs가 EVAL-002 dashboard를
+      읽어 populate; A4 — EVAL-002는 export를 제공하지 않음). 각 키는
+      real SourceID; `x`는 `lifecycle: disabled`.
 
 ### Priority dimension
 
@@ -176,9 +191,11 @@ allowed per `constitution.md` §11.4 contract evolution rule).
   으로 검토하고 8개 open question에 대한 user 답변 collect
   (AskUserQuestion via MoAI orchestrator):
   - §8.1 Korean-tokenizer cross-link only (D6 confirmation)
-  - §8.2 Status badge taxonomy ↔ EVAL-002 lifecycle field alignment
+  - §8.2 RESOLVED (A4) — DOC-002 owns the taxonomy; no EVAL-002
+    `lifecycle` alignment needed
   - §8.3 Bluesky vs X page split (D3 confirmation)
-  - §8.4 EVAL-002 dashboard export job timing
+  - §8.4 RESOLVED (A4) — V1 ships static `adapter-status.json`;
+    live EVAL-002 export deferred
   - §8.5 `check-bilingual-coverage.sh` exclude pattern extension
         approval from DOC-001 owner
   - §8.6 `tools/gen-adapter-ref/` location convention
@@ -231,8 +248,13 @@ intersection 을 detailed map으로 inventory.
     계산
   - `docs/content/ko/CONTRIBUTING.md` (DOC-001) reviewer log
     엔트리 포맷 확인
-- SPEC-EVAL-002 dashboard 의 `lifecycle` field 현재 schema 확인
-  → DOC-002 D5 taxonomy 와 alignment delta 측정.
+- SPEC-EVAL-002 (PR #44) 실제 artifacts 확인 — Grafana
+  `adapter-reliability` dashboard + `/admin/health/adapters` +
+  `usearch_adapter_health_status` gauge. `lifecycle` field도
+  `adapter-status.json` export도 없음을 confirm (A4). DOC-002의
+  static `adapter-status.json`에 채울 per-adapter lifecycle 값을
+  dashboard read로 결정 (alignment delta 측정 아님 — DOC-002가
+  taxonomy를 단독 소유).
 
 **Files read (read-only)**:
 
@@ -275,11 +297,30 @@ documenting:
 
 #### 2.1 `tools/gen-adapter-ref/` Go program
 
+- The tool is driven by a SourceID-keyed adapter registry (A2),
+  NOT a naive per-file `{adapter}.go` glob. The registry maps each
+  SourceID → (Go file, Capabilities-producing func). Three real
+  shapes must be handled:
+  - Standard adapters: `Capabilities()` method returns a struct
+    literal in `internal/adapters/{pkg}/{pkg}.go`.
+  - HN: pkg dir `hn/`, SourceID `hackernews` (`hn.go:101`) → emit
+    `hackernews.capabilities.json` (A1).
+  - `social`: `Capabilities()` (`social.go:132`) is a switch over
+    `a.subSource` returning helper funcs `blueskyCapabilities()`
+    (`social.go:144`) + `xCapabilities()` (`social.go:164`); NO
+    `bluesky.go`/`x.go`. The tool resolves both helper funcs and
+    emits two JSONs (`bluesky`, `x`) (A2).
+  - `noop` (SourceID `reference`) is excluded.
 - RED: `tools/gen-adapter-ref/extract_test.go` writes failing
   tests for AST extraction:
   - Golden test: parse `tools/gen-adapter-ref/testdata/
     fixture-adapter.go` → assert extracted JSON matches
     `testdata/fixture-adapter.expected.json`
+  - Golden test: a `social`-style fixture (switch + two helper
+    funcs) → assert two JSON fragments emitted with correct
+    SourceIDs and `RateLimitPerMin` (600 / 0)
+  - Golden test: a `hackernews`-style fixture (pkg name ≠ SourceID)
+    → assert output filename keyed by SourceID
   - Edge case: nil `AuthEnvVars` slice → JSON `"authEnvVars":
     null`
   - Edge case: non-literal `RateLimitPerMin` (e.g., `const`
@@ -287,8 +328,10 @@ documenting:
   - Edge case: missing `Capabilities()` method → skip with
     informational log
 - GREEN: minimal `tools/gen-adapter-ref/main.go` + `extract.go`
-  implementing `go/parser` AST walk per REQ-ADPDOC-007 schema.
-- REFACTOR: extract `parseStructLiteral`, `findCapabilitiesMethod`,
+  implementing the registry-driven `go/parser` AST walk +
+  helper-func resolution per REQ-ADPDOC-007 schema.
+- REFACTOR: extract `parseStructLiteral`, `resolveCapabilitiesFunc`
+  (handles both methods and package-level helper funcs),
   `emitJSON` into separate testable functions; achieve 85%+
   coverage.
 
@@ -343,9 +386,12 @@ documenting:
   - Add `adapter-page-completeness` job — `scripts/check-
     adapter-page-completeness.sh` (Phase 3 deliverable; can
     no-op pass until adapter pages exist)
-  - Add `adapter-status-staleness` job — mtime check on
-    `_generated/adapter-status.json`
   - Add `check-doc-credentials` job
+  - NOTE (A4): NO `adapter-status-staleness` job at V1. The V1
+    `adapter-status.json` is a STATIC hand-curated file; an
+    mtime gate is meaningless for it. The staleness automation +
+    live-export schema validation are DEFERRED to a post-V1
+    EVAL-002 amendment (NFR-ADPDOC-003).
 - Initial CI run validates all jobs green on baseline.
 
 **Files created**:
@@ -363,10 +409,12 @@ documenting:
 - `docs/components/CapabilitiesTable.tsx`,
   `CapabilitiesTable.test.tsx`
 - `docs/components/AdapterCatalog.tsx`, `AdapterCatalog.test.tsx`
-- 10× `docs/content/en/reference/adapters/_generated/{adapter}.
-  capabilities.json` (baseline)
-- `docs/content/en/reference/adapters/_generated/adapter-status.
-  schema.json` (JSON Schema definition)
+- 10× `docs/content/en/reference/adapters/_generated/{sourceID}.
+  capabilities.json` (baseline; slugs = SourceIDs incl.
+  `hackernews`, `bluesky`, `x`)
+- (A4) NO `adapter-status.schema.json` at V1 — the static feed has
+  no build-time JSON-Schema validation step; deferred to the
+  post-V1 EVAL-002 live-export amendment.
 
 **Files modified**:
 
@@ -392,8 +440,8 @@ file-by-file iteration):
 
 #### 3.1 Per-page authoring (5 EN pages)
 
-For each of `reddit.mdx`, `hn.mdx`, `arxiv.mdx`, `youtube.mdx`,
-`searxng.mdx`:
+For each of `reddit.mdx`, `hackernews.mdx` (SourceID slug; Go pkg
+dir is `hn/`), `arxiv.mdx`, `youtube.mdx`, `searxng.mdx`:
 
 - Frontmatter: `lastVerified: 2026-05-22`, `category`, `lifecycle`
   (from EVAL-002 dashboard read OR static fallback).
@@ -429,8 +477,8 @@ For each of `reddit.mdx`, `hn.mdx`, `arxiv.mdx`, `youtube.mdx`,
 #### 3.3 `_meta.json` sidebar ordering
 
 - `docs/content/en/reference/adapters/_meta.json` with key order:
-  `index, reddit, hn, arxiv, github, youtube, bluesky, x,
-  searxng, naver, koreanews, errors`.
+  `index, reddit, hackernews, arxiv, github, youtube, bluesky, x,
+  searxng, naver, koreanews, errors` (page slugs = SourceIDs).
 
 #### 3.4 `scripts/check-adapter-page-completeness.sh` full impl
 
@@ -448,7 +496,7 @@ For each of `reddit.mdx`, `hn.mdx`, `arxiv.mdx`, `youtube.mdx`,
 **Files created**:
 
 - `docs/content/en/reference/adapters/reddit.mdx`
-- `docs/content/en/reference/adapters/hn.mdx`
+- `docs/content/en/reference/adapters/hackernews.mdx`
 - `docs/content/en/reference/adapters/arxiv.mdx`
 - `docs/content/en/reference/adapters/youtube.mdx`
 - `docs/content/en/reference/adapters/searxng.mdx`
@@ -514,12 +562,17 @@ package) + still missing koreanews EN.
 #### 4.4 `x.mdx`
 
 - All 10 sections per template.
-- Section 1 (Status & Compatibility): badge likely `alpha` per
-  research §1.7 (degraded syndication).
-- Section 2 (Overview): explicit "degraded mode — syndication
-  endpoint health is opaque" framing.
-- Section 6 (Rate limits): "none advertised — degraded mode"
-  formulation per REQ-ADPDOC-012 enumeration.
+- Section 1 (Status & Compatibility): badge `disabled` (A3).
+  `xCapabilities()` (`social.go:164-177`) is a DISABLED v0 stub —
+  "DISABLED in v0 ... no live path wired", `RateLimitPerMin: 0`,
+  `DefaultMaxResults: 0`.
+- Section 2 (Overview): explicit "DISABLED in V1 — no live search
+  path; requires `USEARCH_X_ENABLED=true` + SPEC-ADP-006-XENABLE
+  (pending) to enable" framing. NOT "alpha"/"degraded".
+- Section 3 (Setup): document the `USEARCH_X_ENABLED` flag gate
+  and that the adapter returns no results while disabled.
+- Section 6 (Rate limits): "none — disabled v0 stub" formulation
+  per REQ-ADPDOC-012 enumeration.
 - "Shared implementation notes" callout linking to `bluesky.mdx`.
 
 #### 4.5 `koreanews.mdx` EN
@@ -584,15 +637,18 @@ native reviewer signoff.
   `docs/content/ko/CONTRIBUTING.md` (DOC-001 ship state)
   reviewer log per REQ-ADPDOC-017 + NFR-ADPDOC-006.
 
-#### 5.3 EVAL-002 status feed reconciliation
+#### 5.3 Static status feed finalization (A4)
 
-- If EVAL-002 dashboard export job (open question §8.4) is now
-  shipping `adapter-status.json` daily → switch from static
-  initial JSON to live feed; verify CI `adapter-status-staleness`
-  passes.
-- If EVAL-002 export job still pending → file follow-up SPEC-
-  EVAL-002 amendment ticket; static initial JSON remains in
-  place until export job lands.
+- Finalize the STATIC, hand-curated `adapter-status.json`:
+  manager-docs reads the EVAL-002 `adapter-reliability` Grafana
+  dashboard + `/admin/health/adapters` to assign each adapter's
+  `lifecycle` (+ `successRate7d` where applicable) and a
+  `verifiedAt` timestamp. `x` → `lifecycle: disabled`.
+- File a follow-up SPEC-EVAL-002 amendment ticket to add a live
+  `adapter-status.json` cron export + JSON-Schema validation +
+  staleness automation (post-V1). Until that lands, the static
+  feed is authoritative and is refreshed manually on adapter
+  status changes (tracked via per-page `lastVerified`).
 
 **Files created**:
 
@@ -638,8 +694,8 @@ log shows 4 entries → Phase 6 unlock.
 - Modify `scripts/check-bilingual-coverage.sh` (DOC-001
   ownership) per REQ-ADPDOC-017:
   - Extend EXCLUDE pattern to skip `docs/content/en/reference/
-    adapters/{reddit,hn,arxiv,github,youtube,bluesky,x,searxng}
-    .mdx` (Tier-2 EN-only).
+    adapters/{reddit,hackernews,arxiv,github,youtube,bluesky,x,
+    searxng}.mdx` (Tier-2 EN-only; page slugs = SourceIDs).
   - Extend REQUIRED pattern to include `docs/content/ko/
     reference/adapters/{index,naver,koreanews,errors}.mdx`
     (Tier-1 KO required).
@@ -662,9 +718,11 @@ log shows 4 entries → Phase 6 unlock.
   - `bilingual-coverage` (DOC-001 REQ-DOC-016 + DOC-002
     REQ-ADPDOC-017 extension).
   - `adapter-page-completeness` (NEW, DOC-002 REQ-ADPDOC-002 +
-    NFR-ADPDOC-004).
-  - `adapter-status-staleness` (NEW, DOC-002 NFR-ADPDOC-003).
+    NFR-ADPDOC-004; includes the `lastVerified` staleness warn of
+    REQ-ADPDOC-015).
   - `check-doc-credentials` (NEW, DOC-002 REQ-ADPDOC-018).
+  - (A4) NO `adapter-status-staleness` job at V1 — deferred with
+    the live EVAL-002 export (NFR-ADPDOC-003).
 - Total wall-clock measured; assert NFR-ADPDOC-001 (≤ 60s
   drift gate) + NFR-ADPDOC-002 (≤ 30s completeness gate) +
   combined ≤ 6 min per NFR-ADPDOC-001 ceiling.
@@ -716,8 +774,10 @@ Phase 7 unlock.
     "complete adapter reference" exit criterion.
   - SPEC-DEPLOY-001 owner notified — Helm values cross-links
     in `deployment-helm.mdx` ready for DEPLOY-001 to consume.
-  - SPEC-EVAL-002 owner notified — if export job still pending,
-    follow-up amendment SPEC ticket created.
+  - SPEC-EVAL-002 owner notified — follow-up amendment ticket
+    (live `adapter-status.json` export + schema validation +
+    staleness automation) filed, since EVAL-002 ships no such
+    export at V1 (A4).
 
 **Deliverables**: PR merged; docs site live with `reference/
 adapters/` populated; SPEC status `implemented`; CHANGELOG
@@ -737,7 +797,7 @@ Summary count per Phase (priority-ordered):
 |-------|--------|--------|----------------|------------|-------|---------|--------|-------|
 | 0 | — | — | — | — | — | — | — | plan-auditor + DOC-001 PASS gate |
 | 1 | — | — | — | — | — | — | — | ANALYZE inventory; read-only |
-| 2 | — | — | 11 + schema | 3 | 1 | 3 | 5 jobs added | drift + lint + components |
+| 2 | — | — | 10 (capabilities; no schema at V1) | 3 | 1 | 3 | 4 jobs added | drift + lint + components |
 | 3 | 6 (5 adp + errors) + _meta | — | — | — | — | 1 (completeness full impl) | — | no-auth EN |
 | 4 | 5 (github, naver, bluesky, x, koreanews) | — | — | — | — | — | — | auth + Korean EN; deployment-helm modify |
 | 5 | 1 (index replaces placeholder) | 4 + _meta | adapter-status feed | — | — | — | — | catalog + KO Tier-1; CONTRIBUTING modify |
@@ -748,7 +808,8 @@ Cumulative at Phase 7 ship:
 
 - EN MDX: 12 (10 adapter + index + errors)
 - KO MDX: 4 (naver + koreanews + errors + index)
-- Generated JSON: 12 (10 Capabilities + 1 status + 1 schema)
+- Generated JSON: 11 (10 Capabilities + 1 static status feed; NO
+  `adapter-status.schema.json` at V1 — A4)
 - React components: 3 (StatusBadge, CapabilitiesTable,
   AdapterCatalog) + 3 test files
 - Go tools: 1 (`tools/gen-adapter-ref/`)
@@ -756,10 +817,11 @@ Cumulative at Phase 7 ship:
   `check-adapter-page-completeness.sh`, `check-doc-credentials.sh`,
   `.docs-credentials-patterns.toml`) + 1 modified
   (`check-bilingual-coverage.sh`)
-- CI jobs added to docs.yml: 4 new
+- CI jobs added to docs.yml: 3 new
   (`gen-adapter-ref-drift`, `adapter-page-completeness`,
-  `adapter-status-staleness`, `check-doc-credentials`) +
-  1 modified (`bilingual-coverage` exclude pattern)
+  `check-doc-credentials`) + 1 modified (`bilingual-coverage`
+  exclude pattern). The `adapter-status-staleness` job is
+  DEFERRED with the live EVAL-002 export (A4).
 - DOC-001 ship state modifications: 4 files
   (`theme.config.tsx`, `lychee.toml`, `surface-comparison.mdx`,
   `deployment-helm.mdx`, `CONTRIBUTING.md` — all require DOC-001
@@ -825,11 +887,13 @@ re-planning gate; user notified via AskUserQuestion (orchestrator).
 ### 6.3 Drift gates
 
 - `gen-adapter-ref-drift`: REQ-ADPDOC-007 — committed JSON
-  matches freshly-generated output.
-- `adapter-status-staleness`: NFR-ADPDOC-003 — `adapter-status.
-  json` mtime ≤ 7 days (warn, not fail).
+  matches freshly-generated output (registry-driven; handles
+  `hackernews` slug + `social.go` helper funcs).
 - `lastVerified` per-page: REQ-ADPDOC-015 — ≥ 1 row within 90
-  days; warn at > 180 days.
+  days; warn at > 180 days (part of `adapter-page-completeness`).
+- (A4) `adapter-status-staleness` (mtime gate on
+  `adapter-status.json`) is DEFERRED to the post-V1 EVAL-002
+  live-export amendment (NFR-ADPDOC-003).
 
 ### 6.4 Anti-pattern gates
 
@@ -872,17 +936,21 @@ Backout decision made by SPEC-DOC-002 owner + SPEC-DOC-001 owner
 
 - §8.1 (Korean-tokenizer cross-link only): committed by D6 +
   REQ-ADPDOC-011. Phase 4-5 implementation enforces.
-- §8.2 (badge taxonomy ↔ EVAL-002 lifecycle alignment): Phase
-  0 plan-auditor activity. If misalignment found, EVAL-002
-  amendment scheduled in parallel (SPEC-EVAL-002 owner ticket).
+- §8.2 (badge taxonomy): RESOLVED (A4). DOC-002 solely owns the
+  4-tier taxonomy (stable/beta/disabled/deprecated); EVAL-002 has
+  no `lifecycle` field, so no alignment is required.
 - §8.3 (Bluesky vs X split): committed by D3 + REQ-ADPDOC-009.
-  Phase 4 implementation enforces.
-- §8.4 (EVAL-002 export job timing): graceful degradation in
-  Phase 2 (static initial JSON) + Phase 5 reconciliation.
+  Phase 4 implementation enforces; `x` framed as DISABLED v0 stub
+  (A3).
+- §8.4 (EVAL-002 status export): RESOLVED (A4). V1 ships a STATIC
+  hand-curated `adapter-status.json` (Phase 5.3); live cron export
+  + schema validation + staleness automation deferred to a post-V1
+  EVAL-002 amendment.
 - §8.5 (`check-bilingual-coverage.sh` exclude pattern): Phase
   6 § 6.2 coordination.
-- §8.6 (`tools/gen-adapter-ref/` location): Phase 2.1 confirms
-  `tools/` directory creation (precedent set by this SPEC).
+- §8.6 (`tools/gen-adapter-ref/` location): RESOLVED. A `tools/`
+  directory already exists (`tools/claude-skill`);
+  `tools/gen-adapter-ref/` is a clean sibling.
 - §8.7 (provider doc URL per locale): Phase 3-5 per-page authoring
   decision; EN page → EN provider doc; KO page → KO provider
   doc where available.

@@ -1,0 +1,10 @@
+{
+  "sourceID": "hackernews",
+  "requiresAuth": false,
+  "authEnvVars": [],
+  "rateLimitPerMin": 60,
+  "defaultMaxResults": 25,
+  "sourcePath": "internal/adapters/hn/hn.go",
+  "sourceLine": 100,
+  "extractedAt": "2026-05-30T22:44:16Z"
+}

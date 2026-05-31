@@ -1,0 +1,105 @@
+---
+title: Reddit Adapter
+description: Reference documentation for the Reddit search adapter
+lastVerified: 2026-05-31
+sourceID: reddit
+category: social
+---
+
+import { Callout } from 'nextra/components'
+import { CapabilitiesTable } from '../../../../components/CapabilitiesTable'
+import { StatusBadge } from '../../../../components/StatusBadge'
+import redditCaps from './_generated/reddit.capabilities.json'
+
+# Reddit Adapter
+
+<StatusBadge adapter="reddit" />
+
+The Reddit adapter queries Reddit's public search.json endpoint without authentication.
+
+## Status &amp; Compatibility
+
+| Field | Value |
+|-------|-------|
+| SPEC | SPEC-ADP-001 |
+| Source path | `internal/adapters/reddit/` |
+| SourceID | `reddit` |
+| Last verified | 2026-05-31 |
+| Status | <StatusBadge adapter="reddit" /> |
+
+## Overview
+
+Reddit is a social news aggregation and discussion platform. The Universal Search Reddit adapter queries the public `search.json` endpoint at `https://www.reddit.com/search.json`, returning post-level results from across all subreddits. NSFW content is excluded by default.
+
+**Use case:** community discussion discovery, trending topics, Q&A content aggregation.
+
+## Setup
+
+Authentication: not required — public endpoint.
+
+Reddit's `search.json` endpoint is publicly accessible without credentials. No API key or application registration is required for unauthenticated access. The rate limit for unauthenticated access is approximately 10 requests/min.
+
+```bash
+# Verify the adapter is reachable:
+usearch query --source reddit "machine learning transformers"
+```
+
+## Capabilities
+
+The table below is auto-extracted from the Go source via `gen-adapter-ref` — edit the adapter source to change these values.
+
+<CapabilitiesTable data={redditCaps} />
+
+## Query syntax
+
+Reddit queries are submitted as free-text strings mapped to Reddit's search.json parameters:
+
+| Universal Search field | Reddit parameter | Notes |
+|------------------------|-----------------|-------|
+| `Query.Text` | `q={text}` | Full-text search across all subreddits |
+| `Query.Filters["nsfw"]` | `include_over_18=on` | Set to `"true"` to include NSFW results (excluded by default) |
+| `Query.MaxResults` | `limit={n}` | Reddit caps at 100 per request |
+
+**Sorting:** `sort=relevance` is hardcoded. Time range filter (`t=`) is hardcoded to `all` in v0.1; date-range support is deferred.
+
+## Rate limits
+
+- **Advertised limit:** 10 requests/min (conservative unauthenticated figure; actual Reddit documented rate is higher but varies)
+- **Enforcement mechanism:** HTTP 429 response handling — Reddit returns 429 with `Retry-After` header when the rate is exceeded
+- **Upstream quota documentation:** [Reddit API documentation](https://github.com/reddit-archive/reddit/wiki/API)
+- **Exhaustion behaviour:** The fanout dispatcher ([SPEC-FAN-001](/en/reference/architecture)) reads the `Retry-After` header and waits before retrying. Returns `CategoryRateLimited` to the caller.
+
+## Error reference
+
+See [Error Taxonomy](/en/reference/adapters/errors) for the shared `Category` reference.
+
+**Reddit-specific status rosetta:**
+
+| HTTP status | Category | Cause | Operator action |
+|-------------|----------|-------|-----------------|
+| 429 | CategoryRateLimited | Rate limit exceeded | Wait for `Retry-After` delay; consider reducing fanout concurrency |
+| 403 | CategoryPermanent | IP banned or access denied | Check Reddit's Terms of Service; IP may be throttled |
+| 503 | CategoryUnavailable | Reddit API temporarily down | Wait and retry; check https://www.redditstatus.com |
+| Network timeout | CategoryTransient | DNS/TCP failure | Check connectivity to `www.reddit.com` |
+
+## Troubleshooting
+
+| Symptom | Likely cause | Diagnostic command | Resolution | Related SPECs |
+|---------|-------------|-------------------|------------|---------------|
+| Zero results | NSFW filter blocking all results for certain queries | Add `nsfw=true` filter in query | Enable NSFW results if content policy allows | SPEC-ADP-001 |
+| `CategoryRateLimited` frequently | High fanout concurrency against unauthenticated endpoint | Check fanout dispatcher concurrency settings | Reduce parallel adapter calls; the 10/min figure is conservative | SPEC-FAN-001 |
+| Old posts dominate results | Time range hardcoded to `all` in v0.1 | — | Time-range filter is deferred to a future SPEC amendment | SPEC-ADP-001 |
+
+## Version compatibility
+
+| usearch version | Reddit API | Last verified | Verifier |
+|----------------|------------|---------------|----------|
+| v1.0.0 | search.json (public, no version) | 2026-05-31 | manager-docs |
+
+## Related
+
+- [SPEC-ADP-001](/en/reference/architecture) — Reddit adapter specification
+- [End-user surface comparison](/en/end-users/surface-comparison)
+- [Deployment Helm values](/en/operators/deployment-helm)
+- [SPEC-FAN-001 fanout retry semantics](/en/reference/architecture)
+- [SPEC-CACHE-001 5-phase fallback](/en/reference/architecture)

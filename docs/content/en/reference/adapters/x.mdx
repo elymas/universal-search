@@ -1,0 +1,104 @@
+---
+title: X (Twitter) Adapter — DISABLED in V1
+description: Reference documentation for the X (Twitter) adapter — disabled v0 stub, not available in V1
+lastVerified: 2026-05-31
+sourceID: x
+category: social
+---
+
+import { Callout } from 'nextra/components'
+import { CapabilitiesTable } from '../../../../components/CapabilitiesTable'
+import { StatusBadge } from '../../../../components/StatusBadge'
+import xCaps from './_generated/x.capabilities.json'
+
+# X (Twitter) Adapter
+
+<StatusBadge adapter="x" />
+
+**This adapter is DISABLED in V1. It is a compile-time stub with no live search path.** `RateLimitPerMin: 0`, `DefaultMaxResults: 0`. Do not attempt to use this adapter for production queries in Universal Search v1.0.0.
+
+<Callout type="error">
+  **Not available in V1.** The X adapter is a disabled v0 stub (`SPEC-ADP-006-XENABLE` pending).
+  Set `USEARCH_X_ENABLED=true` only when a live path is explicitly wired in a future release.
+  Searching via this adapter will always return zero results in V1.
+</Callout>
+
+<Callout type="info">
+  **Shared implementation:** X and Bluesky share the `internal/adapters/social/` Go package.
+  See [Bluesky adapter](/en/reference/adapters/bluesky) for the live social adapter documentation.
+</Callout>
+
+## Status &amp; Compatibility
+
+| Field | Value |
+|-------|-------|
+| SPEC | SPEC-ADP-006 |
+| Source path | `internal/adapters/social/social.go` — `xCapabilities()` |
+| SourceID | `x` |
+| **V1 status** | **DISABLED — not available in V1** |
+| Last verified | 2026-05-31 |
+| Status | <StatusBadge adapter="x" /> |
+
+## Overview
+
+X (formerly Twitter) is a social platform. In Universal Search v1.0.0, the X adapter is a **compile-time stub** with no live search path wired. The `xCapabilities()` function returns `RateLimitPerMin: 0` and `DefaultMaxResults: 0` with the Notes field explicitly stating: _"DISABLED in v0. Set USEARCH_X_ENABLED=true to enable. SPEC-ADP-006-XENABLE pending. social sub-source stub; no live path wired."_
+
+**The adapter will always return zero results in V1.** This is intentional and expected behaviour.
+
+## Setup
+
+Authentication: not required — adapter is disabled and makes no API calls.
+
+There is no setup that will make this adapter functional in V1. Enabling `USEARCH_X_ENABLED=true` registers the adapter in the registry but the search path returns empty results because no HTTP client or API endpoint is wired.
+
+```bash
+# Do NOT use this adapter for production queries in V1:
+# usearch query --source x "anything"  # returns 0 results
+```
+
+## Capabilities
+
+<CapabilitiesTable data={xCaps} />
+
+Both `rateLimitPerMin` and `defaultMaxResults` are `0` — this reflects the disabled state, not a real rate limit.
+
+## Query syntax
+
+Not applicable — the adapter is disabled in V1. Query parameters are accepted by the interface but no search is performed.
+
+## Rate limits
+
+- **Advertised limit:** 0 — not applicable (adapter is disabled, no live path)
+- **Enforcement mechanism:** None — disabled v0 stub
+- **Upstream quota documentation:** Not applicable in V1; X API quota would apply if the adapter were enabled
+- **Exhaustion behaviour:** Not applicable
+
+## Error reference
+
+See [Error Taxonomy](/en/reference/adapters/errors) for the shared `Category` reference.
+
+The X adapter in V1 returns empty results rather than errors. There are no X-specific error codes to document for V1.
+
+When the adapter is invoked, `Search()` in `social/search_x.go` returns an empty slice without making any HTTP calls.
+
+## Troubleshooting
+
+| Symptom | Likely cause | Diagnostic command | Resolution | Related SPECs |
+|---------|-------------|-------------------|------------|---------------|
+| X adapter returns 0 results | Adapter is disabled in V1 — expected behaviour | `usearch sources` — check X adapter status | This is expected; X search is not available in V1 | SPEC-ADP-006 |
+| X adapter not listed in sources | `USEARCH_X_ENABLED` not set | Set `USEARCH_X_ENABLED=true` and restart | Adapter will be registered but still returns 0 results | SPEC-ADP-006 |
+| Confusion about X vs Bluesky | Different social adapters | See [Bluesky adapter](/en/reference/adapters/bluesky) | Use Bluesky for live social search in V1 | SPEC-ADP-006 |
+
+## Version compatibility
+
+| usearch version | X API version | Status | Last verified | Verifier |
+|----------------|---------------|--------|---------------|----------|
+| v1.0.0 | N/A | **DISABLED** | 2026-05-31 | manager-docs |
+
+## Related
+
+- [SPEC-ADP-006](/en/reference/architecture) — social adapter specification (Bluesky + X)
+- [Bluesky adapter](/en/reference/adapters/bluesky) — live social adapter for V1
+- [End-user surface comparison](/en/end-users/surface-comparison)
+- [Deployment Helm values](/en/operators/deployment-helm)
+- [SPEC-FAN-001 fanout retry semantics](/en/reference/architecture)
