@@ -422,7 +422,6 @@ jobs:
           git push origin HEAD:main
 
       - name: Send notification (optional)
-        if: secrets.RELEASE_NOTIFICATION_WEBHOOK
         run: |
           WEBHOOK_URL="${{ secrets.RELEASE_NOTIFICATION_WEBHOOK }}"
           if [[ -n "$WEBHOOK_URL" ]]; then

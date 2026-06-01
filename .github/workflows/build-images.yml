@@ -122,8 +122,10 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Sign image (keyless)
+      - name: Install cosign
         uses: sigstore/cosign-installer@v3
+
+      - name: Sign image (keyless)
         run: |
           cosign sign --yes ${{ env.REGISTRY }}/${{ env.ORG }}/${{ matrix.sidecar }}@${{ steps.meta.outputs.digest }}
 
@@ -163,7 +165,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Sign image (keyless)
+      - name: Install cosign
         uses: sigstore/cosign-installer@v3
+
+      - name: Sign image (keyless)
         run: |
           cosign sign --yes ${{ env.REGISTRY }}/${{ env.ORG }}/embedder@${{ steps.meta.outputs.digest }}
