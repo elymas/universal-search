@@ -261,6 +261,11 @@ jobs:
       - name: Install cosign
         uses: sigstore/cosign-installer@v3.7.0
 
+      # syft binary is required by the `sboms:` block in .goreleaser.yml
+      # (SPDX SBOM generation per archive). goreleaser shells out to syft.
+      - name: Install syft
+        uses: anchore/sbom-action/download-syft@v0
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
