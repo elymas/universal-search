@@ -124,19 +124,22 @@ gh run list --workflow=go.yml --branch=main --created-before=1day --limit=10 --j
 
 **Expected outcome**: At least 8 out of last 10 runs are `success` (95%+ success rate).
 
-### G11: GPG-Signed Tag Verification
+### G11: GPG-Signed Tag Verification (optional / best-effort)
 
-Before pushing, ensure the tag will be signed:
+GPG tag signing is OPTIONAL and non-blocking. Artifact provenance is provided by
+cosign keyless (OIDC) signing + SLSA provenance, so the G11 release gate never
+fails on an unsigned or CI-unverifiable tag. If a GPG key is available, signing the
+tag is still encouraged:
 
 ```bash
-# Check GPG key is available
-gpg --list-keys limbowl@elymas || echo "GPG key not found; set up before pushing tag"
+# Check GPG key is available (optional)
+gpg --list-keys limbowl@elymas || echo "GPG key not found; signing is optional"
 
 # Simulate tag creation (don't push yet)
-git tag -a v1.0.0 -s -m "Release v1.0.0 — Universal Search" --dry-run || echo "Tag signing failed; check GPG setup"
+git tag -a v1.0.0 -s -m "Release v1.0.0 — Universal Search" --dry-run || echo "Tag signing skipped; not required"
 ```
 
-**Expected outcome**: No errors; GPG key ready to sign.
+**Expected outcome**: GPG signing is best-effort. An unsigned tag does not block the release.
 
 ### G12: Version Consistency
 
@@ -328,7 +331,7 @@ cd universal-search
 git tag -v v1.0.0
 ```
 
-**Expected output**: GPG signature verified with limbowl's key (exit code 0).
+**Expected output**: If the tag is GPG-signed, the signature is verified with limbowl's key (exit code 0). GPG tag signing is optional — artifact provenance is provided by cosign keyless signing + SLSA provenance.
 
 ---
 
