@@ -112,6 +112,7 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- **SPEC-REL-001** — G11 tag-signature gate is non-blocking; provenance via cosign+SLSA (`.github/workflows/release.yml` G11 no longer `exit 1` on unsigned/CI-unverifiable tags; artifact provenance enforced by cosign keyless signing + SLSA provenance)
 - **SPEC-BOOT-001** — toolchain and scaffold polish (post-implementation sync)
   - Go toolchain version aligned with reality: SPEC + tech.md + README updated from Go 1.23 to Go 1.25 (matches `go.mod` since bootstrap; CI workflows already pin via `go-version-file: go.mod`)
   - CI workflow filenames renamed to match SPEC §6.3: `go-ci.yml` → `go.yml`, `python-ci.yml` → `python.yml`, `web-ci.yml` → `web.yml`
