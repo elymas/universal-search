@@ -126,10 +126,10 @@ gh run list --workflow=go.yml --branch=main --created-before=1day --limit=10 --j
 
 ### G11: GPG-Signed Tag Verification (optional / best-effort)
 
-GPG tag signing is OPTIONAL and non-blocking. Artifact provenance is provided by
-cosign keyless (OIDC) signing + SLSA provenance, so the G11 release gate never
-fails on an unsigned or CI-unverifiable tag. If a GPG key is available, signing the
-tag is still encouraged:
+GPG tag signing is OPTIONAL and non-blocking. Artifact integrity is provided by
+cosign keyless (OIDC) signing over `SHA256SUMS` + the SHA256 checksums (SLSA
+provenance deferred to V1.1), so the G11 release gate never fails on an unsigned
+or CI-unverifiable tag. If a GPG key is available, signing the tag is still encouraged:
 
 ```bash
 # Check GPG key is available (optional)
@@ -249,7 +249,7 @@ Once the issue is fixed:
 
 After the GitHub Release is published (release.yml workflow completes successfully):
 
-- [ ] Verify the GitHub Release page shows all artifacts (12 archives, SBOM, cosign signatures, provenance)
+- [ ] Verify the GitHub Release page shows all artifacts (12 archives, SHA256SUMS, SBOMs, and the cosign signature bundle `SHA256SUMS.sigstore.json`)
 - [ ] Review and merge the auto-generated `.moai/project/roadmap.md` PR (marks M9 as shipped)
 - [ ] Update SECURITY.md vulnerability reporting contact (per SPEC-SEC-001)
 - [ ] Draft a release announcement (English + Korean summary) for GitHub Discussions / community channel (optional post-V1 channel)
@@ -289,38 +289,39 @@ After downloading a binary from the v1.0.0 release, operators can verify authent
 
 ### Verify Cosign Signature (Keyless OIDC)
 
-```bash
-# Download the binary, .sig, and .crt from the GitHub Release
-curl -L https://github.com/elymas/universal-search/releases/download/v1.0.0/usearch_1.0.0_linux_amd64.tar.gz -O
-curl -L https://github.com/elymas/universal-search/releases/download/v1.0.0/usearch_1.0.0_linux_amd64.tar.gz.sig -O
-curl -L https://github.com/elymas/universal-search/releases/download/v1.0.0/usearch_1.0.0_linux_amd64.tar.gz.crt -O
+GoReleaser signs the `SHA256SUMS` checksum file with cosign keyless (OIDC) and
+publishes a single sigstore bundle (`SHA256SUMS.sigstore.json`). Because every
+archive's SHA256 is listed inside `SHA256SUMS`, verifying that one signed file
+transitively authenticates all 12 archives.
 
-# Verify the signature
+```bash
+# Download the checksum file and its cosign bundle from the GitHub Release
+curl -L https://github.com/elymas/universal-search/releases/download/v1.0.0/SHA256SUMS -O
+curl -L https://github.com/elymas/universal-search/releases/download/v1.0.0/SHA256SUMS.sigstore.json -O
+
+# Verify the checksum file signature (keyless)
 cosign verify-blob \
-  --certificate usearch_1.0.0_linux_amd64.tar.gz.crt \
-  --signature usearch_1.0.0_linux_amd64.tar.gz.sig \
+  --bundle SHA256SUMS.sigstore.json \
   --certificate-identity-regexp "https://github.com/elymas/universal-search/.github/workflows/release.yml@.*" \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
-  usearch_1.0.0_linux_amd64.tar.gz
+  SHA256SUMS
+
+# Then confirm the downloaded archive matches its signed checksum
+curl -L https://github.com/elymas/universal-search/releases/download/v1.0.0/usearch_1.0.0_linux_amd64.tar.gz -O
+sha256sum --check --ignore-missing SHA256SUMS
 ```
 
-**Expected output**: `Verified OK` (exit code 0).
+**Expected output**: `Verified OK` from cosign, then `usearch_1.0.0_linux_amd64.tar.gz: OK` from `sha256sum --check`.
 
-### Verify SLSA Provenance
+### SLSA Provenance — deferred to V1.1
 
-```bash
-# Download the provenance file
-curl -L https://github.com/elymas/universal-search/releases/download/v1.0.0/multiple.intoto.jsonl -O
-
-# Verify with slsa-verifier
-slsa-verifier verify-artifact \
-  --provenance-path multiple.intoto.jsonl \
-  --source-uri github.com/elymas/universal-search \
-  --source-tag v1.0.0 \
-  usearch_1.0.0_linux_amd64.tar.gz
-```
-
-**Expected output**: `SLSA verification succeeded. Builder ID: …` (exit code 0).
+SLSA L2 build provenance is **deferred to V1.1**. V1.0.0 artifact integrity is
+provided by **cosign keyless (OIDC) signatures over `SHA256SUMS` + the SHA256
+checksums themselves**. The earlier hand-rolled SLSA job invoked the
+slsa-github-generator reusable workflow incorrectly (as a step `uses:` rather
+than a job-level `uses:`) and was never functional; rather than ship a broken
+provenance path, V1.0.0 relies on the cosign + checksum chain above, and a
+correctly wired job-level SLSA generator is planned for V1.1.
 
 ### Verify Git Tag
 
@@ -331,7 +332,7 @@ cd universal-search
 git tag -v v1.0.0
 ```
 
-**Expected output**: If the tag is GPG-signed, the signature is verified with limbowl's key (exit code 0). GPG tag signing is optional — artifact provenance is provided by cosign keyless signing + SLSA provenance.
+**Expected output**: If the tag is GPG-signed, the signature is verified with limbowl's key (exit code 0). GPG tag signing is optional — artifact integrity is provided by cosign keyless signing over `SHA256SUMS` + the SHA256 checksums (SLSA provenance deferred to V1.1).
 
 ---
 

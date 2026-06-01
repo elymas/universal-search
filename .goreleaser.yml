@@ -64,7 +64,7 @@ archives:
   # usearch-mcp) so they do not collide — yields 3 binaries x 2 OS x 2 arch
   # = 12 archives (REQ-REL-006).
   - name_template: "{{ .Binary }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    format: tar.gz
+    formats: ["tar.gz"]
     files:
       - LICENSE
       - README.md
@@ -72,6 +72,22 @@ archives:
 checksum:
   name_template: SHA256SUMS
   algorithm: sha256
+
+# REQ-REL-009: cosign keyless (OIDC) signing of the checksum file.
+# Signing SHA256SUMS transitively covers every archive (each archive's sha256
+# is listed inside SHA256SUMS), so a single signature anchors all 12 archives.
+# Produces a sigstore bundle (cert + signature) uploaded to the GitHub Release.
+# Requires the cosign binary on PATH and `id-token: write` for OIDC in CI.
+signs:
+  - cmd: cosign
+    signature: "${artifact}.sigstore.json"
+    artifacts: checksum
+    output: true
+    args:
+      - sign-blob
+      - "--bundle=${signature}"
+      - "${artifact}"
+      - "--yes"
 
 # SBOM generation via anchore/syft (Nix-based, no additional dependency)
 # REQ-REL-010: produces SPDX-format SBOM per archive + aggregate
@@ -86,10 +102,18 @@ sboms:
 # deployment (Kubernetes); (3) Windows users can use WSL + linux/amd64 binary.
 # (research §5.3) Post-V1 Windows support may be added via MSIX or separate SPEC.
 
-# Disable auto-publishing; release.yml workflow handles GitHub Release creation
+# GoReleaser is the authoritative release path: `goreleaser release --clean`
+# creates the GitHub Release and uploads all 12 archives, SHA256SUMS, SBOMs,
+# and the cosign signature bundle natively via GITHUB_TOKEN.
+# prerelease: auto marks v*.*.*-<pre> tags (e.g. v1.0.0-rc1) as pre-releases.
 release:
-  disable: true
+  prerelease: auto
+  footer: |
+    ---
+    Artifact integrity: each archive's SHA256 is recorded in `SHA256SUMS`, which
+    is signed with cosign keyless (OIDC) — verify with:
+    `cosign verify-blob --bundle SHA256SUMS.sigstore.json SHA256SUMS`
 
 # Snapshot mode for local testing (--snapshot flag)
 snapshot:
-  name_template: "{{ incpatch .Version }}-snapshot"
+  version_template: "{{ incpatch .Version }}-snapshot"

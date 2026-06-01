@@ -234,9 +234,13 @@ jobs:
             exit 1
           fi
 
-  # ========== GoReleaser Build ==========
+  # ========== GoReleaser Build + Publish (authoritative release path) ==========
+  # `goreleaser release --clean` builds all 12 archives, generates SHA256SUMS
+  # + SPDX SBOMs, signs the checksum file with cosign keyless (OIDC), and
+  # creates the GitHub Release uploading every artifact natively via
+  # GITHUB_TOKEN. This single job IS the release — no separate publish job.
   goreleaser-build:
-    name: GoReleaser build
+    name: GoReleaser build + publish
     needs: pre-tag-verify
     runs-on: ubuntu-24.04
     if: ${{ !failure() }}
@@ -252,6 +256,11 @@ jobs:
           go-version: '1.25'
           cache: true
 
+      # cosign binary is required by the `signs:` block in .goreleaser.yml
+      # (cosign keyless sign-blob over SHA256SUMS).
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.7.0
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
@@ -260,6 +269,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Retain dist/ for dry-run inspection and post-release auditing.
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -267,123 +277,10 @@ jobs:
           path: dist/
           retention-days: 7
 
-  # ========== SLSA Provenance ==========
-  slsa-provenance:
-    name: SLSA L2 provenance
-    needs: goreleaser-build
-    runs-on: ubuntu-24.04
-    if: ${{ !failure() && github.event.inputs.dry_run != 'true' }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: goreleaser-dist
-          path: dist/
-
-      - name: Generate SLSA provenance
-        uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.0.0
-        with:
-          base64-subjects: ${{ needs.goreleaser-build.outputs.artifacts }}
-          upload-assets: false
-
-  # ========== Cosign Sign Binaries ==========
-  cosign-sign:
-    name: Cosign sign binaries
-    needs: goreleaser-build
-    runs-on: ubuntu-24.04
-    if: ${{ !failure() && github.event.inputs.dry_run != 'true' }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: goreleaser-dist
-          path: dist/
-
-      - name: Install cosign
-        uses: sigstore/cosign-installer@v3.7.0
-
-      - name: Sign archives with cosign
-        run: |
-          for archive in dist/usearch*_{linux,darwin}_{amd64,arm64}.tar.gz; do
-            if [[ -f "$archive" ]]; then
-              cosign sign-blob --yes "$archive" > "$archive.sig" 2>&1 || {
-                echo "Cosign signing failed for $archive; retrying..."
-                sleep 5
-                cosign sign-blob --yes "$archive" > "$archive.sig"
-              }
-              cosign sign-blob --certificate-output-file "$archive.crt" --yes "$archive"
-              echo "✓ Signed: $archive"
-            fi
-          done
-        env:
-          COSIGN_EXPERIMENTAL: 1
-
-      - name: Upload signed artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: cosign-signatures
-          path: dist/*.sig
-          retention-days: 7
-
-  # ========== Publish GitHub Release ==========
-  publish-release:
-    name: Publish GitHub Release
-    needs: [pre-tag-verify, slsa-provenance, cosign-sign]
-    runs-on: ubuntu-24.04
-    if: ${{ !failure() && github.event.inputs.dry_run != 'true' && github.ref_type == 'tag' }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-
-      - name: Extract CHANGELOG section
-        id: changelog
-        run: |
-          TAG="${{ needs.pre-tag-verify.outputs.tag }}"
-          VERSION="${TAG#v}"
-
-          # Extract from CHANGELOG.md
-          if grep -q "## \[${VERSION}\]" CHANGELOG.md; then
-            awk "/^## \[${VERSION}\]/,/^## \[/" CHANGELOG.md | sed '$d' > release-notes.md
-            echo "✓ CHANGELOG section extracted"
-          else
-            echo "No CHANGELOG section found; using generic notes"
-            echo "See CHANGELOG.md for details" > release-notes.md
-          fi
-
-          echo "notes<<EOF" >> $GITHUB_OUTPUT
-          cat release-notes.md >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ needs.pre-tag-verify.outputs.tag }}
-          body: ${{ steps.changelog.outputs.notes }}
-          files: |
-            goreleaser-dist/**/*.tar.gz
-            goreleaser-dist/SHA256SUMS
-            goreleaser-dist/**/*.spdx.json
-            cosign-signatures/**/*.sig
-            cosign-signatures/**/*.crt
-            slsa-provenance/**/*.intoto.jsonl
-          draft: false
-          prerelease: ${{ contains(needs.pre-tag-verify.outputs.tag, '-') }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   # ========== Post-Release Tasks ==========
   post-release-tasks:
     name: Post-release tasks
-    needs: [pre-tag-verify, publish-release]
+    needs: [pre-tag-verify, goreleaser-build]
     runs-on: ubuntu-24.04
     if: ${{ !failure() && github.event.inputs.dry_run != 'true' && github.ref_type == 'tag' }}
     steps:
@@ -422,7 +319,6 @@ jobs:
           git push origin HEAD:main
 
       - name: Send notification (optional)
-        if: secrets.RELEASE_NOTIFICATION_WEBHOOK
         run: |
           WEBHOOK_URL="${{ secrets.RELEASE_NOTIFICATION_WEBHOOK }}"
           if [[ -n "$WEBHOOK_URL" ]]; then
