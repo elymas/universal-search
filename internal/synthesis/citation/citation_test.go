@@ -134,6 +134,7 @@ func TestModeStringValues(t *testing.T) {
 		{citation.ModeStrip, "strip"},
 		{citation.ModeReject, "reject"},
 		{citation.ModeOff, "off"},
+		{citation.EnforcementMode(99), "unknown(99)"}, // default branch
 	}
 	for _, tc := range cases {
 		tc := tc

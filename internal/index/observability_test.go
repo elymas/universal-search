@@ -2,10 +2,75 @@
 package index
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
+
+	"github.com/elymas/universal-search/internal/obs"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
+
+// fullObs builds a real Obs bundle (metrics + logger wired) for exercising the
+// non-nil emission paths in emitSearch / emitUpsert.
+func fullObs(t *testing.T) *obs.Obs {
+	t.Helper()
+	o, shutdown, err := obs.Init(context.Background(), obs.Config{
+		ServiceName:    "index-obs-test",
+		ServiceVersion: "test",
+		LogLevel:       "INFO",
+	})
+	if err != nil {
+		t.Fatalf("obs.Init: %v", err)
+	}
+	t.Cleanup(func() { _ = shutdown(context.Background()) })
+	return o
+}
+
+// TestEmitSearch_FullPath drives the wired metrics + logger + span path with
+// successful and failing per-store outcomes.
+func TestEmitSearch_FullPath(t *testing.T) {
+	o := fullObs(t)
+	tp := sdktrace.NewTracerProvider()
+	defer func() { _ = tp.Shutdown(context.Background()) }()
+	_, span := tp.Tracer("test").Start(context.Background(), "search")
+	defer span.End()
+
+	result := &IndexResult{
+		PerStoreErrors: map[string]error{"qdrant": nil, "meili": errors.New("boom")},
+		Stats: SearchStats{
+			PerStoreCounts: map[string]int{"qdrant": 3, "meili": 0},
+			StoreLatencies: map[string]time.Duration{"qdrant": 12 * time.Millisecond},
+			FusionLatency:  4 * time.Millisecond,
+			FusedCount:     3,
+			ElapsedSeconds: 0.02,
+		},
+	}
+	perStoreErrs := map[string]error{"qdrant": nil, "meili": errors.New("boom")}
+	// Must execute span attrs, prometheus inc/observe, and the WARN log branch
+	// (errCount > 0) without panicking.
+	emitSearch(o, span, result, perStoreErrs, 20*time.Millisecond)
+}
+
+// TestEmitUpsert_FullPath drives the wired metrics + logger + span path.
+func TestEmitUpsert_FullPath(t *testing.T) {
+	o := fullObs(t)
+	tp := sdktrace.NewTracerProvider()
+	defer func() { _ = tp.Shutdown(context.Background()) }()
+	_, span := tp.Tracer("test").Start(context.Background(), "upsert")
+	defer span.End()
+
+	result := &UpsertResult{
+		PerStoreErrors: map[string]error{"pg": nil, "qdrant": errors.New("write failed")},
+		Stats: UpsertStats{
+			DocCount:          5,
+			SkippedCount:      1,
+			SuccessCount:      4,
+			PerStoreLatencies: map[string]time.Duration{"pg": 6 * time.Millisecond, "qdrant": 8 * time.Millisecond},
+		},
+	}
+	emitUpsert(o, span, result, 14*time.Millisecond)
+}
 
 // TestEmitSearch_NilObs verifies nil-safety (no panic when obs is nil).
 func TestEmitSearch_NilObs(t *testing.T) {

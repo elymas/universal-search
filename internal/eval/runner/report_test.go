@@ -1,6 +1,8 @@
 package runner_test
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -90,5 +92,48 @@ func TestReportNullQueriesListed(t *testing.T) {
 	md := runner.RenderMarkdown(sampleReport(), runner.RenderOpts{})
 	if !strings.Contains(md, "Q3") {
 		t.Errorf("report missing null query Q3:\n%s", md)
+	}
+}
+
+// TestWriteLatestCreatesReport verifies WriteLatest writes latest.md, creating
+// the target directory, with content identical to RenderMarkdown. REQ-EVAL1-007.
+func TestWriteLatestCreatesReport(t *testing.T) {
+	t.Parallel()
+	// Use a nested dir to also exercise the MkdirAll path.
+	dir := filepath.Join(t.TempDir(), "eval", "reports")
+	rep := sampleReport()
+	opts := runner.RenderOpts{CostUSD: 0.42}
+
+	if err := runner.WriteLatest(dir, rep, opts); err != nil {
+		t.Fatalf("WriteLatest: %v", err)
+	}
+
+	got, err := os.ReadFile(filepath.Join(dir, "latest.md"))
+	if err != nil {
+		t.Fatalf("read latest.md: %v", err)
+	}
+	want := runner.RenderMarkdown(rep, opts)
+	if string(got) != want {
+		t.Errorf("latest.md content does not match RenderMarkdown output")
+	}
+	if !strings.Contains(string(got), "0.86") {
+		t.Errorf("latest.md missing expected mean score:\n%s", got)
+	}
+}
+
+// TestWriteLatestMkdirError verifies WriteLatest surfaces a mkdir failure when
+// the target path is blocked by an existing regular file.
+func TestWriteLatestMkdirError(t *testing.T) {
+	t.Parallel()
+	base := t.TempDir()
+	// Create a file where WriteLatest expects to create a directory.
+	blocker := filepath.Join(base, "blocker")
+	if err := os.WriteFile(blocker, []byte("x"), 0o644); err != nil {
+		t.Fatalf("setup: %v", err)
+	}
+	// dir is under the regular file -> MkdirAll must fail.
+	dir := filepath.Join(blocker, "sub")
+	if err := runner.WriteLatest(dir, sampleReport(), runner.RenderOpts{}); err == nil {
+		t.Fatal("expected mkdir error when path is blocked by a file, got nil")
 	}
 }

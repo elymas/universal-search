@@ -304,6 +304,31 @@ func TestClientEmbedEmitsSingleObservabilityPerCall(t *testing.T) {
 	assert.NotNil(t, reg.EmbedderLatency)
 }
 
+// TestClientEmbedEmitsWithFullObs drives emitObs's logger + tracer branches by
+// wiring a fully-initialised Obs bundle (Logger + tracer provider), which the
+// metrics-only tests above do not exercise.
+// @MX:SPEC: SPEC-REL-001 — G1 release coverage gate
+func TestClientEmbedEmitsWithFullObs(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(cannedResponse(t, "req-001", 1, 0, 1))
+	}))
+	t.Cleanup(srv.Close)
+
+	o, shutdown, err := obs.Init(context.Background(), obs.Config{
+		ServiceName:    "embedder-test",
+		ServiceVersion: "test",
+		LogLevel:       "INFO",
+	})
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = shutdown(context.Background()) })
+
+	client := newTestClient(t, srv, o)
+	_, err = client.Embed(context.Background(), testRequest())
+	require.NoError(t, err)
+}
+
 // TestClientConfigFromEnv verifies env-based config defaults.
 func TestClientConfigFromEnv(t *testing.T) {
 	t.Setenv("EMBEDDER_BASE_URL", "")

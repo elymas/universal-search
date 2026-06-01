@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 )
@@ -100,6 +101,40 @@ func TestCheckFaithfulnessWrapperHandlesTransportFailure(t *testing.T) {
 	_, err := CheckFaithfulness(context.Background(), client, "http://"+srv.Listener.Addr().String()+"/faithfulness_check", "text", nil, nil)
 	if err == nil {
 		t.Fatal("expected error for transport failure, got nil")
+	}
+}
+
+func TestCheckFaithfulnessWrapperHandlesSidecar4xx(t *testing.T) {
+	// A 4xx response must be surfaced as a client-error (distinct from the 5xx
+	// branch already covered).
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte("bad payload"))
+	}))
+	defer srv.Close()
+
+	_, err := CheckFaithfulness(context.Background(), srv.Client(), srv.URL+"/faithfulness_check", "text", nil, nil)
+	if err == nil {
+		t.Fatal("expected error for 4xx response, got nil")
+	}
+	if !strings.Contains(err.Error(), "client error") {
+		t.Errorf("error = %v, want a client error", err)
+	}
+}
+
+func TestCheckFaithfulnessWrapperHandlesDecodeError(t *testing.T) {
+	// A 200 response with a non-JSON body must surface a decode error.
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte("not json"))
+	}))
+	defer srv.Close()
+
+	_, err := CheckFaithfulness(context.Background(), srv.Client(), srv.URL+"/faithfulness_check", "text", nil, nil)
+	if err == nil {
+		t.Fatal("expected decode error, got nil")
+	}
+	if !strings.Contains(err.Error(), "decode") {
+		t.Errorf("error = %v, want a decode error", err)
 	}
 }
 

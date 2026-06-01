@@ -3,8 +3,10 @@ package scorer_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -176,6 +178,21 @@ func TestBridgeTimeoutEnforced(t *testing.T) {
 	}
 	if !scorer.IsUnavailable(err) {
 		t.Errorf("expected error classified as unavailable, got %v", err)
+	}
+}
+
+// TestWrapUnavailableRoundTrip verifies WrapUnavailable tags an error so that
+// IsUnavailable recognises it while still preserving the original message.
+// REQ-EVAL1-006.
+func TestWrapUnavailableRoundTrip(t *testing.T) {
+	t.Parallel()
+	base := errors.New("judge sidecar down")
+	wrapped := scorer.WrapUnavailable(base)
+	if !scorer.IsUnavailable(wrapped) {
+		t.Error("WrapUnavailable output must be classified as unavailable")
+	}
+	if !strings.Contains(wrapped.Error(), "judge sidecar down") {
+		t.Errorf("wrapped error %q must preserve the original message", wrapped.Error())
 	}
 }
 

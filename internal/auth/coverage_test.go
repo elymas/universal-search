@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -122,6 +123,21 @@ func TestValidateNbfWithDifferentTypes(t *testing.T) {
 			map[string]interface{}{"nbf": "not-a-number"},
 			true, // wrong type is silently accepted
 		},
+		{
+			"nbf json.Number past",
+			map[string]interface{}{"nbf": json.Number(fmt.Sprintf("%d", time.Now().Add(-time.Hour).Unix()))},
+			true,
+		},
+		{
+			"nbf json.Number future beyond skew",
+			map[string]interface{}{"nbf": json.Number(fmt.Sprintf("%d", time.Now().Add(60*time.Second).Unix()))},
+			false,
+		},
+		{
+			"nbf json.Number unparseable is accepted",
+			map[string]interface{}{"nbf": json.Number("not-a-number")},
+			true, // Float64() error path -> nil (accepted)
+		},
 	}
 
 	for _, tt := range tests {
@@ -131,6 +147,24 @@ func TestValidateNbfWithDifferentTypes(t *testing.T) {
 				t.Errorf("validateNbf() error = %v, want no error: %v", err, tt.want)
 			}
 		})
+	}
+}
+
+// TestUnwrapFailureReason covers the error-chain traversal: a direct
+// failureReasonError, a wrapped one, and an unrelated error.
+func TestUnwrapFailureReason(t *testing.T) {
+	direct := failureReasonError{reason: ReasonMalformed}
+	if fre, ok := unwrapFailureReason(direct); !ok || fre.reason != ReasonMalformed {
+		t.Errorf("direct: got (%v, %v), want (ReasonMalformed, true)", fre.reason, ok)
+	}
+
+	wrapped := fmt.Errorf("context: %w", failureReasonError{reason: ReasonExpired})
+	if fre, ok := unwrapFailureReason(wrapped); !ok || fre.reason != ReasonExpired {
+		t.Errorf("wrapped: got (%v, %v), want (ReasonExpired, true)", fre.reason, ok)
+	}
+
+	if _, ok := unwrapFailureReason(errors.New("plain error")); ok {
+		t.Error("plain error must not unwrap to a failureReasonError")
 	}
 }
 
