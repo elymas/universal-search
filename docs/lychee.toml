@@ -1,0 +1,84 @@
+# lychee link checker configuration
+# SPEC-DOC-001 REQ-DOC-012 / T7
+# Internal links: fail on broken
+# External links: warn only (rate-limit polite)
+
+# Output format
+format = "markdown"
+verbose = false
+
+# Timeout for HTTP requests (seconds)
+timeout = 20
+
+# Retry count for transient failures
+max_retries = 3
+
+# Concurrency limit (polite crawling)
+threads = 8
+
+# Maximum number of cached redirects
+# Adjust to stay within GitHub rate limits
+max_redirects = 10
+
+# User agent
+user_agent = "Universal Search docs link-check (lychee)"
+
+# Accept these HTTP status codes as valid
+accept = [200, 201, 204, 206, 301, 302, 307, 308, 403, 429]
+
+# === EXCLUDE PATTERNS ===
+# These patterns are excluded from link checking.
+# Rationale: forward-references, known rate-limited domains, localhost URLs.
+
+exclude = [
+    # Forward references — SPEC-SEC-001 not yet merged (B2)
+    # These paths do not exist on main branch until SPEC-SEC-001 PR #42 merges
+    "ops/security/.*",
+    "https://github.com/elymas/universal-search/blob/main/ops/security/.*",
+
+    # Localhost URLs (deployment-specific, not checkable in CI)
+    "^http://localhost",
+    "^http://127\\.0\\.0\\.1",
+    "^http://0\\.0\\.0\\.0",
+
+    # Known rate-limited or bot-blocking domains
+    "^https://www\\.linkedin\\.com",
+    "^https://twitter\\.com",
+    "^https://x\\.com",
+    "^https://reddit\\.com",
+    "^https://news\\.ycombinator\\.com",
+
+    # Placeholder/anchor links
+    "#.*",
+
+    # Internal SPEC references (not web URLs)
+    "SPEC-[A-Z]+-[0-9]+",
+
+    # GitHub Actions / CI anchors
+    "https://github\\.com/elymas/universal-search/actions",
+
+    # naver.com developer portal (may block bots)
+    "^https://developers\\.naver\\.com",
+
+    # SPEC-DOC-002 NFR-ADPDOC-005: known-rate-limited or auth-walled provider documentation
+    "^https://api\\.github\\.com",
+    "^https://docs\\.github\\.com",
+    "^https://reddit\\.com/dev",
+    "^https://hn\\.algolia\\.com",
+    "^https://info\\.arxiv\\.org",
+    "^https://developers\\.google\\.com/youtube",
+    "^https://docs\\.bsky\\.app",
+    "^https://docs\\.searxng\\.org",
+]
+
+# === INCLUDE ONLY ===
+# When running against docs/, restrict to docs content
+# (Uncomment to restrict scan scope in CI)
+# include_path = ["docs/content/"]
+
+# === EXTERNAL LINK BEHAVIOR ===
+# External broken links are warnings, not failures.
+# Internal broken links are failures.
+# This is enforced in CI via separate lychee invocations:
+#   lychee --no-progress --base docs/out docs/out/**/*.html    (internal only, --fail-fast)
+#   lychee --no-progress --format markdown docs/out/**/*.html  (all, warnings for external)

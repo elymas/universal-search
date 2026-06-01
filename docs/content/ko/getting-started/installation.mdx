@@ -1,0 +1,127 @@
+---
+title: 설치
+description: Universal Search 단계별 설치 가이드
+lastUpdated: 2026-05-30
+---
+
+import { Callout, Steps, Tabs } from 'nextra/components'
+
+# 설치
+
+<Steps>
+
+### 저장소 클론
+
+```bash
+git clone <repo-url>
+cd universal-search
+```
+
+<Callout type="info">
+  작업 디렉토리는 `univesal-search` (오타)로 명명되어 있지만, 정식 GitHub 저장소 이름은 `universal-search`입니다. Go 모듈 경로(`github.com/elymas/universal-search`)는 영향받지 않습니다.
+</Callout>
+
+### 환경 설정
+
+```bash
+cp .env.example .env
+```
+
+`.env`를 열어 필수 값을 입력하세요:
+
+```bash
+# 필수
+MEILI_MASTER_KEY=your-secret-key-here
+POSTGRES_PASSWORD=your-postgres-password
+
+# 선택 사항이지만 권장
+ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
+BRAVE_SEARCH_API_KEY=BSA...
+NAVER_CLIENT_ID=...       # 한국어 로케일 결과에 필요
+NAVER_CLIENT_SECRET=...
+```
+
+### 의존성 서비스 시작
+
+```bash
+make compose-up
+```
+
+다음 서비스들이 시작됩니다:
+- **Qdrant** (벡터 데이터베이스) — 포트 6333
+- **Meilisearch** (전문 검색) — 포트 7700
+- **PostgreSQL** (관계형 데이터) — 포트 5432
+- **SearXNG** (메타검색 엔진) — 포트 8080
+- **LiteLLM 프록시** (LLM 라우팅) — 포트 4000
+- **Redis** (캐싱) — 포트 6379
+
+모든 서비스가 정상 상태가 될 때까지 기다립니다:
+
+```bash
+docker compose ps     # 모든 서비스가 "healthy" 또는 "running" 상태여야 함
+```
+
+### 바이너리 빌드
+
+```bash
+make build
+```
+
+`./cmd/usearch/usearch` 바이너리가 생성됩니다.
+
+### 확인
+
+```bash
+./cmd/usearch/usearch --version
+# 예상 출력: usearch v0.1.0-dev
+
+./cmd/usearch/usearch --help
+# 7개 서브커맨드 표시: query, config, history, deep, sources, login, repl
+```
+
+</Steps>
+
+## 일반 빌드 명령어
+
+```bash
+make compose-up    # 모든 docker-compose 서비스 시작
+make compose-down  # 모든 서비스 중지
+make build         # cmd/usearch/usearch 바이너리 빌드
+make test          # Go + Python + Node 테스트 실행
+make lint          # 모든 린터 실행
+make fmt           # 모든 코드 포맷팅
+make tidy          # go mod tidy
+make install-py    # uv sync (Python 작업공간)
+make clean         # 빌드 아티팩트 제거
+```
+
+## 서비스 확인
+
+<Tabs items={['Qdrant', 'Meilisearch', 'SearXNG', 'LiteLLM']}>
+  <Tabs.Tab>
+    ```bash
+    curl http://localhost:6333/health
+    # {"status":"ok"}
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```bash
+    curl http://localhost:7700/health
+    # {"status":"available"}
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+    브라우저에서 [http://localhost:8080](http://localhost:8080)을 엽니다.
+  </Tabs.Tab>
+  <Tabs.Tab>
+    ```bash
+    curl http://localhost:4000/health
+    # {"status":"healthy"}
+    ```
+  </Tabs.Tab>
+</Tabs>
+
+## 다음 단계
+
+[첫 번째 쿼리](/ko/getting-started/first-query)를 실행해보세요.

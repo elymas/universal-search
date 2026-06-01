@@ -1,0 +1,81 @@
+---
+title: 관측가능성
+description: Universal Search 운영자를 위한 로깅, 추적, 메트릭
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# 관측가능성
+
+Universal Search는 SPEC-OBS-001을 통해 구조화된 로그, OpenTelemetry 추적, 쿼리별 메트릭을 제공합니다.
+
+## 구조화된 로깅
+
+로그는 stdout에 JSON 형식으로 출력됩니다 (개발 환경에서는 `LOG_FORMAT=text`로 변경 가능).
+
+### 로그 레벨
+
+```bash
+LOG_LEVEL=debug   # 어댑터 응답 포함 상세 로그
+LOG_LEVEL=info    # 기본값; 쿼리 시작/종료, 오류
+LOG_LEVEL=warn    # 오류만
+LOG_LEVEL=error   # 심각한 오류만
+```
+
+### 로그 필드
+
+모든 쿼리 로그 항목에 포함:
+
+```json
+{
+  "time": "2026-05-30T14:22:00Z",
+  "level": "info",
+  "msg": "query complete",
+  "req_id": "req_abc123",
+  "query": "Raft란 무엇인가?",
+  "locale": "ko",
+  "sources": ["searxng", "arxiv"],
+  "citations": 5,
+  "confidence": 0.94,
+  "duration_ms": 1240,
+  "model": "claude-3-5-sonnet-20241022",
+  "cost_usd": 0.003
+}
+```
+
+## OpenTelemetry 추적
+
+SPEC-OBS-001에 따라 모든 요청에 OTel 스팬 `usearch.cli.query`가 계측됩니다.
+
+### OTLP 내보내기 설정
+
+```bash
+OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
+OTEL_SERVICE_NAME=usearch
+
+# 개발 환경에서 stdout으로
+OTEL_TRACES_EXPORTER=console
+```
+
+## 주요 메트릭
+
+<Callout type="info">
+  쿼리별 성공률 메트릭, 인용 충실도 평가, 소스별 성공률 대시보드는 **SPEC-OBS-001**에서 제공됩니다.
+</Callout>
+
+| 메트릭 | 타입 | 설명 |
+|---|---|---|
+| `usearch.query.duration_ms` | Histogram | 엔드투엔드 쿼리 지연 |
+| `usearch.query.citations` | Histogram | 쿼리당 인용 수 |
+| `usearch.query.confidence` | Gauge | 합성 신뢰도 점수 |
+| `usearch.adapter.success_rate` | Gauge | 어댑터별 성공률 |
+| `usearch.llm.cost_usd` | Counter | 누적 LLM 비용 |
+
+## 로그 집계
+
+Universal Search는 stdout에 JSON 로그를 출력합니다 — 다음과 호환됩니다:
+
+- **ELK Stack**: Filebeat → Elasticsearch → Kibana
+- **Loki + Grafana**: promtail → Loki → Grafana
+- **AWS CloudWatch**: CloudWatch Logs Agent

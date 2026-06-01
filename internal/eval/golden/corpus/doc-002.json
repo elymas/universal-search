@@ -1,15 +1,20 @@
 {
   "id": "doc-002",
   "source_id": "arxiv",
-  "url": "https://example.com/arxiv/0002",
-  "title": "reinforcement learning from human feedback - study 2",
-  "body": "This document discusses reinforcement learning from human feedback. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of reinforcement learning from human feedback. Key findings include improved accuracy, reduced latency, and better scalability. The study 2 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on reinforcement learning from human feedback.",
-  "published_at": "2025-01-03T00:00:00+00:00",
-  "retrieved_at": "2026-05-01T02:00:00+00:00",
-  "author": "author-2",
-  "score": 0.52,
+  "url": "https://example.test/arxiv/quantum-b",
+  "title": "Quantum supremacy milestone 2019 (deep dive)",
+  "body": "Google reported a quantum processor completing a sampling task in 200 seconds that would take a classical supercomputer about 10000 years. The claim was later contested by IBM researchers who argued a classical method could finish it in days. The result is widely cited as the first quantum supremacy demonstration. Subsequent work expanded on these findings with broader experiments.",
+  "snippet": "Quantum supremacy milestone 2019 (deep dive)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
   "lang": "en",
   "doc_type": "paper",
-  "hash": "d4b597d106ce05be"
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

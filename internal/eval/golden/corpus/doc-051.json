@@ -1,15 +1,20 @@
 {
   "id": "doc-051",
-  "source_id": "polymarket",
-  "url": "https://example.com/polymarket/0051",
-  "title": "diffusion models for image generation - study 51",
-  "body": "This document discusses diffusion models for image generation. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of diffusion models for image generation. Key findings include improved accuracy, reduced latency, and better scalability. The study 51 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on diffusion models for image generation.",
-  "published_at": "2025-02-21T00:00:00+00:00",
-  "retrieved_at": "2026-05-03T03:00:00+00:00",
-  "author": "author-1",
-  "score": 0.51,
-  "lang": "en",
-  "doc_type": "video",
-  "hash": "6571fa07e5472f60"
+  "source_id": "github",
+  "url": "https://example.test/github/goroutine-ko-a",
+  "title": "Go 고루틴 스케줄링",
+  "body": "Go는 작업 훔치기 스케줄러를 사용하여 고루틴을 OS 스레드에 다중화한다. GOMAXPROCS 설정이 병렬성을 제한한다. 채널은 고루틴 간 동기화를 제공한다.",
+  "snippet": "Go 고루틴 스케줄링",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "ko",
+  "doc_type": "repo",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

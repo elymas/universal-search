@@ -1,0 +1,41 @@
+---
+title: STRIDE 위협 모델
+description: 모든 인터페이스에 대한 위협 분석 — SPEC-SEC-001 포워드 레퍼런스
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# STRIDE 위협 모델
+
+<Callout type="warning">
+  **포워드 레퍼런스 — SPEC-SEC-001 미완료**
+
+  Universal Search의 전체 STRIDE 위협 모델은 **SPEC-SEC-001** (PR #42, main 브랜치 머지 대기 중)에서 제공됩니다.
+
+  이 페이지는 플레이스홀더입니다. SPEC-SEC-001이 머지되면 확장됩니다.
+</Callout>
+
+## 범위 내 인터페이스
+
+Universal Search는 네 개의 공격 표면을 노출합니다:
+
+| 인터페이스 | 프로토콜 | 인증 |
+|-----------|---------|------|
+| CLI (`usearch`) | 로컬 서브프로세스 | OS 사용자 |
+| MCP 서버 (`usearch-mcp`) | stdio / SSE | MCP 토큰 |
+| 웹 UI | HTTPS | OAuth/OIDC |
+| REST API | HTTPS | JWT |
+
+## 위협 모델에 포함될 내용
+
+SPEC-SEC-001이 머지되면 이 페이지에 전체 STRIDE 분석이 포함됩니다:
+
+- **스푸핑(Spoofing)** — 각 인터페이스에 대한 신원 위협
+- **변조(Tampering)** — 데이터 무결성 위협 (쿼리 결과, 인용)
+- **부인(Repudiation)** — 감사 로그 및 부인 방지 컨트롤
+- **정보 공개(Information Disclosure)** — 민감한 데이터 노출 위험
+- **서비스 거부(Denial of Service)** — 속도 제한 및 리소스 고갈
+- **권한 상승(Elevation of Privilege)** — 권한 상승 벡터
+
+각 인터페이스별 공격 트리와 완화 컨트롤이 문서화됩니다.

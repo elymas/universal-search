@@ -14,7 +14,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from researcher.deep_tree import router as deep_tree_router
-from researcher.eval_judge import router as eval_judge_router
+from researcher.eval_judge import deepeval_judge, make_router as make_eval_judge_router
 from researcher.faithfulness_endpoint import router as faithfulness_router
 from researcher.gateway import Gateway
 from researcher.models import SynthesizeRequest, SynthesizeResponse
@@ -40,11 +40,13 @@ app = FastAPI(title="researcher", version=__version__, lifespan=lifespan)
 # SPEC-DEEP-002 REQ-DEEP2-006: Faithfulness check endpoint.
 app.include_router(faithfulness_router)
 
-# SPEC-EVAL-001: Citation faithfulness judge endpoint.
-app.include_router(eval_judge_router)
-
 # SPEC-DEEP-003 Phase C: Tree decomposition endpoint.
 app.include_router(deep_tree_router)
+
+# SPEC-EVAL-001 REQ-EVAL1-004: DeepEval faithfulness judge endpoint.
+# The judge wraps DeepEval's FaithfulnessMetric (imported lazily at call time),
+# routed via LiteLLM with deterministic params (temperature=0, top_p=1, seed=42).
+app.include_router(make_eval_judge_router(deepeval_judge()))
 
 
 @app.get("/health")

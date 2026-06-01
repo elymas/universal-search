@@ -1,17 +1,22 @@
 # SPEC-DOC-001 Plan — phased implementation
 
-Status: draft companion to spec.md
+Status: draft companion to spec.md (v0.2.0)
 Author: limbowl via manager-spec
-Date: 2026-05-22
+Date: 2026-05-30 (amended from 2026-05-22 — B1/B2/B3 stale fixes +
+proportionality reductions; see spec.md HISTORY v0.2.0)
 Methodology: **DDD** (ANALYZE-PRESERVE-IMPROVE per `.claude/rules/
 moai/workflow/workflow-modes.md`). DDD-mode justification: 본 SPEC은
 **기존 docs 자산을 consolidate + migrate**하는 작업이 본질이다.
 README.md, CHANGELOG.md, `.moai/project/product.md` + `tech.md`,
-`docs/dependencies.md`, `.moai/docs/MCP_OAUTH_SETUP.md`, `ops/security/*`
-는 모두 현재 production-ready 콘텐츠다 — 본 SPEC은 (a) ANALYZE
-existing surface (research.md §1 inventory), (b) PRESERVE 콘텐츠를
-MDX wrapper로 byte-fidelity 마이그레이션 (변형 금지), (c) IMPROVE는
-Nextra IA + bilingual 커버리지 + CI 게이트만 추가. 신규 narrative
+`docs/dependencies.md`, `.moai/docs/MCP_OAUTH_SETUP.md`는 모두 현재
+production-ready 콘텐츠다 — 본 SPEC은 (a) ANALYZE existing surface
+(research.md §1 inventory), (b) PRESERVE 콘텐츠를 MDX wrapper로
+byte-fidelity 마이그레이션 (변형 금지), (c) IMPROVE는 Nextra IA +
+bilingual 커버리지 + CI 게이트만 추가. **주의**: `ops/security/*`는
+main에 아직 없다 (SEC-001 PR #42 미머지) — security operator 페이지는
+PRESERVE 대상이 아니라 forward-reference placeholder (B2). 또한
+`docs/`는 빈 폴더가 아니라 stale Nextra v3 / Next 14 build artifact를
+포함하므로 (B1), Nextra v4 부트스트랩 전 v3 artifact 정리가 선행한다. 신규 narrative
 콘텐츠 (`getting-started/first-query`, `end-users/cli-tour`, 등)는
 TDD 하위 cycle이 부적합 (content authoring은 test-first 패러다임이
 아님) — 대신 manager-docs + native reviewer 검수 + bilingual-coverage
@@ -47,9 +52,11 @@ are optional but recommended for standard harness level").
    MDX 페이지). 따라서 phase ordering은 인프라 → 콘텐츠 → CI 게이트
    순서.
 2. **PRESERVE before IMPROVE** — 기존 자산 (README, product.md,
-   tech.md, dependencies.md, MCP_OAUTH_SETUP.md, ops/security/*)
-   부터 MDX wrapper로 마이그레이션. 콘텐츠 변형 금지 — wrapper +
-   frontmatter + 크로스링크만 추가. 그 후 hand-write 신규 narrative.
+   tech.md, dependencies.md, MCP_OAUTH_SETUP.md)부터 MDX wrapper로
+   마이그레이션. 콘텐츠 변형 금지 — wrapper + frontmatter +
+   크로스링크만 추가. `ops/security/*`는 PRESERVE 대상이 아니다
+   (main 부재 — B2): security 페이지는 forward-ref placeholder. 그
+   후 hand-write 신규 narrative.
 3. **EN authoritative for technical reference** — `reference/cli`,
    `reference/api`, `reference/mcp`는 EN-only (D3). KO는 narrative-
    heavy 페이지에 집중 (introduction, getting-started, end-users,
@@ -83,9 +90,9 @@ Contract draft (run phase에서 evaluator-active와 finalize):
 - [ ] 내부 링크 100% 해결 (lychee internal-strict pass)
 - [ ] 90% bilingual coverage 게이트 pass
 - [ ] gh-pages 배포 succeeds + `https://<org>.github.io/universal-
-      search/` 접근 가능
-- [ ] Docker container image (`ghcr.io/<org>/usearch-docs:<sha>`)
-      build + pull + serve 검증
+      search/` 접근 가능 (V1 gate)
+- [ ] Docker container image (`Dockerfile.docs`) build + 로컬 serve
+      검증 (GHCR push는 `<org>`/registry 확정 후 — V1 gate 아님)
 
 ### Priority dimension
 
@@ -127,7 +134,7 @@ condition + exit gate가 명시되어 있다.
 **Priority**: High (foundation for all subsequent phases)
 
 **Entry conditions**:
-- spec.md draft v0.1.0 PASS annotation cycle.
+- spec.md draft (v0.2.0) PASS plan-auditor re-audit + annotation cycle.
 - research.md §1 inventory complete.
 
 **Goals**:
@@ -170,9 +177,17 @@ condition + exit gate가 명시되어 있다.
 - Static export produces `docs/out/`.
 
 **Tasks**:
+- T2.0 (B1 — precondition): Clean stale Nextra v3 / Next 14 artifacts
+  from `docs/` (`docs/.next/`, `docs/out/`, `docs/node_modules/`,
+  `docs/pages/`, scratch `docs/content/`). All are gitignored.
+  **PRESERVE** git-tracked `docs/dependencies.md`, `docs/_deps-*.md`,
+  `docs/licenses/` (REQ-DOC-001). Verify `git status` shows no
+  tracked-file deletions after cleanup.
 - T2.1: `docs/package.json` + `pnpm-lock.yaml` (deps: nextra@4.x,
-  nextra-theme-docs@4.x, next@16.x, react@19.x, typescript@5.x).
-  Pin exact minor versions per SPEC-DEP-001 REQ-DEP-007.
+  nextra-theme-docs@4.x, **next@^16.2.6 matching `web/package.json`**,
+  react@19.x, typescript@5.x). Pin exact minor versions per
+  SPEC-DEP-001 REQ-DEP-007. Use Nextra v4 `content/{locale}/`
+  convention (NOT v3 `pages/`).
 - T2.2: `docs/next.config.mjs` with `output: 'export'`, i18n config
   (`locales: ['en', 'ko'], defaultLocale: 'en'`), Nextra plugin
   wiring.
@@ -230,9 +245,14 @@ condition + exit gate가 명시되어 있다.
   `docs/dependencies.md` (NOT re-render).
 - T3.9: `content/en/operators/auth-setup.mdx` — wrap `.moai/docs/
   MCP_OAUTH_SETUP.md` content.
-- T3.10: `content/en/operators/security/runbook.mdx`, `owasp-
-  checklist.mdx`, `threat-model.mdx` — cross-link `ops/security/*`
-  canonical files.
+- T3.10 (B2 — forward-ref, NOT PRESERVE): `content/en/operators/
+  security/{runbook,owasp-checklist,threat-model}.mdx` — placeholder
+  pages linking SPEC-SEC-001 status ONLY. `ops/security/*`는 main에
+  없으므로 (SEC-001 PR #42 미머지) 해당 파일로의 cross-link 금지
+  (link-check fail 방지 — REQ-DOC-005 + REQ-DOC-013). SEC-001 머지
+  후 별도 PR가 placeholder를 cross-link wrapper로 교체. 이 task는
+  Phase 3 PRESERVE가 아니라 Phase 4 HAND-WRITE 성격이지만 IA slot
+  확보를 위해 여기서 placeholder 생성.
 - T3.11: `content/en/legal/licenses.mdx` — wrap product.md §8
   upstream licenses + LICENSE + NOTICE references.
 - T3.12: `content/en/legal/changelog.mdx` — embed/link CHANGELOG.md.
@@ -353,10 +373,12 @@ content available for scripts to scan).
   AND `screenshot:ui:*` tag. GREEN: implement scan + tag parsing.
   REFACTOR: separate concerns (scan / parse / compare / report).
 - T5.3: `scripts/check-bilingual-coverage.sh` (REQ-DOC-016).
-  RED: test asserts script fails when KO coverage < 90% of EN
-  excluding `reference/cli/` + `reference/api/`. GREEN: implement
-  EN enumeration + KO existence check + report. REFACTOR: extract
-  exclusion list to config.
+  RED: test asserts script fails when **Tier-1** KO coverage < 90%.
+  GREEN: enumerate Tier-1 EN set (introduction / getting-started /
+  end-users / operators core / troubleshooting) + KO existence check
+  + report. The entire `reference/` subtree is EXCLUDED from the V1
+  gate (full reference KO deferred to V1.1 — proportionality
+  reduction). REFACTOR: extract Tier-1 set + exclusion list to config.
 - T5.4: `scripts/check-doc-claims.sh` (REQ-DOC-018).
   RED: test asserts script warns on prohibited phrase. GREEN:
   implement grep + warning output. REFACTOR: externalize prohibited
@@ -426,10 +448,14 @@ content available for scripts to scan).
   Stage 1: `node:22-alpine` + `pnpm install` + `pnpm build`.
   Stage 2: `caddy:2.8-alpine` + `COPY --from=builder /app/out
   /srv` + Caddyfile.
-- T7.3: Add `build-and-push-container` job to `docs.yml`:
-  `docker/build-push-action@v6` to `ghcr.io/<org>/usearch-docs:
-  <sha>` + `:latest` on main; tagged release (`v*.*.*`) → `:v*.
-  *.*` per REQ-DOC-015.
+- T7.3 (Docker publish DEFERRED): Add `build-and-push-container`
+  job to `docs.yml` that builds `Dockerfile.docs` and verifies the
+  image locally. The actual **push** to `ghcr.io/<org>/usearch-docs:
+  <sha>` + `:latest` (+ `:v*.*.*` on tagged release) is **conditional
+  /deferred** until `<org>` / container-registry path is resolved
+  (Open Question §7 rows 11.3, 11.4). Gate the push step behind a
+  resolved-registry condition; image publish is NOT a V1.0.0 ship
+  gate (REQ-DOC-015). Until resolved: build-and-verify-only, no push.
 - T7.4: Container image Trivy scan per NFR-DOC-004 (chains to
   SPEC-SEC-001 D1 Trivy policy).
 - T7.5: Verify gh-pages deploy: push test commit to main; confirm
@@ -441,8 +467,10 @@ content available for scripts to scan).
   size measurement; if violations, identify reduction opportunities.
 
 **Exit gate**:
-- gh-pages reachable at canonical URL.
-- Container image pullable from `ghcr.io/<org>/usearch-docs:latest`.
+- gh-pages reachable at canonical URL (V1 gate).
+- Container image builds from `Dockerfile.docs` and serves locally;
+  GHCR **push deferred** until `<org>`/registry resolved (NOT a V1
+  gate — REQ-DOC-015).
 - All NFR-DOC-001 through NFR-DOC-007 SLAs verified or documented
   baseline.
 - V1.0.0 freeze gate manual audits (REQ-DOC-017 accessibility +
@@ -461,13 +489,14 @@ spec.md §7.1과 §7.2의 file 목록을 phase별로 grouping. 동일 file은
 | Phase | Path | Strategy | Owner |
 |-------|------|----------|-------|
 | 1 | `docs/MIGRATION_MAP.md` (developer-facing) | HAND-WRITE | manager-docs |
-| 2 | `docs/package.json`, `pnpm-lock.yaml`, `next.config.mjs`, `theme.config.tsx`, `tsconfig.json`, `.gitignore`, `README.md` | NEW | manager-docs |
+| 2 | `docs/` stale v3 artifacts (`.next/`, `out/`, `node_modules/`, `pages/`, scratch `content/`) | CLEAN (preserve git-tracked deps docs; B1) | manager-docs |
+| 2 | `docs/package.json`, `pnpm-lock.yaml`, `next.config.mjs`, `theme.config.tsx`, `tsconfig.json`, `.gitignore`, `README.md` | NEW (next@^16.2.6) | manager-docs |
 | 2 | `docs/content/en/index.mdx`, `content/ko/index.mdx` (smoke-test) | NEW (minimal) | manager-docs |
 | 3 | `docs/content/en/introduction/{index,personas,comparison}.mdx` | PRESERVE (wrap product.md) | manager-docs |
 | 3 | `docs/content/en/getting-started/{prerequisites,compose-setup,build-binary}.mdx` | PRESERVE (wrap README) | manager-docs |
 | 3 | `docs/content/en/reference/{architecture,dependencies}.mdx` | PRESERVE (wrap tech.md + docs/dependencies.md) | manager-docs |
 | 3 | `docs/content/en/operators/auth-setup.mdx` | PRESERVE (wrap MCP_OAUTH_SETUP.md) | manager-docs |
-| 3 | `docs/content/en/operators/security/{runbook,owasp-checklist,threat-model}.mdx` | PRESERVE (cross-link ops/security/*) | manager-docs |
+| 3 | `docs/content/en/operators/security/{runbook,owasp-checklist,threat-model}.mdx` | FORWARD-REF placeholder → SPEC-SEC-001 (no ops/security/* link until merged; B2) | manager-docs |
 | 3 | `docs/content/en/legal/{licenses,changelog}.mdx` | PRESERVE (wrap product.md §8 + CHANGELOG.md) | manager-docs |
 | 3 | `docs/content/ko/**` Tier-1 placeholder MDX | NEW (Phase 4 fills) | manager-docs |
 | 4 | `docs/content/en/getting-started/{index,first-query}.mdx` | HAND-WRITE | manager-docs |
@@ -560,16 +589,18 @@ resolution 필수. 미해결 시 phase entry 차단.
 - [ ] 4 scripts 모두 RED → GREEN → REFACTOR 완료 + 85% coverage
       (Phase 5)
 - [ ] `docs.yml` 5-job CI 전부 green baseline (Phase 6)
-- [ ] gh-pages publish + container image push 둘 다 동작 (Phase 7)
+- [ ] gh-pages publish 동작 (Phase 7, V1 gate); container image
+      build-verify 동작 (push는 `<org>`/registry 확정 후 — V1 gate
+      아님)
 - [ ] V1.0.0 freeze gate manual audit (accessibility + performance)
       결과 recorded in `legal/accessibility.mdx` + `legal/performance
       .mdx`
 - [ ] CHANGELOG.md에 SPEC-DOC-001 entry 추가
 - [ ] SPEC-REL-001 release notes가 docs canonical URL cite 가능
 
-본 plan v0.1.0 (draft) — plan-auditor cycle pending. annotation
+본 plan v0.2.0 (draft) — plan-auditor re-audit pending. annotation
 cycle 결과 + Open Question resolution 후 finalize.
 
 ---
 
-*End of SPEC-DOC-001 plan v0.1.0 (draft).*
+*End of SPEC-DOC-001 plan v0.2.0 (draft).*

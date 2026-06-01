@@ -1,15 +1,20 @@
 {
   "id": "doc-042",
-  "source_id": "github",
-  "url": "https://example.com/github/0042",
-  "title": "reinforcement learning from human feedback - study 42",
-  "body": "This document discusses reinforcement learning from human feedback. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of reinforcement learning from human feedback. Key findings include improved accuracy, reduced latency, and better scalability. The study 42 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on reinforcement learning from human feedback.",
-  "published_at": "2025-02-12T00:00:00+00:00",
-  "retrieved_at": "2026-05-02T18:00:00+00:00",
-  "author": "author-42",
-  "score": 0.92,
+  "source_id": "arxiv",
+  "url": "https://example.test/arxiv/diffusion-b",
+  "title": "Diffusion models for images (deep dive)",
+  "body": "Diffusion models generate images by reversing a gradual noising process. A neural network learns to denoise samples step by step. They have surpassed GANs on many image generation benchmarks. Subsequent work expanded on these findings with broader experiments.",
+  "snippet": "Diffusion models for images (deep dive)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
   "lang": "en",
   "doc_type": "paper",
-  "hash": "da12069ee5845764"
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

@@ -14,9 +14,8 @@ import (
 	"github.com/elymas/universal-search/internal/adapters"
 	"github.com/elymas/universal-search/internal/mcpserver"
 	"github.com/elymas/universal-search/internal/obs"
+	vver "github.com/elymas/universal-search/internal/version"
 )
-
-const version = "0.1.0-dev"
 
 func main() {
 	// Parse flags.
@@ -25,14 +24,14 @@ func main() {
 	flag.Parse()
 
 	if *showVersion {
-		fmt.Printf("usearch-mcp %s\n", version)
+		fmt.Printf("usearch-mcp %s\n", vver.Short())
 		os.Exit(0)
 	}
 
 	ctx := context.Background()
 	o, shutdown, err := obs.Init(ctx, obs.Config{
 		ServiceName:    "usearch-mcp",
-		ServiceVersion: version,
+		ServiceVersion: vver.Short(),
 		LogLevel:       os.Getenv("LOG_LEVEL"),
 		AdminAddr:      adminAddr(),
 		OTLPEndpoint:   os.Getenv("OTLP_ENDPOINT"),

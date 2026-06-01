@@ -1,0 +1,10 @@
+{
+  "sourceID": "koreanews",
+  "requiresAuth": false,
+  "authEnvVars": [],
+  "rateLimitPerMin": 0,
+  "defaultMaxResults": 20,
+  "sourcePath": "internal/adapters/koreanews/koreanews.go",
+  "sourceLine": 84,
+  "extractedAt": "2026-05-30T22:44:16Z"
+}

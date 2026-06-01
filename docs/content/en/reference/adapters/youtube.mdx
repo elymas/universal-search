@@ -1,0 +1,118 @@
+---
+title: YouTube Adapter
+description: Reference documentation for the YouTube video search adapter (yt-dlp sidecar)
+lastVerified: 2026-05-31
+sourceID: youtube
+category: social
+---
+
+import { Callout } from 'nextra/components'
+import { CapabilitiesTable } from '../../../../components/CapabilitiesTable'
+import { StatusBadge } from '../../../../components/StatusBadge'
+import youtubeCaps from './_generated/youtube.capabilities.json'
+
+# YouTube Adapter
+
+<StatusBadge adapter="youtube" />
+
+The YouTube adapter retrieves video results via a **yt-dlp Python sidecar** running on port 8082 (default). It does not use the YouTube Data API directly; no API key is required.
+
+## Status &amp; Compatibility
+
+| Field | Value |
+|-------|-------|
+| SPEC | SPEC-ADP-005 |
+| Source path | `internal/adapters/youtube/` |
+| SourceID | `youtube` |
+| Last verified | 2026-05-31 |
+| Status | <StatusBadge adapter="youtube" /> |
+
+## Overview
+
+The YouTube adapter wraps a Python yt-dlp sidecar service that performs YouTube search and metadata extraction. The sidecar listens at `http://localhost:8082` by default (configurable via `USEARCH_YOUTUBE_URL`). The adapter communicates with the sidecar over HTTP; the sidecar handles YouTube access internally.
+
+**Use case:** video content discovery, tutorial search, talk/conference discovery.
+
+<Callout type="warning">
+  The yt-dlp sidecar must be running before YouTube searches will succeed.
+  See [Deployment guide](/en/operators/deployment-helm) for sidecar configuration.
+</Callout>
+
+## Setup
+
+Authentication: not required — public endpoint.
+
+The adapter uses the yt-dlp sidecar for YouTube access; no YouTube Data API credentials are needed. The sidecar service must be deployed and reachable.
+
+```bash
+# Check sidecar health:
+curl http://localhost:8082/health
+
+# Verify the adapter is reachable:
+usearch query --source youtube "distributed systems consensus"
+```
+
+**Environment variables:**
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `USEARCH_YOUTUBE_URL` | `http://localhost:8082` | Base URL of the yt-dlp sidecar |
+
+## Capabilities
+
+The table below is auto-extracted from the Go source via `gen-adapter-ref` — edit the adapter source to change these values.
+
+<CapabilitiesTable data={youtubeCaps} />
+
+## Query syntax
+
+YouTube queries are forwarded to the yt-dlp sidecar as free-text search:
+
+| Universal Search field | Sidecar parameter | Notes |
+|------------------------|------------------|-------|
+| `Query.Text` | `q={text}` | YouTube search query |
+| `Query.Lang` | `lang={bcp47}` | Language preference forwarded to sidecar (ko-KR supported via `youtube/lang.go`) |
+| `Query.MaxResults` | `max_results={n}` | Capped at `DefaultMaxResults` when zero |
+| `Query.Since` | `since={unix_seconds}` | Date-range filter (SupportsSince=true) |
+
+## Rate limits
+
+- **Advertised limit:** 30 requests/min
+- **Enforcement mechanism:** HTTP 429 response handling — the sidecar returns 429 when YouTube throttles requests
+- **Upstream quota documentation:** [YouTube Data API quota](https://developers.google.com/youtube/v3/getting-started) (informational; adapter uses yt-dlp, not the Data API)
+- **Exhaustion behaviour:** The adapter returns `CategoryRateLimited` with `RetryAfter` from the sidecar's 429 response.
+
+## Error reference
+
+See [Error Taxonomy](/en/reference/adapters/errors) for the shared `Category` reference.
+
+**YouTube-specific status rosetta:**
+
+| HTTP status | Category | Cause | Operator action |
+|-------------|----------|-------|-----------------|
+| 429 | CategoryRateLimited | YouTube rate throttle via sidecar | Reduce search frequency; sidecar includes back-off |
+| 503 | CategoryUnavailable | yt-dlp sidecar not running | Start the sidecar service; check `USEARCH_YOUTUBE_URL` |
+| 404 | CategoryPermanent | Sidecar endpoint not found | Verify sidecar version compatibility |
+| Network timeout | CategoryTransient | Sidecar unreachable | Check sidecar health endpoint |
+
+## Troubleshooting
+
+| Symptom | Likely cause | Diagnostic command | Resolution | Related SPECs |
+|---------|-------------|-------------------|------------|---------------|
+| `CategoryUnavailable` on all YouTube queries | yt-dlp sidecar not running | `curl http://localhost:8082/health` | Start the sidecar: `docker compose up youtube-sidecar` | SPEC-ADP-005 |
+| Empty results for Korean queries | Language negotiation not forwarded | Set `Query.Lang = "ko-KR"` | Pass `ko-KR` language filter; see `youtube/lang.go` | SPEC-ADP-005 |
+| Stale video content | yt-dlp version outdated | `yt-dlp --version` in sidecar container | Update yt-dlp in the sidecar Docker image | SPEC-DEPLOY-001 |
+
+## Version compatibility
+
+| usearch version | yt-dlp version | Last verified | Verifier |
+|----------------|----------------|---------------|----------|
+| v1.0.0 | 2024.x (pinned in sidecar Dockerfile) | 2026-05-31 | manager-docs |
+
+## Related
+
+- [SPEC-ADP-005](/en/reference/architecture) — YouTube adapter specification
+- [End-user surface comparison](/en/end-users/surface-comparison)
+- [Deployment Helm values](/en/operators/deployment-helm)
+- [SPEC-FAN-001 fanout retry semantics](/en/reference/architecture)
+- [SPEC-CACHE-001 5-phase fallback](/en/reference/architecture)

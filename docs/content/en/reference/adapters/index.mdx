@@ -1,0 +1,44 @@
+---
+title: Adapter Catalog
+description: Filterable catalog of all 10 Universal Search production adapters with status badges
+lastVerified: 2026-05-31
+---
+
+import { AdapterCatalog } from '../../../../components/AdapterCatalog'
+
+# Adapter Catalog
+
+Universal Search includes 10 production adapters. Each adapter wraps a search source and implements the common `Adapter` interface (`pkg/types.Adapter`).
+
+Use the category filter below to narrow the list. For shared error categories, see the [Error Taxonomy](/en/reference/adapters/errors) page.
+
+<AdapterCatalog />
+
+## Adapter Lifecycle
+
+Status badges reflect the adapter's lifecycle classification (SPEC-DOC-002 D5):
+
+| Badge | Meaning |
+|-------|---------|
+| **stable** | success rate ≥ 0.95 (7-day rolling) |
+| **beta** | success rate 0.80–0.94 |
+| **disabled** | compile/flag-gated stub — no live path in V1 (currently: `x`) |
+| **deprecated** | reserved for post-V1 adapter removal |
+
+Status data is sourced from the EVAL-002 reliability dashboard. For live reliability metrics, see [SPEC-EVAL-002 Adapter Reliability Dashboard](/en/reference/architecture).
+
+## Korean-Locale Adapters
+
+Two adapters are optimised for Korean-language content:
+
+- **[Naver](/en/reference/adapters/naver)** — requires `NAVER_CLIENT_ID` + `NAVER_CLIENT_SECRET`; Korean UTF-8 queries forwarded verbatim
+- **[Korean News](/en/reference/adapters/koreanews)** — public RSS + optional KNC sidecar; mecab-ko-aware dedup
+
+See [Korean Locale Setup](/en/operators/korean-locale-setup) for index-side tokenization prerequisites.
+
+## Related
+
+- [Error Taxonomy](/en/reference/adapters/errors) — shared `Category` reference
+- [Architecture reference](/en/reference/architecture) — adapter interface contract
+- [Korean Locale Setup](/en/operators/korean-locale-setup)
+- [Deployment guide](/en/operators/deployment-helm)

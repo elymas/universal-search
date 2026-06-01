@@ -1,15 +1,20 @@
 {
   "id": "doc-019",
-  "source_id": "x",
-  "url": "https://example.com/x/0019",
-  "title": "neural architecture search automation - study 19",
-  "body": "This document discusses neural architecture search automation. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of neural architecture search automation. Key findings include improved accuracy, reduced latency, and better scalability. The study 19 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on neural architecture search automation.",
-  "published_at": "2025-01-20T00:00:00+00:00",
-  "retrieved_at": "2026-05-01T19:00:00+00:00",
-  "author": "author-19",
-  "score": 0.69,
-  "lang": "en",
-  "doc_type": "video",
-  "hash": "70f09258103eb86f"
+  "source_id": "arxiv",
+  "url": "https://example.test/arxiv/crispr-ko-a",
+  "title": "크리스퍼 유전자 편집 개요",
+  "body": "크리스퍼-Cas9는 가이드 RNA를 사용하여 Cas9 핵산분해효소를 특정 DNA 서열로 유도해 이중 가닥 절단을 만든다. 세포의 복구 기구가 편집을 도입한다. 2012년 이후 유전 연구를 변혁했다.",
+  "snippet": "크리스퍼 유전자 편집 개요",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "ko",
+  "doc_type": "paper",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

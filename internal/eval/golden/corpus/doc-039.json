@@ -1,15 +1,20 @@
 {
   "id": "doc-039",
-  "source_id": "reddit",
-  "url": "https://example.com/reddit/0039",
-  "title": "site reliability engineering principles - study 39",
-  "body": "This document discusses site reliability engineering principles. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of site reliability engineering principles. Key findings include improved accuracy, reduced latency, and better scalability. The study 39 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on site reliability engineering principles.",
-  "published_at": "2025-02-09T00:00:00+00:00",
-  "retrieved_at": "2026-05-02T15:00:00+00:00",
-  "author": "author-39",
-  "score": 0.89,
-  "lang": "en",
-  "doc_type": "other",
-  "hash": "6d60b52df489a230"
+  "source_id": "github",
+  "url": "https://example.test/github/wasm-ko-a",
+  "title": "웹어셈블리 런타임 모델",
+  "body": "웹어셈블리는 샌드박스화된 스택 기반 가상 머신에서 실행되는 이식 가능한 바이트코드다. 거의 네이티브에 가까운 성능과 언어 독립성을 제공한다. 브라우저와 독립 런타임 모두 이를 실행한다.",
+  "snippet": "웹어셈블리 런타임 모델",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "ko",
+  "doc_type": "repo",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

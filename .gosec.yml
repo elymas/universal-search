@@ -1,0 +1,30 @@
+# SPEC-SEC-001 REQ-SEC-010 — gosec static analysis configuration.
+#
+# Severity gate (enforced in .github/workflows/security.yml):
+#   HIGH    -> fails the job (blocks merge)
+#   MEDIUM  -> informational only
+#   LOW     -> informational only
+#
+# Test files and testdata are excluded: characterization fixtures and
+# integration tests deliberately use patterns (InsecureSkipVerify, in-memory
+# credentials, weak randomness for determinism) that are unsafe in production
+# code but intentional and inert in tests.
+
+# Directories excluded from scanning entirely.
+exclude-dir:
+  - testdata
+  - vendor
+  - node_modules
+  - web
+
+# Rule-level configuration.
+# G104 (unhandled errors) is handled by errcheck/golangci-lint already; gosec's
+# variant produces high noise on deferred Close() calls, so it is excluded to
+# keep the HIGH gate signal-rich.
+global:
+  # nosec comments require a justification (REQ-SEC-010: no blanket suppression).
+  "#nosec": "enabled"
+  audit: "enabled"
+
+# Confidence/severity reporting threshold. The workflow re-filters to HIGH for
+# the blocking gate; MEDIUM/LOW are surfaced as annotations.

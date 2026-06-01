@@ -1,8 +1,9 @@
 ---
 id: SPEC-EVAL-001
-version: 0.1.0
+version: 0.2.0
 status: draft
 created: 2026-05-26
+updated: 2026-05-29
 author: limbowl (via manager-spec)
 related_spec: SPEC-EVAL-001 (spec.md, plan.md)
 format: Given/When/Then
@@ -14,9 +15,9 @@ format: Given/When/Then
 
 This document specifies acceptance criteria for SPEC-EVAL-001 in Given/When/Then format, expanding the scenario index in spec.md §5 (§5.1..§5.16) into externally-observable behaviors that the run phase MUST verify before declaring EVAL-001 ship-ready.
 
-Scope: 16 acceptance criteria (AC-001..AC-016) covering REQ-EVAL1-001 through REQ-EVAL1-011 + NFR-EVAL1-001 through NFR-EVAL1-005, plus 3 edge-case sections, plus a Definition of Done checklist.
+Scope (v0.2.0): 15 active acceptance criteria (AC-001..AC-016, with AC-011 deferred to V1.1) covering REQ-EVAL1-001..009 + REQ-EVAL1-011 + NFR-EVAL1-001..005, plus 2 active edge-case sections, plus a Definition of Done checklist. REQ-EVAL1-010 (nightly cron) is deferred to V1.1 per spec.md HISTORY D9, so AC-011 and EC-003 (override expiry race) are marked deferred.
 
-Coverage policy: every REQ and every NFR in spec.md §2 / §3 has ≥1 matching AC below. See Coverage Matrix at end of file.
+Coverage policy: every active (non-deferred) REQ and every NFR in spec.md §2 / §3 has ≥1 matching AC below. See Coverage Matrix at end of file.
 
 ---
 
@@ -26,7 +27,7 @@ Coverage policy: every REQ and every NFR in spec.md §2 / §3 has ≥1 matching 
 
 Covers: REQ-EVAL1-001, REQ-EVAL1-002
 
-**Given** `internal/eval/golden/queries.jsonl` with 50 query records and `internal/eval/golden/corpus/*.json` with ≥ 200 NormalizedDoc fixtures.
+**Given** `internal/eval/golden/queries.jsonl` with 50 query records and `internal/eval/golden/corpus/*.json` with 50–80 NormalizedDoc fixtures (V1 size).
 
 **When** the runner starts and loads the golden set.
 
@@ -34,7 +35,7 @@ Covers: REQ-EVAL1-001, REQ-EVAL1-002
 - Exactly 50 query records parse successfully (one per line).
 - Locale partition is exactly 35 `locale: "en"` + 15 `locale: "ko"`.
 - Each record has the required fields: `id` matching format `EVAL-001-Q{NNN}`, `query`, `locale ∈ {"en","ko"}`, `category ∈ {"factual","comparison","synthesis","korean","edge"}`.
-- Corpus contains ≥ 200 distinct docs, each deserializing into `pkg/types.NormalizedDoc`.
+- Corpus contains ≥ 50 distinct docs (V1 floor; 50–80 target), each deserializing into `pkg/types.NormalizedDoc`.
 - Every `expected_sources` entry in any query record resolves to a valid `doc_id` in the corpus.
 - `.moai/eval/golden/manifest.json` contains a `corpus_revision` field.
 
@@ -70,7 +71,7 @@ Covers: REQ-EVAL1-005, REQ-EVAL1-007
 **When** the runner executes Q010.
 
 **Then**:
-- The bridge splits the response into 4 claims using the SPEC-SYN-002 sentence regex.
+- The bridge splits the response into 4 claims using its own EN sentence segmentation (ASCII `(?<=[.!?])\s+`, equivalent to the live structural checker `faithfulness_endpoint.py`).
 - The judge returns `claim_scores: [supported=true, supported=true, supported=true, supported=false]`.
 - The unsupported claim includes a non-empty `judge_rationale` text.
 - `faithfulness_score = 3/4 = 0.75`.
@@ -83,14 +84,15 @@ Maps to scenario §5.3 in spec.md.
 
 ### AC-004 — Korean query routes through ko-locale path and scores in Korean entailment
 
-Covers: REQ-EVAL1-001 (locale partition), REQ-EVAL1-004
+Covers: REQ-EVAL1-001 (locale partition), REQ-EVAL1-004, REQ-EVAL1-005(a) (Korean segmentation)
 
-**Given** query Q036 (`locale: "ko"`, `category: "korean"`) with Korean source text.
+**Given** query Q036 (`locale: "ko"`, `category: "korean"`) with Korean source text whose sentences end with `다.`/`요.`-style endings (which the live structural checker's ASCII `(?<=[.!?])\s+` splitter does NOT reliably segment).
 
 **When** the runner executes Q036 with the mocked Korean adapter fixtures.
 
 **Then**:
 - The synthesis path returns Korean response text.
+- The bridge applies EVAL-001's own Korean-aware claim segmentation (NOT the structural checker's ASCII splitter) and produces the correct claim count.
 - The judge endpoint receives Korean claims + Korean corpus excerpts.
 - DeepEval scores in Korean entailment context (judge model has multilingual capability).
 - The score is recorded in the report with `locale: "ko"` tag for per-locale slicing.
@@ -176,19 +178,19 @@ Maps to scenario §5.8 in spec.md.
 
 Covers: REQ-EVAL1-003
 
-**Given** `internal/eval/golden/overrides.json` containing:
+**Given** the manually-maintained `internal/eval/golden/overrides.json` containing:
 ```json
 [{"query_id": "EVAL-001-Q023", "manual_override": "pass", "override_reason": "judge mis-scores known compound sentence", "expires_at": "2026-06-20", "created_at": "2026-05-22T12:00:00Z", "created_by": "elymas"}]
 ```
-and 5 total active overrides (within cap).
+and 5 total override entries (within cap). (`expires_at` is advisory documentation only in V1 — not enforced.)
 
 **When** the runner executes the 50-query benchmark.
 
 **Then**:
 - Q023 is treated as a forced pass (excluded from aggregate calculation OR scored as 1.0 per implementation decision; either way reported as an override).
 - The override usage is logged in the per-query report with the reason.
-- Expired overrides (e.g., entries with `expires_at < today`) are auto-removed before scoring.
-- The report summary shows `overrides=N` where N is the count of active applied overrides.
+- The report summary shows `overrides=N` where N is the count of override entries applied.
+- V1 does NOT auto-expire or auto-remove entries (operators prune by hand); `expires_at` is not consulted by the runner.
 
 Maps to scenario §5.9 in spec.md.
 
@@ -198,35 +200,27 @@ Maps to scenario §5.9 in spec.md.
 
 Covers: REQ-EVAL1-003
 
-**Given** `overrides.json` containing 6 active (non-expired) override entries.
+**Given** `overrides.json` containing 6 override entries.
 
 **When** the runner starts.
 
 **Then**:
-- The pre-check fails BEFORE any query runs.
+- The simple cap check fails BEFORE any query runs.
 - Exit code is `1`.
-- The summary contains "override cap exceeded: 6 active overrides, max 5 allowed".
+- The summary contains "override cap exceeded: 6 entries, max 5 allowed".
 - CI status is `failure`.
 
 Maps to scenario §5.10 in spec.md.
 
 ---
 
-### AC-011 — Nightly cron run writes history without gating
+### AC-011 — Nightly cron run writes history without gating — DEFERRED to V1.1
 
-Covers: REQ-EVAL1-010
+Covers: REQ-EVAL1-010 (deferred)
 
-**Given** GitHub Actions cron schedule `0 3 * * *` (03:00 UTC).
+**[DEFERRED to V1.1 — out of V1 scope, per spec.md HISTORY D9.]** The nightly cron, the `.moai/eval/history/EVAL-001-YYYY-MM-DD.json` history writer, and day-over-day baseline establishment are not built in V1. This AC is retained for forward-compatibility and will be re-scoped in the V1.1 amendment. The V1 release gate is the PR-gating CI (AC-005..AC-007, AC-010).
 
-**When** the scheduled workflow fires.
-
-**Then**:
-- The full 50-query benchmark runs.
-- A file is written at `.moai/eval/history/EVAL-001-YYYY-MM-DD.json` containing `{date, commit_sha, branch, mean_score, per_query_scores, judge_model, override_count, null_count, runtime_seconds}`.
-- `.moai/eval/reports/latest.md` is updated with the human-readable report.
-- The nightly run does NOT block any merge or PR (it only writes the baseline).
-
-Maps to scenario §5.11 in spec.md.
+Maps to scenario §5.11 in spec.md (also marked removed in v0.2.0).
 
 ---
 
@@ -347,31 +341,24 @@ Maps to scenario §5.16 in spec.md.
 - stderr contains the parse error message and the line / byte offset.
 - Distinguishable from exit 1 (score fail) and exit 2 (judge unavailable).
 
-### EC-003 — Override expires mid-run (race condition)
+### EC-003 — Override expires mid-run (race condition) — N/A in V1 (DEFERRED)
 
-**Given** an override with `expires_at: 2026-05-26T03:30:00Z` while the nightly cron runs at 03:00:00 and the query is processed at 03:31:00.
-
-**When** the runner pre-check filters expired overrides.
-
-**Then**:
-- The runner uses a single snapshot of `overrides.json` at start (filters by start-of-run timestamp).
-- Subsequent in-flight expiry does NOT alter the active override set for the current run.
-- The next run picks up the new (expired-removed) state.
+**[N/A in V1.]** This edge case only exists when overrides are auto-expired by timestamp. V1 (per spec.md REQ-EVAL1-003 v0.2.0) does NOT auto-expire overrides — the list is hand-maintained and `expires_at` is advisory only, so there is no in-flight expiry race. If automated time-based expiry is reintroduced (deferred, alongside the V1.1 nightly cron), this edge case is re-scoped then.
 
 ---
 
 ## 3. Definition of Done Checklist
 
-- [ ] All 16 AC scenarios pass on CI.
-- [ ] All 16 scenario index entries (§5.1..§5.16) in spec.md are implemented as automated tests.
+- [ ] All 15 active AC scenarios pass on CI (AC-011 deferred to V1.1).
+- [ ] All active scenario index entries (§5.1..§5.10, §5.12..§5.16) in spec.md are implemented as automated tests (§5.11 nightly removed in v0.2.0).
 - [ ] `internal/eval/golden/queries.jsonl` contains 50 records (35 EN + 15 KO).
-- [ ] `internal/eval/golden/corpus/*.json` contains ≥ 200 docs.
-- [ ] `internal/eval/golden/overrides.json` schema validates; cap of 5 enforced.
+- [ ] `internal/eval/golden/corpus/*.json` contains ≥ 50 docs (V1 floor; 50–80 target).
+- [ ] `internal/eval/golden/overrides.json` schema validates; simple cap of 5 entries enforced (no auto-expiry in V1).
 - [ ] `services/researcher/src/researcher/eval_judge.py` `/judge/faithfulness` endpoint live with deterministic params.
-- [ ] `internal/eval/scorer/deepeval_bridge.go` returns per-claim rationale + 30s timeout enforced.
+- [ ] `internal/eval/scorer/deepeval_bridge.go` consumes `synthesis.Result.Citations`, performs locale-aware claim segmentation (incl. Korean), returns per-claim rationale + 30s timeout enforced.
 - [ ] `internal/eval/ci/gate.go` exit code mapping verified (0/1/2/3).
 - [ ] `.github/workflows/eval.yml` runs on the configured path filters + skips on docs-only.
-- [ ] Nightly cron writes `.moai/eval/history/EVAL-001-YYYY-MM-DD.json` + updates `latest.md`.
+- [ ] (DEFERRED V1.1) Nightly cron + `.moai/eval/history/` writer — not part of V1 DoD.
 - [ ] Determinism re-runs: variance ≤ 0.02 across 3 consecutive runs.
 - [ ] Cost cap ≤ $0.50 per run verified.
 - [ ] Runtime ≤ 15 min on standard runner verified.
@@ -387,14 +374,14 @@ Maps to scenario §5.16 in spec.md.
 |-----------|--------|--------|--------|--------|--------|--------|--------|--------|--------|--------|--------|--------|--------|--------|--------|--------|----|
 | REQ-EVAL1-001 | ✓ |   |   | ✓ |   |   |   |   |   |   |   |   |   |   |   |   |   |
 | REQ-EVAL1-002 | ✓ |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
-| REQ-EVAL1-003 |   |   |   |   |   |   |   |   | ✓ | ✓ |   |   |   |   |   |   | EC-003 |
+| REQ-EVAL1-003 |   |   |   |   |   |   |   |   | ✓ | ✓ |   |   |   |   |   |   | (EC-003 N/A in V1) |
 | REQ-EVAL1-004 |   | ✓ |   | ✓ |   |   |   |   |   |   |   |   |   |   |   |   |   |
-| REQ-EVAL1-005 |   | ✓ | ✓ |   |   |   |   |   |   |   |   |   |   |   |   |   |   |
+| REQ-EVAL1-005 |   | ✓ | ✓ | ✓ |   |   |   |   |   |   |   |   |   |   |   |   |   |
 | REQ-EVAL1-006 |   |   |   |   |   |   |   | ✓ |   |   |   |   |   |   |   |   |   |
 | REQ-EVAL1-007 |   |   | ✓ |   |   | ✓ |   |   |   |   |   |   |   |   |   |   |   |
 | REQ-EVAL1-008 |   |   |   |   | ✓ | ✓ | ✓ |   |   |   |   |   |   |   |   |   | EC-002 |
 | REQ-EVAL1-009 |   |   |   |   | ✓ |   |   |   |   |   |   |   |   |   |   |   | EC-001 |
-| REQ-EVAL1-010 |   |   |   |   |   |   |   |   |   |   | ✓ |   |   |   |   |   |   |
+| REQ-EVAL1-010 (DEFERRED V1.1) |   |   |   |   |   |   |   |   |   |   | (AC-011 deferred) |   |   |   |   |   |   |
 | REQ-EVAL1-011 |   |   |   |   |   |   |   |   |   |   |   |   |   |   |   | ✓ |   |
 | NFR-EVAL1-001 |   |   |   |   |   |   |   |   |   |   |   | ✓ |   |   |   |   |   |
 | NFR-EVAL1-002 |   |   |   |   |   |   |   | ✓ |   |   |   |   |   |   |   |   |   |
@@ -402,8 +389,8 @@ Maps to scenario §5.16 in spec.md.
 | NFR-EVAL1-004 |   |   |   |   |   |   |   |   |   |   |   |   |   | ✓ |   |   |   |
 | NFR-EVAL1-005 |   |   |   |   |   |   |   |   |   |   |   |   |   |   | ✓ |   |   |
 
-Every REQ and NFR has ≥ 1 AC; edge cases EC-001..EC-003 supplement workflow path filters, gate input handling, and override expiry race conditions.
+Every active REQ and NFR has ≥ 1 AC. REQ-EVAL1-010 (nightly cron) is deferred to V1.1, so AC-011 carries no V1 obligation. Active edge cases EC-001 (path-filter skip) and EC-002 (malformed report) supplement workflow filtering and gate input handling; EC-003 (override expiry race) is N/A in V1 because override auto-expiry was dropped (REQ-EVAL1-003 v0.2.0).
 
 ---
 
-*End of SPEC-EVAL-001 acceptance.md.*
+*End of SPEC-EVAL-001 acceptance.md (v0.2.0).*

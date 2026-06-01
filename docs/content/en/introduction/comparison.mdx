@@ -1,0 +1,47 @@
+---
+title: Feature Comparison
+description: How Universal Search compares to existing AI search products
+lastUpdated: 2026-05-30
+---
+
+# Feature Comparison
+
+## Universal Search vs. Commercial AI Search
+
+| Feature | Universal Search | Perplexity | ChatGPT Search | You.com |
+|---|---|---|---|---|
+| Self-hosted | Yes | No | No | No |
+| Korean-locale first | Yes | Partial | Partial | No |
+| MCP integration | Yes (native) | No | No | No |
+| CLI access | Yes | No | No | No |
+| Team shared memory | Yes | No | No | Partial |
+| Open-source | Yes (Apache-2.0) | No | No | No |
+| Auditable citations | Yes (per-claim) | Partial | Partial | Partial |
+| Deep research mode | Yes (`/deep`) | Pro tier | No | Yes |
+| Custom adapters | Yes (extensible) | No | No | No |
+| Cost | Self-hosted infra | Subscription | Subscription | Freemium |
+
+## Source Coverage
+
+| Source Category | Universal Search | Notes |
+|---|---|---|
+| Web (general) | Yes | SearXNG metasearch, 70+ engines |
+| Social (Reddit, X, HN, YouTube) | Yes | Social engagement scoring |
+| Academic (arXiv, Semantic Scholar) | Yes | Citation-quality sources |
+| Korean-locale (Naver, 다음, Korean RSS) | Yes | mecab-ko tokenization, Korean-first ranking |
+| GitHub / technical docs | Yes | Developer-focused adapters |
+| Personal context | Partial (V1.1) | Opt-in, read-only |
+
+## Open Source Lineage
+
+Universal Search builds on proven open-source components:
+
+| Component | License | Role |
+|---|---|---|
+| SearXNG | AGPL-3.0 | Metasearch engine (separate container) |
+| gpt-researcher | Apache-2.0 | Deep research pipeline |
+| last30days-skill pattern | MIT | Social signal aggregation |
+| Stanford STORM pattern | Apache-2.0 | Citation report generation |
+| insane-search pattern | MIT | Adaptive access layer |
+
+See [Dependencies](/en/reference/dependencies) and [Licenses](/en/legal/licenses) for complete attribution.

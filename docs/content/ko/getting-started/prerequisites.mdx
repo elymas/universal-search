@@ -1,0 +1,66 @@
+---
+title: 사전 요구사항
+description: Universal Search 실행을 위한 소프트웨어 및 환경 요구사항
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# 사전 요구사항
+
+Universal Search를 설치하기 전에 다음 도구들이 설치되어 있는지 확인하세요.
+
+## 필수 도구
+
+| 도구 | 최소 버전 | 목적 | 설치 |
+|---|---|---|---|
+| **Docker** | 24+ | `make compose-up`에 필요 | [docker.com](https://docker.com) |
+| **Go** | 1.25+ | `make build`와 `make test`에 필요 | [go.dev](https://go.dev) |
+| **Python** | 3.11+ | Python 서비스에 필요 | [python.org](https://python.org) |
+| **Node.js** | 22+ | 웹 프론트엔드에 필요 | [nodejs.org](https://nodejs.org) |
+| **make** | 모든 버전 | 표준 빌드 도구 | 시스템 패키지 관리자 |
+| **uv** | 0.4+ | Python 패키지 관리자 | `pip install uv` |
+| **pnpm** | 9+ | Node 패키지 관리자 | `npm install -g pnpm` |
+
+## 설치 확인
+
+```bash
+docker --version        # Docker version 24.0.0+
+go version              # go1.25.0+
+python3 --version       # Python 3.11+
+node --version          # v22.0.0+
+make --version          # GNU Make 4.x
+uv --version            # uv 0.4.0+
+pnpm --version          # 9.0.0+
+```
+
+## 외부 API 키 (선택 사항이지만 권장)
+
+Universal Search는 로컬 Ollama 모델로도 동작하지만, 최상의 결과를 위해 최소 하나의 LLM API 키가 필요합니다:
+
+| 서비스 | 목적 | 필수 여부 |
+|---|---|---|
+| Anthropic (Claude) | 기본 LLM 합성 | 권장 |
+| OpenAI | 대안 LLM | 선택 사항 |
+| 네이버 Search API | 한국어 로케일 결과 | 선택 사항 (한국어 분석가 페르소나에 필요) |
+| Brave Search API | 추가 웹 결과 | 선택 사항 |
+
+<Callout type="info">
+  모든 API 키는 `.env` 파일을 통해 설정합니다. 전체 환경 변수 목록은 [구성 참조](/en/reference/configuration)를 참조하세요 *(영어)*.
+</Callout>
+
+## 하드웨어 요구사항
+
+| 워크로드 | CPU | RAM | 디스크 |
+|---|---|---|---|
+| 개발 (최소) | 2코어 | 4 GB | 10 GB |
+| 표준 운영 | 4코어 | 8 GB | 20 GB |
+| 심층 연구 워크로드 | 8코어+ | 16 GB | 50 GB |
+
+<Callout type="warning">
+  Qdrant(벡터 데이터베이스)와 Meilisearch(전문 검색)가 가장 메모리 집약적인 컴포넌트입니다. 프로덕션에서는 각 서비스당 최소 2 GB RAM을 계획하세요.
+</Callout>
+
+## 다음 단계
+
+사전 요구사항이 충족되면 [설치](/ko/getting-started/installation)로 진행하세요.

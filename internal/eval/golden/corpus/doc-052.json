@@ -1,15 +1,20 @@
 {
   "id": "doc-052",
-  "source_id": "reddit",
-  "url": "https://example.com/reddit/0052",
-  "title": "multi-modal foundation models - study 52",
-  "body": "This document discusses multi-modal foundation models. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of multi-modal foundation models. Key findings include improved accuracy, reduced latency, and better scalability. The study 52 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on multi-modal foundation models.",
-  "published_at": "2025-02-22T00:00:00+00:00",
-  "retrieved_at": "2026-05-03T04:00:00+00:00",
-  "author": "author-2",
-  "score": 0.52,
-  "lang": "en",
+  "source_id": "github",
+  "url": "https://example.test/github/goroutine-ko-b",
+  "title": "Go 고루틴 스케줄링 (심화)",
+  "body": "Go는 작업 훔치기 스케줄러를 사용하여 고루틴을 OS 스레드에 다중화한다. GOMAXPROCS 설정이 병렬성을 제한한다. 채널은 고루틴 간 동기화를 제공한다. 후속 연구는 더 광범위한 실험으로 이러한 발견을 확장했다.",
+  "snippet": "Go 고루틴 스케줄링 (심화)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "ko",
   "doc_type": "repo",
-  "hash": "918aaed93af04ac7"
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

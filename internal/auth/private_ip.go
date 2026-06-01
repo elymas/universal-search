@@ -3,11 +3,17 @@ package auth
 import (
 	"fmt"
 	"net"
-	"net/netip"
+
+	secssrf "github.com/elymas/universal-search/internal/security/ssrf"
 )
 
 // checkPrivateIP verifies that the hostname does not resolve to a private IP range.
 // REQ-AUTH1-011: RFC 1918 / fc00::/7 / loopback / link-local block.
+//
+// SPEC-SEC-001 REQ-SEC-007 (DDD IMPROVE): the private-range classification is
+// now shared with the access cascade via internal/security/ssrf. The external
+// behavior is preserved: empty/unresolvable hostnames pass (let the connection
+// fail later), literal or resolved private IPs are rejected with the same error.
 func checkPrivateIP(hostname string) error {
 	// Skip check for empty hostname (should not happen after URL parse)
 	if hostname == "" {
@@ -33,12 +39,7 @@ func checkPrivateIP(hostname string) error {
 		}
 	}
 
-	addr, ok := netip.AddrFromSlice(ip)
-	if !ok {
-		return nil
-	}
-
-	if addr.IsPrivate() || addr.IsLoopback() || addr.IsLinkLocalUnicast() || addr.IsLinkLocalMulticast() {
+	if secssrf.IsPrivateOrLoopback(ip) {
 		return fmt.Errorf("auth: issuer host %q resolves to private IP range; set auth.oidc.allow_private_issuer=true for dev/CI", hostname)
 	}
 
@@ -46,14 +47,12 @@ func checkPrivateIP(hostname string) error {
 }
 
 // isPrivateIP reports whether the given IP string is in a private/reserved range.
+//
+// SPEC-SEC-001 REQ-SEC-007: delegates to the shared ssrf classifier.
 func isPrivateIP(ipStr string) bool {
 	ip := net.ParseIP(ipStr)
 	if ip == nil {
 		return false
 	}
-	addr, ok := netip.AddrFromSlice(ip)
-	if !ok {
-		return false
-	}
-	return addr.IsPrivate() || addr.IsLoopback() || addr.IsLinkLocalUnicast() || addr.IsLinkLocalMulticast()
+	return secssrf.IsPrivateOrLoopback(ip)
 }

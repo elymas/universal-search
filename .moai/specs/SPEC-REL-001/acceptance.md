@@ -1,8 +1,9 @@
 ---
 id: SPEC-REL-001
-version: 0.1.0
+version: 0.2.0
 status: draft
 created: 2026-05-26
+updated: 2026-05-31
 author: limbowl (via manager-spec)
 related_spec: SPEC-REL-001 (spec.md, plan.md)
 format: Given/When/Then
@@ -34,7 +35,7 @@ go build -ldflags "-X github.com/elymas/universal-search/internal/version.Versio
 ```
 
 **Then**:
-- The resulting binary's `--version` output contains `usearch v1.0.0`, matching the existing semver regex `^usearch v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$`.
+- The resulting binary's `--version` output contains `usearch v1.0.0`, matching the actual `semverPattern` `^usearch v\d+\.\d+\.\d+` (prefix-anchored, no trailing `$`, no prerelease group — per `cmd/usearch/main_test.go:12`).
 - `internal/version.Commit` returns `"abc123"`.
 - `internal/version.BuildDate` returns `"2026-05-22T12:00:00Z"`.
 - Re-running the build with identical ldflags produces a binary that reports the same version values (NFR-REL-002 determinism).
@@ -56,8 +57,8 @@ go test -run TestVersionFlag ./cmd/usearch/...
 
 **Then**:
 - The test passes WITHOUT ldflags injection (default `0.1.0-dev`).
-- The assertion `usearch --version` output matches the semver regex.
-- The characterization test from M0 is preserved (HARD characterization requirement).
+- The assertion `usearch --version` output matches the actual `semverPattern` `^usearch v\d+\.\d+\.\d+` (per `cmd/usearch/main_test.go:12` — prefix-anchored, no `$`, no prerelease group).
+- The characterization test is preserved byte-for-byte: `main_test.go` is NOT modified by the refactor (HARD characterization requirement — the regex is preserved as-is, not tightened).
 
 Maps to scenario S2 in spec.md §5.
 
@@ -115,9 +116,9 @@ Covers: REQ-REL-004
 **When** the structural validation script extracts all `^## ` headers.
 
 **Then**:
-- Exactly 12 sections appear in this documented order: §1 Overview, §2 Freeze scope, §3 Breaking changes, §4 Deprecations, §5 New features, §6 Removed features, §7 Configuration changes, §8 Schema changes, §9 Upgrade procedure, §10 Verification commands, §11 Known issues, §12 Rollback procedure.
-- Each section is non-empty (≥ 30 plain-text characters after stripping code blocks).
-- Verification commands in §10 are runnable (lint-checked for shell syntax).
+- Exactly 12 sections appear in the canonical order defined by spec.md HISTORY D4 / REQ-REL-004: §1 Overview, §2 CLI breaking changes, §3 Config schema breaking changes, §4 Env var renames, §5 MCP protocol surface, §6 Adapter plugin contract, §7 MoAI Skill manifest, §8 REST/GraphQL endpoint schema, §9 Database schema migration policy, §10 Adapter status taxonomy reference, §11 Upgrade procedure, §12 Rollback procedure.
+- Each section is non-empty (≥ 30 plain-text characters after stripping code blocks); sections with no current known breaking change explicitly state "v1.0.0 — no breaking changes in this category".
+- §11 Upgrade procedure commands (helm / go install / Skill reinstall) are runnable (lint-checked for shell syntax).
 
 Maps to scenario S5 in spec.md §5.
 
@@ -167,6 +168,8 @@ Maps to scenario S7 in spec.md §5.
 
 Covers: REQ-REL-007, REQ-REL-008, REQ-REL-010, REQ-REL-011, REQ-REL-012, REQ-REL-013, REQ-REL-014, REQ-REL-016, REQ-REL-017
 
+Verification timing: this AC is a Sprint-2 / release-ceremony acceptance (requires a real signed tag push + merged dependency workflows). It is NOT verified at implementation time; the implementation-time acceptance is the dry-run/snapshot/lint coverage in AC-006, AC-012, and gates A1..A13.
+
 **Given** all G1..G12 gates PASS and `goreleaser release` succeeds.
 
 **When** the GitHub Release publish step executes.
@@ -179,8 +182,8 @@ Covers: REQ-REL-007, REQ-REL-008, REQ-REL-010, REQ-REL-011, REQ-REL-012, REQ-REL
 - `*.intoto.jsonl` SLSA provenance is attached (REQ-REL-011).
 - `*.sig` + `*.crt` cosign signature artifacts are attached (REQ-REL-012).
 - SPDX SBOM files are attached.
-- The tag is GPG-signed (per REQ-REL-008 release ceremony).
-- `.moai/state/roadmap.md` PR is auto-created updating M9 status (REQ-REL-014, REQ-REL-016).
+- The tag is GPG-signed (per REQ-REL-008 release ceremony — OPERATIONAL/post-merge; not required at implementation time).
+- `.moai/project/roadmap.md` PR is auto-created updating M9 status (REQ-REL-014, REQ-REL-016).
 - Optional release-notification webhook fires (REQ-REL-013).
 
 Maps to scenarios S8, S11 in spec.md §5.
@@ -239,14 +242,15 @@ Maps to scenario S10 in spec.md §5.
 
 Covers: REQ-REL-017
 
-**Given** SPEC-DEPLOY-001 `build-images.yml` has published `ghcr.io/elymas/universal-search:1.0.0` with valid cosign signature, AND `chart-release.yml` has published `oci://ghcr.io/elymas/charts/universal-search:1.0.0` with `appVersion: 1.0.0`.
+**Given** SPEC-DEPLOY-001 `build-images.yml` has published the real app images `ghcr.io/elymas/usearch-api:1.0.0` and `ghcr.io/elymas/usearch-mcp:1.0.0` (plus `ghcr.io/elymas/usearch-migrate:1.0.0`) with valid cosign signatures, AND `chart-release.yml` has published `oci://ghcr.io/elymas/charts/universal-search:1.0.0` with `appVersion: 1.0.0`. (Note: `universal-search` is the Helm **chart** name only — no `universal-search` app image is built, so G7 must not verify one.)
 
 **When** the `release.yml` G7 step executes verification.
 
 **Then**:
 - G7 verification SUCCEEDS.
-- If the image is missing → G7 FAILS, release aborts.
+- If a required app image (`usearch-api` or `usearch-mcp`) is missing → G7 FAILS, release aborts.
 - If the chart `appVersion` ≠ git tag → G7 FAILS, release aborts.
+- G7 does NOT reference a `ghcr.io/elymas/universal-search` app image (a nonexistent artifact would otherwise hard-fail the gate).
 - DEPLOY-001 and chart-release.yml's publish workflows must complete BEFORE REL-001's release.yml is triggered (dependency ordering enforced).
 
 Maps to scenario S11 in spec.md §5.
@@ -268,7 +272,7 @@ Covers: REQ-REL-015, NFR-REL-006
   - `cosign sign`.
   - SLSA provenance generation.
   - GitHub Release publish.
-  - `.moai/state/roadmap.md` PR creation.
+  - `.moai/project/roadmap.md` PR creation.
   - Notification webhook fires.
 - The workflow status is `success` with a clear "dry-run mode" banner in the summary.
 

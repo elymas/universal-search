@@ -1,15 +1,20 @@
 {
   "id": "doc-010",
-  "source_id": "korea_news",
-  "url": "https://example.com/korea_news/0010",
-  "title": "\ud55c\uad6d \ub274\uc2a4 \ub370\uc774\ud130 \ub9c8\uc774\ub2dd \uae30\ubc95 - study 10",
-  "body": "This document discusses \ud55c\uad6d \ub274\uc2a4 \ub370\uc774\ud130 \ub9c8\uc774\ub2dd \uae30\ubc95. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of \ud55c\uad6d \ub274\uc2a4 \ub370\uc774\ud130 \ub9c8\uc774\ub2dd \uae30\ubc95. Key findings include improved accuracy, reduced latency, and better scalability. The study 10 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on \ud55c\uad6d \ub274\uc2a4 \ub370\uc774\ud130 \ub9c8\uc774\ub2dd \uae30\ubc95.",
-  "published_at": "2025-01-11T00:00:00+00:00",
-  "retrieved_at": "2026-05-01T10:00:00+00:00",
-  "author": "author-10",
-  "score": 0.6,
-  "lang": "ko",
-  "doc_type": "paper",
-  "hash": "97c8bb0be3fa43e5"
+  "source_id": "github",
+  "url": "https://example.test/github/rustgc-b",
+  "title": "Rust memory model without GC (deep dive)",
+  "body": "Rust achieves memory safety without a garbage collector using an ownership and borrowing system checked at compile time. Each value has a single owner and references are validated by the borrow checker. This eliminates entire classes of memory bugs. Subsequent work expanded on these findings with broader experiments.",
+  "snippet": "Rust memory model without GC (deep dive)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "en",
+  "doc_type": "repo",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

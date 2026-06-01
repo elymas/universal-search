@@ -1,0 +1,161 @@
+---
+title: Error Taxonomy
+description: Shared error category reference for all Universal Search adapters
+lastVerified: 2026-05-31
+---
+
+import { Callout } from 'nextra/components'
+
+# Error Taxonomy
+
+All Universal Search adapters return errors wrapped in `*types.SourceError` with a `Category` field. The fanout dispatcher (SPEC-FAN-001) uses these categories to determine retry strategy. Each per-adapter page links here from its **Error reference** section.
+
+<Callout type="info">
+  Source: `pkg/types/errors.go` — `Category` enum with 5 values.
+  Retry semantics are defined in [SPEC-FAN-001](/en/reference/architecture).
+</Callout>
+
+## Status &amp; Compatibility
+
+| Field | Value |
+|-------|-------|
+| Source file | `pkg/types/errors.go` |
+| Used by | All 10 production adapters |
+| Last verified | 2026-05-31 |
+
+## Overview
+
+When an adapter call fails, the error is wrapped in `*types.SourceError`:
+
+```go
+type SourceError struct {
+    Adapter    string
+    Category   Category
+    HTTPStatus int
+    Cause      error
+    RetryAfter time.Duration
+}
+```
+
+The `Category` field determines how the fanout dispatcher handles the failure (retry, circuit-break, or propagate).
+
+## Setup
+
+Not required — this is a reference page for error handling semantics.
+
+## Capabilities
+
+Not applicable — error taxonomy applies uniformly across all adapters.
+
+## Query syntax
+
+Not applicable.
+
+## Rate limits
+
+Not applicable.
+
+## Error reference
+
+### CategoryUnknown
+
+**Value:** `0` (default zero value)
+
+**Triggering HTTP status codes:** Any unrecognised error that does not match the four sentinels. Returned when `CategorizeError()` cannot classify the error.
+
+**Fanout dispatcher behaviour:** Treated as a permanent failure — no retry. Maps to Prometheus outcome label `"failure"`.
+
+**`RetryAfter` handling:** Not applicable — no retry.
+
+**Example error message:**
+```
+adapter "searxng": unknown: unexpected EOF
+```
+
+---
+
+### CategoryTransient
+
+**Value:** `1`
+
+**Triggering HTTP status codes:** HTTP 5xx responses, network timeouts (`context.DeadlineExceeded`), temporary connection errors.
+
+**Fanout dispatcher behaviour:** Retried with exponential back-off (see SPEC-FAN-001). Maps to Prometheus outcome label `"transient"`.
+
+**`RetryAfter` handling:** If `RetryAfter > 0`, the dispatcher honours the delay before the next retry attempt.
+
+**Example error message:**
+```
+adapter "reddit": transient: dial tcp: i/o timeout
+```
+
+---
+
+### CategoryPermanent
+
+**Value:** `2`
+
+**Triggering HTTP status codes:** HTTP 400, 401, 403, 404, 422. Non-retryable errors including authentication failures and invalid query parameters.
+
+**Fanout dispatcher behaviour:** No retry — the error is propagated immediately to the caller. Maps to Prometheus outcome label `"failure"`.
+
+**`RetryAfter` handling:** Not applicable — permanent errors are never retried.
+
+**Example error message:**
+```
+adapter "github": permanent: 401 Unauthorized — Bad credentials
+```
+
+---
+
+### CategoryRateLimited
+
+**Value:** `3`
+
+**Triggering HTTP status codes:** HTTP 429. All adapters except SearXNG and x return this category when the upstream rate limit is hit.
+
+**Fanout dispatcher behaviour:** The dispatcher pauses for `RetryAfter` duration (parsed from the upstream `Retry-After` header) before retrying. Falls back to a 5-second default when the header is absent. Maps to Prometheus outcome label `"rate_limited"`.
+
+**`RetryAfter` handling:** `RetryAfter` is populated from the upstream `Retry-After` response header where available. Adapters apply a per-adapter cap (e.g., GitHub caps at 90s).
+
+**Example error message:**
+```
+adapter "hackernews": rate_limited: 429 Too Many Requests (retry-after: 5s)
+```
+
+---
+
+### CategoryUnavailable
+
+**Value:** `4`
+
+**Triggering HTTP status codes:** HTTP 503, DNS resolution failure, TCP dial timeout (distinct from query timeout).
+
+**Fanout dispatcher behaviour:** Circuit-breaker may open after repeated `CategoryUnavailable` errors from the same adapter. Maps to Prometheus outcome label `"unavailable"`.
+
+**`RetryAfter` handling:** A 503 response with `Retry-After` header populates `RetryAfter` on the returned `*SourceError`.
+
+**Example error message:**
+```
+adapter "naver": unavailable: dial tcp: lookup openapi.naver.com: no such host
+```
+
+## Troubleshooting
+
+| Symptom | Likely cause | Diagnostic command | Resolution | Related SPECs |
+|---------|-------------|-------------------|------------|---------------|
+| All adapters return `CategoryUnavailable` simultaneously | Network partition or DNS outage | `ping openapi.naver.com`, check container networking | Verify network connectivity, inspect Docker DNS resolution | SPEC-DEPLOY-001 |
+| Adapter returns `CategoryUnknown` repeatedly | Unhandled error type in adapter's error-mapping code | Check adapter logs for the raw error | File a bug against the adapter's SPEC-ADP-* | SPEC-ADP-001..009 |
+| `CategoryRateLimited` with no `RetryAfter` | Upstream did not send `Retry-After` header | Check adapter source for default fallback value | Adapter uses a hardcoded default (5s for HN, 90s cap for GitHub) | SPEC-FAN-001 |
+
+## Version compatibility
+
+| usearch version | errors.go Category enum | Last verified |
+|----------------|------------------------|---------------|
+| v1.0.0 | 5 values (Unknown..Unavailable) | 2026-05-31 |
+
+## Related
+
+- [SPEC-FAN-001 fanout dispatcher](/en/reference/architecture) — retry semantics
+- [SPEC-CACHE-001 5-phase fallback](/en/reference/architecture) — cache fallback on errors
+- [pkg/types/errors.go](https://github.com/elymas/universal-search/blob/main/pkg/types/errors.go) — source

@@ -1,15 +1,20 @@
 {
   "id": "doc-033",
-  "source_id": "searxng",
-  "url": "https://example.com/searxng/0033",
-  "title": "time series anomaly detection methods - study 33",
-  "body": "This document discusses time series anomaly detection methods. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of time series anomaly detection methods. Key findings include improved accuracy, reduced latency, and better scalability. The study 33 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on time series anomaly detection methods.",
-  "published_at": "2025-02-03T00:00:00+00:00",
-  "retrieved_at": "2026-05-02T09:00:00+00:00",
-  "author": "author-33",
-  "score": 0.83,
+  "source_id": "rss",
+  "url": "https://example.test/rss/tls13-a",
+  "title": "TLS 1.3 handshake",
+  "body": "TLS 1.3 reduces the handshake to one round trip by removing legacy cipher suites and key exchange methods. It mandates forward secrecy and encrypts more of the handshake. Zero round-trip resumption is supported with caveats.",
+  "snippet": "TLS 1.3 handshake",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
   "lang": "en",
-  "doc_type": "post",
-  "hash": "f24ff0ad420fdf3f"
+  "doc_type": "article",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

@@ -1,15 +1,20 @@
 {
   "id": "doc-028",
-  "source_id": "arxiv",
-  "url": "https://example.com/arxiv/0028",
-  "title": "model serving latency optimization - study 28",
-  "body": "This document discusses model serving latency optimization. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of model serving latency optimization. Key findings include improved accuracy, reduced latency, and better scalability. The study 28 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on model serving latency optimization.",
-  "published_at": "2025-01-29T00:00:00+00:00",
-  "retrieved_at": "2026-05-02T04:00:00+00:00",
-  "author": "author-28",
-  "score": 0.78,
-  "lang": "en",
-  "doc_type": "repo",
-  "hash": "a27c6add090c2bbe"
+  "source_id": "rss",
+  "url": "https://example.test/rss/httpcache-ko-b",
+  "title": "HTTP 캐싱 시맨틱 (심화)",
+  "body": "HTTP 캐싱은 max-age와 no-store 같은 Cache-Control 지시어로 신선도를 제어한다. ETag와 If-None-Match를 사용한 조건부 요청으로 재검증이 가능하다. 304 Not Modified 응답은 대역폭을 절약한다. 후속 연구는 더 광범위한 실험으로 이러한 발견을 확장했다.",
+  "snippet": "HTTP 캐싱 시맨틱 (심화)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "ko",
+  "doc_type": "article",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

@@ -1,15 +1,20 @@
 {
   "id": "doc-015",
-  "source_id": "arxiv",
-  "url": "https://example.com/arxiv/0015",
-  "title": "\ud55c\uad6d SaaS \uc2a4\ud0c0\ud2b8\uc5c5 \uae30\uc220 \uc2a4\ud0dd \ubd84\uc11d - study 15",
-  "body": "This document discusses \ud55c\uad6d SaaS \uc2a4\ud0c0\ud2b8\uc5c5 \uae30\uc220 \uc2a4\ud0dd \ubd84\uc11d. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of \ud55c\uad6d SaaS \uc2a4\ud0c0\ud2b8\uc5c5 \uae30\uc220 \uc2a4\ud0dd \ubd84\uc11d. Key findings include improved accuracy, reduced latency, and better scalability. The study 15 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on \ud55c\uad6d SaaS \uc2a4\ud0c0\ud2b8\uc5c5 \uae30\uc220 \uc2a4\ud0dd \ubd84\uc11d.",
-  "published_at": "2025-01-16T00:00:00+00:00",
-  "retrieved_at": "2026-05-01T15:00:00+00:00",
-  "author": "author-15",
-  "score": 0.65,
+  "source_id": "github",
+  "url": "https://example.test/github/k8s-ko-a",
+  "title": "쿠버네티스 스케줄링 기초",
+  "body": "쿠버네티스 스케줄러는 리소스 요청, 어피니티 규칙, 테인트를 기반으로 파드를 노드에 할당한다. 필터링 단계 후 점수 매기기 단계를 실행한다. 가장 높은 점수의 실행 가능한 노드가 파드를 차지한다.",
+  "snippet": "쿠버네티스 스케줄링 기초",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
   "lang": "ko",
-  "doc_type": "other",
-  "hash": "a36daf3516cc2b8c"
+  "doc_type": "repo",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

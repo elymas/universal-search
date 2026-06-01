@@ -1,15 +1,20 @@
 {
   "id": "doc-040",
-  "source_id": "hackernews",
-  "url": "https://example.com/hackernews/0040",
-  "title": "\ud55c\uad6d\uc5b4 \uc790\uc5f0\uc5b4 \ucc98\ub9ac \ubaa8\ub378 \ubc1c\uc804 - study 40",
-  "body": "This document discusses \ud55c\uad6d\uc5b4 \uc790\uc5f0\uc5b4 \ucc98\ub9ac \ubaa8\ub378 \ubc1c\uc804. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of \ud55c\uad6d\uc5b4 \uc790\uc5f0\uc5b4 \ucc98\ub9ac \ubaa8\ub378 \ubc1c\uc804. Key findings include improved accuracy, reduced latency, and better scalability. The study 40 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on \ud55c\uad6d\uc5b4 \uc790\uc5f0\uc5b4 \ucc98\ub9ac \ubaa8\ub378 \ubc1c\uc804.",
-  "published_at": "2025-02-10T00:00:00+00:00",
-  "retrieved_at": "2026-05-02T16:00:00+00:00",
-  "author": "author-40",
-  "score": 0.9,
+  "source_id": "github",
+  "url": "https://example.test/github/wasm-ko-b",
+  "title": "웹어셈블리 런타임 모델 (심화)",
+  "body": "웹어셈블리는 샌드박스화된 스택 기반 가상 머신에서 실행되는 이식 가능한 바이트코드다. 거의 네이티브에 가까운 성능과 언어 독립성을 제공한다. 브라우저와 독립 런타임 모두 이를 실행한다. 후속 연구는 더 광범위한 실험으로 이러한 발견을 확장했다.",
+  "snippet": "웹어셈블리 런타임 모델 (심화)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
   "lang": "ko",
-  "doc_type": "article",
-  "hash": "88be432c303e2a01"
+  "doc_type": "repo",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

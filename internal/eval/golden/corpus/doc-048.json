@@ -1,15 +1,20 @@
 {
   "id": "doc-048",
-  "source_id": "daum",
-  "url": "https://example.com/daum/0048",
-  "title": "federated learning privacy guarantees - study 48",
-  "body": "This document discusses federated learning privacy guarantees. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of federated learning privacy guarantees. Key findings include improved accuracy, reduced latency, and better scalability. The study 48 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on federated learning privacy guarantees.",
-  "published_at": "2025-02-18T00:00:00+00:00",
-  "retrieved_at": "2026-05-03T00:00:00+00:00",
-  "author": "author-48",
-  "score": 0.98,
-  "lang": "en",
+  "source_id": "rss",
+  "url": "https://example.test/rss/sqlindex-ko-b",
+  "title": "SQL 인덱스 내부 (심화)",
+  "body": "B-트리 인덱스는 디스크 페이지에 키를 정렬해 두어 조회 속도를 높인다. 쿼리 플래너는 선택도가 높을 때 인덱스를 선택한다. 복합 인덱스는 최좌측 접두사 규칙을 따른다. 후속 연구는 더 광범위한 실험으로 이러한 발견을 확장했다.",
+  "snippet": "SQL 인덱스 내부 (심화)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "ko",
   "doc_type": "article",
-  "hash": "e149b80938d84cd5"
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

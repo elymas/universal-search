@@ -1,75 +1,63 @@
-# SPEC-EVAL-001 Progress
+# SPEC-EVAL-001 Progress Log
 
-## Session 1 — 2026-05-27
+## 2026-05-29 — Phase 1 (Analysis & Planning) — manager-strategy
 
-### Phase 1: Golden Set + Corpus — COMPLETE
+Phase 1 of /moai run executed in analysis-only mode (no implementation).
 
-- Created `internal/eval/golden/queries.jsonl` (50 records: 35 EN + 15 KO)
-- Created `internal/eval/golden/corpus/doc-*.json` (210 NormalizedDoc fixtures)
-- Created `internal/eval/golden/manifest.json` (corpus_revision: 1.0.0)
-- Created `internal/eval/golden/overrides.json` (empty initial)
-- Created `internal/eval/golden/golden_test.go` (10 tests)
-- All 10 golden tests PASS
+**Outputs:** `tasks.md` written (10 units: 1 gate + 9 impl). Memory entries recorded.
 
-### Phase 2: Python Judge Service — COMPLETE
+**Harness:** standard (confirmed from `.moai/config/sections/harness.yaml`). P1 feature SPEC, multi-domain (Go + Python + CI), no security/payment keywords, priority != critical → standard. plan_audit.enabled=true, require_must_pass=true, evaluator=final-pass.
 
-- Created `services/researcher/src/researcher/eval_judge.py` (POST /judge/faithfulness)
-- Created `services/researcher/tests/test_eval_judge.py` (11 tests)
-- Modified `services/researcher/src/researcher/app.py` (mounted eval_judge router)
-- Modified `services/researcher/pyproject.toml` (added deepeval ~= 1.0)
-- All 11 Python judge tests PASS
+**Dependency verification (all 3 declared deps + transitive):**
+| SPEC | declared status | actual status | assets exist |
+|------|----------------|---------------|--------------|
+| SPEC-SYN-002 | implemented | implemented ✓ | structural faithfulness shipped (see note) |
+| SPEC-OBS-001 | implemented | implemented ✓ | `internal/obs/metrics/` allowlist present |
+| SPEC-CLI-002 | implemented | implemented ✓ | cmd/usearch present |
+| SPEC-LLM-001 | implemented | implemented ✓ | `internal/llm/` LiteLLM router present |
+| SPEC-SYN-001 | implemented | implemented ✓ | synthesis client/Result present |
+| SPEC-CORE-001 | implemented | implemented ✓ | pkg/types/normalized_doc.go present |
+| SPEC-REL-001 (blocks) | draft | draft ✓ | — |
 
-### Phase 3: Go DeepEval Bridge — COMPLETE
+**SPEC factual corrections found (C1-style staleness — flagged, not blocking):**
+1. SYN-002 faithfulness path `services/researcher/src/researcher/faithfulness.py` cited in HISTORY does NOT exist. Real: `faithfulness_endpoint.py` (Python) + `internal/synthesis/faithfulness.go` (Go), both owned by SPEC-DEEP-002 REQ-DEEP2-006, not SYN-002.
+2. Quoted CJK-aware sentence regex does not match real code (`_MARKER_RE=r"\[(\d+)\]"`, split `(?<=[.!?])\s+`, no CJK). Affects 15 KO queries.
+3. Go result type is `synthesis.Result` w/ `[]Citation{Marker,DocID,URL,Title}`, not `SynthesizeResponse`.
+4. Orphaned `.pyc` cache for `eval_judge`/`test_eval_judge` exists with no source (clean before Phase 2).
 
-- Created `internal/eval/scorer/deepeval_bridge.go` (HTTP bridge with 30s timeout)
-- Created `internal/eval/scorer/deepeval_bridge_test.go` (7 tests)
-- Coverage: 85.7%
-- All 7 bridge tests PASS
+**SYN-002 overlap (C1 risk) check:** REFUTED. EVAL-001 adds the *semantic* layer (LLM-judge entailment) that the shipped *structural* gate cannot do, and consumes synthesis output read-only. No reinvention. (Path-attribution is wrong in the SPEC, but the capability boundary is sound.)
 
-### Phase 4: Runner + Report Writer — COMPLETE
+**Phase 0 / plan-auditor:** NO report exists at `.moai/reports/plan-audit/SPEC-EVAL-001-*`. Standard harness REQUIRES plan-auditor PASS before implementation. → recommendation: **needs-plan-auditor-first**.
 
-- Created `internal/eval/runner/runner.go` (parallel benchmark orchestrator)
-- Created `internal/eval/runner/report.go` (JSON + Markdown report writers)
-- Created `internal/eval/runner/runner_test.go` (10 tests)
-- Created `internal/eval/runner/report_test.go` (3 tests)
-- Coverage: 92.7%
-- All 13 runner/report tests PASS
+**Acceptance count:** 16 AC + 3 edge cases, full REQ→AC coverage matrix present. acceptance.md is complete.
 
-### Phase 5: CI Gate — COMPLETE
+**Blockers:** none hard. One gate: plan-auditor must run (T-EVAL1-00).
 
-- Created `internal/eval/ci/gate.go` (exit code mapping: 0/1/2/3)
-- Created `internal/eval/ci/gate_test.go` (7 tests)
-- Coverage: 94.4%
-- All 7 CI gate tests PASS
+**Acceptance criteria met this iteration:** 0 (analysis phase). **Error delta:** 0.
 
-### Phase 6: CI Workflows — COMPLETE
+---
 
-- Created `.github/workflows/eval.yml` (PR-gating workflow)
-- Created `.github/workflows/eval-nightly.yml` (nightly cron workflow)
+## Iteration 2 — TDD implementation (manager-tdd, 2026-05-29)
 
-### Phase 7: Observability — COMPLETE
+Implemented SPEC-EVAL-001 v0.2.0 end-to-end via RED-GREEN-REFACTOR. Branch `feature/SPEC-EVAL-001`. Standard harness.
 
-- Modified `internal/obs/metrics/metrics.go` (added eval benchmark metrics)
-- Added: EvalBenchmarkRuns, EvalBenchmarkScore, EvalJudgeCalls, EvalJudgeDuration
-- All existing metrics tests still PASS
+**Tasks completed (T01-T09):**
+- T01 golden set + corpus: 50 queries (35 EN + 15 KO) + 60 NormalizedDoc fixtures + manifest + empty overrides. Generator at `internal/eval/golden/gen/gen.go`. 17 schema/loader tests. coverage 94.4%.
+- T02 Python judge: `eval_judge.py` `/judge/faithfulness` wrapping DeepEval FaithfulnessMetric (lazy import) via injectable judge; deterministic params (temp=0/top_p=1/seed=42); mounted in app.py; `deepeval~=1.0` added to pyproject. 6 pytest tests pass.
+- T03 calibration: KO segmentation re-decided benchmark-side (handled in T04 bridge); Korean-bias check is a CI-time concern (real judge), documented. No code blocker.
+- T04 bridge: `deepeval_bridge.go` — locale-aware claim segmentation (EN ASCII + KO CJK/no-whitespace), citation extraction, 30s timeout, unavailability classification. 9 tests, race-clean. coverage 90.2%.
+- T05 runner: `runner.go` — bounded concurrency (≤5), null-vs-zero, override exclusion, exit-class mapping. 8 tests, race-clean. coverage 87.2%.
+- T06 report: `report.go` — markdown latest.md, Lowest-Scoring section w/ rationales, per-category breakdown, null listing, cost. 6 tests.
+- T07 gate + entrypoint: `ci/gate.go` pure Decide (exit 0/1/2/3) + `cmd/eval/main.go`. 9 gate tests + 4 cmd tests. gate coverage 100%.
+- T08 CI: `.github/workflows/eval.yml` PR-gate (path filters, boots researcher sidecar, health-check, runs cmd/eval, posts/overwrites PR comment, concurrency group, 25-min hard timeout). Nightly cron NOT built (V1.1 deferred).
+- T09 observability: `usearch_eval_runs_total{outcome}` + `usearch_eval_score_gauge` registered (reuse `outcome` label, no new cardinality); cardinality allowlist regression guard extended. metrics coverage 95.7%.
 
-### Summary
+**Test evidence:** `go build ./...` clean; `go vet ./...` clean; `golangci-lint run` 0 issues; `go test -race -cover ./internal/eval/... ./cmd/eval/...` all pass. Python: 6/6 judge tests pass (`PYTHONPATH=src python3 -m pytest tests/test_eval_judge.py`).
 
-| Metric | Value |
-|--------|-------|
-| Go tests | 34 total, 34 PASS |
-| Python tests | 11 total, 11 PASS |
-| Total tests | 45 |
-| Packages | 4 (golden, scorer, runner, ci) |
-| Coverage (scorer) | 85.7% |
-| Coverage (runner) | 92.7% |
-| Coverage (ci) | 94.4% |
-| New files | 14 |
-| Modified files | 3 (app.py, pyproject.toml, metrics.go) |
+**Determinism:** temp=0/top_p=1/seed=42 wired in `deterministic_litellm_params`; ±0.02 warn / ±0.05 block tolerance bands are gate-side (real-judge CI concern, documented).
 
-### Deferred
+**@MX tags:** ANCHOR on gate.Decide + runner.Run (+REASON), NOTE on bridge KO segmentation, WARN on runner goroutine fan-out (+REASON).
 
-- Full DeepEval integration (requires deepeval package install and LLM API key)
-- Full 50-query benchmark execution in CI (requires judge service deployment)
-- `usearch eval` CLI subcommand (SPEC-CLI-002 Phase 8)
-- Nightly history writing automation
+**Residual:** (1) DeepEval pin `~=1.0` not installed locally — real-judge path exercised only in CI. (2) Real-judge CI cost (~$0.45/run) + Korean-bias calibration require live LiteLLM secrets. (3) 7 pre-existing researcher pytest failures are environmental (pytest-asyncio absent in bare env) — unrelated to this change. (4) Status stays `approved`; plan-auditor gate (T00) is orchestrator-owned.
+
+**Acceptance criteria met this iteration:** 9 tasks (T01-T09). **Error delta:** 0.

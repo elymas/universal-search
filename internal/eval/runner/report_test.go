@@ -1,163 +1,94 @@
-// Package runner_test — report writer tests.
 package runner_test
 
 import (
-	"encoding/json"
-	"os"
-	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/elymas/universal-search/internal/eval/runner"
+	"github.com/elymas/universal-search/internal/eval/scorer"
 )
 
-func TestReportWritesJSON(t *testing.T) {
-	dir := t.TempDir()
-	outPath := filepath.Join(dir, "report.json")
+func ptr(f float64) *float64 { return &f }
 
-	scores := []float64{1.0, 0.8, 0.6}
-	results := make([]runner.QueryResult, 3)
-	for i := range results {
-		results[i] = runner.QueryResult{
-			QueryID:   "EVAL-001-Q001",
-			Locale:    "en",
-			Category:  "factual",
-			Score:     &scores[i],
-			Overridden: false,
-		}
-	}
-
-	report := &runner.RunReport{
-		TotalQueries:    3,
-		MeanScore:       0.8,
-		FloorScore:      0.6,
-		OverrideCount:   0,
-		NullCount:       0,
-		JudgeModel:      "test-model",
-		CorpusRevision:  "1.0.0",
-		Results:         results,
-	}
-
-	err := runner.WriteJSONReport(report, outPath)
-	if err != nil {
-		t.Fatalf("WriteJSONReport() error: %v", err)
-	}
-
-	raw, err := os.ReadFile(outPath)
-	if err != nil {
-		t.Fatalf("read report: %v", err)
-	}
-
-	var parsed runner.RunReport
-	if err := json.Unmarshal(raw, &parsed); err != nil {
-		t.Fatalf("unmarshal report: %v", err)
-	}
-	if parsed.MeanScore != 0.8 {
-		t.Errorf("parsed mean = %f, want 0.8", parsed.MeanScore)
-	}
-	if parsed.TotalQueries != 3 {
-		t.Errorf("parsed total = %d, want 3", parsed.TotalQueries)
-	}
-}
-
-func TestReportWritesMarkdown(t *testing.T) {
-	dir := t.TempDir()
-	outPath := filepath.Join(dir, "report.md")
-
-	score := 0.75
-	results := []runner.QueryResult{
-		{
-			QueryID:  "EVAL-001-Q001",
-			Locale:   "en",
-			Category: "factual",
-			Score:    &score,
+func sampleReport() runner.Report {
+	return runner.Report{
+		MeanScore:     0.86,
+		NullCount:     1,
+		OverrideCount: 1,
+		Queries: []runner.QueryResult{
+			{QueryID: "Q1", Category: "factual", Locale: "en", Score: ptr(1.0)},
+			{QueryID: "Q2", Category: "synthesis", Locale: "en", Score: ptr(0.40), PerClaim: []scorer.ClaimScore{
+				{Text: "bad claim [1]", Supported: false, JudgeRationale: "cited doc unrelated"},
+			}},
+			{QueryID: "Q3", Category: "korean", Locale: "ko", Score: nil, ErrorClass: "judge_unavailable"},
+			{QueryID: "Q4", Category: "edge", Locale: "en", Score: ptr(0.95), Overridden: true},
 		},
 	}
+}
 
-	report := &runner.RunReport{
-		TotalQueries:   1,
-		MeanScore:      0.75,
-		FloorScore:     0.75,
-		OverrideCount:  0,
-		NullCount:      0,
-		JudgeModel:     "test-model",
-		CorpusRevision: "1.0.0",
-		Results:        results,
+// TestReportHeaderHasMeanAndCounts verifies the markdown summary line.
+// REQ-EVAL1-007.
+func TestReportHeaderHasMeanAndCounts(t *testing.T) {
+	t.Parallel()
+	md := runner.RenderMarkdown(sampleReport(), runner.RenderOpts{})
+	if !strings.Contains(md, "0.86") {
+		t.Errorf("report missing mean score:\n%s", md)
 	}
-
-	err := runner.WriteMarkdownReport(report, outPath)
-	if err != nil {
-		t.Fatalf("WriteMarkdownReport() error: %v", err)
-	}
-
-	raw, err := os.ReadFile(outPath)
-	if err != nil {
-		t.Fatalf("read report: %v", err)
-	}
-
-	content := string(raw)
-	if len(content) == 0 {
-		t.Error("markdown report is empty")
-	}
-	// Check key sections exist
-	checks := []string{"EVAL-001", "Mean Score", "Floor Score", "Judge Model"}
-	for _, check := range checks {
-		if !contains(content, check) {
-			t.Errorf("markdown missing %q", check)
-		}
+	if !strings.Contains(md, "nulls") && !strings.Contains(md, "Null") {
+		t.Errorf("report missing null count")
 	}
 }
 
-func TestMarkdownWithNullScoresAndOverrides(t *testing.T) {
-	dir := t.TempDir()
-	outPath := filepath.Join(dir, "report.md")
-
-	score := 0.3
-	results := []runner.QueryResult{
-		{QueryID: "EVAL-001-Q001", Locale: "en", Category: "factual", Score: &score},
-		{QueryID: "EVAL-001-Q002", Locale: "en", Category: "factual", Score: nil, Error: "judge unavailable"},
-		{QueryID: "EVAL-001-Q003", Locale: "ko", Category: "korean", Score: nil, Overridden: true, OverrideReason: "known flaky"},
-	}
-
-	report := &runner.RunReport{
-		TotalQueries:   3,
-		MeanScore:      0.3,
-		FloorScore:     0.3,
-		OverrideCount:  1,
-		NullCount:      1,
-		JudgeModel:     "test-model",
-		CorpusRevision: "1.0.0",
-		Results:        results,
-	}
-
-	err := runner.WriteMarkdownReport(report, outPath)
-	if err != nil {
-		t.Fatalf("WriteMarkdownReport() error: %v", err)
-	}
-
-	raw, err := os.ReadFile(outPath)
-	if err != nil {
-		t.Fatalf("read report: %v", err)
-	}
-
-	content := string(raw)
-	if !contains(content, "OVERRIDDEN") {
-		t.Error("markdown missing OVERRIDDEN marker")
-	}
-	if !contains(content, "ERROR") {
-		t.Error("markdown missing ERROR marker")
+// TestReportTopTenLowestQueriesSection verifies the lowest-scoring section.
+// REQ-EVAL1-007.
+func TestReportTopTenLowestQueriesSection(t *testing.T) {
+	t.Parallel()
+	md := runner.RenderMarkdown(sampleReport(), runner.RenderOpts{})
+	if !strings.Contains(md, "Lowest-Scoring Queries") {
+		t.Errorf("report missing Lowest-Scoring Queries section:\n%s", md)
 	}
 }
 
-func contains(s, sub string) bool {
-	return len(s) >= len(sub) && (s == sub || len(sub) == 0 ||
-		(len(s) > 0 && len(sub) > 0 && findSubstr(s, sub)))
+// TestReportContainsJudgeRationalesForLowScores verifies rationales surface.
+// REQ-EVAL1-007: un-explained low scores must never appear.
+func TestReportContainsJudgeRationalesForLowScores(t *testing.T) {
+	t.Parallel()
+	md := runner.RenderMarkdown(sampleReport(), runner.RenderOpts{})
+	if !strings.Contains(md, "cited doc unrelated") {
+		t.Errorf("report missing judge rationale for low-scoring claim:\n%s", md)
+	}
 }
 
-func findSubstr(s, sub string) bool {
-	for i := 0; i <= len(s)-len(sub); i++ {
-		if s[i:i+len(sub)] == sub {
-			return true
-		}
+// TestReportPerCategoryBreakdown verifies per-category aggregation appears.
+func TestReportPerCategoryBreakdown(t *testing.T) {
+	t.Parallel()
+	md := runner.RenderMarkdown(sampleReport(), runner.RenderOpts{})
+	// factual (Q1) and synthesis (Q2) have scored queries; korean (Q3) is null
+	// and edge (Q4) is overridden, so both are correctly excluded from the mean.
+	if !strings.Contains(md, "Per-Category Breakdown") {
+		t.Errorf("report missing per-category section:\n%s", md)
 	}
-	return false
+	if !strings.Contains(md, "factual") || !strings.Contains(md, "synthesis") {
+		t.Errorf("report missing scored categories:\n%s", md)
+	}
+}
+
+// TestReportCostReported verifies cost is rendered when provided.
+// NFR-EVAL1-003.
+func TestReportCostReported(t *testing.T) {
+	t.Parallel()
+	md := runner.RenderMarkdown(sampleReport(), runner.RenderOpts{CostUSD: 0.42})
+	if !strings.Contains(md, "0.42") {
+		t.Errorf("report missing cost:\n%s", md)
+	}
+}
+
+// TestReportNullQueriesListed verifies judge-unavailable queries are surfaced.
+// REQ-EVAL1-006.
+func TestReportNullQueriesListed(t *testing.T) {
+	t.Parallel()
+	md := runner.RenderMarkdown(sampleReport(), runner.RenderOpts{})
+	if !strings.Contains(md, "Q3") {
+		t.Errorf("report missing null query Q3:\n%s", md)
+	}
 }

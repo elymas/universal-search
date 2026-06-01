@@ -1,8 +1,9 @@
 ---
 id: SPEC-DOC-001
-version: 0.1.0
+version: 0.2.0
 status: draft
 created: 2026-05-26
+updated: 2026-05-30
 author: limbowl (via manager-spec)
 related_spec: SPEC-DOC-001 (spec.md, plan.md)
 format: Given/When/Then
@@ -109,6 +110,7 @@ Covers: REQ-DOC-005, REQ-DOC-006
 
 **Then**:
 - Operators section contains at minimum: `deployment-helm.mdx`, `auth-setup.mdx`, `team-rbac.mdx`, `audit-log.mdx`, `observability.mdx`, `security/runbook.mdx`, `security/owasp-checklist.mdx`, `security/threat-model.mdx`.
+- The three `security/*` pages are FORWARD-REFERENCE placeholders linking SPEC-SEC-001 status — they do NOT cross-link any `ops/security/*` file (those files are not on main; SEC-001 PR #42 unmerged). No broken `ops/security/*` link is present (link-check stays green).
 - End Users section contains at minimum: `cli-tour.mdx`, `web-ui-tour.mdx`, `skill-claude.mdx`, `mcp-integration.mdx`, `surface-comparison.mdx`.
 - Each operator page has frontmatter `lastUpdated` date AND a "Related SPECs" footer linking the underlying SPEC IDs.
 - Each end-user page contains ≥ 1 tagged screenshot reference (`screenshot:ui:*` or `screenshot:terminal:*`).
@@ -130,7 +132,7 @@ Covers: REQ-DOC-007
 
 **Then**:
 - The script builds the binary if missing.
-- For each subcommand defined in SPEC-CLI-001/002 implemented set, an MDX file is written to `docs/content/en/reference/cli/{subcommand}.mdx`.
+- For each subcommand in the implemented set — currently **7: `query`, `config`, `history`, `deep`, `sources`, `login`, `repl`** (per `cmd/usearch/root.go`) — an MDX file is written to `docs/content/en/reference/cli/{subcommand}.mdx`.
 - Each MDX file has frontmatter `{title, generated: true, source: "usearch --help", lastGenerated: <ISO-8601>}`.
 - The help text is rendered inside an MDX `<CodeBlock>` component.
 - CI job `gen-reference-drift` fails when committed reference content drifts from re-generated output.
@@ -184,7 +186,7 @@ Covers: REQ-DOC-010, NFR-DOC-006
 **When** the contributor enumerates Tier-1 EN pages and audits KO counterparts.
 
 **Then**:
-- Every Tier-1 EN page (all Introduction, all Getting Started, all End Users, Operators core path, Troubleshooting top-10) has a KO counterpart in `content/ko/`.
+- Every Tier-1 EN page (all Introduction, all Getting Started, all End Users, Operators core path, Troubleshooting top-10) has a KO counterpart in `content/ko/`. The `reference/` subtree is NOT part of the V1 Tier-1 KO set — full reference-section KO is deferred to V1.1.
 - `content/ko/CONTRIBUTING.md` reviewer log lists ≥ 1 named native-Korean-speaking reviewer per Tier-1 batch.
 - `content/ko/operators/korean-locale-setup.mdx` is marked as KO-authoritative (source of truth).
 - The translation backlog table in `content/ko/CONTRIBUTING.md` tracks any pending KO updates from recent EN modifications (≥ 30 lines diff) within the same minor release window.
@@ -243,6 +245,7 @@ Covers: REQ-DOC-013
 
 **Then**:
 - `link-check` job FAILS due to the broken internal link.
+- The security forward-reference placeholder pages do NOT cause a failure: no `ops/security/*` link is emitted, and any unavoidable deferred reference is in the `docs/lychee.toml` exclude allowlist (commented with the unblocking SPEC). SEC-001's unmerged state does NOT break the gate.
 - `link-check` job posts a PR annotation for the unreachable external link but does NOT fail on it.
 - `link-check` job ignores the 403 from the allowlisted GitHub API link.
 - External-link retries: 3 attempts with exponential backoff.
@@ -279,13 +282,12 @@ Covers: REQ-DOC-015, NFR-DOC-002, NFR-DOC-004, NFR-DOC-007
 **When** the deploy job runs.
 
 **Then**:
-- gh-pages is deployed via `actions/deploy-pages@v4`; site is reachable at `https://<org>.github.io/universal-search/`.
-- Container image is pushed to `ghcr.io/<org>/usearch-docs:<sha>` AND `ghcr.io/<org>/usearch-docs:latest`.
-- `docker run -p 8080:80 ghcr.io/<org>/usearch-docs:latest` serves the docs index on http://localhost:8080.
+- gh-pages is deployed via `actions/deploy-pages@v4`; site is reachable at `https://<org>.github.io/universal-search/` (V1 ship gate).
+- The `build-and-push-container` job builds `Dockerfile.docs` successfully and verifies it locally: `docker run -p 8080:80 <local-image>` serves the docs index on http://localhost:8080.
+- The actual push to `ghcr.io/<org>/usearch-docs:<sha>` / `:latest` (and `:v1.x.y` on tagged release) is CONDITIONAL/DEFERRED until the `<org>`/registry path is resolved (Open Questions §8.3, §8.4) — it is NOT a V1.0.0 ship gate. When `<org>` is unresolved, the push step is skipped without failing the workflow.
 - Compressed image size ≤ 100 MB.
-- `trivy image --severity HIGH,CRITICAL ghcr.io/<org>/usearch-docs:latest` reports zero findings.
+- `trivy image --severity HIGH,CRITICAL <image>` reports zero findings.
 - `du -sh docs/out/` (excluding `_pagefind/`) ≤ 50 MB; `_pagefind/` per-locale ≤ 20 MB.
-- On a tagged release (`v1.x.y`), additional tag `ghcr.io/<org>/usearch-docs:v1.x.y` is pushed.
 
 Maps to scenarios §5.12, §5.17 in spec.md.
 
@@ -295,15 +297,16 @@ Maps to scenarios §5.12, §5.17 in spec.md.
 
 Covers: REQ-DOC-016
 
-**Given** `scripts/check-bilingual-coverage.sh` and current Tier-1 EN pages.
+**Given** `scripts/check-bilingual-coverage.sh` scoped to the Tier-1 EN page set (the `reference/` subtree is excluded — full reference KO deferred to V1.1).
 
 **When** the contributor opens a PR deleting one Tier-1 KO page (e.g., `content/ko/getting-started/index.mdx`).
 
 **Then**:
-- Coverage drops below 90%.
+- Tier-1 coverage drops below 90%.
 - `bilingual-coverage` job FAILS.
-- `docs/coverage-report.md` is generated listing the specific missing KO paths.
-- The 90% threshold can NOT be lowered without explicit SPEC amendment (script literal threshold).
+- `docs/coverage-report.md` is generated listing the specific missing Tier-1 KO paths (and the V1.1-deferred `reference/` subtree as informational, not counted).
+- Deleting a `reference/` KO page does NOT affect the gate.
+- The 90% Tier-1 threshold can NOT be lowered without explicit SPEC amendment (script literal threshold).
 
 Maps to scenario §5.13 in spec.md.
 
@@ -393,9 +396,9 @@ Maps to scenario §5.15 in spec.md.
 - [ ] `scripts/gen-cli-reference.sh`, `scripts/check-screenshot-freshness.sh`, `scripts/check-bilingual-coverage.sh`, `scripts/check-doc-claims.sh` are committed and executable.
 - [ ] `.github/workflows/docs.yml` contains all 5 jobs and completes within 5 minutes for the median PR.
 - [ ] `docs/lychee.toml` with internal-strict + external-warn config.
-- [ ] gh-pages deploys at `https://<org>.github.io/universal-search/`.
-- [ ] `ghcr.io/<org>/usearch-docs:latest` reachable; container size ≤ 100 MB; zero Trivy HIGH/CRITICAL findings.
-- [ ] KO Tier-1 coverage ≥ 90% (bilingual-coverage gate green).
+- [ ] gh-pages deploys at `https://<org>.github.io/universal-search/` (V1 gate).
+- [ ] `Dockerfile.docs` builds + serves locally; container size ≤ 100 MB; zero Trivy HIGH/CRITICAL findings. (GHCR push deferred until `<org>`/registry resolved — NOT a V1 gate.)
+- [ ] KO Tier-1 coverage ≥ 90% (bilingual-coverage gate green; `reference/` KO deferred to V1.1).
 - [ ] V1.0.0 freeze: axe-core audit + Lighthouse mobile audit recorded in `legal/`.
 - [ ] Open Questions in spec.md §8 are resolved or explicitly deferred with mitigation.
 
@@ -435,4 +438,4 @@ Every REQ and NFR has ≥ 1 AC; edge cases supplement EC-001..EC-003.
 
 ---
 
-*End of SPEC-DOC-001 acceptance.md.*
+*End of SPEC-DOC-001 acceptance.md (v0.2.0).*

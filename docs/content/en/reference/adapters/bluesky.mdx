@@ -1,0 +1,112 @@
+---
+title: Bluesky Adapter
+description: Reference documentation for the Bluesky social adapter (AT Protocol)
+lastVerified: 2026-05-31
+sourceID: bluesky
+category: social
+---
+
+import { Callout } from 'nextra/components'
+import { CapabilitiesTable } from '../../../../components/CapabilitiesTable'
+import { StatusBadge } from '../../../../components/StatusBadge'
+import blueskyCaps from './_generated/bluesky.capabilities.json'
+
+# Bluesky Adapter
+
+<StatusBadge adapter="bluesky" />
+
+The Bluesky adapter queries the Bluesky AppView public search API via the AT Protocol. No authentication required. Part of the `social` Go package (`internal/adapters/social/`).
+
+<Callout type="info">
+  **Shared implementation:** Bluesky and X share the `internal/adapters/social/` Go package.
+  Implementation details (URL extraction, parse rules, scoring) are shared.
+  See [X adapter](/en/reference/adapters/x) for the X-specific documentation.
+</Callout>
+
+## Status &amp; Compatibility
+
+| Field | Value |
+|-------|-------|
+| SPEC | SPEC-ADP-006 |
+| Source path | `internal/adapters/social/social.go` — `blueskyCapabilities()` |
+| SourceID | `bluesky` |
+| Last verified | 2026-05-31 |
+| Status | <StatusBadge adapter="bluesky" /> |
+
+## Overview
+
+Bluesky is a decentralised social platform based on the AT Protocol (atproto). The Universal Search Bluesky adapter queries the public AppView search endpoint (`app.bsky.feed.searchPosts`) with anonymous access. Results are sorted by `top` (relevance).
+
+**Use case:** social post discovery, tech community content, real-time discussion search.
+
+## Setup
+
+Authentication: not required — public endpoint.
+
+The Bluesky AppView search API is publicly accessible without credentials. The adapter uses the SSRF guard allowlist: `{public.api.bsky.app, api.bsky.app, bsky.app}`.
+
+```bash
+# Verify the adapter is reachable:
+usearch query --source bluesky "federated learning privacy"
+```
+
+## Capabilities
+
+The table below is auto-extracted from the Go source via `gen-adapter-ref` — edit the adapter source to change these values.
+
+<CapabilitiesTable data={blueskyCaps} />
+
+## Query syntax
+
+Bluesky queries are forwarded to the AppView search API:
+
+| Universal Search field | AT Protocol parameter | Notes |
+|------------------------|----------------------|-------|
+| `Query.Text` | `q={text}` | Full-text search across posts |
+| `Query.Lang` | `lang={bcp47}` | Language filter (e.g. `ko`, `en`) |
+| `Query.Since` | `since={rfc3339}` | RFC 3339 timestamp filter |
+| `Query.MaxResults` | `limit={n}` | Capped at `DefaultMaxResults` |
+
+**Sort:** `sort=top` is hardcoded.
+
+## Rate limits
+
+- **Advertised limit:** 600 requests/min
+- **Enforcement mechanism:** HTTP 429 response handling — Bluesky AppView returns 429 with `Retry-After`
+- **Upstream quota documentation:** [Bluesky API docs](https://docs.bsky.app/)
+- **Exhaustion behaviour:** Returns `CategoryRateLimited` with `RetryAfter` to the fanout dispatcher.
+
+## Error reference
+
+See [Error Taxonomy](/en/reference/adapters/errors) for the shared `Category` reference.
+
+**Bluesky-specific status rosetta:**
+
+| HTTP status | Category | Cause | Operator action |
+|-------------|----------|-------|-----------------|
+| 429 | CategoryRateLimited | AppView rate limit | Adapter reads `Retry-After`; reduce request frequency |
+| 503 | CategoryUnavailable | Bluesky AppView down | Check https://bsky.app status; retry after delay |
+| Network timeout | CategoryTransient | DNS/TCP failure | Verify `public.api.bsky.app` is reachable |
+
+## Troubleshooting
+
+| Symptom | Likely cause | Diagnostic command | Resolution | Related SPECs |
+|---------|-------------|-------------------|------------|---------------|
+| No posts returned for recent events | `since` filter too old | Remove `since` filter | Search without time constraint | SPEC-ADP-006 |
+| Non-English results dominate | Language filter not set | Add `Query.Lang = "en"` | Set explicit language filter | SPEC-ADP-006 |
+| `CategoryUnavailable` | Bluesky AppView outage | `curl https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts?q=test` | Wait for Bluesky recovery | SPEC-CACHE-001 |
+
+## Version compatibility
+
+| usearch version | Bluesky AppView API | Last verified | Verifier |
+|----------------|---------------------|---------------|----------|
+| v1.0.0 | `app.bsky.feed.searchPosts` (lexicon v1.0) | 2026-05-31 | manager-docs |
+
+## Related
+
+- [SPEC-ADP-006](/en/reference/architecture) — social adapter specification (Bluesky + X)
+- [X adapter](/en/reference/adapters/x) — X (Twitter) adapter (disabled in V1)
+- [End-user surface comparison](/en/end-users/surface-comparison)
+- [Deployment Helm values](/en/operators/deployment-helm)
+- [SPEC-FAN-001 fanout retry semantics](/en/reference/architecture)
+- [SPEC-CACHE-001 5-phase fallback](/en/reference/architecture)

@@ -1,0 +1,65 @@
+# SPEC-EVAL-002 REQ-EVAL2-008 / AC-005,006,007: promtool unit test for the
+# three V1 alert rules. Run with:
+#   promtool test rules deploy/prometheus/alerts-test.yml
+#
+# The alerts read recording-rule series directly, so the fixtures inject the
+# recorded series (usearch:adapter_success_rate_*) rather than the raw counter.
+rule_files:
+  - alerts.yml
+
+evaluation_interval: 1m
+
+tests:
+  # AC-005: 7d success rate < 0.85 sustained 30m -> AdapterSuccessRate7dLow.
+  - interval: 1m
+    input_series:
+      - series: 'usearch:adapter_success_rate_7d{adapter="reddit"}'
+        values: "0.70x40" # held at 0.70 for 40 minutes (> the 30m `for`)
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: AdapterSuccessRate7dLow
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              spec: SPEC-EVAL-002
+              adapter: reddit
+            exp_annotations:
+              summary: "Adapter reddit 7-day success rate 70% below 85%"
+              description: "The 7-day rolling success rate for adapter reddit has stayed below 0.85 for 30 minutes. Investigate sustained degradation (auth expiry, upstream block, parser drift)."
+              runbook_url: "https://github.com/elymas/universal-search/blob/main/docs/operations/adapter-reliability-runbook.md#adaptersuccessrate7dlow"
+
+  # AC-006: 1h success rate < 0.50 sustained 5m -> AdapterSuccessRate1hCritical.
+  - interval: 1m
+    input_series:
+      - series: 'usearch:adapter_success_rate_1h{adapter="naver"}'
+        values: "0.40x10" # held at 0.40 for 10 minutes (> the 5m `for`)
+    alert_rule_test:
+      - eval_time: 6m
+        alertname: AdapterSuccessRate1hCritical
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              spec: SPEC-EVAL-002
+              adapter: naver
+            exp_annotations:
+              summary: "Adapter naver 1-hour success rate 40% acutely degraded"
+              description: "The 1-hour success rate for adapter naver dropped below 0.50 for 5 minutes — an acute outage. Check upstream availability and recent deploys."
+              runbook_url: "https://github.com/elymas/universal-search/blob/main/docs/operations/adapter-reliability-runbook.md#adaptersuccessrate1hcritical"
+
+  # AC-007: partial ratio > 0.30 sustained 15m -> FanoutPartialRatioHigh.
+  - interval: 1m
+    input_series:
+      - series: 'usearch:adapter_fanout_partial_ratio_24h{adapter="youtube"}'
+        values: "0.45x20" # held at 0.45 for 20 minutes (> the 15m `for`)
+    alert_rule_test:
+      - eval_time: 16m
+        alertname: FanoutPartialRatioHigh
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              spec: SPEC-EVAL-002
+              adapter: youtube
+            exp_annotations:
+              summary: "Adapter youtube missing from 45% of fanout dispatches over 24h"
+              description: "Adapter youtube contributed an error to more than 30% of fanout dispatches over the last 24h. Users may be receiving partial results without this source."
+              runbook_url: "https://github.com/elymas/universal-search/blob/main/docs/operations/adapter-reliability-runbook.md#fanoutpartialratiohigh"

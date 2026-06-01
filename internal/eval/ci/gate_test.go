@@ -1,167 +1,139 @@
-// Package ci_test validates the CI gate logic.
-//
-// REQ-EVAL1-009: Exit code mapping (0=pass, 1=score fail, 2=judge error, 3=parse error).
-// REQ-EVAL1-008: Mean ≥ 0.85 and floor ≥ 0.50.
-// AC-005, AC-006, AC-007, EC-002.
 package ci_test
 
 import (
-	"encoding/json"
-	"os"
-	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/elymas/universal-search/internal/eval/ci"
-	"github.com/elymas/universal-search/internal/eval/runner"
 )
 
-func scorePtr(v float64) *float64 { return &v }
+func ptr(f float64) *float64 { return &f }
 
-// ---------- Test: Gate passes with mean ≥ 0.85 and floor ≥ 0.50 ----------
-
-func TestGatePassesWithGoodScores(t *testing.T) {
-	report := &runner.RunReport{
-		TotalQueries:   50,
-		MeanScore:      0.89,
-		FloorScore:     0.62,
-		OverrideCount:  0,
-		NullCount:      0,
-		JudgeModel:     "claude-haiku-4-5",
-		CorpusRevision: "1.0.0",
-		Results:        make([]runner.QueryResult, 50),
-	}
-	exitCode, summary := ci.Evaluate(report)
-	if exitCode != 0 {
-		t.Errorf("exit code = %d, want 0; summary: %s", exitCode, summary)
+func passingScores() []ci.QueryScore {
+	return []ci.QueryScore{
+		{QueryID: "Q1", Score: ptr(0.90)},
+		{QueryID: "Q2", Score: ptr(0.88)},
+		{QueryID: "Q3", Score: ptr(0.95)},
 	}
 }
 
-// ---------- Test: Gate fails when mean < 0.85 ----------
-
-func TestGateFailsOnLowMean(t *testing.T) {
-	report := &runner.RunReport{
-		TotalQueries:   50,
-		MeanScore:      0.82,
-		FloorScore:     0.60,
-		OverrideCount:  0,
-		NullCount:      0,
-		JudgeModel:     "claude-haiku-4-5",
-		CorpusRevision: "1.0.0",
-		Results:        make([]runner.QueryResult, 50),
+// TestGatePassesAt085MeanAnd050Floor verifies a clean pass.
+// REQ-EVAL1-008.
+func TestGatePassesAt085MeanAnd050Floor(t *testing.T) {
+	t.Parallel()
+	res := ci.Decide(passingScores(), nil, ci.Thresholds{Mean: 0.85, Floor: 0.50, OverrideCap: 5})
+	if !res.Pass {
+		t.Fatalf("expected pass, got %#v", res)
 	}
-	exitCode, summary := ci.Evaluate(report)
-	if exitCode != 1 {
-		t.Errorf("exit code = %d, want 1; summary: %s", exitCode, summary)
+	if res.ExitCode != 0 {
+		t.Errorf("exit code = %d, want 0", res.ExitCode)
 	}
 }
 
-// ---------- Test: Gate fails when floor < 0.50 ----------
-
-func TestGateFailsOnLowFloor(t *testing.T) {
-	report := &runner.RunReport{
-		TotalQueries:   50,
-		MeanScore:      0.87,
-		FloorScore:     0.40,
-		OverrideCount:  0,
-		NullCount:      0,
-		JudgeModel:     "claude-haiku-4-5",
-		CorpusRevision: "1.0.0",
-		Results:        make([]runner.QueryResult, 50),
+// TestGateFailsBelowMean verifies exit 1 when mean < 0.85.
+// REQ-EVAL1-008(a).
+func TestGateFailsBelowMean(t *testing.T) {
+	t.Parallel()
+	scores := []ci.QueryScore{
+		{QueryID: "Q1", Score: ptr(0.80)},
+		{QueryID: "Q2", Score: ptr(0.82)},
 	}
-	exitCode, summary := ci.Evaluate(report)
-	if exitCode != 1 {
-		t.Errorf("exit code = %d, want 1; summary: %s", exitCode, summary)
+	res := ci.Decide(scores, nil, ci.Thresholds{Mean: 0.85, Floor: 0.50, OverrideCap: 5})
+	if res.Pass {
+		t.Fatal("expected fail below mean")
 	}
-	if !contains(summary, "floor violation") {
-		t.Errorf("summary missing 'floor violation': %s", summary)
+	if res.ExitCode != 1 {
+		t.Errorf("exit code = %d, want 1", res.ExitCode)
 	}
 }
 
-// ---------- Test: Gate returns 2 on judge errors ----------
-
-func TestGateReturnsTwoOnJudgeErrors(t *testing.T) {
-	report := &runner.RunReport{
-		TotalQueries:   50,
-		MeanScore:      0.90,
-		FloorScore:     0.70,
-		OverrideCount:  0,
-		NullCount:      3,
-		JudgeModel:     "claude-haiku-4-5",
-		CorpusRevision: "1.0.0",
-		Results:        make([]runner.QueryResult, 50),
+// TestGateFailsBelowFloor verifies exit 1 when any query < 0.50 even if mean ok.
+// REQ-EVAL1-008(b).
+func TestGateFailsBelowFloor(t *testing.T) {
+	t.Parallel()
+	scores := []ci.QueryScore{
+		{QueryID: "Q1", Score: ptr(1.0)},
+		{QueryID: "Q2", Score: ptr(1.0)},
+		{QueryID: "Q3", Score: ptr(0.40)}, // below floor; mean is still 0.80
 	}
-	exitCode, _ := ci.Evaluate(report)
-	if exitCode != 2 {
-		t.Errorf("exit code = %d, want 2 (judge errors)", exitCode)
+	res := ci.Decide(scores, nil, ci.Thresholds{Mean: 0.70, Floor: 0.50, OverrideCap: 5})
+	if res.Pass {
+		t.Fatal("expected fail on floor violation")
 	}
-}
-
-// ---------- Test: Gate returns 3 on malformed report ----------
-
-func TestGateReturnsThreeOnMalformedReport(t *testing.T) {
-	dir := t.TempDir()
-	badPath := filepath.Join(dir, "bad.json")
-	os.WriteFile(badPath, []byte(`{invalid json`), 0o644)
-
-	exitCode, _ := ci.EvaluateFile(badPath)
-	if exitCode != 3 {
-		t.Errorf("exit code = %d, want 3 (parse error)", exitCode)
+	if res.ExitCode != 1 {
+		t.Errorf("exit code = %d, want 1", res.ExitCode)
+	}
+	if !strings.Contains(strings.ToLower(res.Reason), "floor") {
+		t.Errorf("reason should mention floor, got %q", res.Reason)
 	}
 }
 
-// ---------- Test: Gate reads valid file ----------
-
-func TestGateReadsValidFile(t *testing.T) {
-	dir := t.TempDir()
-	reportPath := filepath.Join(dir, "report.json")
-
-	report := &runner.RunReport{
-		TotalQueries:   2,
-		MeanScore:      0.90,
-		FloorScore:     0.80,
-		OverrideCount:  0,
-		NullCount:      0,
-		JudgeModel:     "claude-haiku-4-5",
-		CorpusRevision: "1.0.0",
-		Results:        make([]runner.QueryResult, 2),
+// TestGateExitCode2OnJudgeError verifies null scores force exit 2.
+// REQ-EVAL1-008(c).
+func TestGateExitCode2OnJudgeError(t *testing.T) {
+	t.Parallel()
+	scores := []ci.QueryScore{
+		{QueryID: "Q1", Score: ptr(0.90)},
+		{QueryID: "Q2", Score: nil}, // judge unavailable → null
 	}
-
-	data, _ := json.Marshal(report)
-	os.WriteFile(reportPath, data, 0o644)
-
-	exitCode, _ := ci.EvaluateFile(reportPath)
-	if exitCode != 0 {
-		t.Error("expected pass for valid report file")
+	res := ci.Decide(scores, nil, ci.Thresholds{Mean: 0.85, Floor: 0.50, OverrideCap: 5})
+	if res.Pass {
+		t.Fatal("expected fail on judge error")
+	}
+	if res.ExitCode != 2 {
+		t.Errorf("exit code = %d, want 2", res.ExitCode)
 	}
 }
 
-// ---------- Test: Summary format ----------
-
-func TestSummaryFormat(t *testing.T) {
-	report := &runner.RunReport{
-		TotalQueries:   50,
-		MeanScore:      0.890,
-		FloorScore:     0.62,
-		OverrideCount:  2,
-		NullCount:      0,
-		JudgeModel:     "claude-haiku-4-5",
-		CorpusRevision: "1.0.0",
-		Results:        make([]runner.QueryResult, 50),
+// TestGateFailsOnOverrideCap verifies exit 1 when active overrides exceed cap.
+// REQ-EVAL1-008(d).
+func TestGateFailsOnOverrideCap(t *testing.T) {
+	t.Parallel()
+	overrides := make([]string, 6)
+	for i := range overrides {
+		overrides[i] = "Qx"
 	}
-	_, summary := ci.Evaluate(report)
-	if !contains(summary, "EVAL-001") {
-		t.Errorf("summary missing EVAL-001: %s", summary)
+	res := ci.Decide(passingScores(), overrides, ci.Thresholds{Mean: 0.85, Floor: 0.50, OverrideCap: 5})
+	if res.Pass {
+		t.Fatal("expected fail on override cap exceeded")
 	}
-	if !contains(summary, "PASS") {
-		t.Errorf("summary missing PASS: %s", summary)
+	if res.ExitCode != 1 {
+		t.Errorf("exit code = %d, want 1", res.ExitCode)
+	}
+	if !strings.Contains(strings.ToLower(res.Reason), "override") {
+		t.Errorf("reason should mention override, got %q", res.Reason)
 	}
 }
 
-func contains(s, sub string) bool {
-	for i := 0; i <= len(s)-len(sub); i++ {
-		if s[i:i+len(sub)] == sub {
-			return true
+// TestGateExcludesNullFromMean verifies the mean is computed over non-null only.
+// REQ-EVAL1-006 + REQ-EVAL1-008.
+func TestGateExcludesNullFromMean(t *testing.T) {
+	t.Parallel()
+	scores := []ci.QueryScore{
+		{QueryID: "Q1", Score: ptr(0.90)},
+		{QueryID: "Q2", Score: ptr(0.90)},
+		{QueryID: "Q3", Score: nil},
+	}
+	res := ci.Decide(scores, nil, ci.Thresholds{Mean: 0.85, Floor: 0.50, OverrideCap: 5})
+	// Mean over non-null = 0.90 (passes mean+floor), but null forces exit 2.
+	if res.Mean < 0.89 || res.Mean > 0.91 {
+		t.Errorf("mean = %v, want ~0.90 (null excluded)", res.Mean)
+	}
+	if res.ExitCode != 2 {
+		t.Errorf("exit code = %d, want 2 (null present)", res.ExitCode)
+	}
+}
+
+// TestGateSummaryLineFormat verifies the grep-friendly stdout summary.
+// REQ-EVAL1-008.
+func TestGateSummaryLineFormat(t *testing.T) {
+	t.Parallel()
+	res := ci.Decide(passingScores(), nil, ci.Thresholds{Mean: 0.85, Floor: 0.50, OverrideCap: 5})
+	line := ci.SummaryLine(res)
+	// EVAL-001 result=PASS|FAIL mean=<X.XXX> floor=<X.XX> overrides=<N> nulls=<N>
+	for _, want := range []string{"EVAL-001", "result=PASS", "mean=", "floor=", "overrides=", "nulls="} {
+		if !strings.Contains(line, want) {
+			t.Errorf("summary line missing %q: %s", want, line)
 		}
 	}
-	return false
 }

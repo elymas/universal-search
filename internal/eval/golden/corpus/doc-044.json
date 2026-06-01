@@ -1,15 +1,20 @@
 {
   "id": "doc-044",
-  "source_id": "bluesky",
-  "url": "https://example.com/bluesky/0044",
-  "title": "vector database indexing strategies - study 44",
-  "body": "This document discusses vector database indexing strategies. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of vector database indexing strategies. Key findings include improved accuracy, reduced latency, and better scalability. The study 44 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on vector database indexing strategies.",
-  "published_at": "2025-02-14T00:00:00+00:00",
-  "retrieved_at": "2026-05-02T20:00:00+00:00",
-  "author": "author-44",
-  "score": 0.94,
-  "lang": "en",
-  "doc_type": "repo",
-  "hash": "4884f70eab8b57e7"
+  "source_id": "arxiv",
+  "url": "https://example.test/arxiv/diffusion-ko-b",
+  "title": "이미지를 위한 확산 모델 (심화)",
+  "body": "확산 모델은 점진적인 노이즈 추가 과정을 역전시켜 이미지를 생성한다. 신경망이 단계별로 샘플의 노이즈를 제거하는 법을 학습한다. 많은 이미지 생성 벤치마크에서 GAN을 능가했다. 후속 연구는 더 광범위한 실험으로 이러한 발견을 확장했다.",
+  "snippet": "이미지를 위한 확산 모델 (심화)",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "ko",
+  "doc_type": "paper",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

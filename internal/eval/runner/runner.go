@@ -1,190 +1,161 @@
-// Package runner orchestrates the 50-query faithfulness benchmark.
+// Package runner orchestrates the SPEC-EVAL-001 benchmark: for each golden
+// query it drives the synthesis path, ships the result to the DeepEval judge
+// bridge, collects per-claim scores, applies manual overrides, and aggregates
+// a mean across non-null scores.
 //
-// REQ-EVAL1-008: Runner with max 5 concurrent queries.
-// REQ-EVAL1-003: Override handling with ≤5 cap.
-// REQ-EVAL1-006: Judge errors produce null scores (not zero).
+// REQ-EVAL1-006: null-score handling (judge unavailable → null, not zero).
+// REQ-EVAL1-003: override apply + exclusion from aggregate.
+// NFR-EVAL1-004: bounded concurrency (default 5).
 package runner
 
 import (
 	"context"
-	"fmt"
+	"sort"
 	"sync"
-	"time"
 
+	"github.com/elymas/universal-search/internal/eval/golden"
 	"github.com/elymas/universal-search/internal/eval/scorer"
+	"github.com/elymas/universal-search/internal/synthesis"
 )
 
-// maxOverrides is the hard cap on simultaneous active overrides.
-// REQ-EVAL1-003: Maximum 5 overrides allowed simultaneously.
-const maxOverrides = 5
-
-// QueryRecord represents one query from the golden set.
-type QueryRecord struct {
-	ID              string   `json:"id"`
-	Query           string   `json:"query"`
-	Locale          string   `json:"locale"`
-	Category        string   `json:"category"`
-	ExpectedSources []string `json:"expected_sources"`
+// Synthesizer drives the synthesis path for one golden query against the
+// frozen corpus. The runner stubs this in tests; CI wires the real client.
+type Synthesizer interface {
+	Synthesize(ctx context.Context, q golden.Query, corpus map[string]string) (synthesis.Result, error)
 }
 
-// Override represents a manual override entry.
-type Override struct {
-	QueryID        string `json:"query_id"`
-	ManualOverride string `json:"manual_override"`
-	OverrideReason string `json:"override_reason"`
-	ExpiresAt      string `json:"expires_at"`
-	CreatedAt      string `json:"created_at"`
-	CreatedBy      string `json:"created_by"`
+// Scorer scores a synthesized result against the judge (the DeepEval bridge).
+type Scorer interface {
+	Score(ctx context.Context, queryID, locale string, result synthesis.Result, corpus map[string]string) (scorer.Result, error)
 }
 
-// QueryResult is the per-query scoring result.
+// Config tunes the run.
+type Config struct {
+	// Concurrency bounds parallel query execution (NFR-EVAL1-004: max 5).
+	Concurrency int
+}
+
+// QueryResult is the per-query outcome.
 type QueryResult struct {
-	QueryID       string   `json:"query_id"`
-	Locale        string   `json:"locale"`
-	Category      string   `json:"category"`
-	Score         *float64 `json:"score"`          // nil when judge error
-	Error         string   `json:"error,omitempty"` // non-empty when judge error
-	Overridden    bool     `json:"overridden"`
-	OverrideReason string  `json:"override_reason,omitempty"`
+	QueryID  string
+	Category string
+	Locale   string
+	// Score is nil when the judge could not score the query (REQ-EVAL1-006).
+	Score      *float64
+	PerClaim   []scorer.ClaimScore
+	Overridden bool
+	ErrorClass string // "", "judge_unavailable", "synth_error"
 }
 
-// RunReport is the aggregate benchmark report.
-type RunReport struct {
-	TotalQueries   int           `json:"total_queries"`
-	MeanScore      float64       `json:"mean_score"`
-	FloorScore     float64       `json:"floor_score"`
-	OverrideCount  int           `json:"override_count"`
-	NullCount      int           `json:"null_count"`
-	JudgeModel     string        `json:"judge_model"`
-	CorpusRevision string        `json:"corpus_revision"`
-	Results        []QueryResult `json:"results"`
-	RuntimeSeconds float64       `json:"runtime_seconds"`
-	Timestamp      string        `json:"timestamp"`
+// Report is the aggregate benchmark result handed to the gate + report writer.
+type Report struct {
+	Queries       []QueryResult
+	MeanScore     float64
+	NullCount     int
+	OverrideCount int
 }
 
-// BridgeIface abstracts the scorer.Bridge for testing.
-type BridgeIface interface {
-	Score(ctx context.Context, queryID string, claims []scorer.Claim, corpus []scorer.CorpusEntry) (*scorer.ScoreResponse, error)
-}
-
-// Runner orchestrates the benchmark.
-type Runner struct {
-	bridge   BridgeIface
-	maxConc  int
-}
-
-// NewRunner creates a benchmark runner with the given concurrency limit.
-// maxConc must be > 0; typical value is 5 (NFR-EVAL1-004).
-func NewRunner(bridge BridgeIface, maxConc int) *Runner {
-	if maxConc <= 0 {
-		maxConc = 5
+// HasJudgeError reports whether any query was marked null due to a judge
+// availability error (drives exit code 2).
+// REQ-EVAL1-006(d).
+func (r *Report) HasJudgeError() bool {
+	for _, q := range r.Queries {
+		if q.ErrorClass == "judge_unavailable" {
+			return true
+		}
 	}
-	return &Runner{bridge: bridge, maxConc: maxConc}
+	return false
 }
 
-// Run executes the benchmark against all queries, applying overrides.
-// Returns the aggregate RunReport. Returns error only for pre-check failures
-// (e.g., override cap exceeded).
-func (r *Runner) Run(ctx context.Context, queries []QueryRecord, overrides []Override) (*RunReport, error) {
-	start := time.Now()
+// @MX:ANCHOR: [AUTO] Benchmark orchestration entrypoint; consumed by the CI
+// gate and report writer. The null-vs-zero distinction and mean-over-non-null
+// contract are release-gate invariants.
+// @MX:REASON: gate.Decide + report.Write both depend on Report.MeanScore,
+// NullCount, and per-query Score==nil semantics; changing them shifts the
+// M8 release gate behaviour.
+// @MX:SPEC: SPEC-EVAL-001 REQ-EVAL1-006
 
-	// Pre-check: validate override cap.
-	if len(overrides) > maxOverrides {
-		return nil, fmt.Errorf("override cap exceeded: %d active overrides, max %d allowed", len(overrides), maxOverrides)
+// Run executes the benchmark over the given queries with bounded concurrency.
+// Overrides marked "skip" or "pass" exclude their query from the aggregate.
+func Run(ctx context.Context, cfg Config, queries []golden.Query, corpus map[string]string, overrides []golden.Override, synth Synthesizer, sc Scorer) (Report, error) {
+	conc := cfg.Concurrency
+	if conc <= 0 {
+		conc = 5
 	}
 
-	// Build override lookup.
-	overrideMap := make(map[string]Override, len(overrides))
+	overridden := make(map[string]bool, len(overrides))
 	for _, o := range overrides {
-		overrideMap[o.QueryID] = o
+		overridden[o.QueryID] = true
 	}
 
-	// Score queries with bounded concurrency.
 	results := make([]QueryResult, len(queries))
-	sem := make(chan struct{}, r.maxConc)
+	sem := make(chan struct{}, conc)
 	var wg sync.WaitGroup
 
 	for i, q := range queries {
+		// @MX:WARN: [AUTO] Bounded worker fan-out over the judge bridge.
+		// @MX:REASON: each goroutine performs a network call; the semaphore
+		// caps concurrency at cfg.Concurrency to respect judge rate limits.
 		wg.Add(1)
-		go func(idx int, query QueryRecord) {
+		sem <- struct{}{}
+		go func(i int, q golden.Query) {
 			defer wg.Done()
-			sem <- struct{}{}
 			defer func() { <-sem }()
-
-			results[idx] = r.scoreQuery(ctx, query, overrideMap)
+			results[i] = scoreOne(ctx, q, corpus, overridden[q.ID], synth, sc)
 		}(i, q)
 	}
 	wg.Wait()
 
-	// Compute aggregate.
-	return buildReport(results, start), nil
+	return aggregate(results), nil
 }
 
-// scoreQuery scores a single query, applying overrides.
-func (r *Runner) scoreQuery(ctx context.Context, query QueryRecord, overrides map[string]Override) QueryResult {
-	result := QueryResult{
-		QueryID:  query.ID,
-		Locale:   query.Locale,
-		Category: query.Category,
-	}
+func scoreOne(ctx context.Context, q golden.Query, corpus map[string]string, overridden bool, synth Synthesizer, sc Scorer) QueryResult {
+	qr := QueryResult{QueryID: q.ID, Category: q.Category, Locale: q.Locale, Overridden: overridden}
 
-	// Check override.
-	if o, ok := overrides[query.ID]; ok {
-		result.Overridden = true
-		result.OverrideReason = o.OverrideReason
-		score := 1.0
-		result.Score = &score
-		return result
-	}
-
-	// Build claims from the query (simplified: one claim per query).
-	claims := []scorer.Claim{
-		{Text: query.Query, CitedDocIDs: query.ExpectedSources},
-	}
-
-	resp, err := r.bridge.Score(ctx, query.ID, claims, nil)
+	res, err := synth.Synthesize(ctx, q, corpus)
 	if err != nil {
-		// REQ-EVAL1-006: Judge errors → null score, NOT zero.
-		result.Error = err.Error()
-		return result
+		qr.ErrorClass = "synth_error"
+		return qr // Score stays nil → null.
 	}
 
-	result.Score = &resp.FaithfulnessScore
-	return result
+	score, err := sc.Score(ctx, q.ID, q.Locale, res, corpus)
+	if err != nil {
+		if scorer.IsUnavailable(err) {
+			qr.ErrorClass = "judge_unavailable"
+		} else {
+			qr.ErrorClass = "score_error"
+		}
+		return qr // Score stays nil → null.
+	}
+
+	s := score.Score
+	qr.Score = &s
+	qr.PerClaim = score.PerClaim
+	return qr
 }
 
-// buildReport computes aggregate metrics from individual results.
-func buildReport(results []QueryResult, start time.Time) *RunReport {
-	report := &RunReport{
-		TotalQueries: len(results),
-		Results:      results,
-		Timestamp:    time.Now().UTC().Format(time.RFC3339),
-		RuntimeSeconds: time.Since(start).Seconds(),
-	}
-
+func aggregate(results []QueryResult) Report {
+	rep := Report{Queries: results}
 	var sum float64
-	var count int
-	floor := 1.0
-
-	for _, r := range results {
-		if r.Score == nil {
-			report.NullCount++
+	var counted int
+	for _, qr := range results {
+		if qr.Overridden {
+			rep.OverrideCount++
 			continue
 		}
-		if r.Overridden {
-			report.OverrideCount++
+		if qr.Score == nil {
+			rep.NullCount++
+			continue
 		}
-		sum += *r.Score
-		if *r.Score < floor {
-			floor = *r.Score
-		}
-		count++
+		sum += *qr.Score
+		counted++
 	}
-
-	if count > 0 {
-		report.MeanScore = sum / float64(count)
-		report.FloorScore = floor
+	if counted > 0 {
+		rep.MeanScore = sum / float64(counted)
 	}
-
-	return report
+	// Stable ordering for deterministic reports.
+	sort.SliceStable(rep.Queries, func(i, j int) bool {
+		return rep.Queries[i].QueryID < rep.Queries[j].QueryID
+	})
+	return rep
 }

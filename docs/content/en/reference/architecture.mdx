@@ -1,0 +1,108 @@
+---
+title: Architecture Overview
+description: Technical architecture of Universal Search
+lastUpdated: 2026-05-30
+---
+
+# Architecture Overview
+
+Universal Search is composed of a Go orchestration plane, Python sidecars, and a Next.js web UI, all wired together via Docker Compose.
+
+## High-Level Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Client Surfaces                                            │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  │
+│  │ CLI      │  │ Web UI   │  │ MCP      │  │ Claude   │  │
+│  │ usearch  │  │ Next.js  │  │ Server   │  │ Skill    │  │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘  │
+└───────┼─────────────┼─────────────┼──────────────┼─────────┘
+        │             │             │              │
+        ▼             ▼             ▼              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Go Orchestration Plane (cmd/usearch, internal/)            │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │  Router → Fanout → Adapters → Synthesis → Output     │   │
+│  └──────────────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │  Auth (JWT/OIDC) │ Observability (OTel, slog)       │   │
+│  └──────────────────────────────────────────────────────┘   │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+        ┌─────────────────┼─────────────────────┐
+        ▼                 ▼                     ▼
+┌────────────┐   ┌────────────────┐   ┌──────────────────┐
+│  SearXNG   │   │  Python        │   │  Storage Layer   │
+│  (AGPL-3   │   │  Sidecars      │   │  ┌────────────┐  │
+│  separate  │   │  ┌──────────┐  │   │  │  Qdrant    │  │
+│  container)│   │  │researcher│  │   │  │  (vectors) │  │
+└────────────┘   │  │storm     │  │   │  ├────────────┤  │
+                 │  │embedder  │  │   │  │Meilisearch │  │
+                 │  └──────────┘  │   │  │(full-text) │  │
+                 └────────────────┘   │  ├────────────┤  │
+                                      │  │ PostgreSQL │  │
+                                      │  │ (relational│  │
+                                      │  └────────────┘  │
+                                      └──────────────────┘
+```
+
+## Repository Structure
+
+```
+cmd/
+  usearch/         → Go CLI binary (cobra, 7 subcommands)
+internal/
+  adapters/        → Source adapters (searxng, arxiv, naver, github, hn, reddit, youtube, social)
+  deepagent/       → Multi-agent deep research pipeline
+  fanout/          → Parallel adapter fan-out with circuit breaker
+  llm/             → LLM routing via LiteLLM proxy
+  mcpserver/       → MCP server (4 tools: search, get_citation, list_sources, deep_research)
+  obs/             → Observability (OTel tracing, structured logging, metrics)
+  router/          → Request routing + locale-aware ranking
+  synthesis/       → LLM synthesis client
+  usearch/         → Core domain (config, auth, storage)
+services/
+  researcher/      → Python: gpt-researcher-based deep research
+  storm/           → Python: STORM citation report generator
+  embedder/        → Python: text embedding service
+web/               → Next.js 16 App Router web UI
+deploy/            → docker-compose dev + prod stack
+docs/              → This documentation site (Nextra v4)
+```
+
+## Key Design Decisions
+
+| Decision | Choice | Rationale |
+|---|---|---|
+| Language | Go (orchestration) + Python (sidecars) | Go for latency-sensitive path; Python for ML/AI ecosystem |
+| CLI framework | Cobra | Standard Go CLI; SPEC-CLI-002 |
+| Search | SearXNG (AGPL-3 separate container) | 70+ engines, privacy-preserving, self-hostable |
+| Vector DB | Qdrant | Tiered multitenancy for team isolation |
+| Full-text | Meilisearch | Fast, typo-tolerant, self-hosted |
+| LLM routing | LiteLLM proxy | Multi-provider fallback, cost tracking |
+| MCP | go-sdk | Official Anthropic Go SDK |
+| Auth | JWT + OIDC | Stateless + SSO compatibility |
+
+## Adapter System
+
+The `internal/adapters` package defines a pluggable adapter interface:
+
+```go
+type Adapter interface {
+    Search(ctx context.Context, query string, opts SearchOptions) ([]Doc, error)
+    Capabilities() Capabilities
+}
+```
+
+Adapters: `searxng`, `arxiv`, `github`, `hn`, `reddit`, `youtube`, `naver`, `koreanews`, `social`
+
+See [Adapters Reference](/en/reference/adapters) for the full adapter catalog. SPEC-DOC-002 covers the adapter plugin system.
+
+## Related Documents
+
+- [`.moai/project/tech.md`](https://github.com/elymas/universal-search/blob/main/.moai/project/tech.md) — Full tech stack reference (internal)
+- SPEC-CLI-001, SPEC-CLI-002: CLI architecture
+- SPEC-MCP-001: MCP server design
+- SPEC-AUTH-001/002/003: Authentication architecture
+- SPEC-OBS-001: Observability design

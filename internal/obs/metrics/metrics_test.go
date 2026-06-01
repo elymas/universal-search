@@ -280,9 +280,17 @@ func TestCardinalityGuardRejectsUnboundedLabels(t *testing.T) {
 		// RBAC labels added by SPEC-AUTH-002 (NFR-AUTH2-003).
 		// reason_class ∈ {policy_matched, no_policy_matched, explicit_deny, empty_team} (4 values).
 		"reason_class": true,
-		// Adapter reliability labels added by SPEC-EVAL-002 (NFR-EVAL2-001).
-		// state in {closed, open, half_open} (3 values, bounded enum).
+		// Adapter reliability label added by SPEC-EVAL-002 (NFR-EVAL2-001).
+		// state ∈ {closed, open, half_open} (3 values, bounded enum).
 		"state": true,
+		// Security labels added by SPEC-SEC-001 (NFR-SEC-007); bounded enums.
+		// component ∈ {access, auth, adapter}; type ∈ 7-event taxonomy;
+		// severity ∈ {critical, high, medium, low};
+		// tenant_id_class ∈ {known, unknown} (REQ-SEC-014, raw tenant_id never a label).
+		"component":       true,
+		"type":            true,
+		"severity":        true,
+		"tenant_id_class": true,
 	}
 
 	reg := metrics.NewRegistry()

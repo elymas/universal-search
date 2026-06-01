@@ -1,0 +1,126 @@
+---
+title: GitHub Adapter
+description: Reference documentation for the GitHub repository and issue search adapter
+lastVerified: 2026-05-31
+sourceID: github
+category: search-engine
+requiresAuth: true
+---
+
+import { Callout } from 'nextra/components'
+import { CapabilitiesTable } from '../../../../components/CapabilitiesTable'
+import { StatusBadge } from '../../../../components/StatusBadge'
+import githubCaps from './_generated/github.capabilities.json'
+
+# GitHub Adapter
+
+<StatusBadge adapter="github" />
+
+The GitHub adapter searches public GitHub repositories and issues via the GitHub REST API. **Authentication required** — a Personal Access Token (PAT) must be provided.
+
+## Status &amp; Compatibility
+
+| Field | Value |
+|-------|-------|
+| SPEC | SPEC-ADP-004 |
+| Source path | `internal/adapters/github/` |
+| SourceID | `github` |
+| Last verified | 2026-05-31 |
+| Status | <StatusBadge adapter="github" /> |
+
+## Overview
+
+The GitHub adapter queries GitHub's REST search API to retrieve repositories, issues, and code results. It uses the `google/go-github` library and supports multi-intent routing via `Query.Filters["kind"]`.
+
+**Use case:** open-source repository discovery, issue tracking, code search (v1 deferred).
+
+## Setup
+
+**Authentication required.** Provide a GitHub Personal Access Token via the `USEARCH_GITHUB_TOKEN` environment variable.
+
+**Step 1 — Create a GitHub PAT:**
+1. Go to [github.com/settings/tokens](https://github.com/settings/tokens)
+2. Click **Generate new token (classic)**
+3. Select the `public_repo` scope (private-repo search is out of v0.1 scope)
+4. Set a reasonable expiration (90 days recommended)
+5. Copy the generated token
+
+**Step 2 — Configure the environment variable:**
+
+```bash
+export USEARCH_GITHUB_TOKEN=<YOUR_GITHUB_PAT>
+```
+
+**Step 3 — Verify the configuration:**
+
+```bash
+usearch query --source github "distributed tracing opentelemetry"
+# Expected: list of repositories, no 401 error
+```
+
+**Step 4 — Recommended scopes:** `public_repo` only. Do not grant `repo` (private access) unless your deployment explicitly requires private repository search.
+
+**Step 5 — Deployment reference:** See [Helm values](/en/operators/deployment-helm#github-pat) for the `secrets.github.token` Helm values key.
+
+## Capabilities
+
+<CapabilitiesTable data={githubCaps} />
+
+**Rate limit note:** GitHub code search is limited to 9 requests/min; repository/issue search is 30/min. Capabilities advertises the conservative 30/min figure.
+
+## Query syntax
+
+GitHub queries use the GitHub search syntax forwarded to the REST API:
+
+| Universal Search field | GitHub API parameter | Notes |
+|------------------------|---------------------|-------|
+| `Query.Text` | `q={text}` | GitHub search syntax; qualifiers supported |
+| `Query.Filters["kind"]` | Determines endpoint | `repos` (default), `issues`, `code` |
+| `Query.Since` | `q=created:>={date}` | ISO 8601 date appended to query |
+| `Query.MaxResults` | `per_page={n}` | Capped at 25 default |
+
+**Qualifiers:** GitHub search qualifiers work directly in `Query.Text` — e.g. `"language:Go stars:>100"`.
+
+## Rate limits
+
+- **Advertised limit:** 30 requests/min (authenticated; 5000/hour primary rate limit)
+- **Enforcement mechanism:** HTTP 429 response handling + `X-RateLimit-Remaining=0` on 403 (go-github secondary rate limit handling at `github/client.go:77-112`)
+- **Upstream quota documentation:** [GitHub REST API rate limits](https://docs.github.com/en/rest/overview/resources-in-the-rest-api#rate-limiting)
+- **Exhaustion behaviour:** Adapter parses `Retry-After` header; caps at 90 seconds (vs 60s for other adapters). Returns `CategoryRateLimited`.
+
+## Error reference
+
+See [Error Taxonomy](/en/reference/adapters/errors) for the shared `Category` reference.
+
+**GitHub-specific status rosetta:**
+
+| HTTP status | Category | Cause | Operator action |
+|-------------|----------|-------|-----------------|
+| 401 | CategoryPermanent | Bad or missing PAT | Check `USEARCH_GITHUB_TOKEN` is set and valid |
+| 403 + `X-RateLimit-Remaining: 0` | CategoryRateLimited | Primary rate limit hit | Wait for rate limit reset; check `X-RateLimit-Reset` header |
+| 403 (secondary rate limit) | CategoryRateLimited | Abuse detection triggered | Reduce request frequency; retry with 90s+ delay |
+| 422 | CategoryPermanent | Validation failed — invalid query syntax | Check query for unsupported qualifiers; see GitHub docs |
+| 503 | CategoryUnavailable | GitHub API temporarily down | Check https://githubstatus.com |
+
+## Troubleshooting
+
+| Symptom | Likely cause | Diagnostic command | Resolution | Related SPECs |
+|---------|-------------|-------------------|------------|---------------|
+| 401 Unauthorized on all GitHub queries | Missing or expired PAT | `curl -H "Authorization: Bearer <token>" https://api.github.com/user` | Regenerate PAT at github.com/settings/tokens | SPEC-ADP-004 |
+| 403 on code search | Code search rate limit (9/min) | Check `X-RateLimit-Remaining` in response | Use `kind=repos` instead; code search has lower quota | SPEC-ADP-004 |
+| 422 Validation failed | Unsupported query qualifier | Review query string | Remove unsupported qualifiers; check GitHub search syntax docs | SPEC-ADP-004 |
+
+## Version compatibility
+
+| usearch version | GitHub REST API | go-github version | Last verified | Verifier |
+|----------------|----------------|------------------|---------------|----------|
+| v1.0.0 | REST v3 | v73.0.0 (SPEC references v85; v73 used at implementation) | 2026-05-31 | manager-docs |
+
+## Related
+
+- [SPEC-ADP-004](/en/reference/architecture) — GitHub adapter specification
+- [End-user surface comparison](/en/end-users/surface-comparison)
+- [Deployment Helm values — GitHub PAT](/en/operators/deployment-helm#github-pat)
+- [SPEC-SEC-001 security hardening](/en/reference/architecture) — credential management
+- [SPEC-FAN-001 fanout retry semantics](/en/reference/architecture)
+- [SPEC-CACHE-001 5-phase fallback](/en/reference/architecture)

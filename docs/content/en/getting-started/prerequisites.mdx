@@ -1,0 +1,66 @@
+---
+title: Prerequisites
+description: Software and environment requirements for running Universal Search
+lastUpdated: 2026-05-30
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Prerequisites
+
+Before installing Universal Search, ensure you have the following tools installed.
+
+## Required Tools
+
+| Tool | Minimum Version | Purpose | Install |
+|---|---|---|---|
+| **Docker** | 24+ | Required for `make compose-up` | [docker.com](https://docker.com) |
+| **Go** | 1.25+ | Required for `make build` and `make test` | [go.dev](https://go.dev) |
+| **Python** | 3.11+ | Required for Python services | [python.org](https://python.org) |
+| **Node.js** | 22+ | Required for web frontend | [nodejs.org](https://nodejs.org) |
+| **make** | Any | Standard build tool | System package manager |
+| **uv** | 0.4+ | Python package manager | `pip install uv` |
+| **pnpm** | 9+ | Node package manager | `npm install -g pnpm` |
+
+## Verify Installation
+
+```bash
+docker --version        # Docker version 24.0.0+
+go version              # go1.25.0+
+python3 --version       # Python 3.11+
+node --version          # v22.0.0+
+make --version          # GNU Make 4.x
+uv --version            # uv 0.4.0+
+pnpm --version          # 9.0.0+
+```
+
+## External API Keys (Optional but Recommended)
+
+Universal Search can work with local Ollama models, but for best results you will need at least one LLM API key:
+
+| Service | Purpose | Required? |
+|---|---|---|
+| Anthropic (Claude) | Primary LLM synthesis | Recommended |
+| OpenAI | Alternative LLM | Optional |
+| Naver Search API | Korean-locale results | Optional (needed for KO persona) |
+| Brave Search API | Additional web results | Optional |
+
+<Callout type="info">
+  All API keys are configured via `.env` file. See [Configuration](/en/operators/configuration) for the full list of environment variables.
+</Callout>
+
+## Hardware Requirements
+
+| Workload | CPU | RAM | Disk |
+|---|---|---|---|
+| Development (minimal) | 2 cores | 4 GB | 10 GB |
+| Standard operation | 4 cores | 8 GB | 20 GB |
+| Deep research workloads | 8+ cores | 16 GB | 50 GB |
+
+<Callout type="warning">
+  Qdrant (vector database) and Meilisearch (full-text search) are the most memory-intensive components. Plan for at least 2 GB RAM per service in production.
+</Callout>
+
+## Next Step
+
+Once prerequisites are met, proceed to [Installation](/en/getting-started/installation).

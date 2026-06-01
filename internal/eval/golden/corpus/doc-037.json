@@ -1,15 +1,20 @@
 {
   "id": "doc-037",
-  "source_id": "rss",
-  "url": "https://example.com/rss/0037",
-  "title": "infrastructure as code best practices - study 37",
-  "body": "This document discusses infrastructure as code best practices. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of infrastructure as code best practices. Key findings include improved accuracy, reduced latency, and better scalability. The study 37 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on infrastructure as code best practices.",
-  "published_at": "2025-02-07T00:00:00+00:00",
-  "retrieved_at": "2026-05-02T13:00:00+00:00",
-  "author": "author-37",
-  "score": 0.87,
+  "source_id": "github",
+  "url": "https://example.test/github/wasm-a",
+  "title": "WebAssembly runtime model",
+  "body": "WebAssembly is a portable bytecode that runs in a sandboxed stack-based virtual machine. It offers near-native performance and language independence. Browsers and standalone runtimes both execute it.",
+  "snippet": "WebAssembly runtime model",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
   "lang": "en",
-  "doc_type": "issue",
-  "hash": "cc1e872eacea8da5"
+  "doc_type": "repo",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

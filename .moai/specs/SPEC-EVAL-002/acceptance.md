@@ -1,8 +1,9 @@
 ---
 id: SPEC-EVAL-002
-version: 0.1.0
+version: 0.2.0
 status: draft
 created: 2026-05-26
+updated: 2026-05-30
 author: limbowl (via manager-spec)
 related_spec: SPEC-EVAL-002 (spec.md, plan.md)
 format: Given/When/Then
@@ -15,6 +16,14 @@ format: Given/When/Then
 This document specifies acceptance criteria for SPEC-EVAL-002 in Given/When/Then format, expanding the scenario index in spec.md §5 (§5.1..§5.12) into externally-observable behaviors that the run phase MUST verify before declaring EVAL-002 ship-ready.
 
 Scope: 12 acceptance criteria (AC-001..AC-012) covering REQ-EVAL2-001 through REQ-EVAL2-010 + NFR-EVAL2-001 through NFR-EVAL2-005, plus 3 edge-case sections, plus a Definition of Done checklist.
+
+> **v0.2.0 amendment (2026-05-30):** (A1) AC-009 rewritten — health
+> surface reuses SPEC-UI-002's `/api/admin/adapters` handler + adds
+> `/api/admin/adapters/health` sibling (LoopbackOnly, no new port).
+> (A2) AC-008 (circuit alert) marked **DEFERRED post-V1 — NOT a V1
+> gate item**; AC-004 reduced to 4 V1 core panels (circuit-state matrix
+> deferred). (A5) AC-003 Loki panel marked optional/non-gate. The DoD
+> checklist and Coverage Matrix below reflect these deferrals.
 
 Coverage policy: every REQ and every NFR in spec.md §2 / §3 has ≥1 matching AC below. See Coverage Matrix at end of file.
 
@@ -69,10 +78,10 @@ Covers: REQ-EVAL2-005
 **When** `wrappedAdapter.emit` writes the slog record.
 
 **Then**:
-- The slog record contains `failure_class="tls"` attribute.
+- The slog record contains `failure_class="tls"` attribute (emitted by `wrappedAdapter.emit`, `internal/adapters/registry.go:433`).
 - The slog record contains `outcome="failure"` (existing label).
 - No new Prometheus label is created (`failure_class` lives ONLY in slog/Loki).
-- The Grafana dashboard JSON contains a Loki/log-link panel with query `{service="usearch"} | json | adapter = <selected> and outcome != "success"`.
+- **(OPTIONAL, A5 — NOT a V1 gate item)** WHERE a Loki datasource is configured, the Grafana dashboard JSON MAY contain a Loki/log-link panel with query `{service="usearch"} | json | adapter = <selected> and outcome != "success"`. When Loki is absent, the panel renders empty and the 4 core panels are unaffected; its absence does NOT fail the gate.
 - Other taxonomy values are emitted for: 5xx, 4xx, dns, parse, transcript, unknown — verified per error fixture.
 
 Maps to scenario §5.3 in spec.md.
@@ -89,11 +98,12 @@ Covers: REQ-EVAL2-006, REQ-EVAL2-007, NFR-EVAL2-002
 
 **Then**:
 - HTTP 200 received within 30 seconds of compose up.
-- The dashboard contains exactly 5 panels: (1) per-adapter 24h success-rate heatmap, (2) per-adapter 7d success-rate trendline, (3) failure-cause stacked bar by outcome, (4) fanout partial-result ratio time-series, (5) circuit-state matrix.
-- Each panel references the recording rules from REQ-EVAL2-001 (NOT raw `rate()` queries).
+- The dashboard contains the **V1: 4 core panels**: (1) per-adapter 24h success-rate heatmap, (2) per-adapter 7d success-rate trendline, (3) failure-cause stacked bar by outcome, (4) fanout partial-result ratio time-series.
+- **(DEFERRED post-V1, A2 — NOT a V1 gate item)** Panel (5) circuit-state matrix is excluded from the V1 dashboard because no upstream emits `usearch_adapter_circuit_state`; it MAY be added (rendering "no data") when a future SPEC emits the gauge.
+- Each core panel references the recording rules from REQ-EVAL2-001 (NOT raw `rate()` queries).
 - A Grafana template variable `adapter` is populated from `label_values(usearch_adapter_calls_total, adapter)`.
-- All 5 panels render in < 2 seconds against a Prometheus instance with 30 days of retention and 12 adapters × ~1 req/sec sustained traffic.
-- Visual smoke screenshot shows all 5 panels with non-empty data when fed the seeded fixture.
+- All **4 core panels** render in < 2 seconds against a Prometheus instance with 30 days of retention and 12 adapters × ~1 req/sec sustained traffic.
+- Visual smoke screenshot shows the **4 core panels** with non-empty data when fed the seeded fixture.
 
 Maps to scenario §5.4 in spec.md.
 
@@ -153,42 +163,60 @@ Maps to scenario §5.7 in spec.md.
 
 ---
 
-### AC-008 — Circuit-open alert fires after 10 min of `state="open"`
+### AC-008 — Circuit-open alert (DEFERRED post-V1, A2 — NOT a V1 gate item)
 
-Covers: REQ-EVAL2-008
+Covers: REQ-EVAL2-008 (deferred portion)
 
-**Given** the metric `usearch_adapter_circuit_state{adapter="reddit",state="open"} == 1` sustained for 10 minutes.
+> **v0.2.0 amendment A2:** Because no upstream emits `usearch_adapter_
+> circuit_state` in V1, the circuit-open alert (and the circuit-state
+> dashboard panel) are deferred to post-V1 and **removed from the V1
+> acceptance gate**. The metric family stays registered for forward
+> compatibility. This AC is retained for documentation but MUST NOT
+> block V1 ship-readiness; it is re-enabled when a future resilience
+> SPEC emits real circuit transitions.
+
+**Given** (post-V1, once an upstream emits it) the metric `usearch_adapter_circuit_state{adapter="reddit",state="open"} == 1` sustained for 10 minutes.
 
 **When** Prometheus evaluates alerts.
 
-**Then**:
+**Then** (post-V1 only):
 - The circuit-open alert fires.
 - The alert has labels `spec=SPEC-EVAL-002`, `adapter=reddit`, `severity=warning|critical`.
-- If the upstream package never emits `usearch_adapter_circuit_state` (e.g., SPEC-CACHE-001 cascade not yet deployed), the alert and the corresponding dashboard panel render "no data" gracefully — no error.
 
-Maps to scenario §5.8 in spec.md.
+**V1 behavior (asserted by EC-001):** the gauge is never emitted, the alert rule is NOT shipped in V1 `alerts.yml`, and the panel is NOT in the V1 dashboard — no spurious firing, no "no data" panel in the V1 gate.
+
+Maps to scenario §5.8 in spec.md (deferred).
 
 ---
 
-### AC-009 — /admin/health/adapters endpoint with status derivation
+### AC-009 — Adapter health surface reusing SPEC-UI-002 admin handler
 
 Covers: REQ-EVAL2-010
 
-**Given** the usearch admin port (default 9090 per SPEC-OBS-001) and a mixed-status metrics fixture (some healthy, some degraded, one unhealthy).
+> **v0.2.0 amendment A1:** The health surface REUSES SPEC-UI-002's
+> existing `/api/admin/adapters` handler (`internal/api/admin/handler_
+> adapters.go`, mounted at `cmd/usearch-api/main.go:71` behind
+> `LoopbackOnly`) and adds a sibling `/api/admin/adapters/health` on
+> the SAME admin mux. The separate `:9090` server from v0.1.0 is
+> removed.
+
+**Given** the usearch admin mux (LoopbackOnly, same listener as `/api/admin/adapters`) and a mixed-status metrics fixture (some healthy, some degraded, one unhealthy).
 
 **When** the operator issues:
 ```
-curl http://127.0.0.1:9090/admin/health/adapters
+curl http://127.0.0.1:<admin-port>/api/admin/adapters/health
 ```
+(and also `curl http://127.0.0.1:<admin-port>/api/admin/adapters`)
 
 **Then**:
-- HTTP status is `503` (because at least one adapter is unhealthy).
+- `GET /api/admin/adapters/health` returns HTTP `503` (because at least one adapter is unhealthy).
 - The JSON body contains an `adapters` array.
-- Each element includes: `name`, `status ∈ {healthy, degraded, unhealthy}`, `success_rate_24h ∈ [0.0, 1.0]`, `success_rate_7d ∈ [0.0, 1.0]`, `last_call_at` (ISO-8601), `circuit_state ∈ {closed, open, half_open}`.
+- Each element includes: `name`, `status ∈ {healthy, degraded, unhealthy}`, `success_rate_24h ∈ [0.0, 1.0]`, `success_rate_7d ∈ [0.0, 1.0]`, `last_call_at` (ISO-8601). The `circuit_state` field, IF present, always reports `closed` in V1 (deferred per A2) and is NOT asserted as a gate item.
 - Status mapping: ≥ 0.95 → healthy; 0.85–0.95 → degraded; < 0.85 → unhealthy.
-- The endpoint does NOT require authentication (admin port is private).
-- The endpoint is NOT exposed on the public API listener (verified by attempting GET on the public port → 404).
-- When all adapters are healthy, HTTP status is `200`.
+- `GET /api/admin/adapters` now returns populated `success_count` / `fail_count` / `success_rate` (no longer 0 stubs) for adapters with telemetry.
+- The endpoint is loopback-only (existing SPEC-UI-002 `LoopbackOnly` middleware): a request with a non-loopback `RemoteAddr` is rejected (403), and the endpoint is NOT on the public API listener.
+- When all adapters are healthy, `GET /api/admin/adapters/health` returns HTTP `200`.
+- Existing SPEC-UI-002 admin tests (secret non-leakage, status, resync, toggle) continue to pass unchanged.
 
 Maps to scenario §5.9 in spec.md.
 
@@ -251,16 +279,18 @@ Maps to scenario §5.12 in spec.md.
 
 ## 2. Edge Cases
 
-### EC-001 — Circuit-state metric absent (upstream not deployed)
+### EC-001 — Circuit-state metric absent (V1 default; alert/panel deferred per A2)
 
-**Given** `usearch_adapter_circuit_state` is never emitted by any upstream package at run time (SPEC-CACHE-001 cascade not deployed or feature-flagged off).
+**Given** `usearch_adapter_circuit_state` is never emitted by any upstream package at run time (V1 default — no upstream emits it yet).
 
-**When** Grafana renders the circuit-state matrix panel and Prometheus evaluates the circuit-open alert.
+**When** V1 EVAL-002 ships.
 
 **Then**:
-- The panel displays "No data" without raising an error.
-- The alert remains in `inactive` state forever (no spurious firing).
+- The metric family `usearch_adapter_circuit_state` is still registered (forward-compat, REQ-EVAL2-003c) and stays at default `closed`.
+- The circuit-open alert is NOT present in the V1 `deploy/prometheus/alerts.yml` (deferred, A2) — so there is no "inactive-forever" or spurious-firing rule in V1.
+- The circuit-state matrix panel is NOT present in the V1 dashboard (deferred, A2) — so there is no "no data" panel in the V1 gate.
 - No log error or warning is emitted.
+- (Post-V1) When a future SPEC adds both the emit source and re-enables the alert/panel, the panel renders live data and the alert fires per AC-008.
 
 ### EC-002 — Adapter added/removed mid-window
 
@@ -288,21 +318,31 @@ Maps to scenario §5.12 in spec.md.
 
 ## 3. Definition of Done Checklist
 
-- [ ] All 12 AC scenarios pass on CI.
-- [ ] All 12 scenario index entries (§5.1..§5.12) in spec.md are implemented as automated tests.
-- [ ] `deploy/prometheus/recording-rules.yml` + `deploy/prometheus/alerts.yml` pass `promtool check rules`.
+**V1 gate items:**
+
+- [ ] All V1 AC scenarios pass on CI (AC-001..AC-007, AC-009..AC-012; AC-008 deferred per A2).
+- [ ] V1 scenario index entries (§5.1..§5.7, §5.9..§5.12) in spec.md are implemented as automated tests. (§5.8 circuit alert deferred.)
+- [ ] `deploy/prometheus/recording-rules.yml` + `deploy/prometheus/alerts.yml` (V1: 3 alert rules) pass `promtool check rules`.
+- [ ] `deploy/prometheus/prometheus.yml` `evaluation_interval` set to `1m` (was 15s) per A4 / NFR-EVAL2-003.
 - [ ] `deploy/alertmanager/alertmanager.yml` passes `amtool check-config`.
-- [ ] `deploy/grafana/dashboards/adapter-reliability.json` imports cleanly into Grafana 11.x.
+- [ ] `deploy/grafana/dashboards/adapter-reliability.json` (V1: 4 core panels) imports cleanly into Grafana 11.x.
 - [ ] `deploy/grafana/provisioning/*.yaml` enables auto-provisioning via docker compose.
-- [ ] `internal/obs/metrics` registers the 3 new metric families without panic.
+- [ ] `internal/obs/metrics` registers the 3 new metric families without panic (circuit_state registered but unused in V1).
 - [ ] `internal/fanout` increments `usearch_fanout_partial_total` exactly once per failed adapter.
-- [ ] `wrappedAdapter.emit` writes the `failure_class` slog attribute for the documented taxonomy.
-- [ ] `GET /admin/health/adapters` on admin port returns the documented schema + status mapping.
+- [ ] `wrappedAdapter.emit` (registry.go:433) writes the `failure_class` slog attribute for the documented taxonomy.
+- [ ] `GET /api/admin/adapters` returns populated `success_count`/`fail_count`/`success_rate` (SPEC-UI-002 handler reuse, A1).
+- [ ] `GET /api/admin/adapters/health` on the same LoopbackOnly admin mux returns the documented schema + status mapping; no new :9090 server.
+- [ ] Existing SPEC-UI-002 admin tests pass unchanged.
 - [ ] `Registry.labelNames` allowlist test passes with `state` added; no other new labels.
 - [ ] Bench delta < 1% p99 verified on `internal/fanout/bench_test.go`.
 - [ ] Prometheus 30-day retention verified across container restart.
-- [ ] Runbook `docs/operations/adapter-reliability-runbook.md` exists with sections matching each alert name in `runbook_url` annotations.
+- [ ] Runbook `docs/operations/adapter-reliability-runbook.md` exists with sections matching each V1 alert name in `runbook_url` annotations.
 - [ ] Open Questions in spec.md §8 are resolved or explicitly deferred with mitigation.
+
+**Deferred (post-V1, NOT V1 gate items):**
+
+- [ ] (post-V1) AC-008 circuit-open alert + circuit-state panel re-enabled when an upstream emits `usearch_adapter_circuit_state` (A2).
+- [ ] (optional, non-gate) Loki log-link panel present when a Loki datasource is configured (A5).
 
 ---
 
@@ -317,7 +357,7 @@ Maps to scenario §5.12 in spec.md.
 | REQ-EVAL2-005 |   |   | ✓ |   |   |   |   |   |   |   |   |   | EC-003 |
 | REQ-EVAL2-006 |   |   |   | ✓ |   |   |   |   |   |   |   |   |   |
 | REQ-EVAL2-007 |   |   |   | ✓ |   |   |   |   |   |   |   |   |   |
-| REQ-EVAL2-008 |   |   |   |   | ✓ | ✓ | ✓ | ✓ |   |   |   |   | EC-001 |
+| REQ-EVAL2-008 (V1: 3 alerts) |   |   |   |   | ✓ | ✓ | ✓ | (✓ deferred, A2) |   |   |   |   | EC-001 |
 | REQ-EVAL2-009 |   |   |   |   | ✓ |   |   |   |   |   |   |   |   |
 | REQ-EVAL2-010 |   |   |   |   |   |   |   |   | ✓ |   |   |   |   |
 | NFR-EVAL2-001 |   |   |   |   |   |   |   |   |   | ✓ |   |   |   |
@@ -326,8 +366,8 @@ Maps to scenario §5.12 in spec.md.
 | NFR-EVAL2-004 |   |   |   |   |   |   |   |   |   |   |   | ✓ |   |
 | NFR-EVAL2-005 |   |   |   |   |   |   |   |   |   |   | ✓ |   |   |
 
-Every REQ and NFR has ≥ 1 AC; edge cases EC-001..EC-003 supplement upstream-absent graceful degradation, adapter set drift, and taxonomy expansion.
+Every REQ and NFR has ≥ 1 AC; edge cases EC-001..EC-003 supplement upstream-absent graceful degradation, adapter set drift, and taxonomy expansion. Per v0.2.0 amendment A2, the REQ-EVAL2-008 circuit-open portion (AC-008) is deferred to post-V1 and is NOT a V1 gate item; the other 3 alert conditions (AC-005, AC-006, AC-007) constitute the V1 alerting gate.
 
 ---
 
-*End of SPEC-EVAL-002 acceptance.md.*
+*End of SPEC-EVAL-002 acceptance.md (v0.2.0).*

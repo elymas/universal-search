@@ -1,15 +1,20 @@
 {
   "id": "doc-031",
-  "source_id": "bluesky",
-  "url": "https://example.com/bluesky/0031",
-  "title": "stream processing with Apache Kafka - study 31",
-  "body": "This document discusses stream processing with Apache Kafka. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of stream processing with Apache Kafka. Key findings include improved accuracy, reduced latency, and better scalability. The study 31 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on stream processing with Apache Kafka.",
-  "published_at": "2025-02-01T00:00:00+00:00",
-  "retrieved_at": "2026-05-02T07:00:00+00:00",
-  "author": "author-31",
-  "score": 0.81,
-  "lang": "en",
-  "doc_type": "other",
-  "hash": "4d5d1ec0ce5c5f62"
+  "source_id": "github",
+  "url": "https://example.test/github/vectordb-ko-a",
+  "title": "검색을 위한 벡터 데이터베이스",
+  "body": "벡터 데이터베이스는 고차원 임베딩을 저장하고 근사 최근접 이웃 검색을 지원한다. 일반적인 인덱스 유형으로 HNSW와 IVF가 있다. 현대 검색 시스템의 의미 검색을 구동한다.",
+  "snippet": "검색을 위한 벡터 데이터베이스",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "ko",
+  "doc_type": "repo",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

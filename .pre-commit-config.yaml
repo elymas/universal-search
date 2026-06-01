@@ -73,6 +73,15 @@ repos:
         entry: scripts/run-eslint-web.sh
         pass_filenames: true
 
+  # ── Secret scanning (SPEC-SEC-001 REQ-SEC-004) ──────────────────────────────
+  # Blocks commits containing secrets not present in the .gitleaks.toml
+  # allowlist. The CI security.yml gitleaks job is the backstop if this hook is
+  # bypassed with --no-verify.
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.20.0
+    hooks:
+      - id: gitleaks
+
   # ── Dockerfile linting ───────────────────────────────────────────────────────
   - repo: https://github.com/hadolint/hadolint
     rev: v2.12.0

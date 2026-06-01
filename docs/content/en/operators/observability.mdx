@@ -1,0 +1,102 @@
+---
+title: Observability
+description: Logging, tracing, and metrics for Universal Search operators
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# Observability
+
+Universal Search emits structured logs, OpenTelemetry traces, and per-query metrics via SPEC-OBS-001.
+
+## Structured Logging
+
+Logs are emitted in JSON format to stdout (configurable via `LOG_FORMAT=text` for development).
+
+### Log Levels
+
+```bash
+LOG_LEVEL=debug   # verbose, including adapter responses
+LOG_LEVEL=info    # default; query start/end, errors
+LOG_LEVEL=warn    # errors only
+LOG_LEVEL=error   # critical failures only
+```
+
+### Log Fields
+
+Every query log entry includes:
+
+```json
+{
+  "time": "2026-05-30T14:22:00Z",
+  "level": "info",
+  "msg": "query complete",
+  "req_id": "req_abc123",
+  "query": "what is Raft?",
+  "locale": "en",
+  "sources": ["searxng", "arxiv"],
+  "citations": 5,
+  "confidence": 0.94,
+  "duration_ms": 1240,
+  "model": "claude-3-5-sonnet-20241022",
+  "cost_usd": 0.003
+}
+```
+
+## OpenTelemetry Tracing
+
+Universal Search instruments every request with an OTel span `usearch.cli.query` per SPEC-OBS-001.
+
+### Span Attributes
+
+| Attribute | Value |
+|---|---|
+| `usearch.query` | Query text |
+| `usearch.locale` | `en` or `ko` |
+| `usearch.sources` | Comma-separated adapter names |
+| `usearch.citations` | Citation count |
+| `usearch.confidence` | Float 0.0–1.0 |
+| `usearch.req_id` | Request ID |
+
+### Export Configuration
+
+```bash
+# OTLP exporter (Jaeger, Tempo, Honeycomb, etc.)
+OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger:4318
+OTEL_SERVICE_NAME=usearch
+
+# Or stdout for development
+OTEL_TRACES_EXPORTER=console
+```
+
+## Metrics
+
+<Callout type="info">
+  Per-query success rate metrics, citation-faithfulness eval, and per-source success rate dashboards are delivered by **SPEC-OBS-001**. See that SPEC for the full metrics catalog.
+</Callout>
+
+Key metrics emitted:
+
+| Metric | Type | Description |
+|---|---|---|
+| `usearch.query.duration_ms` | Histogram | End-to-end query latency |
+| `usearch.query.citations` | Histogram | Citation count per query |
+| `usearch.query.confidence` | Gauge | Synthesis confidence score |
+| `usearch.adapter.success_rate` | Gauge | Per-adapter success percentage |
+| `usearch.llm.cost_usd` | Counter | Cumulative LLM cost |
+
+## Log Aggregation
+
+Universal Search emits JSON logs to stdout — compatible with:
+
+- **ELK Stack**: Filebeat → Elasticsearch → Kibana
+- **Loki + Grafana**: promtail → Loki → Grafana
+- **AWS CloudWatch**: CloudWatch Logs Agent
+- **GCP Cloud Logging**: Fluentd/Fluent Bit
+
+Example Grafana dashboard query (Loki):
+
+```text
+{service="usearch"} | json | duration_ms > 5000
+```

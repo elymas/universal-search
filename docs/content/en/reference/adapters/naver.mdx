@@ -1,0 +1,136 @@
+---
+title: Naver Adapter
+description: Reference documentation for the Naver multi-vertical search adapter (Korean-locale)
+lastVerified: 2026-05-31
+sourceID: naver
+category: korean-locale
+requiresAuth: true
+koreanLocaleOptimized: true
+---
+
+import { Callout } from 'nextra/components'
+import { CapabilitiesTable } from '../../../../components/CapabilitiesTable'
+import { StatusBadge } from '../../../../components/StatusBadge'
+import naverCaps from './_generated/naver.capabilities.json'
+
+# Naver Adapter
+
+<StatusBadge adapter="naver" />
+
+The Naver adapter queries Naver's multi-vertical Search API (blog, news, web, shopping, DataLab). **Authentication required** — a Naver Developer Application client ID and secret must be provided. Supports Korean (`ko`) queries only.
+
+## Status &amp; Compatibility
+
+| Field | Value |
+|-------|-------|
+| SPEC | SPEC-ADP-008 |
+| Source path | `internal/adapters/naver/` |
+| SourceID | `naver` |
+| Korean-locale optimized | Yes |
+| Last verified | 2026-05-31 |
+| Status | <StatusBadge adapter="naver" /> |
+
+## Overview
+
+Naver is South Korea's dominant search engine. The Universal Search Naver adapter supports multiple search verticals: blog posts, news articles, web documents, shopping results, and DataLab trend data. Queries are forwarded in UTF-8 to Naver's OpenAPI endpoint (`openapi.naver.com`).
+
+**Use case:** Korean-language content discovery, Korean news aggregation, Korean blog search, trend data via DataLab.
+
+## Setup
+
+**Authentication required.** Provide Naver API credentials via environment variables.
+
+**Step 1 — Register a Naver Developer Application:**
+1. Go to [developers.naver.com](https://developers.naver.com/main/)
+2. Create a new application under **내 애플리케이션**
+3. Enable the **검색 API** service
+4. **CRITICAL:** Register your Service URL in the application settings (the redirect allowlist at `naver/client.go:22-24` validates `openapi.naver.com` — the Application must have the search endpoints registered)
+5. Copy the **Client ID** and **Client Secret**
+
+**Step 2 — Configure environment variables:**
+
+```bash
+export NAVER_CLIENT_ID=<YOUR_NAVER_CLIENT_ID>
+export NAVER_CLIENT_SECRET=<YOUR_NAVER_CLIENT_SECRET>
+```
+
+**Step 3 — Verify the configuration:**
+
+```bash
+usearch query --source naver "인공지능 최신 논문"
+# Expected: Korean blog/news results, no 401 error
+```
+
+**Step 4 — Deployment reference:** See [Helm values](/en/operators/deployment-helm#naver-credentials) for the `secrets.naver.clientId` and `secrets.naver.clientSecret` Helm values keys.
+
+**Step 5 — Korean-locale prerequisites:**
+- Korean queries are passed as UTF-8 verbatim to the Naver API (no in-adapter tokenization)
+- Index-side Korean tokenization (mecab-ko) is handled by the indexing layer (SPEC-IDX-003)
+- DataLab endpoint (`openapi.naver.com/v1/datalab/search`) has a separate rate budget from the search endpoint
+- See [Korean Locale Setup](/en/operators/korean-locale-setup) for mecab-ko + Meili plugin configuration
+
+## Capabilities
+
+The table below is auto-extracted from the Go source via `gen-adapter-ref` — edit the adapter source to change these values.
+
+<CapabilitiesTable data={naverCaps} />
+
+## Query syntax
+
+Naver queries use the OpenAPI search endpoint with vertical selection:
+
+| Universal Search field | Naver API parameter | Notes |
+|------------------------|---------------------|-------|
+| `Query.Text` | `query={text}` | UTF-8 Korean text forwarded verbatim |
+| `Query.Filters["naver_vertical"]` | Determines endpoint path | `blog` (default), `news`, `web`, `shop`, `datalab` |
+| `Query.MaxResults` | `display={n}` | Max 100 per Naver docs; defaults to 25 |
+
+**DataLab queries:** For the `datalab` vertical, `Query.Text` must be a JSON-encoded request body matching the DataLab Trend API schema.
+
+## Rate limits
+
+- **Advertised limit:** 10 requests/min
+- **Enforcement mechanism:** HTTP 429 response handling — Naver returns 429 with `Retry-After` when quota is exceeded
+- **Upstream quota documentation:** [Naver Developers API quota](https://developers.naver.com/docs/common/openapiguide/)
+- **Exhaustion behaviour:** The adapter reads `Retry-After` from the 429 response. Returns `CategoryRateLimited` to the fanout dispatcher.
+
+## Error reference
+
+See [Error Taxonomy](/en/reference/adapters/errors) for the shared `Category` reference.
+
+**Naver-specific status rosetta** (from `naver/client.go:87-110`):
+
+| HTTP status | Category | Cause | Operator action |
+|-------------|----------|-------|-----------------|
+| 401 | CategoryPermanent | Invalid client ID | Check `NAVER_CLIENT_ID` env var is set correctly |
+| 403 | CategoryPermanent | Access denied / SSRF guard | Verify the Application's Service URL is registered in Naver Developer Console |
+| 429 | CategoryRateLimited | Rate quota exceeded | Wait for `Retry-After`; reduce request frequency |
+| 4xx (other) | CategoryPermanent | Malformed request | Check query format and vertical name |
+| 5xx | CategoryUnavailable | Naver API unavailable | Retry after delay |
+
+## Troubleshooting
+
+| Symptom | Likely cause | Diagnostic command | Resolution | Related SPECs |
+|---------|-------------|-------------------|------------|---------------|
+| 401 "Invalid client id" | Wrong `NAVER_CLIENT_ID` | Check env var is set | Export correct client ID from Naver Developer Console | SPEC-ADP-008 |
+| 0 results despite valid query | Service URL not registered in Naver Console | Check Naver application settings | Register `openapi.naver.com` as allowed Service URL | SPEC-ADP-008 |
+| SSRF guard block (403) | Request to non-allowlisted domain | Check adapter logs for SSRF error | Adapter only allows `openapi.naver.com` (SPEC-SEC-001 D3) | SPEC-SEC-001 |
+| DataLab returns error | Malformed JSON body in `Query.Text` | Log the raw query text | Ensure `Query.Text` is valid DataLab Trend API JSON | SPEC-ADP-008 |
+| Korean tokenization issues | mecab-ko not configured at index side | Check Meili plugin status | Follow [Korean Locale Setup](/en/operators/korean-locale-setup) | SPEC-IDX-003 |
+
+## Version compatibility
+
+| usearch version | Naver OpenAPI version | Last verified | Verifier |
+|----------------|----------------------|---------------|----------|
+| v1.0.0 | v1 (openapi.naver.com/v1) | 2026-05-31 | manager-docs |
+
+## Related
+
+- [SPEC-ADP-008](/en/reference/architecture) — Naver adapter specification
+- [Korean Locale Setup](/en/operators/korean-locale-setup) — mecab-ko + Meili plugin
+- [End-user surface comparison](/en/end-users/surface-comparison)
+- [Deployment Helm values — Naver credentials](/en/operators/deployment-helm#naver-credentials)
+- [SPEC-IDX-003 Korean tokenization](/en/reference/architecture)
+- [SPEC-SEC-001 SSRF mitigation](/en/reference/architecture) — redirect allowlist
+- [SPEC-FAN-001 fanout retry semantics](/en/reference/architecture)
+- [SPEC-EVAL-003 Korean benchmark](/en/reference/architecture)

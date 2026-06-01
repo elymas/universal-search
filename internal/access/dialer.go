@@ -2,13 +2,17 @@
 //
 // REQ-CACHE-013 guard #3: The hostname is resolved ONCE and all subsequent
 // TCP connections are made directly to the pinned IP, preventing DNS rebinding.
+//
+// SPEC-SEC-001 REQ-SEC-007 (DDD IMPROVE): delegates to the generic
+// internal/security/ssrf package; the wrappers preserve the CACHE-001
+// call-site signatures and translate the generic error into *FetchError.
 package access
 
 import (
 	"context"
-	"fmt"
 	"net"
-	"time"
+
+	secssrf "github.com/elymas/universal-search/internal/security/ssrf"
 )
 
 // pinnedDialContext resolves hostname once and returns a DialContext function
@@ -31,53 +35,16 @@ func pinnedDialContext(
 	opts Options,
 	fopts FetchOptions,
 ) (func(context.Context, string, string) (net.Conn, error), error) {
-	// Skip DNS pinning when private networks are explicitly allowed (test mode).
-	if opts.AllowPrivateNetworks || fopts.AllowPrivateNetworks {
-		d := &net.Dialer{Timeout: 10 * time.Second}
-		return d.DialContext, nil
-	}
-
-	resolveCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-
-	ips, err := net.DefaultResolver.LookupIPAddr(resolveCtx, hostname)
+	dialFn, err := secssrf.PinnedIPDialer(ctx, hostname, toSecOptions(opts), toSecFetchOptions(fopts))
 	if err != nil {
-		return nil, &FetchError{
-			Category: CategoryBlocked,
-			Reason:   fmt.Sprintf("DNS lookup failed for %q: %v", hostname, err),
-			Cause:    err,
-		}
+		return nil, fromSecError(err)
 	}
-	if len(ips) == 0 {
-		return nil, &FetchError{
-			Category: CategoryBlocked,
-			Reason:   fmt.Sprintf("no IP address resolved for %q", hostname),
-		}
-	}
-
-	// Check the resolved IP against the private-network deny list.
-	pinnedIP := ips[0].IP
-	if isPrivateOrLoopback(pinnedIP) {
-		return nil, &FetchError{
-			Category: CategoryBlocked,
-			Reason:   fmt.Sprintf("private/loopback IP %s resolved for %q", pinnedIP, hostname),
-		}
-	}
-
-	return dialContextWithPinnedIP(pinnedIP.String()), nil
+	return dialFn, nil
 }
 
 // dialContextWithPinnedIP returns a DialContext function that forces all TCP
 // connections to the given pinnedAddr (IP string), bypassing DNS.
 // This function is used by Phase 3 and Phase 4 HTTP transports.
 func dialContextWithPinnedIP(pinnedIP string) func(context.Context, string, string) (net.Conn, error) {
-	d := &net.Dialer{Timeout: 10 * time.Second}
-	return func(ctx context.Context, network, addr string) (net.Conn, error) {
-		// Replace the hostname portion of addr with the pinned IP.
-		_, port, err := net.SplitHostPort(addr)
-		if err != nil {
-			return nil, err
-		}
-		return d.DialContext(ctx, network, net.JoinHostPort(pinnedIP, port))
-	}
+	return secssrf.DialContextWithPinnedIP(pinnedIP)
 }

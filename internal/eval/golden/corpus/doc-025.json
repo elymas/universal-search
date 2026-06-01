@@ -1,15 +1,20 @@
 {
   "id": "doc-025",
-  "source_id": "polymarket",
-  "url": "https://example.com/polymarket/0025",
-  "title": "\ud55c\uad6d\uc5b4 \ud14d\uc2a4\ud2b8 \ubd84\ub958 \uae30\ubc95 - study 25",
-  "body": "This document discusses \ud55c\uad6d\uc5b4 \ud14d\uc2a4\ud2b8 \ubd84\ub958 \uae30\ubc95. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of \ud55c\uad6d\uc5b4 \ud14d\uc2a4\ud2b8 \ubd84\ub958 \uae30\ubc95. Key findings include improved accuracy, reduced latency, and better scalability. The study 25 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on \ud55c\uad6d\uc5b4 \ud14d\uc2a4\ud2b8 \ubd84\ub958 \uae30\ubc95.",
-  "published_at": "2025-01-26T00:00:00+00:00",
-  "retrieved_at": "2026-05-02T01:00:00+00:00",
-  "author": "author-25",
-  "score": 0.75,
-  "lang": "ko",
-  "doc_type": "post",
-  "hash": "7792f346a400ec77"
+  "source_id": "rss",
+  "url": "https://example.test/rss/httpcache-a",
+  "title": "HTTP caching semantics",
+  "body": "HTTP caching uses Cache-Control directives such as max-age and no-store to control freshness. Conditional requests with ETag and If-None-Match enable revalidation. A 304 Not Modified response saves bandwidth.",
+  "snippet": "HTTP caching semantics",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
+  "lang": "en",
+  "doc_type": "article",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

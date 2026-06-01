@@ -1,15 +1,20 @@
 {
   "id": "doc-055",
-  "source_id": "github",
-  "url": "https://example.com/github/0055",
-  "title": "\ud55c\uad6d SaaS \uc2a4\ud0c0\ud2b8\uc5c5 \uae30\uc220 \uc2a4\ud0dd \ubd84\uc11d - study 55",
-  "body": "This document discusses \ud55c\uad6d SaaS \uc2a4\ud0c0\ud2b8\uc5c5 \uae30\uc220 \uc2a4\ud0dd \ubd84\uc11d. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of \ud55c\uad6d SaaS \uc2a4\ud0c0\ud2b8\uc5c5 \uae30\uc220 \uc2a4\ud0dd \ubd84\uc11d. Key findings include improved accuracy, reduced latency, and better scalability. The study 55 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on \ud55c\uad6d SaaS \uc2a4\ud0c0\ud2b8\uc5c5 \uae30\uc220 \uc2a4\ud0dd \ubd84\uc11d.",
-  "published_at": "2025-02-25T00:00:00+00:00",
-  "retrieved_at": "2026-05-03T07:00:00+00:00",
-  "author": "author-5",
-  "score": 0.55,
+  "source_id": "rss",
+  "url": "https://example.test/rss/oauth-ko-a",
+  "title": "OAuth 2.0 인가 코드 흐름",
+  "body": "인가 코드 흐름은 토큰 엔드포인트에서 단명 코드를 액세스 토큰으로 교환한다. PKCE는 공개 클라이언트를 가로채기로부터 보호한다. 갱신 토큰은 장기 세션을 가능하게 한다.",
+  "snippet": "OAuth 2.0 인가 코드 흐름",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
   "lang": "ko",
-  "doc_type": "other",
-  "hash": "907353582606ed10"
+  "doc_type": "article",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

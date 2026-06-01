@@ -1,0 +1,109 @@
+---
+title: arXiv Adapter
+description: Reference documentation for the arXiv academic paper search adapter
+lastVerified: 2026-05-31
+sourceID: arxiv
+category: academic
+---
+
+import { Callout } from 'nextra/components'
+import { CapabilitiesTable } from '../../../../components/CapabilitiesTable'
+import { StatusBadge } from '../../../../components/StatusBadge'
+import arxivCaps from './_generated/arxiv.capabilities.json'
+
+# arXiv Adapter
+
+<StatusBadge adapter="arxiv" />
+
+The arXiv adapter provides access to academic preprints via the public arXiv API (no authentication required).
+
+## Status &amp; Compatibility
+
+| Field | Value |
+|-------|-------|
+| SPEC | SPEC-ADP-003 |
+| Source path | `internal/adapters/arxiv/` |
+| SourceID | `arxiv` |
+| Last verified | 2026-05-31 |
+| Status | <StatusBadge adapter="arxiv" /> |
+
+## Overview
+
+arXiv (arxiv.org) is a free distribution service and open-access archive for scholarly articles in physics, mathematics, computer science, quantitative biology, quantitative finance, statistics, electrical engineering, systems science, and economics. The Universal Search arXiv adapter queries the public XML/Atom feed API at `https://export.arxiv.org/api/query`.
+
+**Use case:** academic paper discovery, research survey automation, citation-aware search.
+
+## Setup
+
+Authentication: not required — public endpoint.
+
+The arXiv API is publicly accessible without credentials. No account registration or API key is needed. The adapter enforces a **3-second courtesy interval** between requests (configurable via `Options.MinRequestInterval`) as required by arXiv's API usage guidelines.
+
+```bash
+# Verify the adapter is reachable:
+usearch query --source arxiv "transformer attention mechanism"
+```
+
+## Capabilities
+
+<CapabilitiesTable data={arxivCaps} />
+
+**Rate limit enforcement mechanism:** In-process interval guard — the adapter enforces a configurable minimum interval between consecutive requests in the same process. This is not an HTTP-429-based mechanism; arXiv does not return 429 responses. The `RateLimitPerMin: 20` value corresponds to the default 3-second interval.
+
+## Query syntax
+
+arXiv queries are submitted as free-text search strings. The adapter appends `sortBy=relevance` and maps Universal Search `Query` fields as follows:
+
+| Universal Search field | arXiv query parameter | Notes |
+|------------------------|----------------------|-------|
+| `Query.Text` | `search_query=all:{text}` | Full-text search across title, abstract, author |
+| `Query.Filters["category"]` | `search_query=cat:{category}` | e.g. `cs.AI`, `math.GT`, `quant-ph` |
+| `Query.MaxResults` | `max_results={n}` | Capped at `DefaultMaxResults` when zero |
+| `Query.Since` | Forward-compat placeholder | Date-range translation deferred to P2 |
+
+**Score:** All results receive `Score: 0.5` (arXiv API does not expose per-paper relevance scores).
+
+**LaTeX pass-through:** Mathematical notation in titles and abstracts is preserved as plain text.
+
+## Rate limits
+
+- **Advertised limit:** 20 requests/min (3-second interval guard)
+- **Enforcement mechanism:** In-process interval guard (`search.go:142-146`) — no external rate limit enforced by arXiv at the API level
+- **Upstream quota documentation:** [arXiv API access policy](https://info.arxiv.org/help/api/user-manual.html)
+- **Exhaustion behaviour:** When concurrent callers share a process, the effective rate is lower than the per-caller advertised rate. The fanout dispatcher ([SPEC-FAN-001](/en/reference/architecture)) treats any non-429 error as `CategoryTransient` for retry purposes; the interval guard is an adapter-internal mechanism.
+
+## Error reference
+
+See [Error Taxonomy](/en/reference/adapters/errors) for the shared `Category` reference.
+
+**arXiv-specific status rosetta:**
+
+| HTTP status | Category | Cause | Operator action |
+|-------------|----------|-------|-----------------|
+| 200 (empty results) | — | No matching papers | Broaden query terms or remove category filter |
+| 400 | CategoryPermanent | Malformed query syntax | Check `search_query` format; avoid unsupported field prefixes |
+| 503 | CategoryUnavailable | arXiv API temporarily down | Retry after `RetryAfter` delay or check arXiv status page |
+| Network timeout | CategoryTransient | DNS/TCP failure | Check network connectivity to `export.arxiv.org` |
+
+## Troubleshooting
+
+| Symptom | Likely cause | Diagnostic command | Resolution | Related SPECs |
+|---------|-------------|-------------------|------------|---------------|
+| Zero results for broad query | arXiv category filter too narrow | Remove `category` filter, retry | Use full-text search without category constraint | SPEC-ADP-003 |
+| Slow responses under load | Multiple concurrent callers share the interval guard | Check adapter logs for "rate guard sleep" messages | Deploy separate usearch instances per consumer to avoid interval contention | SPEC-FAN-001 |
+| `CategoryUnavailable` on all arXiv queries | arXiv API outage | `curl https://export.arxiv.org/api/query?search_query=test&max_results=1` | Wait for arXiv recovery; see https://status.arxiv.org | SPEC-CACHE-001 |
+
+## Version compatibility
+
+| usearch version | arXiv API version | Last verified | Verifier |
+|----------------|-------------------|---------------|----------|
+| v1.0.0 | Atom/XML feed v1.0 (no versioned endpoint) | 2026-05-31 | manager-docs |
+
+## Related
+
+- [SPEC-ADP-003](/en/reference/architecture) — arXiv adapter specification
+- [End-user surface comparison](/en/end-users/surface-comparison) — when to use arXiv vs other adapters
+- [Deployment Helm values](/en/operators/deployment-helm) — env var configuration
+- [SPEC-FAN-001 fanout retry semantics](/en/reference/architecture)
+- [SPEC-CACHE-001 5-phase fallback](/en/reference/architecture)
+- [SPEC-EVAL-002 adapter reliability dashboard](/en/reference/architecture) — live success rate data

@@ -1,0 +1,93 @@
+---
+title: Your First Query
+description: Run your first search with Universal Search
+lastUpdated: 2026-05-30
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Your First Query
+
+After completing [Installation](/en/getting-started/installation), you are ready to run your first search.
+
+<Steps>
+
+### Basic Query
+
+```bash
+usearch query "what is Raft consensus algorithm?"
+```
+
+Expected output:
+
+```
+Searching... [web, academic, technical]
+
+## Raft Consensus Algorithm
+
+Raft is a consensus algorithm designed to be more understandable than Paxos...
+
+### Sources
+1. [Raft Paper](https://raft.github.io/raft.pdf) — arXiv 2014
+2. [etcd documentation](https://etcd.io/docs/current/learning/why/) — etcd.io
+3. [HN discussion](https://news.ycombinator.com/item?id=...) — 2023-05-12
+
+Citation confidence: 0.94
+```
+
+### Query with JSON Output
+
+For scripting and integrations:
+
+```bash
+usearch query --json "what is Raft consensus?" | jq .
+```
+
+### Deep Research Mode
+
+For comprehensive research with multi-agent synthesis:
+
+```bash
+usearch deep "compare Raft vs Paxos consensus algorithms"
+```
+
+<Callout type="info">
+  `usearch deep` runs a multi-agent pipeline (Researcher → Reviewer → Writer → Verifier) and may take 30–120 seconds. Use for complex research tasks where citation quality matters most.
+</Callout>
+
+### Check Query History
+
+```bash
+usearch history list
+# Lists recent queries with timestamps and result counts
+
+usearch history show --id <query-id>
+# Shows full result for a past query
+```
+
+</Steps>
+
+## Query Tips
+
+| Tip | Example |
+|---|---|
+| Be specific | `"Raft consensus split-brain handling"` vs `"consensus"` |
+| Use `--locale ko` for Korean | `usearch query --locale ko "네이버 클라우드 서비스"` |
+| Use `deep` for reports | `usearch deep "market analysis: AI search 2024"` |
+| Combine with `jq` | `usearch query --json "..." \| jq '.citations[].url'` |
+
+## What Happens Under the Hood
+
+```
+1. Query → SearXNG metasearch (70+ engines, 5-phase adaptive scheduler)
+2. Results → Adapter-specific re-ranking (Korean-first if locale=ko)
+3. Filtered results → LLM synthesis (Claude by default via LiteLLM)
+4. Synthesis + citations → stored in Qdrant + Meilisearch
+5. Output → Markdown with per-claim citations
+```
+
+## Next Steps
+
+- [CLI Tour](/en/end-users/cli-tour) — All 7 subcommands explained
+- [Operator Quickstart](/en/getting-started/operator-quickstart) — Production deployment checklist
+- [MCP Integration](/en/end-users/mcp-integration) — Use with Claude for Desktop

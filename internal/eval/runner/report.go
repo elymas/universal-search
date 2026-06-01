@@ -1,102 +1,145 @@
-// Package runner — report writing utilities.
-//
-// REQ-EVAL1-009: JSON report for CI gate consumption.
-// REQ-EVAL1-010: Nightly history JSON artifact.
 package runner
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
+	"strings"
 )
 
-// WriteJSONReport writes the run report as JSON to the given path.
-func WriteJSONReport(report *RunReport, path string) error {
-	data, err := json.MarshalIndent(report, "", "  ")
-	if err != nil {
-		return fmt.Errorf("marshal report: %w", err)
-	}
-	if err := os.WriteFile(path, data, 0o644); err != nil {
-		return fmt.Errorf("write report: %w", err)
-	}
-	return nil
+// RenderOpts carries optional metadata rendered alongside the report.
+type RenderOpts struct {
+	CommitSHA  string
+	Branch     string
+	JudgeModel string
+	CostUSD    float64
+	RuntimeS   float64
 }
 
-// WriteMarkdownReport writes a human-readable markdown report.
-func WriteMarkdownReport(report *RunReport, path string) error {
-	var md string
-	md += "# EVAL-001 Citation Faithfulness Report\n\n"
-	md += fmt.Sprintf("- **Total Queries**: %d\n", report.TotalQueries)
-	md += fmt.Sprintf("- **Mean Score**: %.3f\n", report.MeanScore)
-	md += fmt.Sprintf("- **Floor Score**: %.3f\n", report.FloorScore)
-	md += fmt.Sprintf("- **Overrides**: %d\n", report.OverrideCount)
-	md += fmt.Sprintf("- **Null Scores**: %d\n", report.NullCount)
-	md += fmt.Sprintf("- **Judge Model**: %s\n", report.JudgeModel)
-	md += fmt.Sprintf("- **Corpus Revision**: %s\n", report.CorpusRevision)
-	md += fmt.Sprintf("- **Runtime**: %.1f seconds\n", report.RuntimeSeconds)
-	md += fmt.Sprintf("- **Timestamp**: %s\n\n", report.Timestamp)
+// RenderMarkdown produces the operator-facing markdown report for a run.
+// REQ-EVAL1-007: includes a Lowest-Scoring Queries section with judge
+// rationales, a per-category breakdown, null-query listing, and cost.
+func RenderMarkdown(rep Report, opts RenderOpts) string {
+	var b strings.Builder
 
-	// Lowest-scoring queries.
-	scorable := filterScorable(report.Results)
-	sort.Slice(scorable, func(i, j int) bool {
-		if scorable[i].Score == nil && scorable[j].Score == nil {
-			return false
+	fmt.Fprintf(&b, "# SPEC-EVAL-001 Citation Faithfulness Report\n\n")
+	scored := len(rep.Queries) - rep.NullCount - rep.OverrideCount
+	fmt.Fprintf(&b, "- Mean score: **%.3f** (over %d scored queries)\n", rep.MeanScore, scored)
+	fmt.Fprintf(&b, "- Null (judge unavailable): %d\n", rep.NullCount)
+	fmt.Fprintf(&b, "- Overrides applied: %d\n", rep.OverrideCount)
+	if opts.JudgeModel != "" {
+		fmt.Fprintf(&b, "- Judge model: %s\n", opts.JudgeModel)
+	}
+	if opts.CommitSHA != "" {
+		fmt.Fprintf(&b, "- Commit: %s (branch %s)\n", opts.CommitSHA, opts.Branch)
+	}
+	fmt.Fprintf(&b, "- LLM judge cost: $%.2f\n", opts.CostUSD)
+	if opts.RuntimeS > 0 {
+		fmt.Fprintf(&b, "- Runtime: %.1fs\n", opts.RuntimeS)
+	}
+	b.WriteString("\n")
+
+	renderCategoryBreakdown(&b, rep)
+	renderLowestScoring(&b, rep)
+	renderNullQueries(&b, rep)
+
+	return b.String()
+}
+
+func renderCategoryBreakdown(b *strings.Builder, rep Report) {
+	type agg struct {
+		sum   float64
+		count int
+	}
+	cats := map[string]*agg{}
+	var order []string
+	for _, q := range rep.Queries {
+		if q.Score == nil || q.Overridden {
+			continue
 		}
-		if scorable[i].Score == nil {
-			return true
+		a, ok := cats[q.Category]
+		if !ok {
+			a = &agg{}
+			cats[q.Category] = a
+			order = append(order, q.Category)
 		}
-		if scorable[j].Score == nil {
-			return false
+		a.sum += *q.Score
+		a.count++
+	}
+	sort.Strings(order)
+	b.WriteString("## Per-Category Breakdown\n\n")
+	b.WriteString("| Category | Mean | Count |\n|---|---|---|\n")
+	for _, c := range order {
+		a := cats[c]
+		mean := 0.0
+		if a.count > 0 {
+			mean = a.sum / float64(a.count)
 		}
-		return *scorable[i].Score < *scorable[j].Score
+		fmt.Fprintf(b, "| %s | %.3f | %d |\n", c, mean, a.count)
+	}
+	b.WriteString("\n")
+}
+
+func renderLowestScoring(b *strings.Builder, rep Report) {
+	scored := make([]QueryResult, 0, len(rep.Queries))
+	for _, q := range rep.Queries {
+		if q.Score != nil && !q.Overridden {
+			scored = append(scored, q)
+		}
+	}
+	sort.SliceStable(scored, func(i, j int) bool {
+		return *scored[i].Score < *scored[j].Score
 	})
-
-	if len(scorable) > 0 {
-		md += "## Lowest-Scoring Queries\n\n"
-		limit := 10
-		if len(scorable) < limit {
-			limit = len(scorable)
-		}
-		for i := 0; i < limit; i++ {
-			s := scorable[i]
-			scoreStr := "null"
-			if s.Score != nil {
-				scoreStr = fmt.Sprintf("%.3f", *s.Score)
-			}
-			md += fmt.Sprintf("- **%s** (%s/%s): %s", s.QueryID, s.Locale, s.Category, scoreStr)
-			if s.Overridden {
-				md += " [OVERRIDDEN]"
-			}
-			if s.Error != "" {
-				md += fmt.Sprintf(" [ERROR: %s]", truncate(s.Error, 80))
-			}
-			md += "\n"
-		}
+	limit := 10
+	if len(scored) < limit {
+		limit = len(scored)
 	}
 
-	data := []byte(md)
-	if err := os.WriteFile(path, data, 0o644); err != nil {
-		return fmt.Errorf("write markdown report: %w", err)
+	b.WriteString("## Lowest-Scoring Queries\n\n")
+	if limit == 0 {
+		b.WriteString("_No scored queries._\n\n")
+		return
+	}
+	for _, q := range scored[:limit] {
+		fmt.Fprintf(b, "### %s (%s, %s) — score %.3f\n\n", q.QueryID, q.Category, q.Locale, *q.Score)
+		for _, c := range q.PerClaim {
+			if c.Supported {
+				continue
+			}
+			fmt.Fprintf(b, "- UNSUPPORTED: %q\n  - rationale: %s\n", c.Text, c.JudgeRationale)
+		}
+		b.WriteString("\n")
+	}
+}
+
+func renderNullQueries(b *strings.Builder, rep Report) {
+	var nulls []QueryResult
+	for _, q := range rep.Queries {
+		if q.Score == nil && !q.Overridden {
+			nulls = append(nulls, q)
+		}
+	}
+	if len(nulls) == 0 {
+		return
+	}
+	b.WriteString("## Null (Unscoreable) Queries\n\n")
+	for _, q := range nulls {
+		fmt.Fprintf(b, "- %s (%s): %s\n", q.QueryID, q.Locale, q.ErrorClass)
+	}
+	b.WriteString("\n")
+}
+
+// WriteLatest writes the rendered markdown to .moai/eval/reports/latest.md.
+// REQ-EVAL1-007. (JSON history writer is deferred to V1.1 per REQ-EVAL1-010.)
+func WriteLatest(dir string, rep Report, opts RenderOpts) error {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return fmt.Errorf("report: mkdir: %w", err)
+	}
+	md := RenderMarkdown(rep, opts)
+	p := filepath.Join(dir, "latest.md")
+	if err := os.WriteFile(p, []byte(md), 0o644); err != nil { //nolint:gosec // operator-readable report.
+		return fmt.Errorf("report: write latest: %w", err)
 	}
 	return nil
-}
-
-func filterScorable(results []QueryResult) []QueryResult {
-	out := make([]QueryResult, 0, len(results))
-	for _, r := range results {
-		if r.Score == nil {
-			out = append(out, r)
-		} else if !r.Overridden {
-			out = append(out, r)
-		}
-	}
-	return out
-}
-
-func truncate(s string, maxLen int) string {
-	if len(s) <= maxLen {
-		return s
-	}
-	return s[:maxLen] + "..."
 }

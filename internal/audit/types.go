@@ -49,6 +49,21 @@ const (
 	// System category (audit lifecycle).
 	EventAuditExport        EventType = "audit.export"
 	EventAuditPartitionDrop EventType = "audit.partition_drop"
+
+	// Security category (SPEC-SEC-001 REQ-SEC-017). These four constants are
+	// the genuinely-new delta of SEC-001's 7-type taxonomy; the other three
+	// types (auth.failed, auth.success, rbac.denied) reuse the existing
+	// EventAuthFail / EventAuthLogin / EventRBACDeny constants.
+	//
+	// @MX:NOTE: [AUTO] Cross-SPEC: these EventType constants extend the AUTH-003
+	// enum lock (AllEventTypes + allEventTypesSet). Activation of any fail-closed
+	// audit-write lockdown for these types requires AUTH-003 owner sign-off
+	// (Phase 5 coordination gate, plan.md). Adding constants here is the agreed
+	// scope; lockdown stays default OFF.
+	EventSecuritySSRFBlocked     EventType = "ssrf.blocked"
+	EventSecuritySecretFinding   EventType = "secret.scan.finding"
+	EventSecurityRateLimit       EventType = "ratelimit.exceeded"
+	EventSecurityPromptSanitized EventType = "prompt.sanitized"
 )
 
 // Decision enumerates the outcome of the audited action.
@@ -157,5 +172,10 @@ func AllEventTypes() []EventType {
 		EventAdminConfigChange,
 		EventAuditExport,
 		EventAuditPartitionDrop,
+		// Security category (SPEC-SEC-001 REQ-SEC-017).
+		EventSecuritySSRFBlocked,
+		EventSecuritySecretFinding,
+		EventSecurityRateLimit,
+		EventSecurityPromptSanitized,
 	}
 }

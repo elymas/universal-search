@@ -1,0 +1,60 @@
+# SPEC-EVAL-002 REQ-EVAL2-001 / AC-001: promtool unit test for the adapter
+# reliability recording rules. Run with:
+#   promtool test rules deploy/prometheus/recording-rules-test.yml
+#
+# Hand-calculated expectations:
+#   reddit: 95 success + 5 failure over 1h => success_rate_1h = 0.95
+#   naver:  60 success + 40 rate_limited   => success_rate_1h = 0.60
+rule_files:
+  - recording-rules.yml
+
+evaluation_interval: 1m
+
+tests:
+  - interval: 1m
+    # Provide >1h of samples so the [1h] range vector is fully populated and
+    # rate() has a stable two-point slope across the window.
+    input_series:
+      # reddit: steady success + a little failure.
+      - series: 'usearch_adapter_calls_total{adapter="reddit", outcome="success"}'
+        # 95 increments per hour => +95 over 60 samples at 1m spacing.
+        values: "0+95x70"
+      - series: 'usearch_adapter_calls_total{adapter="reddit", outcome="failure"}'
+        values: "0+5x70"
+      # naver: rate-limited heavy.
+      - series: 'usearch_adapter_calls_total{adapter="naver", outcome="success"}'
+        values: "0+60x70"
+      - series: 'usearch_adapter_calls_total{adapter="naver", outcome="rate_limited"}'
+        values: "0+40x70"
+      # fanout partial for reddit (for the partial-ratio rule).
+      - series: 'usearch_fanout_partial_total{adapter="reddit"}'
+        values: "0+5x70"
+
+    promql_expr_test:
+      # reddit 1h success rate = 95 / (95 + 5) = 0.95
+      - expr: usearch:adapter_success_rate_1h{adapter="reddit"}
+        eval_time: 65m
+        exp_samples:
+          - labels: 'usearch:adapter_success_rate_1h{adapter="reddit"}'
+            value: 0.95
+
+      # naver 1h success rate = 60 / (60 + 40) = 0.60
+      - expr: usearch:adapter_success_rate_1h{adapter="naver"}
+        eval_time: 65m
+        exp_samples:
+          - labels: 'usearch:adapter_success_rate_1h{adapter="naver"}'
+            value: 0.6
+
+      # reddit 24h success rate also resolves to 0.95 with steady traffic.
+      - expr: usearch:adapter_success_rate_24h{adapter="reddit"}
+        eval_time: 65m
+        exp_samples:
+          - labels: 'usearch:adapter_success_rate_24h{adapter="reddit"}'
+            value: 0.95
+
+      # reddit partial ratio = partial(5/min) / total_calls(100/min) = 0.05
+      - expr: usearch:adapter_fanout_partial_ratio_24h{adapter="reddit"}
+        eval_time: 65m
+        exp_samples:
+          - labels: 'usearch:adapter_fanout_partial_ratio_24h{adapter="reddit"}'
+            value: 0.05

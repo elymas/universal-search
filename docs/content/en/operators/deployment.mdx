@@ -1,0 +1,128 @@
+---
+title: Deployment
+description: Production deployment guide for Universal Search operators
+lastUpdated: 2026-05-30
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Deployment
+
+Universal Search is deployed as a Docker Compose stack. The following guide covers production deployment for organization-scale self-hosted installations.
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────┐
+│  Load Balancer / Reverse Proxy (nginx/caddy) │
+└─────────────────────┬───────────────────────┘
+                      │
+┌─────────────────────▼───────────────────────┐
+│  usearch Go server (port 8081)              │
+└─────┬───────────────┬───────────────────────┘
+      │               │
+┌─────▼────┐  ┌───────▼──────────────────────┐
+│ SearXNG  │  │  Storage Layer               │
+│ (AGPL-3) │  │  Qdrant | Meilisearch | PG   │
+└──────────┘  └──────────────────────────────┘
+```
+
+## Deployment Options
+
+### Option 1: Docker Compose (Recommended for Teams)
+
+<Steps>
+
+### Clone and Configure
+
+```bash
+git clone <repo-url> && cd universal-search
+cp .env.example .env.production
+# Fill in all required values — see Configuration Reference
+```
+
+### Start the Stack
+
+```bash
+docker compose -f deploy/docker-compose.yml --env-file .env.production up -d
+```
+
+### Verify Health
+
+```bash
+docker compose ps           # all services healthy
+curl http://localhost:8081/health
+```
+
+</Steps>
+
+### Option 2: Kubernetes (Helm — Planned)
+
+Helm chart deployment is planned in **SPEC-DEPLOY-001**. Until that SPEC is delivered, use Docker Compose.
+
+## Data Persistence
+
+Configure persistent volumes for stateful services:
+
+```yaml
+# In deploy/docker-compose.yml — example volumes section
+volumes:
+  qdrant_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/qdrant
+  meilisearch_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/meilisearch
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/postgres
+```
+
+<Callout type="warning">
+  Without persistent volumes, all data (query history, indexed documents, user accounts) is lost when containers restart.
+</Callout>
+
+## Reverse Proxy
+
+Example Caddy configuration:
+
+```
+usearch.example.com {
+    reverse_proxy localhost:8081
+    encode gzip
+    tls {
+        protocols tls1.2 tls1.3
+    }
+}
+```
+
+## Backup
+
+Schedule regular backups of:
+
+```bash
+# Qdrant snapshots
+curl -X POST http://localhost:6333/collections/{name}/snapshots
+
+# Meilisearch dump
+curl -X POST http://localhost:7700/dumps
+
+# PostgreSQL
+pg_dump -h localhost -U usearch usearch_db > backup.sql
+```
+
+## Related
+
+- [Configuration Reference](/en/reference/configuration) — all environment variables
+- [Authentication Setup](/en/operators/auth-setup) — OAuth/OIDC configuration
+- [Observability](/en/operators/observability) — logging and metrics
+- SPEC-DEPLOY-001: Kubernetes/Helm deployment (future)

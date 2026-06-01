@@ -1,15 +1,20 @@
 {
   "id": "doc-029",
   "source_id": "github",
-  "url": "https://example.com/github/0029",
-  "title": "feature store architecture patterns - study 29",
-  "body": "This document discusses feature store architecture patterns. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of feature store architecture patterns. Key findings include improved accuracy, reduced latency, and better scalability. The study 29 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on feature store architecture patterns.",
-  "published_at": "2025-01-30T00:00:00+00:00",
-  "retrieved_at": "2026-05-02T05:00:00+00:00",
-  "author": "author-29",
-  "score": 0.79,
+  "url": "https://example.test/github/vectordb-a",
+  "title": "Vector databases for retrieval",
+  "body": "Vector databases store high-dimensional embeddings and support approximate nearest neighbour search. Common index types include HNSW and IVF. They power semantic retrieval in modern search systems.",
+  "snippet": "Vector databases for retrieval",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
   "lang": "en",
-  "doc_type": "issue",
-  "hash": "52ba06e210c801a2"
+  "doc_type": "repo",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }

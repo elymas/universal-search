@@ -1,15 +1,20 @@
 {
   "id": "doc-057",
-  "source_id": "bluesky",
-  "url": "https://example.com/bluesky/0057",
-  "title": "semi-supervised learning techniques - study 57",
-  "body": "This document discusses semi-supervised learning techniques. Research has shown significant progress in this area. Multiple teams have contributed to the understanding of semi-supervised learning techniques. Key findings include improved accuracy, reduced latency, and better scalability. The study 57 was conducted with rigorous evaluation methodology. Results demonstrate clear improvements over prior baselines. Further research is needed to fully explore the implications. The authors recommend additional experiments to validate these findings.",
-  "snippet": "Summary of research on semi-supervised learning techniques.",
-  "published_at": "2025-02-27T00:00:00+00:00",
-  "retrieved_at": "2026-05-03T09:00:00+00:00",
-  "author": "author-7",
-  "score": 0.57,
+  "source_id": "arxiv",
+  "url": "https://example.test/arxiv/llmquant-a",
+  "title": "LLM quantization tradeoffs",
+  "body": "Quantization reduces model weights to lower precision such as int8 or int4, shrinking memory and speeding inference. It can degrade accuracy, mitigated by techniques like GPTQ and AWQ. The tradeoff depends on the task.",
+  "snippet": "LLM quantization tradeoffs",
+  "published_at": "2026-01-15T00:00:00Z",
+  "retrieved_at": "2026-05-01T00:00:00Z",
+  "author": "synthetic-author",
+  "score": 0.8,
   "lang": "en",
-  "doc_type": "post",
-  "hash": "2423d680fa4c7879"
+  "doc_type": "paper",
+  "metadata": {
+    "pii": false,
+    "provenance": "synthetic",
+    "spec": "SPEC-EVAL-001"
+  },
+  "hash": ""
 }
