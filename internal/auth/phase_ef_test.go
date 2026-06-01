@@ -406,6 +406,20 @@ func TestRevocationCheckRedisFailureFailsClosedWhenConfigured(t *testing.T) {
 	}
 }
 
+// TestRateLimiterRedisPathAlwaysAllows verifies that when a Redis client is
+// wired the limiter dispatches to allowRedis, which (in v1) always allows.
+// This covers the Allow -> allowRedis branch that the in-memory tests skip.
+// @MX:SPEC: SPEC-REL-001 — G1 release coverage gate
+func TestRateLimiterRedisPathAlwaysAllows(t *testing.T) {
+	limiter := NewRateLimiter(1, time.Minute, newRedisMock())
+	// Even beyond the configured limit of 1, the Redis path returns true.
+	for i := 0; i < 5; i++ {
+		if !limiter.Allow("client-key") {
+			t.Fatalf("request %d: Redis-backed Allow returned false, want true", i+1)
+		}
+	}
+}
+
 // §5.9 case D: callback rate limit 60/min → 429 on 61st
 func TestAuthCallbackRateLimit60PerMinute(t *testing.T) {
 	limiter := NewRateLimiter(60, time.Minute, nil)

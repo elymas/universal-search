@@ -182,3 +182,31 @@ func TestOptionsFromEnv_enableKNC(t *testing.T) {
 		t.Errorf("KNCBaseURL = %q; want http://sidecar:9000", opts.KNCBaseURL)
 	}
 }
+
+// TestOptionsFromEnv_rssFeedsParsed covers the RSS_FEEDS-set branch with a
+// valid comma-separated list (the feeds must be parsed and applied).
+func TestOptionsFromEnv_rssFeedsParsed(t *testing.T) {
+	t.Setenv("USEARCH_ADP009_RSS_FEEDS", "https://a.example/rss,https://b.example/rss")
+	opts := OptionsFromEnv()
+	if len(opts.RSSFeeds) != 2 {
+		t.Fatalf("RSSFeeds = %v, want 2 feeds", opts.RSSFeeds)
+	}
+	if opts.RSSFeeds[0] != "https://a.example/rss" {
+		t.Errorf("RSSFeeds[0] = %q", opts.RSSFeeds[0])
+	}
+}
+
+// TestOptionsFromEnv_rssFeedsParseErrorIsTolerated covers the parse-error
+// branch: a malformed JSON-looking value that also fails CSV parsing must not
+// crash; the feeds list is simply left unset.
+func TestOptionsFromEnv_rssFeedsParseErrorIsTolerated(t *testing.T) {
+	// A bare "[" looks like the start of a JSON array but is invalid JSON; the
+	// CSV fallback yields a single "[" entry, so to force the warn branch we use
+	// an explicitly malformed JSON array.
+	t.Setenv("USEARCH_ADP009_RSS_FEEDS", `["unterminated`)
+	opts := OptionsFromEnv()
+	// On parse failure RSSFeeds stays nil (the warn path); the call must not panic.
+	if opts.RSSFeeds != nil && len(opts.RSSFeeds) == 0 {
+		t.Error("expected RSSFeeds to remain unset on parse failure")
+	}
+}

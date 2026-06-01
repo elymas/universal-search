@@ -2,9 +2,14 @@ package rbac
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"sync"
 	"testing"
 
+	"github.com/casbin/casbin/v2"
+	"github.com/casbin/casbin/v2/model"
+	fileadapter "github.com/casbin/casbin/v2/persist/file-adapter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -88,6 +93,37 @@ func TestLoadDefaultPolicyInMemorySuccess(t *testing.T) {
 	ef := newTestEnforcer(t)
 	count := ef.GetPolicyCount()
 	assert.Greater(t, count, 0, "in-memory load must populate policies")
+}
+
+// TestBootstrapDefaultPolicyAddsPolicies verifies the production bootstrap path
+// (used by NewEnforcer when PG is empty) populates the enforcer from the
+// embedded CSV and persists via SavePolicy. A file-backed adapter stands in for
+// the PG adapter so SavePolicy exercises a real persistence call.
+func TestBootstrapDefaultPolicyAddsPolicies(t *testing.T) {
+	m, err := model.NewModelFromString(string(embeddedModel))
+	require.NoError(t, err)
+
+	// Seed an empty policy file so the adapter has a valid SavePolicy target.
+	policyFile := filepath.Join(t.TempDir(), "policy.csv")
+	require.NoError(t, os.WriteFile(policyFile, []byte(""), 0o644))
+
+	e, err := casbin.NewEnforcer(m, fileadapter.NewAdapter(policyFile))
+	require.NoError(t, err)
+
+	before, _ := e.GetPolicy()
+	require.Empty(t, before, "fresh enforcer must start with no policies")
+
+	if err := bootstrapDefaultPolicy(e); err != nil {
+		t.Fatalf("bootstrapDefaultPolicy: %v", err)
+	}
+
+	after, _ := e.GetPolicy()
+	assert.Greater(t, len(after), 0, "bootstrap must load embedded default policies")
+
+	// SavePolicy must have persisted the rows to disk.
+	saved, err := os.ReadFile(policyFile)
+	require.NoError(t, err)
+	assert.NotEmpty(t, saved, "SavePolicy must write policies to the adapter file")
 }
 
 // TestEnforceReturnsReasonClassInfo verifies Enforce returns correct allow/deny.

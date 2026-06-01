@@ -13,6 +13,37 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestWriteAsyncAndDrainAndCloseNonNil verifies the convenience wrappers
+// forward to a real writer (the nil paths are covered by TestAsyncWriterNilIsNoop).
+func TestWriteAsyncAndDrainAndCloseNonNil(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "history.jsonl")
+	backend, err := history.NewJSONLBackend(path, 1000, 90)
+	require.NoError(t, err)
+
+	writer := history.NewAsyncWriter(backend, 10, nil)
+	history.WriteAsync(writer, newTestEntry("via-wrapper"))
+	history.DrainAndClose(writer, 2*time.Second)
+
+	entries, err := backend.List(0)
+	require.NoError(t, err)
+	assert.Len(t, entries, 1)
+	assert.Equal(t, "via-wrapper", entries[0].ID)
+}
+
+// TestFormatWarnLog verifies the warning prefix and argument formatting.
+func TestFormatWarnLog(t *testing.T) {
+	got := history.FormatWarnLog("dropped %d entries (%s)", 3, "buffer full")
+	assert.Equal(t, "usearch: dropped 3 entries (buffer full)", got)
+}
+
+// TestNewWarnLoggerNilWriterDefaultsToStderr verifies the nil-writer branch
+// returns a usable logger (defaulting to stderr) rather than nil.
+func TestNewWarnLoggerNilWriterDefaultsToStderr(t *testing.T) {
+	logger := history.NewWarnLogger(nil)
+	require.NotNil(t, logger)
+	assert.Equal(t, "usearch: ", logger.Prefix())
+}
+
 // TestAsyncWriterWriteAndDrain verifies async write + drain.
 func TestAsyncWriterWriteAndDrain(t *testing.T) {
 	dir := t.TempDir()

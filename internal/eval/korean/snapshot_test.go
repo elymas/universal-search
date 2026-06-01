@@ -108,6 +108,35 @@ func TestWriteSnapshot_MissingRequiredField(t *testing.T) {
 	}
 }
 
+// TestSnapshotValidate_AllMissingFieldBranches covers each required-field
+// rejection in Snapshot.validate independently.
+func TestSnapshotValidate_AllMissingFieldBranches(t *testing.T) {
+	t.Parallel()
+	tests := []struct {
+		name   string
+		mutate func(*Snapshot)
+	}{
+		{"missing release_tag", func(s *Snapshot) { s.ReleaseTag = "" }},
+		{"missing golden_set_sha256", func(s *Snapshot) { s.GoldenSetSHA256 = "" }},
+		{"missing tokenizer_version", func(s *Snapshot) { s.TokenizerVersion = "" }},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := sampleSnapshot("v1.0.0")
+			tt.mutate(&s)
+			if err := s.validate(); err == nil {
+				t.Errorf("validate(%s) = nil, want error", tt.name)
+			}
+		})
+	}
+
+	// The fully-populated sample must validate cleanly (success path).
+	valid := sampleSnapshot("v1.0.0")
+	if err := valid.validate(); err != nil {
+		t.Errorf("valid snapshot rejected: %v", err)
+	}
+}
+
 func TestWriteSnapshot_Retention(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()

@@ -3,9 +3,86 @@
 package synthesis
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
+
+// TestSSEParserIDAndRetryFields exercises the id and retry field cases of the
+// parser switch, plus the EOF-with-trailing-content path (no terminating blank
+// line), which the existing parser tests do not reach.
+func TestSSEParserIDAndRetryFields(t *testing.T) {
+	// id and retry are parsed; the event still terminates on the blank line.
+	input := "id: 42\nretry: 3000\nevent: sentence\ndata: hi\n\n"
+	p := NewSSEParser(strings.NewReader(input))
+	ev, err := p.Next()
+	if err != nil {
+		t.Fatalf("Next() failed: %v", err)
+	}
+	if ev.ID != "42" {
+		t.Errorf("ID = %q, want 42", ev.ID)
+	}
+	if ev.Event != "sentence" || ev.Data != "hi" {
+		t.Errorf("event/data = %q/%q, want sentence/hi", ev.Event, ev.Data)
+	}
+}
+
+func TestSSEParserTrailingContentWithoutBlankLine(t *testing.T) {
+	// No terminating blank line: the parser must still emit the buffered event
+	// at EOF rather than dropping it.
+	p := NewSSEParser(strings.NewReader("data: last chunk"))
+	ev, err := p.Next()
+	if err != nil {
+		t.Fatalf("Next() failed: %v", err)
+	}
+	if ev.Data != "last chunk" {
+		t.Errorf("Data = %q, want 'last chunk'", ev.Data)
+	}
+}
+
+// TestStreamConsumerUnknownEventTreatedAsSentence verifies the default switch
+// branch: an event type the consumer does not recognise is surfaced as a
+// sentence rather than being dropped.
+func TestStreamConsumerUnknownEventTreatedAsSentence(t *testing.T) {
+	input := "event: heartbeat\ndata: still alive\n\n"
+	consumer := NewStreamConsumer(strings.NewReader(input))
+
+	ev, err := consumer.Next()
+	if err != nil {
+		t.Fatalf("Next() failed: %v", err)
+	}
+	if ev.Type != StreamSentence {
+		t.Errorf("Type = %d, want StreamSentence (default branch)", ev.Type)
+	}
+	if ev.Text != "still alive" {
+		t.Errorf("Text = %q, want %q", ev.Text, "still alive")
+	}
+}
+
+// TestIsTerminal verifies the char-device detection: a regular file is never a
+// terminal, and a stat error (closed file) returns false.
+func TestIsTerminal(t *testing.T) {
+	f, err := os.Create(filepath.Join(t.TempDir(), "regular"))
+	if err != nil {
+		t.Fatalf("create temp file: %v", err)
+	}
+	defer func() { _ = f.Close() }()
+
+	if IsTerminal(f) {
+		t.Error("regular file must not be reported as a terminal")
+	}
+
+	// A closed file makes Stat fail, exercising the error branch.
+	closed, err := os.Create(filepath.Join(t.TempDir(), "closed"))
+	if err != nil {
+		t.Fatalf("create temp file: %v", err)
+	}
+	_ = closed.Close()
+	if IsTerminal(closed) {
+		t.Error("closed file (stat error) must return false")
+	}
+}
 
 // --- Phase 4: Streaming SSE tests ---
 
