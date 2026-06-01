@@ -184,4 +184,5 @@ versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - **SearXNG image** pinned from `searxng/searxng:latest` to `searxng/searxng:2026.04.22-74f1ca203` (digest `sha256:37c616a774b90fb5df9239eb143f1b11866ddf7b830cd1ebcca6ba11b38cc2bf`, captured 2026-04-24 via Docker Hub API) per REQ-DEP-005
 - **NOTICE** updated to point at `docs/dependencies.md` as the authoritative manifest
 
-[Unreleased]: https://github.com/elymas/universal-search/commits/main
+[Unreleased]: https://github.com/elymas/universal-search/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/elymas/universal-search/releases/tag/v1.0.0
