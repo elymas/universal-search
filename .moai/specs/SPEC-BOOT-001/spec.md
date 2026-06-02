@@ -1,6 +1,7 @@
 ---
 id: SPEC-BOOT-001
 title: Repo Scaffold and CI Bootstrap
+version: 0.1.0
 milestone: M1 — Foundation
 status: implemented
 priority: P0

@@ -1,6 +1,7 @@
 ---
 id: SPEC-OBS-001
 title: Observability Baseline
+version: 0.1.0
 milestone: M1 — Foundation
 status: implemented
 priority: P0

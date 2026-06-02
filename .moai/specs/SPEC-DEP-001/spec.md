@@ -1,6 +1,7 @@
 ---
 id: SPEC-DEP-001
 title: Dependency Pinning Policy and Audit CI
+version: 0.1.0
 milestone: M1 — Foundation
 status: implemented
 implemented_at: 2026-04-25

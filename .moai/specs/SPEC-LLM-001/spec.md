@@ -1,6 +1,7 @@
 ---
 id: SPEC-LLM-001
 title: LiteLLM Proxy Integration
+version: 0.1.0
 milestone: M1 — Foundation
 status: implemented
 priority: P0

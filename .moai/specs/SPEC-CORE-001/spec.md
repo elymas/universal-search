@@ -1,6 +1,7 @@
 ---
 id: SPEC-CORE-001
 title: Adapter Interface and NormalizedDoc Contract
+version: 0.1.0
 milestone: M2 — Foundation contracts (inserted)
 status: implemented
 priority: P0

@@ -16,6 +16,7 @@ bin/
 *.so
 *.dylib
 cover.out
+coverage.out
 cover.html
 cpu.prof
 mem.prof
