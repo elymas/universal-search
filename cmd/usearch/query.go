@@ -445,7 +445,7 @@ func determineExitCode(
 //   - HN_BASE_URL: redirects HN adapter to a stub HTTP server
 //   - ARXIV_BASE_URL: redirects arXiv adapter to a stub HTTP server
 //   - GITHUB_BASE_URL: redirects GitHub adapter to a stub HTTP server
-//   - GITHUB_TOKEN: PAT for GitHub adapter (omit to skip registration)
+//   - USEARCH_GITHUB_TOKEN (or GITHUB_TOKEN fallback): PAT for GitHub adapter (omit to skip registration)
 //   - YOUTUBE_BASE_URL: redirects YouTube adapter to a stub HTTP server
 //   - USEARCH_SEARXNG_URL: SearXNG instance URL (default http://searxng:8080)
 //
@@ -473,7 +473,11 @@ func buildProductionRegistry() *adapters.Registry {
 	}); err == nil {
 		_ = reg.Register(a)
 	}
-	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
+	token := os.Getenv("USEARCH_GITHUB_TOKEN")
+	if token == "" {
+		token = os.Getenv("GITHUB_TOKEN")
+	}
+	if token != "" {
 		if a, err := github.New(github.Options{
 			BaseURL: os.Getenv("GITHUB_BASE_URL"),
 			Token:   token,
