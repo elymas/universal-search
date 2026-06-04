@@ -20,6 +20,11 @@ search:
   safe_search: 0
   autocomplete: ""
   default_lang: "en"
+  # Enable the JSON response format. SearXNG defaults to HTML-only and returns
+  # HTTP 403 on ?format=json; the usearch searxng adapter requires JSON.
+  formats:
+    - html
+    - json
 
 ui:
   query_in_title: true
