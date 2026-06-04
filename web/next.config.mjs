@@ -7,12 +7,15 @@
 // `connect-src`/`img-src`/`font-src` directives here in coordination with the
 // security owner — do not remove the header set.
 //
-// V1 CSP strategy: `strict-dynamic` + per-build script hashes (NOT nonce).
-// Nonce-based CSP requires SSR nonce propagation and is deferred to post-V1
-// (spec.md Exclusions). `'unsafe-inline'` is included only as a fallback that
-// `strict-dynamic`-aware browsers ignore; non-supporting browsers degrade
-// safely. Replace the placeholder API host via the NEXT_PUBLIC_API_HOST build
-// arg when wiring the real backend origin.
+// V1 CSP strategy: `'self' 'unsafe-inline'` for scripts. The original
+// `'strict-dynamic'` strategy assumed per-build script hashes (or nonces)
+// would be injected, but neither is wired up. With `'strict-dynamic'` and no
+// hash/nonce the browser ignores `'self'`/`'unsafe-inline'`/`https:` and blocks
+// EVERY script — Next.js chunks and the inline bootstrap included — leaving the
+// client app completely non-interactive. Nonce-based CSP is deferred to post-V1
+// (spec.md Exclusions); until then `'unsafe-inline'` is the working fallback.
+// Replace the placeholder API host via the NEXT_PUBLIC_API_HOST build arg when
+// wiring the real backend origin.
 
 const apiHost = process.env.NEXT_PUBLIC_API_HOST || "'self'";
 
@@ -21,7 +24,7 @@ const csp = [
   "base-uri 'self'",
   "object-src 'none'",
   "frame-ancestors 'none'",
-  "script-src 'self' 'strict-dynamic' 'unsafe-inline' https:",
+  "script-src 'self' 'unsafe-inline' https:",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",

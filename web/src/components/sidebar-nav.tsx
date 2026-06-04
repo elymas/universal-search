@@ -90,7 +90,7 @@ export function SidebarNav() {
 
         {/* Footer with theme toggle */}
         <div className="p-3 flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">v0.1.0</span>
+          <span className="text-xs text-muted-foreground">v1.0.0</span>
           <ThemeToggle />
         </div>
       </aside>
