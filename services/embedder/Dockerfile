@@ -11,14 +11,25 @@ WORKDIR /app
 RUN pip install --no-cache-dir --upgrade pip \
  && useradd --create-home --shell /bin/bash --uid 1001 appuser
 
-# Dependency layer (invalidated only when pyproject.toml changes).
-COPY pyproject.toml ./
-# hadolint ignore=DL3013
-RUN pip install --no-cache-dir ".[runtime]" \
- || pip install --no-cache-dir .
+# Build tools for C-extension deps. FlagEmbedding pulls zlib-state, which has
+# no aarch64 wheel and compiles from sdist (needs gcc + zlib headers).
+# hadolint ignore=DL3008
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential zlib1g-dev \
+ && rm -rf /var/lib/apt/lists/*
 
-# Source layer.
+# Dependency + source layer. The src-layout package (packages.find where=["src"])
+# must be present before pip install, or the build backend fails to build the wheel.
+COPY pyproject.toml ./
 COPY src/ ./src/
+# Install CPU-only torch first. The default torch wheel (incl. linux/arm64)
+# declares NVIDIA CUDA dependencies (~3GB of nvidia-* packages) gated on
+# platform_system == "Linux". This image always runs CPU inference
+# (EMBEDDER_DEVICE=cpu); the CUDA path is the opt-in docker-compose.gpu.yml
+# override. Pinning the CPU index keeps the image lean and the build fast.
+# hadolint ignore=DL3013
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
+ && pip install --no-cache-dir .
 
 # Pre-download BGE-M3 model weights at build time when PREFETCH_MODEL=1.
 # In CI leave unset; in production image builds set to 1.

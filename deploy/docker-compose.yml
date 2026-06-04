@@ -38,7 +38,8 @@ services:
     volumes:
       - qdrant_data:/qdrant/storage
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:6333/readyz || exit 1"]
+      # qdrant image ships no wget/curl/python; only bash. Use a raw TCP open.
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/6333"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -58,7 +59,8 @@ services:
     volumes:
       - meili_data:/meili_data
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:7700/health || exit 1"]
+      # busybox wget resolves localhost to ::1, but meili binds IPv4 only. Use 127.0.0.1.
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:7700/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -106,11 +108,13 @@ services:
       - app
 
   # ── SearXNG metasearch engine ────────────────────────────────────────────────
-  # Pinned to dated tag 2026.4.22-74f1ca203 by SPEC-DEP-001 (2026-04-24).
+  # Pinned by digest from SPEC-DEP-001 (2026-04-24). The dated tag
+  # 2026.04.22-74f1ca203 was removed from the registry upstream; the digest it
+  # resolved to remains pullable, so we pin the digest directly.
   # SearXNG is AGPL-3.0; consumed as an external service (service-boundary, not linked).
   # See NOTICE and docs/dependencies.md for license compliance details.
   searxng:
-    image: searxng/searxng:2026.04.22-74f1ca203
+    image: searxng/searxng@sha256:37c616a774b90fb5df9239eb143f1b11866ddf7b830cd1ebcca6ba11b38cc2bf
     ports:
       - "${SEARXNG_PORT:-8080}:8080"
     volumes:
@@ -154,7 +158,9 @@ services:
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:4000/health || exit 1"]
+      # litellm image ships python but no wget/curl. Probe the lightweight
+      # liveliness endpoint (/health pings configured models and can flap).
+      test: ["CMD", "python3", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:4000/health/liveliness').status==200 else 1)"]
       interval: 10s
       timeout: 5s
       retries: 5

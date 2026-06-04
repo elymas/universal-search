@@ -3,7 +3,7 @@
 # Usage: make <target>
 
 BINARY     := cmd/usearch/usearch
-COMPOSE    := docker compose -f deploy/docker-compose.yml
+COMPOSE    := docker compose --env-file .env -f deploy/docker-compose.yml
 SERVICES   := researcher storm embedder
 
 .PHONY: help dev test test-go test-py test-node lint build clean \

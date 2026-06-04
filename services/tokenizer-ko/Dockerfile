@@ -17,8 +17,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /build
 
-# Copy pyproject.toml first for better layer caching.
+# Copy pyproject.toml and source. The src-layout package
+# (packages.find where=["src"]) must be present before pip install, or the
+# build backend fails to build the wheel.
 COPY pyproject.toml ./
+COPY src/ ./src/
 
 # Install the package and its dependencies into a prefix directory.
 RUN pip install --no-cache-dir --prefix=/install ".[dev]" 2>/dev/null || \
