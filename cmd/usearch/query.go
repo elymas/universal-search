@@ -446,7 +446,7 @@ func determineExitCode(
 //   - ARXIV_BASE_URL: redirects arXiv adapter to a stub HTTP server
 //   - GITHUB_BASE_URL: redirects GitHub adapter to a stub HTTP server
 //   - USEARCH_GITHUB_TOKEN (or GITHUB_TOKEN fallback): PAT for GitHub adapter (omit to skip registration)
-//   - YOUTUBE_BASE_URL: redirects YouTube adapter to a stub HTTP server
+//   - YOUTUBE_BASE_URL: YouTube sidecar base URL (omit to skip registration)
 //   - USEARCH_SEARXNG_URL: SearXNG instance URL (default http://searxng:8080)
 //
 // Empty values fall back to the adapter's compiled-in defaults.
@@ -485,10 +485,12 @@ func buildProductionRegistry() *adapters.Registry {
 			_ = reg.Register(a)
 		}
 	}
-	if a, err := youtube.New(youtube.Options{
-		BaseURL: os.Getenv("YOUTUBE_BASE_URL"),
-	}); err == nil {
-		_ = reg.Register(a)
+	if base := os.Getenv("YOUTUBE_BASE_URL"); base != "" {
+		if a, err := youtube.New(youtube.Options{
+			BaseURL: base,
+		}); err == nil {
+			_ = reg.Register(a)
+		}
 	}
 	if a, err := searxng.New(searxng.Options{}); err == nil {
 		_ = reg.Register(a)
