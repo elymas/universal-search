@@ -3,7 +3,7 @@ id: SPEC-ADP-006-XENABLE
 title: X (Twitter) Adapter — Live Provider Enablement
 version: 0.1.0
 milestone: M3 — Fanout, adapters, index
-status: draft
+status: implemented
 priority: P2
 owner: expert-backend
 methodology: tdd
