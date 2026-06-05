@@ -8,14 +8,19 @@ Monorepo, organized by bounded context. Go is primary for the orchestration plan
 univesal-search/
 ├── cmd/                          # Go binaries
 │   ├── usearch/                  # main CLI
+│   │   └── sources_cmd.go        # Registry-backed sources commands (SPEC-CLI-003)
 │   ├── usearch-mcp/              # MCP server binary
 │   └── usearch-api/              # HTTP API for Web UI
+│       ├── api_handlers.go       # REST handlers /search, /sources, /health (SPEC-API-001)
+│       └── api_handlers_test.go
 │
 ├── internal/                     # Go private packages (orchestration plane)
 │   ├── router/                   # Intent Router (SPEC-IR)
 │   ├── fanout/                   # Multi-source dispatch (SPEC-FAN)
 │   ├── adapters/                 # Per-source adapters (SPEC-ADP)
 │   │   ├── reddit/
+│   │   │   ├── oauth.go          # Reddit OAuth (client_credentials grant, SPEC-ADP-001a)
+│   │   │   └── naver.go
 │   │   ├── xtwitter/
 │   │   ├── hackernews/
 │   │   ├── youtube/
@@ -27,6 +32,9 @@ univesal-search/
 │   │   ├── rss_korean/
 │   │   ├── searxng/              # SearXNG fanout bridge
 │   │   └── polymarket/
+│   ├── pipeline/                  # Pipeline extraction for HTTP API (SPEC-API-001)
+│   │   ├── pipeline.go           # Core pipeline interface
+│   │   └── registry.go           # Adapter registry for status checks
 │   ├── access/                   # 5-phase access fallback (SPEC-CACHE)
 │   │   ├── phase0_index.go
 │   │   ├── phase1_probe.go
@@ -40,7 +48,8 @@ univesal-search/
 │   ├── synthesis/                # Basic synthesis pipeline (SPEC-SYN)
 │   ├── auth/                     # Team auth, RBAC, audit (SPEC-AUTH)
 │   ├── obs/                      # Observability (SPEC-OBS)
-│   └── eval/                     # Citation faithfulness eval
+│   ├── eval/                     # Citation faithfulness eval
+│   └── xenable/                  # Adapter feature flag gating (SPEC-SEC-002, SPEC-ADP-006-XENABLE)
 │
 ├── pkg/                          # Go public packages (SDK for external callers)
 │   ├── client/                   # Go client library
@@ -49,7 +58,8 @@ univesal-search/
 ├── services/                     # Python services (gRPC / HTTP sidecars)
 │   ├── researcher/               # gpt-researcher wrapper (SPEC-SYN, SPEC-DEEP)
 │   ├── storm/                    # STORM wrapper for /deep reports
-│   └── embedder/                 # local embedding service (BGE-M3, fastembed-bm25)
+│   ├── embedder/                 # local embedding service (BGE-M3, fastembed-bm25)
+│   └── youtube-extract/          # YouTube extraction sidecar (Python/FastAPI, SPEC-ADP-005a)
 │
 ├── web/                          # Web UI (TypeScript, Next.js)
 │   ├── app/
