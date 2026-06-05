@@ -15,7 +15,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 	"time"
 	"unicode"
@@ -24,19 +23,10 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/elymas/universal-search/internal/adapters"
-	"github.com/elymas/universal-search/internal/adapters/arxiv"
-	"github.com/elymas/universal-search/internal/adapters/github"
-	"github.com/elymas/universal-search/internal/adapters/hn"
-	"github.com/elymas/universal-search/internal/adapters/koreanews"
-	"github.com/elymas/universal-search/internal/adapters/naver"
-	"github.com/elymas/universal-search/internal/adapters/reddit"
-	"github.com/elymas/universal-search/internal/adapters/searxng"
-	"github.com/elymas/universal-search/internal/adapters/social"
-	"github.com/elymas/universal-search/internal/adapters/youtube"
 	"github.com/elymas/universal-search/internal/fanout"
 	"github.com/elymas/universal-search/internal/obs/reqid"
+	"github.com/elymas/universal-search/internal/pipeline"
 	"github.com/elymas/universal-search/internal/router"
-	"github.com/elymas/universal-search/internal/synthesis"
 	"github.com/elymas/universal-search/pkg/types"
 )
 
@@ -47,35 +37,17 @@ const (
 
 // synthResult is the internal representation of a synthesis result.
 // Maps to internal/synthesis.Result but avoids a hard import for testability.
-type synthResult struct {
-	Text      string
-	Citations []synthCitation
-}
+type synthResult = pipeline.SynthResult
 
 // synthCitation is a single citation from the synthesis client.
-type synthCitation struct {
-	Marker int
-	DocID  string
-	URL    string
-	Title  string
-}
+type synthCitation = pipeline.SynthCitation
 
 // synthClientIface is the interface used by the CLI to call the synthesis client.
 // The real client (internal/synthesis.Client) and the nopSynthClient both satisfy this.
-type synthClientIface interface {
-	Synthesize(ctx context.Context, query, lang string, docs []types.NormalizedDoc) (synthResult, error)
-}
+type synthClientIface = pipeline.SynthClient
 
 // errSynthUnavailable is a sentinel for the nop synthesis client (REQ-CLI-009).
-var errSynthUnavailable = errors.New("synthesis: client unavailable")
-
-// nopSynthClient is a test-only no-op implementation of synthClientIface.
-// Used to verify REQ-CLI-009 degraded mode behavior.
-type nopSynthClient struct{}
-
-func (n *nopSynthClient) Synthesize(_ context.Context, _, _ string, _ []types.NormalizedDoc) (synthResult, error) {
-	return synthResult{}, errSynthUnavailable
-}
+var errSynthUnavailable = pipeline.ErrSynthUnavailable
 
 // queryFlags holds the parsed flags for the query subcommand.
 type queryFlags struct {
@@ -162,7 +134,7 @@ func Execute(ctx context.Context, args []string, stdout, stderr io.Writer, opts 
 	// Build adapter registry (use injected or production registry).
 	reg := cfg.registry
 	if reg == nil {
-		reg = buildProductionRegistry()
+		reg = pipeline.BuildProductionRegistry()
 	}
 
 	// Validate source filter against registry (REQ-CLI-003).
@@ -176,7 +148,7 @@ func Execute(ctx context.Context, args []string, stdout, stderr io.Writer, opts 
 	}
 
 	// Build router.
-	rtr, routerErr := buildRouter(reg)
+	rtr, routerErr := pipeline.BuildRouter(reg)
 	if routerErr != nil {
 		_, _ = fmt.Fprintf(stderr, "usearch query: router init failed: %v\n", routerErr)
 		return ExitSystemError
@@ -251,7 +223,7 @@ func Execute(ctx context.Context, args []string, stdout, stderr io.Writer, opts 
 	// Synthesize (REQ-CLI-008, REQ-CLI-009).
 	synth := cfg.synth
 	if synth == nil {
-		synth = buildProductionSynth()
+		synth = pipeline.BuildProductionSynth()
 	}
 
 	prog.Emit("synthesis", fmt.Sprintf("synthesizing from %d docs", len(docs)))
@@ -434,136 +406,3 @@ func determineExitCode(
 	return ExitSystemError
 }
 
-// buildProductionRegistry constructs the adapter registry for production use.
-//
-// Registers Reddit (SPEC-ADP-001) and Hacker News (SPEC-ADP-002). Both
-// adapters have RequiresAuth=false so no env-var preconditions apply.
-// In tests, withRegistry() injects an alternative registry.
-//
-// Env-var overrides (used by NFR-CLI-001 integration tests):
-//   - REDDIT_BASE_URL: redirects Reddit adapter to a stub HTTP server
-//   - HN_BASE_URL: redirects HN adapter to a stub HTTP server
-//   - ARXIV_BASE_URL: redirects arXiv adapter to a stub HTTP server
-//   - GITHUB_BASE_URL: redirects GitHub adapter to a stub HTTP server
-//   - USEARCH_GITHUB_TOKEN (or GITHUB_TOKEN fallback): PAT for GitHub adapter (omit to skip registration)
-//   - YOUTUBE_BASE_URL: YouTube sidecar base URL (omit to skip registration)
-//   - USEARCH_SEARXNG_URL: SearXNG instance URL (default http://searxng:8080)
-//
-// Empty values fall back to the adapter's compiled-in defaults.
-//
-// @MX:NOTE: [AUTO] Production adapter wiring per SPEC-CLI-001 §2.1(m).
-// New M3 adapters are registered here; auth-gated adapters check
-// Capabilities.AuthEnvVars before Register.
-// @MX:SPEC: SPEC-CLI-001 SPEC-ADP-003 SPEC-ADP-004 SPEC-ADP-005 SPEC-ADP-006 SPEC-ADP-007 SPEC-ADP-008 SPEC-ADP-009
-func buildProductionRegistry() *adapters.Registry {
-	reg := adapters.NewRegistry(nil)
-
-	if a, err := reddit.New(reddit.Options{
-		BaseURL: os.Getenv("REDDIT_BASE_URL"),
-	}); err == nil {
-		_ = reg.Register(a)
-	}
-	if a, err := hn.New(hn.Options{
-		BaseURL: os.Getenv("HN_BASE_URL"),
-	}); err == nil {
-		_ = reg.Register(a)
-	}
-	if a, err := arxiv.New(arxiv.Options{
-		BaseURL: os.Getenv("ARXIV_BASE_URL"),
-	}); err == nil {
-		_ = reg.Register(a)
-	}
-	token := os.Getenv("USEARCH_GITHUB_TOKEN")
-	if token == "" {
-		token = os.Getenv("GITHUB_TOKEN")
-	}
-	if token != "" {
-		if a, err := github.New(github.Options{
-			BaseURL: os.Getenv("GITHUB_BASE_URL"),
-			Token:   token,
-		}); err == nil {
-			_ = reg.Register(a)
-		}
-	}
-	if base := os.Getenv("YOUTUBE_BASE_URL"); base != "" {
-		if a, err := youtube.New(youtube.Options{
-			BaseURL: base,
-		}); err == nil {
-			_ = reg.Register(a)
-		}
-	}
-	if a, err := searxng.New(searxng.Options{}); err == nil {
-		_ = reg.Register(a)
-	}
-	// Bluesky live (X is stub-only — disabled until provider configured).
-	if a, err := social.NewBluesky(social.BlueskyOptions{
-		BaseURL: os.Getenv("BLUESKY_BASE_URL"),
-	}); err == nil {
-		_ = reg.Register(a)
-	}
-	// Naver: requires NAVER_CLIENT_ID + NAVER_CLIENT_SECRET; skipped silently when absent.
-	if a, err := naver.New(naver.Options{}); err == nil {
-		_ = reg.Register(a)
-	}
-	// Korean news composite: RSS enabled by default; KNC/Daum gated by env flags.
-	if a, err := koreanews.New(koreanews.Options{}); err == nil {
-		_ = reg.Register(a)
-	}
-
-	return reg
-}
-
-// buildRouter constructs the Intent Router from a registry.
-// The production path uses env-configured LLM client.
-func buildRouter(reg *adapters.Registry) (*router.Router, error) {
-	return router.New(router.Options{
-		Registry: reg,
-	})
-}
-
-// buildProductionSynth constructs the synthesis client for production use.
-//
-// Wires the real synthesis.Client (SPEC-SYN-001) using RESEARCHER_BASE_URL
-// and RESEARCHER_REQUEST_TIMEOUT_SECONDS env vars. Falls back to
-// nopSynthClient if config load fails or client construction errors;
-// the nop fallback satisfies REQ-CLI-009 degraded-mode behavior.
-//
-// obs is nil here: REQ-SYN-006 guarantees the synthesis.Client is nil-safe
-// across obs.Obs, individual collectors, and obs.Logger.
-func buildProductionSynth() synthClientIface {
-	cfg, err := synthesis.LoadConfig()
-	if err != nil {
-		return &nopSynthClient{}
-	}
-	client, err := synthesis.New(cfg, nil)
-	if err != nil {
-		return &nopSynthClient{}
-	}
-	return &productionSynthAdapter{client: client}
-}
-
-// productionSynthAdapter bridges *synthesis.Client to synthClientIface.
-//
-// @MX:NOTE: [AUTO] Type adapter — synthesis.Result -> synthResult mapping
-// to keep cmd/usearch decoupled from internal/synthesis concrete types.
-// @MX:SPEC: SPEC-CLI-001
-type productionSynthAdapter struct {
-	client *synthesis.Client
-}
-
-func (a *productionSynthAdapter) Synthesize(ctx context.Context, query, lang string, docs []types.NormalizedDoc) (synthResult, error) {
-	res, err := a.client.Synthesize(ctx, query, lang, docs)
-	if err != nil {
-		return synthResult{}, err
-	}
-	citations := make([]synthCitation, len(res.Citations))
-	for i, c := range res.Citations {
-		citations[i] = synthCitation{
-			Marker: c.Marker,
-			DocID:  c.DocID,
-			URL:    c.URL,
-			Title:  c.Title,
-		}
-	}
-	return synthResult{Text: res.Text, Citations: citations}, nil
-}

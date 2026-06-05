@@ -17,6 +17,7 @@ import (
 	"github.com/elymas/universal-search/internal/llm"
 	llmconfig "github.com/elymas/universal-search/internal/llm/config"
 	"github.com/elymas/universal-search/internal/obs"
+	"github.com/elymas/universal-search/internal/pipeline"
 	"github.com/elymas/universal-search/internal/version"
 )
 
@@ -76,7 +77,8 @@ func registerSubcommands(root *cobra.Command) {
 	root.AddCommand(newDeepCmd())
 
 	// sources subcommand tree — SPEC-CLI-002 REQ-CLI2-004.
-	root.AddCommand(newSourcesCmd())
+	// SPEC-CLI-003: registry factory ensures single source of truth.
+	root.AddCommand(newSourcesCmd(pipeline.BuildProductionRegistry))
 
 	// login subcommand tree — SPEC-CLI-002 REQ-CLI2-007.
 	root.AddCommand(newLoginCmd())

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/elymas/universal-search/internal/adapters"
+	"github.com/elymas/universal-search/internal/pipeline"
 	"github.com/elymas/universal-search/pkg/types"
 	"go.uber.org/goleak"
 )
@@ -386,7 +387,7 @@ func TestNopSynthesisProducesDegradedOutput(t *testing.T) {
 		[]string{"--no-obs", "hello"},
 		&stdout, &stderr,
 		withRegistry(reg),
-		withSynth(&nopSynthClient{}),
+		withSynth(&pipeline.NopSynthClient{}),
 	)
 	if code != ExitPartial {
 		t.Errorf("nop synth: exit %d, want %d", code, ExitPartial)
@@ -407,7 +408,7 @@ func TestNopSynthesisStderrCarriesWarning(t *testing.T) {
 		[]string{"--no-obs", "hello"},
 		&stdout, &stderr,
 		withRegistry(reg),
-		withSynth(&nopSynthClient{}),
+		withSynth(&pipeline.NopSynthClient{}),
 	)
 	if !strings.Contains(stderr.String(), "[synthesis: unavailable]") {
 		t.Errorf("stderr missing '[synthesis: unavailable]': %s", stderr.String())

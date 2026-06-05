@@ -11,18 +11,24 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/elymas/universal-search/internal/pipeline"
 	"github.com/elymas/universal-search/pkg/types"
 )
 
-// --- buildProductionRegistry / buildProductionSynth ---
+// --- pipeline.BuildProductionRegistry / pipeline.BuildProductionSynth ---
 
 // TestBuildProductionRegistryReturnsRegistry verifies the production registry
 // constructor does not panic, returns a non-nil registry, and registers the
-// expected M2 adapters (Reddit + Hacker News) per SPEC-CLI-001 §2.1(m).
+// expected adapters (Reddit + Hacker News) per SPEC-CLI-001.
+// Reddit now requires REDDIT_CLIENT_ID + REDDIT_CLIENT_SECRET (ADP-001a).
 func TestBuildProductionRegistryReturnsRegistry(t *testing.T) {
-	reg := buildProductionRegistry()
+	// Set Reddit OAuth credentials so the adapter registers.
+	t.Setenv("REDDIT_CLIENT_ID", "test_coverage_id")
+	t.Setenv("REDDIT_CLIENT_SECRET", "test_coverage_secret")
+
+	reg := pipeline.BuildProductionRegistry()
 	if reg == nil {
-		t.Fatal("buildProductionRegistry() returned nil")
+		t.Fatal("BuildProductionRegistry() returned nil")
 	}
 	for _, name := range []string{"reddit", "hackernews"} {
 		if _, ok := reg.Get(name); !ok {
@@ -32,13 +38,11 @@ func TestBuildProductionRegistryReturnsRegistry(t *testing.T) {
 }
 
 // TestBuildProductionSynthReturnsClient verifies the production synth
-// constructor returns a non-nil client. The client may be either the real
-// productionSynthAdapter (when synthesis.LoadConfig succeeds) or
-// nopSynthClient (fallback). Both satisfy synthClientIface.
+// constructor returns a non-nil client.
 func TestBuildProductionSynthReturnsClient(t *testing.T) {
-	s := buildProductionSynth()
+	s := pipeline.BuildProductionSynth()
 	if s == nil {
-		t.Fatal("buildProductionSynth() returned nil")
+		t.Fatal("BuildProductionSynth() returned nil")
 	}
 	// Calling Synthesize against an unreachable sidecar (or the nop fallback)
 	// must return an error (not panic). Use a short-cancelled context so the
