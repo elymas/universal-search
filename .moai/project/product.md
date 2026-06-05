@@ -4,6 +4,8 @@
 
 **Universal Search** is a team-scale, source-grounded research meta-agent. It unifies web, social, academic, technical, and Korean-locale retrieval behind a single query plane, then routes results through hybrid LLM synthesis (basic summarization by default, `/deep` multi-agent deep-research on demand).
 
+The system exposes multiple surfaces: a CLI (`usearch`), an HTTP API (`usearch-api`), an MCP server, and a Web UI. All surfaces share the same backend pipeline and team-scoped hybrid index.
+
 It is a composition — not a fork — of three proven open-source lineages:
 
 - **Access layer**: inspired by `fivetaku/insane-search` (5-phase adaptive scheduler, TLS fingerprint spoofing, Playwright fallback)
@@ -39,7 +41,8 @@ Universal Search solves this by giving a team **one query → many sources → o
 - 4 source categories: web+social, academic+technical, Korean-locale, personal-context (read-only, opt-in per user — scoped for V1.1 gate)
 - Hybrid synthesis: default summarize-and-cite, `/deep` escalates to multi-agent pipeline (Researcher → Reviewer → Writer → Verifier)
 - Team auth + shared hybrid index (Qdrant Tiered Multitenancy + Meilisearch + Postgres)
-- Multiple surfaces: CLI, MCP server, Claude Skill, Web UI
+- Multiple surfaces: CLI (`usearch query`, `usearch deep`), HTTP API (`/search`, `/sources`, `/health`), MCP server, Claude Skill, Web UI
+- Sources management: Registry-backed `sources list/status/show` commands with health checks and timeout support (SPEC-CLI-003)
 - Mixed LLM routing via LiteLLM proxy (Claude primary, OpenAI-compatible, local Ollama/vLLM fallback)
 - Observability: query log, citation-faithfulness eval, per-source success rate
 
@@ -65,6 +68,7 @@ Universal Search solves this by giving a team **one query → many sources → o
 | `/deep` latency | ≤ 5min p50 |
 | Citation faithfulness (automated eval) | ≥ 0.85 |
 | Source adapter success rate | ≥ 95% per adapter over 7-day window |
+| Sources health check latency | ≤ 2s p50 |
 | Duplicate-query dedup hit rate | ≥ 30% within team-shared index |
 | LLM cost per basic query | ≤ $0.02 |
 | LLM cost per `/deep` query | ≤ $0.50 |
