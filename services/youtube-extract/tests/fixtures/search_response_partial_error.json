@@ -1,0 +1,49 @@
+{
+  "items": [
+    {
+      "id": "dQw4w9WgXcQ",
+      "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "title": "Never Gonna Give You Up",
+      "description": "The official video.",
+      "channel": "Rick Astley",
+      "channel_id": "UCuAXFkgsw1L7xaCfnd5JJOw",
+      "channel_url": "https://www.youtube.com/@RickAstleyYT",
+      "uploader": "Rick Astley",
+      "uploader_id": "RickAstleyYT",
+      "duration_seconds": 213,
+      "view_count": 1600000000,
+      "like_count": 16000000,
+      "upload_date": "2009-10-25",
+      "thumbnail_url": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+      "tags": ["music", "rick astley"],
+      "available_transcript_langs": ["en"],
+      "transcript_snippet": "We're no strangers to love",
+      "transcript_lang": "en",
+      "transcript_is_auto": false,
+      "error": null
+    },
+    {
+      "id": "error001",
+      "url": "https://www.youtube.com/watch?v=error001",
+      "title": "",
+      "description": "",
+      "channel": "",
+      "channel_id": "",
+      "channel_url": "",
+      "uploader": "",
+      "uploader_id": "",
+      "duration_seconds": 0,
+      "view_count": null,
+      "like_count": null,
+      "upload_date": "",
+      "thumbnail_url": "",
+      "tags": [],
+      "available_transcript_langs": [],
+      "transcript_snippet": "",
+      "transcript_lang": "",
+      "transcript_is_auto": false,
+      "error": "Video unavailable"
+    }
+  ],
+  "has_more": false
+}

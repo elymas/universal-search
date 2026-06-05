@@ -2,8 +2,11 @@
 // REQ-ADP8-001: Interface conformance, Name, Capabilities, Healthcheck.
 // SPEC-ADP-008: Multi-vertical Naver search adapter (blog, news, web, shop, DataLab).
 //
-// Authentication: requires NAVER_CLIENT_ID and NAVER_CLIENT_SECRET environment
-// variables declared in Capabilities.AuthEnvVars and resolved in New().
+// Authentication: requires NAVER_CLIENT_ID and NAVER_CLIENT_SECRET resolved
+// via the injected secretstore.Resolver (SPEC-SEC-002 REQ-SEC2-002). The
+// resolver is supplied through Options.Resolver; literal Options.ClientID /
+// ClientSecret take precedence. When no Resolver is injected, New falls back
+// to an EnvResolver (os.Getenv semantics).
 package naver
 
 import (
@@ -15,12 +18,6 @@ import (
 	"github.com/elymas/universal-search/internal/security/secretstore"
 	"github.com/elymas/universal-search/pkg/types"
 )
-
-// secretEnv resolves NAVER_* credentials (REQ-SEC-016). It is the default env
-// backend (os.Getenv semantics); behaviour at the call site is identical — an
-// unset variable yields an empty value that triggers the existing "not set"
-// error path. The resolver is immutable and stateless.
-var secretEnv secretstore.Resolver = secretstore.NewEnvResolver()
 
 const (
 	// baseURLBlog is the Naver Blog search API endpoint.
@@ -61,8 +58,9 @@ const (
 )
 
 // Options configures the Naver adapter. All fields are optional; defaults are
-// used when a field is the zero value. Credentials are resolved from environment
-// variables when Options.ClientID / ClientSecret are empty.
+// used when a field is the zero value. Credentials are resolved from the
+// injected Resolver (or environment variables when Resolver is nil) when
+// Options.ClientID / ClientSecret are empty.
 type Options struct {
 	// ClientID overrides the NAVER_CLIENT_ID environment variable. Tests inject
 	// a dummy value here to avoid requiring live credentials.
@@ -70,6 +68,13 @@ type Options struct {
 
 	// ClientSecret overrides the NAVER_CLIENT_SECRET environment variable.
 	ClientSecret string
+
+	// Resolver supplies the secret resolution backend for NAVER_CLIENT_ID and
+	// NAVER_CLIENT_SECRET. When nil, New falls back to an EnvResolver (os.Getenv
+	// semantics). When non-nil, credentials are resolved through this Resolver.
+	// Literal Options.ClientID / ClientSecret always take precedence over the
+	// Resolver lookup (SPEC-SEC-002 REQ-SEC2-002).
+	Resolver secretstore.Resolver
 
 	// BaseURLBlog overrides the blog search endpoint. Used in tests.
 	BaseURLBlog string
@@ -109,16 +114,22 @@ type Adapter struct {
 }
 
 // New constructs a Naver Adapter from the given Options.
-// Credentials are resolved (in order): Options fields → environment variables.
+// Credentials are resolved (in order): Options fields → injected Resolver → EnvResolver fallback.
 // Returns an error if neither source provides non-empty credentials.
 //
 // @MX:ANCHOR: [AUTO] Constructor; called by registry, tests, and CLI.
 // @MX:REASON: fan_in >= 3; sole construction path for the Naver adapter.
-// @MX:SPEC: SPEC-ADP-008
+// @MX:SPEC: SPEC-ADP-008 SPEC-SEC-002
 func New(opts Options) (*Adapter, error) {
+	// Select the Resolver: injected → fallback to EnvResolver.
+	resolver := opts.Resolver
+	if resolver == nil {
+		resolver = secretstore.NewEnvResolver()
+	}
+
 	clientID := opts.ClientID
 	if clientID == "" {
-		clientID, _ = secretEnv.Get(context.Background(), "NAVER_CLIENT_ID")
+		clientID, _ = resolver.Get(context.Background(), "NAVER_CLIENT_ID")
 	}
 	if clientID == "" {
 		return nil, fmt.Errorf("naver: NAVER_CLIENT_ID not set")
@@ -126,7 +137,7 @@ func New(opts Options) (*Adapter, error) {
 
 	clientSecret := opts.ClientSecret
 	if clientSecret == "" {
-		clientSecret, _ = secretEnv.Get(context.Background(), "NAVER_CLIENT_SECRET")
+		clientSecret, _ = resolver.Get(context.Background(), "NAVER_CLIENT_SECRET")
 	}
 	if clientSecret == "" {
 		return nil, fmt.Errorf("naver: NAVER_CLIENT_SECRET not set")

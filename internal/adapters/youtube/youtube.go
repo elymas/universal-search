@@ -1,5 +1,5 @@
 // Package youtube provides a YouTube search adapter implementing types.Adapter.
-// The adapter is an HTTP client to a yt-dlp Python sidecar (port 8082 by default).
+// The adapter is an HTTP client to a yt-dlp Python sidecar (port 8084 by default).
 // REQ-ADP5-001: Interface conformance, Name, Capabilities, Healthcheck.
 // SPEC-ADP-005: YouTube video search via yt-dlp sidecar.
 package youtube
@@ -17,7 +17,7 @@ import (
 
 const (
 	// defaultBaseURL is the default sidecar HTTP base URL.
-	defaultBaseURL = "http://localhost:8082"
+	defaultBaseURL = "http://localhost:8084"
 
 	// defaultHealthcheckPath is the path for the sidecar health endpoint.
 	defaultHealthcheckPath = "/health"
@@ -31,7 +31,7 @@ const (
 )
 
 // capabilitiesNotes documents the adapter's key operational characteristics.
-const capabilitiesNotes = "yt-dlp Python sidecar at port 8082 (default); public no-auth; " +
+const capabilitiesNotes = "yt-dlp Python sidecar at port 8084 (default); public no-auth; " +
 	"transcript snippet truncated to 500 runes; Korean-locale auto-detection via 30% Hangul threshold; " +
 	"max_results + cursor offset cap 100; score=Tanh-of-log10(view_count+1)/5; 30s default Retry-After"
 
@@ -39,7 +39,7 @@ const capabilitiesNotes = "yt-dlp Python sidecar at port 8082 (default); public 
 // used when a field is the zero value.
 type Options struct {
 	// BaseURL overrides the sidecar base URL. Primarily used in tests to
-	// redirect requests to an httptest.Server. Default: "http://localhost:8082".
+	// redirect requests to an httptest.Server. Default: "http://localhost:8084".
 	BaseURL string
 
 	// HTTPClient overrides the default *http.Client (30s timeout, reqid transport).

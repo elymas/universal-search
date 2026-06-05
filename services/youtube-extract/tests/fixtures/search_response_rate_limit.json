@@ -1,0 +1,6 @@
+{
+  "error": {
+    "category": "rate_limited",
+    "message": "yt-dlp rate limited"
+  }
+}

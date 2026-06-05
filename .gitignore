@@ -7,6 +7,13 @@
 # ============================================
 
 # ===========================================
+# Secrets / direnv (NEVER commit local env keys)
+# ===========================================
+.envrc
+.envrc.local
+secrets.env
+
+# ===========================================
 # Go Build Artifacts
 # ===========================================
 bin/
@@ -220,3 +227,4 @@ dist-ssr/
 
 # Compiled main binary (scratch)
 /usearch
+.gstack/

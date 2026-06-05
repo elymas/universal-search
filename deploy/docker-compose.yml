@@ -333,3 +333,32 @@ services:
     restart: unless-stopped
     networks:
       - app
+
+  # ── YouTube extraction sidecar ─────────────────────────────────────────────────
+  # SPEC-ADP-005a: yt-dlp FastAPI sidecar on port 8084.
+  # Go services reach it via YOUTUBE_BASE_URL=http://youtube-extract:8084.
+  youtube-extract:
+    build:
+      context: ../services/youtube-extract
+      dockerfile: Dockerfile
+    ports:
+      - "${YOUTUBE_PORT:-8084}:8084"
+    environment:
+      YT_EXTRACT_PORT: "8084"
+      YT_COOKIES_PATH: ${YT_COOKIES_PATH:-}
+      YT_SLEEP_REQUESTS: ${YT_SLEEP_REQUESTS:-1.0}
+      YT_SLEEP_INTERVAL: ${YT_SLEEP_INTERVAL:-2}
+      YT_MAX_SLEEP_INTERVAL: ${YT_MAX_SLEEP_INTERVAL:-5}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'python -c "import urllib.request; urllib.request.urlopen(''http://localhost:8084/health'')" || exit 1',
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - app
