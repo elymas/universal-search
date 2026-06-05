@@ -42,6 +42,7 @@
 | Vector DB | **Qdrant v1.16+** | Tiered Multitenancy (team isolation), RRF support |
 | Keyword + hybrid | **Meilisearch v1.10+** | BM25 + vectors, multi-tenant tokens, low-ops |
 | Metadata / audit | **PostgreSQL 16** | ACID for audit, pgvector as fallback |
+| Pipeline extraction | Custom Go registry | Adapter registry pattern for /sources status (SPEC-API-001, SPEC-CLI-003) |
 | Embeddings (dense) | **BGE-M3** via local service | multilingual incl. Korean, SOTA OSS |
 | Embeddings (sparse) | **FastEmbed BM25** (IDF-weighted) | hybrid with dense via RRF |
 | Cross-encoder rerank | **BGE-reranker-v2-m3** | optional, for top-50 → top-10 |
@@ -103,10 +104,10 @@
 
 | Source | Approach | Auth | Rate limit | Notes |
 |--------|----------|------|------------|-------|
-| Reddit | public JSON API | anonymous UA | 60/min | fallback to Pushshift mirror if needed |
+| Reddit | public JSON API | OAuth client_credentials (app-only) | 600 req/10min (60/min) | oauth.reddit.com endpoint; client_credentials grant per SPEC-ADP-001a |
 | X / Twitter | ScrapeCreators API (last30days pattern) or Nitter | API key | per-plan | no official API for deep search in 2026 tier |
 | Hacker News | Algolia HN API | none | generous | stable, no-auth |
-| YouTube | yt-dlp (metadata + transcript) | none | self-throttle | transcript via `--write-auto-subs` |
+| YouTube | yt-dlp sidecar (Python/FastAPI) | none | self-throttle | Dedicated service at :8084 per SPEC-ADP-005a; transcript via `--write-auto-subs` |
 | Bluesky | AT Protocol public feed | anonymous | generous | |
 | TikTok / Instagram / Threads | ScrapeCreators API | API key | per-plan | optional, keyed feature flag |
 | arXiv | OAI-PMH + arXiv Search API | none | 3s between req | |
@@ -170,5 +171,9 @@ RRF formula: `score(d) = Σ 1 / (k + rank_i(d))` with `k=60` by convention.
 | 2026-05-22 | Web UI stack = Next.js 16 + shadcn/ui | App Router streaming for SSE citations; shadcn for accessibility-first primitives |
 | 2026-05-23 | Admin UI loopback guard | API key view+toggle restricted to localhost requests to prevent remote credential leak |
 | 2026-05-26 | M7 surfaces shipped (MCP/CLI/Skill/UI/Admin) | All 5 M7 SPECs implemented; sync gap closed in `docs/sync-m7-milestone`; M8 Eval+polish next |
+| 2026-06-05 | Reddit OAuth app-only auth | Migrated to client_credentials grant (SPEC-ADP-001a); rate limit 10→60/min |
+| 2026-06-05 | YouTube extract sidecar | Dedicated Python/FastAPI service at :8084 (SPEC-ADP-005a) |
+| 2026-06-05 | Registry-backed sources commands | `sources list/status/show` with live registry (SPEC-CLI-003) |
+| 2026-06-05 | Pipeline extraction for HTTP API | internal/pipeline package with registry (SPEC-API-001) |
 
 Subsequent decisions append to this table, never overwrite.
