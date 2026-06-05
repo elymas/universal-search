@@ -13,6 +13,7 @@ import (
 
 	"github.com/elymas/universal-search/internal/adapters"
 	"github.com/elymas/universal-search/internal/adapters/meta"
+	"github.com/elymas/universal-search/internal/adapters/social"
 	"github.com/elymas/universal-search/internal/mcpserver"
 	"github.com/elymas/universal-search/internal/obs"
 	vver "github.com/elymas/universal-search/internal/version"
@@ -84,5 +85,34 @@ func buildProductionRegistry() *adapters.Registry {
 		}
 	}
 
+	// X (Twitter): env-gated registration (SPEC-ADP-006-XENABLE).
+	// @MX:WARN: [AUTO] ToS + secret gate for a ToS-grey source.
+	// @MX:REASON: registering X without the env + ToS-ack gates violates tech.md:147.
+	// @MX:SPEC: SPEC-ADP-006-XENABLE
+	if os.Getenv("USEARCH_X_ENABLED") == "true" {
+		if prov, ok := buildXProvider(); ok {
+			if a, err := social.NewX(social.XOptions{Provider: prov}); err == nil {
+				_ = reg.Register(a)
+			}
+		}
+	}
+
 	return reg
+}
+
+// buildXProvider constructs an X provider from environment credentials.
+// Returns (provider, true) when credentials are present; (nil, false) otherwise.
+// SPEC-ADP-006-XENABLE: Option A (X official API v2) is the default provider.
+func buildXProvider() (social.XProvider, bool) {
+	bearerToken := os.Getenv("X_BEARER_TOKEN")
+	if bearerToken == "" {
+		return nil, false
+	}
+	prov, err := social.NewXOfficialProvider(social.XOfficialOptions{
+		BearerToken: bearerToken,
+	})
+	if err != nil {
+		return nil, false
+	}
+	return prov, true
 }

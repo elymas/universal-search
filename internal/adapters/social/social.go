@@ -7,6 +7,7 @@ package social
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -37,6 +38,9 @@ type Adapter struct {
 	healthcheckTarget string
 	subSource         string              // "bluesky" or "x"
 	envLookup         func(string) string // env var lookup; injected for test isolation
+	xProvider         XProvider           // nil = disabled; non-nil = live (SPEC-ADP-006-XENABLE)
+	// @MX:NOTE: [AUTO] The live/disabled discriminator for X. Nil = disabled; non-nil = live.
+	// @MX:SPEC: SPEC-ADP-006-XENABLE
 }
 
 // BlueskyOptions configures the Bluesky adapter. All fields are optional;
@@ -57,12 +61,17 @@ type BlueskyOptions struct {
 	HealthcheckTarget string
 }
 
-// XOptions configures the X (Twitter) adapter stub.
+// XOptions configures the X (Twitter) adapter.
 type XOptions struct {
 	// EnvLookup overrides os.Getenv for X_ENABLED env var lookups.
 	// MUST be injected in concurrent tests (goroutine-safe replacement for
 	// t.Setenv which is unsafe under -race). Default: os.Getenv.
 	EnvLookup func(string) string
+
+	// Provider is the pluggable X search backend. When nil, the adapter
+	// operates in disabled/stub mode (ErrXDisabled / ErrXProviderNotConfigured).
+	// SPEC-ADP-006-XENABLE REQ-XEN-001.
+	Provider XProvider
 }
 
 // NewBluesky constructs a Bluesky Adapter from the given BlueskyOptions.
@@ -120,6 +129,7 @@ func NewX(opts XOptions) (*Adapter, error) {
 		healthcheckTarget: "",
 		subSource:         "x",
 		envLookup:         lookup,
+		xProvider:         opts.Provider,
 	}, nil
 }
 
@@ -134,6 +144,9 @@ func (a *Adapter) Capabilities() types.Capabilities {
 	case "bluesky":
 		return blueskyCapabilities()
 	case "x":
+		if a.xProvider != nil {
+			return xCapabilitiesLive(a.xProvider)
+		}
 		return xCapabilities()
 	default:
 		return types.Capabilities{SourceID: a.subSource}
@@ -177,6 +190,48 @@ func xCapabilities() types.Capabilities {
 	}
 }
 
+// xCapabilitiesLive returns the LIVE Capabilities descriptor when a provider is configured.
+func xCapabilitiesLive(prov XProvider) types.Capabilities {
+	return types.Capabilities{
+		SourceID:          "x",
+		DisplayName:       "X (Twitter)",
+		DocTypes:          []types.DocType{types.DocTypePost},
+		SupportedLangs:    nil,
+		SupportsSince:     false,
+		RequiresAuth:      true,
+		AuthEnvVars:       nil,
+		RateLimitPerMin:   0,
+		DefaultMaxResults: 25,
+		Notes: "X (Twitter) social LIVE via configured XProvider. Enabled by " +
+			"USEARCH_X_ENABLED=true + provider creds. Provider is pluggable " +
+			"(X official API or twitterapi.io). ToS-grey third-party providers " +
+			"require explicit ToS acknowledgement at deployment (tech.md:147). " +
+			"Provider: " + prov.Name() + ".",
+	}
+}
+
+// xProviderHealthcheck probes the live provider's reachability.
+func (a *Adapter) xProviderHealthcheck(ctx context.Context) error {
+	if a.xProvider == nil {
+		return ErrXDisabled
+	}
+	// Perform a lightweight search with an empty query to probe reachability.
+	// The provider should return quickly or error.
+	_, _, err := a.xProvider.SearchTweets(ctx, types.Query{Text: "healthcheck", MaxResults: 1})
+	if err == nil {
+		return nil
+	}
+	var se *types.SourceError
+	if errors.As(err, &se) {
+		return se
+	}
+	return &types.SourceError{
+		Adapter:  "x",
+		Category: types.CategoryUnavailable,
+		Cause:    err,
+	}
+}
+
 // Search dispatches to the appropriate sub-source search implementation.
 func (a *Adapter) Search(ctx context.Context, q types.Query) ([]types.NormalizedDoc, error) {
 	switch a.subSource {
@@ -206,6 +261,9 @@ func (a *Adapter) Healthcheck(ctx context.Context) error {
 		}
 		return conn.Close()
 	case "x":
+		if a.xProvider != nil {
+			return a.xProviderHealthcheck(ctx)
+		}
 		return ErrXDisabled
 	default:
 		return fmt.Errorf("social: unknown subSource %q", a.subSource)
