@@ -5,7 +5,6 @@ package social
 import (
 	"fmt"
 	"time"
-	"unicode/utf8"
 
 	"github.com/elymas/universal-search/pkg/types"
 )
@@ -25,10 +24,6 @@ func normalizeXTweets(tweets []XTweet, nextCursor string, retrievedAt time.Time)
 	}
 
 	docs := make([]types.NormalizedDoc, 0, len(tweets))
-	providerName := ""
-	// We don't have provider name here; it will be set by the caller.
-	// For now leave it as a placeholder that the caller can override.
-	_ = providerName
 
 	for i, tweet := range tweets {
 		doc := transformXTweet(tweet, retrievedAt)
@@ -75,6 +70,7 @@ func transformXTweet(tweet XTweet, retrievedAt time.Time) types.NormalizedDoc {
 	}
 
 	score := normalizeScore(tweet.LikeCount, tweet.RepostCount)
+	body := tweet.Text
 
 	meta := map[string]any{
 		"handle":       tweet.AuthorHandle,
@@ -87,9 +83,6 @@ func transformXTweet(tweet XTweet, retrievedAt time.Time) types.NormalizedDoc {
 		"sub_source":   "x",
 		"provider":     "",
 	}
-
-	body := tweet.Text
-	_ = utf8.ValidString(body) // body is used as-is
 
 	return types.NormalizedDoc{
 		ID:          "x:" + tweet.ID,
