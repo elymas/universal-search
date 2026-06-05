@@ -12,6 +12,7 @@ import (
 	"os"
 
 	"github.com/elymas/universal-search/internal/adapters"
+	"github.com/elymas/universal-search/internal/adapters/meta"
 	"github.com/elymas/universal-search/internal/mcpserver"
 	"github.com/elymas/universal-search/internal/obs"
 	vver "github.com/elymas/universal-search/internal/version"
@@ -69,7 +70,19 @@ func adminAddr() string {
 }
 
 // buildProductionRegistry constructs the adapter registry for the MCP server.
-// Mirrors cmd/usearch/query.go::buildProductionRegistry.
+// Adapters are registered conditionally based on environment variables.
+// REQ-ADP10-001: Threads is registered only when THREADS_ACCESS_TOKEN is set.
+// REQ-ADP10-008: Facebook is NOT registered (no viable search path).
 func buildProductionRegistry() *adapters.Registry {
-	return adapters.NewRegistry(nil)
+	reg := adapters.NewRegistry(nil)
+
+	// Threads: env-gated registration (SPEC-ADP-010 D1).
+	if os.Getenv("THREADS_ACCESS_TOKEN") != "" {
+		a, err := meta.NewThreads(meta.ThreadsOptions{})
+		if err == nil {
+			_ = reg.Register(a)
+		}
+	}
+
+	return reg
 }

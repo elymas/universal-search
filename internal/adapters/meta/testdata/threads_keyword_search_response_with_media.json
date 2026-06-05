@@ -1,0 +1,7 @@
+{
+  "data": [
+    {"id": "tm_001", "username": "photo_user", "text": "Image post", "permalink": "https://www.threads.net/@photo_user/post/tm_001", "timestamp": "2026-05-03T10:00:00Z", "media_type": "IMAGE"},
+    {"id": "tm_002", "username": "video_user", "text": "Video post", "permalink": "https://www.threads.net/@video_user/post/tm_002", "timestamp": "2026-05-03T11:00:00Z", "media_type": "VIDEO"},
+    {"id": "tm_003", "username": "text_user", "text": "Plain text post", "permalink": "https://www.threads.net/@text_user/post/tm_003", "timestamp": "2026-05-03T12:00:00Z", "media_type": "TEXT"}
+  ]
+}
