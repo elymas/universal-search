@@ -97,7 +97,12 @@ func TestExtractRealAdapters(t *testing.T) {
 		},
 		{
 			sourceID: "reddit",
-			want:     want{requiresAuth: false, rateLimitPerMin: 10, defaultMaxResults: 25},
+			want: want{
+				requiresAuth:      true,
+				authEnvVars:       []string{"REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET"},
+				rateLimitPerMin:   60,
+				defaultMaxResults: 25,
+			},
 		},
 		{
 			sourceID: "hackernews",

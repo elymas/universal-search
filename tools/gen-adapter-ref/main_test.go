@@ -215,7 +215,7 @@ func TestRunCheckDrift(t *testing.T) {
 	// Mutate one JSON file to simulate drift.
 	jsonPath := filepath.Join(dir, "reddit.capabilities.json")
 	data, _ := os.ReadFile(jsonPath)
-	mutated := bytes.ReplaceAll(data, []byte(`"rateLimitPerMin": 10`), []byte(`"rateLimitPerMin": 999`))
+	mutated := bytes.ReplaceAll(data, []byte(`"rateLimitPerMin": 60`), []byte(`"rateLimitPerMin": 999`))
 	_ = os.WriteFile(jsonPath, mutated, 0o644)
 
 	// Check should detect drift.
