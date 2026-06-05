@@ -228,3 +228,6 @@ dist-ssr/
 # Compiled main binary (scratch)
 /usearch
 .gstack/
+/usearch-api
+/usearch-mcp
+cmd/usearch/usearch
