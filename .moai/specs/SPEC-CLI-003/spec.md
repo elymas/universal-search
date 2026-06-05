@@ -3,7 +3,7 @@ id: SPEC-CLI-003
 title: usearch sources — Live Health Status & Registry-Backed Listing
 version: 0.1.0
 milestone: M7 — Surfaces
-status: draft
+status: implemented
 priority: P1
 owner: expert-backend
 methodology: tdd

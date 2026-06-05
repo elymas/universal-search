@@ -3,7 +3,7 @@ id: SPEC-ADP-005a
 title: YouTube Extraction Sidecar (Build + Deploy)
 version: 0.1.0
 milestone: M3 — Fanout, adapters, index
-status: draft
+status: implemented
 priority: P1
 owner: expert-devops
 methodology: tdd

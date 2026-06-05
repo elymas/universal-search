@@ -3,7 +3,7 @@ id: SPEC-SEC-002
 version: 0.1.0
 title: Adapter Credential Resolution via Configured Secret Backend
 milestone: M8 — Eval + polish
-status: draft
+status: implemented
 priority: P1
 owner: expert-backend
 methodology: tdd

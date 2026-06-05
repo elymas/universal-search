@@ -3,7 +3,7 @@ id: SPEC-ADP-001a
 title: Reddit App-Only OAuth (Amendment to SPEC-ADP-001)
 version: 0.1.0
 milestone: M2 — First end-to-end slice (amendment)
-status: draft
+status: implemented
 priority: P1
 owner: expert-backend
 methodology: tdd

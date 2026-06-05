@@ -1,7 +1,7 @@
 ---
 id: SPEC-EVAL-003
 version: 0.2.0
-status: approved
+status: implemented
 created: 2026-05-22
 updated: 2026-05-30
 author: limbowl
