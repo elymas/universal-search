@@ -1,10 +1,12 @@
 // Package reddit — Search hot path.
 // REQ-ADP-002/007/008/011: Query validation, URL construction, HTTP execute,
 // response parsing, and error mapping.
+// SPEC-ADP-001a: OAuth auth preamble + 401 refresh+retry.
 package reddit
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -22,24 +24,31 @@ const maxResponseBytes = 5 * 1024 * 1024
 
 // Search executes a Reddit search query and returns normalized results.
 //
+// Auth preamble (ADP-001a): obtains a valid bearer token from the cache
+// (refreshing if needed), sets Authorization header, and issues the request
+// against the search endpoint. On 401, invalidates the token, refreshes once,
+// and retries exactly once (REQ-ADP-001a-004).
+//
 // Validation: empty or whitespace-only q.Text returns ErrInvalidQuery without
 // issuing any HTTP request (REQ-ADP-008).
 //
-// URL construction: builds the /search.json request URL with all required
+// URL construction: builds the /search request URL with all required
 // parameters per REQ-ADP-002 and the NSFW filter per REQ-ADP-007.
 //
 // Error mapping: 429 -> CategoryRateLimited (with parsed Retry-After),
-// 4xx -> CategoryPermanent, 5xx -> CategoryUnavailable, network errors ->
-// CategoryUnavailable with HTTPStatus=0.
+// 401 -> refresh+retry once then CategoryUnavailable (ADP-001a),
+// 403 -> CategoryPermanent (unchanged),
+// 5xx -> CategoryUnavailable, network errors -> CategoryUnavailable with HTTPStatus=0.
 //
-// Concurrency: all state is read-only after construction; the underlying
+// Concurrency: the tokenCache is guarded by sync.Mutex; the underlying
 // *http.Client is goroutine-safe per Go stdlib (REQ-ADP-011).
 //
 // @MX:ANCHOR: [AUTO] Sole public entry point for Reddit search. Callers:
 // registry wrappedAdapter (via types.Adapter), FAN-001 fanout, CLI-001, tests.
 // @MX:REASON: contract boundary; signature change ripples to FAN-001 + CLI-001
 // + SYN-001 and all downstream SPECs that depend on []types.NormalizedDoc.
-// @MX:SPEC: SPEC-ADP-001
+// ADP-001a adds auth preamble + 401 refresh-retry semantics.
+// @MX:SPEC: SPEC-ADP-001 SPEC-ADP-001a
 func (a *Adapter) Search(ctx context.Context, q types.Query) ([]types.NormalizedDoc, error) {
 	// REQ-ADP-008: reject empty/whitespace-only queries immediately.
 	if isAllWhitespace(q.Text) {
@@ -50,10 +59,51 @@ func (a *Adapter) Search(ctx context.Context, q types.Query) ([]types.Normalized
 		}
 	}
 
-	// Build request URL.
+	// Auth preamble (ADP-001a): obtain a valid bearer token.
+	token, err := a.tokens.get(ctx, a.acquireToken)
+	if err != nil {
+		return nil, err
+	}
+
+	// Build and execute the search request.
+	docs, err := a.doSearch(ctx, q, token)
+	if err == nil {
+		return docs, nil
+	}
+
+	// Handle 401: invalidate token, refresh once, retry exactly once (REQ-ADP-001a-004).
+	if isHTTPStatus401(err) {
+		a.tokens.invalidate()
+
+		token, refreshErr := a.tokens.get(ctx, a.acquireToken)
+		if refreshErr != nil {
+			return nil, refreshErr
+		}
+
+		docs, retryErr := a.doSearch(ctx, q, token)
+		if retryErr == nil {
+			return docs, nil
+		}
+		// If retry also returns 401, wrap as exhausted.
+		if isHTTPStatus401(retryErr) {
+			return nil, &types.SourceError{
+				Adapter:    "reddit",
+				Category:   types.CategoryUnavailable,
+				HTTPStatus: http.StatusUnauthorized,
+				Cause:      ErrTokenRefreshExhausted,
+			}
+		}
+		return nil, retryErr
+	}
+
+	return nil, err
+}
+
+// doSearch executes a single authenticated search attempt. Returns
+// (docs, nil) on success, or (nil, error) for failures.
+func (a *Adapter) doSearch(ctx context.Context, q types.Query, token string) ([]types.NormalizedDoc, error) {
 	searchURL := buildSearchURL(a.baseURL, q)
 
-	// Create the HTTP request with context for cancellation support.
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, searchURL, nil)
 	if err != nil {
 		return nil, &types.SourceError{
@@ -63,11 +113,12 @@ func (a *Adapter) Search(ctx context.Context, q types.Query) ([]types.Normalized
 		}
 	}
 
+	// Set Authorization header for bearer token auth (ADP-001a).
+	req.Header.Set("Authorization", "bearer "+token)
+
 	// Execute the request via doRequest (sets User-Agent + Accept headers).
 	resp, err := a.doRequest(req)
 	if err != nil {
-		// CheckRedirect returning "cross-domain redirect rejected" is a policy
-		// violation, not a transient network failure — map to CategoryPermanent.
 		if isCrossDomainRedirectErr(err) {
 			return nil, &types.SourceError{
 				Adapter:  "reddit",
@@ -75,7 +126,6 @@ func (a *Adapter) Search(ctx context.Context, q types.Query) ([]types.Normalized
 				Cause:    err,
 			}
 		}
-		// Network-level error (dial failure, TLS, ctx cancel, etc.)
 		return nil, categorizeStatus(0, 0, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
@@ -107,6 +157,15 @@ func (a *Adapter) Search(ctx context.Context, q types.Query) ([]types.Normalized
 	}
 
 	return docs, nil
+}
+
+// isHTTPStatus401 checks if the error is a *types.SourceError with HTTPStatus 401.
+func isHTTPStatus401(err error) bool {
+	var se *types.SourceError
+	if errors.As(err, &se) {
+		return se.HTTPStatus == http.StatusUnauthorized
+	}
+	return false
 }
 
 // buildSearchURL constructs the Reddit search URL with all required parameters.

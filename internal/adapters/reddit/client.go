@@ -15,17 +15,18 @@ import (
 )
 
 // allowedRedirectHosts is the SSRF-guard allowlist for Reddit redirect targets.
-// Only these four hosts may be followed during CheckRedirect.
+// Only these hosts may be followed during CheckRedirect.
 //
-// @MX:NOTE: [AUTO] 4-entry security boundary. Adding a host here requires a
-// security review — a permissive allowlist re-opens SSRF via Reddit's CDN
-// redirect infrastructure.
-// @MX:SPEC: SPEC-ADP-001
+// @MX:NOTE: [AUTO] 5-entry security boundary (ADP-001a added oauth.reddit.com).
+// Adding a host here requires a security review — a permissive allowlist
+// re-opens SSRF via Reddit's CDN redirect infrastructure.
+// @MX:SPEC: SPEC-ADP-001 SPEC-ADP-001a
 var allowedRedirectHosts = map[string]struct{}{
-	"www.reddit.com": {},
-	"old.reddit.com": {},
-	"new.reddit.com": {},
-	"reddit.com":     {},
+	"www.reddit.com":   {},
+	"old.reddit.com":   {},
+	"new.reddit.com":   {},
+	"reddit.com":       {},
+	"oauth.reddit.com": {},
 }
 
 // redirectAllowlist is the CheckRedirect policy for the Reddit HTTP client.
@@ -88,17 +89,22 @@ func isCrossDomainRedirectErr(err error) bool {
 // categorizeStatus maps an HTTP status code to a *types.SourceError with the
 // appropriate Category. retryAfter is only applied for status 429.
 //
-// Mapping:
+// Mapping (ADP-001a updated):
 //   - 429 -> CategoryRateLimited (with RetryAfter)
-//   - 4xx -> CategoryPermanent
+//   - 401 -> CategoryUnavailable (token expired; Search intercepts before here
+//     for refresh+retry, but if it reaches this point after exhaustion, map to
+//     Unavailable per REQ-ADP-001a-004)
+//   - 4xx -> CategoryPermanent (including 403 — genuinely forbidden)
 //   - 5xx -> CategoryUnavailable
 //   - 0   -> CategoryUnavailable (network-layer error)
 //   - other -> CategoryUnknown
 //
-// @MX:NOTE: [AUTO] HTTP-status rosetta stone. Future contributors adding new
-// status-code handling should update this switch first, then add a test row in
-// TestCategorizeStatusTable.
-// @MX:SPEC: SPEC-ADP-001
+// @MX:NOTE: [AUTO] HTTP-status rosetta stone. ADP-001a added 401 carve-out:
+// 401 is now CategoryUnavailable (recoverable via token refresh), NOT Permanent.
+// The Search layer intercepts 401 before this function for the refresh+retry path.
+// Future contributors adding new status-code handling should update this switch
+// first, then add a test row in TestCategorizeStatusTable.
+// @MX:SPEC: SPEC-ADP-001 SPEC-ADP-001a
 func categorizeStatus(status int, retryAfter time.Duration, cause error) *types.SourceError {
 	se := &types.SourceError{
 		Adapter:    "reddit",
@@ -109,6 +115,11 @@ func categorizeStatus(status int, retryAfter time.Duration, cause error) *types.
 	case status == 429:
 		se.Category = types.CategoryRateLimited
 		se.RetryAfter = retryAfter
+	case status == 401:
+		// ADP-001a: 401 is recoverable via token refresh. Search intercepts
+		// before reaching here for the refresh+retry path. If it reaches here
+		// after exhaustion, map to Unavailable.
+		se.Category = types.CategoryUnavailable
 	case status >= 400 && status < 500:
 		se.Category = types.CategoryPermanent
 	case status >= 500 && status < 600:

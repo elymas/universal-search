@@ -20,7 +20,7 @@ func TestCategorizeStatusTable(t *testing.T) {
 		expectedCategory types.Category
 	}{
 		{200, types.CategoryUnknown}, // unexpected in normal flow (Search drains 200)
-		{401, types.CategoryPermanent},
+		{401, types.CategoryUnavailable}, // ADP-001a: 401 is now Unavailable (recoverable via token refresh)
 		{403, types.CategoryPermanent},
 		{404, types.CategoryPermanent},
 		{429, types.CategoryRateLimited},
@@ -123,7 +123,7 @@ func TestSearchSetsCustomUserAgent(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	a, err := New(Options{BaseURL: ts.URL})
+	a, err := New(Options{BaseURL: ts.URL, SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -152,7 +152,7 @@ func TestSearchSetsAcceptJSON(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	a, err := New(Options{BaseURL: ts.URL})
+	a, err := New(Options{BaseURL: ts.URL, SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -181,6 +181,7 @@ func TestSearchUserAgentVersionConfigurable(t *testing.T) {
 	a, err := New(Options{
 		BaseURL:          ts.URL,
 		UserAgentVersion: "v0.2-rc1",
+		SkipAuthCheck:    true,
 	})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
@@ -257,7 +258,7 @@ func TestSearchRejectsCrossDomainRedirect(t *testing.T) {
 	defer ts.Close()
 
 	// Use default client with the allowlist.
-	a, err := New(Options{BaseURL: ts.URL})
+	a, err := New(Options{BaseURL: ts.URL, SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}

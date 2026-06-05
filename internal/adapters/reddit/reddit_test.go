@@ -11,7 +11,7 @@ import (
 
 func TestAdapterName(t *testing.T) {
 	t.Parallel()
-	a, err := New(Options{})
+	a, err := New(Options{SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -25,7 +25,7 @@ func TestAdapterImplementsInterface(t *testing.T) {
 	// The compile-time assertion var _ types.Adapter = (*Adapter)(nil) at the
 	// bottom of reddit.go already catches interface drift at build time.
 	// This test provides a runtime cross-check.
-	a, err := New(Options{})
+	a, err := New(Options{SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -34,7 +34,7 @@ func TestAdapterImplementsInterface(t *testing.T) {
 
 func TestCapabilitiesDeterministic(t *testing.T) {
 	t.Parallel()
-	a, err := New(Options{})
+	a, err := New(Options{SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -47,7 +47,7 @@ func TestCapabilitiesDeterministic(t *testing.T) {
 
 func TestCapabilitiesShape(t *testing.T) {
 	t.Parallel()
-	a, err := New(Options{})
+	a, err := New(Options{SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -68,25 +68,35 @@ func TestCapabilitiesShape(t *testing.T) {
 	if c.SupportsSince {
 		t.Error("SupportsSince = true, want false")
 	}
-	if c.RequiresAuth {
-		t.Error("RequiresAuth = true, want false")
+	if !c.RequiresAuth {
+		t.Error("RequiresAuth = false, want true")
 	}
-	if c.AuthEnvVars != nil {
-		t.Errorf("AuthEnvVars = %v, want nil", c.AuthEnvVars)
+	wantAuthEnvVars := []string{"REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET"}
+	if len(c.AuthEnvVars) != len(wantAuthEnvVars) {
+		t.Errorf("AuthEnvVars = %v, want %v", c.AuthEnvVars, wantAuthEnvVars)
+	} else {
+		for i, got := range c.AuthEnvVars {
+			if got != wantAuthEnvVars[i] {
+				t.Errorf("AuthEnvVars[%d] = %q, want %q", i, got, wantAuthEnvVars[i])
+			}
+		}
 	}
-	if c.RateLimitPerMin != 10 {
-		t.Errorf("RateLimitPerMin = %d, want 10", c.RateLimitPerMin)
+	if c.RateLimitPerMin != 60 {
+		t.Errorf("RateLimitPerMin = %d, want 60", c.RateLimitPerMin)
 	}
 	if c.DefaultMaxResults != 25 {
 		t.Errorf("DefaultMaxResults = %d, want 25", c.DefaultMaxResults)
 	}
 
-	// Notes must contain 4 required substrings.
+	// Notes must contain required substrings for the OAuth era.
 	requiredSubstrings := []string{
-		"public no-auth",
+		"oauth.reddit.com",
+		"client_credentials",
+		"60/min",
+		"REDDIT_CLIENT_ID",
+		"REDDIT_CLIENT_SECRET",
 		"NSFW excluded by default",
 		"t=all",
-		"rate limit discrepancy",
 	}
 	for _, sub := range requiredSubstrings {
 		if !containsSubstring(c.Notes, sub) {
@@ -117,6 +127,7 @@ func TestHealthcheckSucceeds(t *testing.T) {
 
 	a, err := New(Options{
 		HealthcheckTarget: ln.Addr().String(),
+		SkipAuthCheck:     true,
 	})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)

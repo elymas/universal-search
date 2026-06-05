@@ -45,7 +45,7 @@ func TestSearchHappyPath25Docs(t *testing.T) {
 	t.Parallel()
 
 	ts := happyPathServer(t)
-	a, err := New(Options{BaseURL: ts.URL})
+	a, err := New(Options{BaseURL: ts.URL, SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -78,7 +78,7 @@ func TestSearchURLParametersIncludeAllRequired(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	a, err := New(Options{BaseURL: ts.URL})
+	a, err := New(Options{BaseURL: ts.URL, SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -121,7 +121,7 @@ func TestSearchClampsLimitTo100(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	a, err := New(Options{BaseURL: ts.URL})
+	a, err := New(Options{BaseURL: ts.URL, SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -147,7 +147,7 @@ func TestSearchDefaultsLimitTo25(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	a, err := New(Options{BaseURL: ts.URL})
+	a, err := New(Options{BaseURL: ts.URL, SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -173,7 +173,7 @@ func TestSearchHonoursCursorParameter(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	a, err := New(Options{BaseURL: ts.URL})
+	a, err := New(Options{BaseURL: ts.URL, SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -196,7 +196,7 @@ func TestSearchHTTP429WithIntegerRetryAfter(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	a, err := New(Options{BaseURL: ts.URL})
+	a, err := New(Options{BaseURL: ts.URL, SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -235,7 +235,7 @@ func TestSearchHTTP429WithHTTPDateRetryAfter(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	a, err := New(Options{BaseURL: ts.URL})
+	a, err := New(Options{BaseURL: ts.URL, SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -264,7 +264,7 @@ func TestSearchHTTP429NoRetryAfterDefaults5s(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	a, err := New(Options{BaseURL: ts.URL})
+	a, err := New(Options{BaseURL: ts.URL, SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -291,7 +291,7 @@ func TestSearchHTTP429RetryAfterCapped60s(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	a, err := New(Options{BaseURL: ts.URL})
+	a, err := New(Options{BaseURL: ts.URL, SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -319,7 +319,7 @@ func TestSearchHTTP429NoInternalRetry(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	a, err := New(Options{BaseURL: ts.URL})
+	a, err := New(Options{BaseURL: ts.URL, SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -332,10 +332,37 @@ func TestSearchHTTP429NoInternalRetry(t *testing.T) {
 	}
 }
 
-// TestSearchHTTP401 verifies HTTP 401 -> CategoryPermanent.
+// TestSearchHTTP401 verifies HTTP 401 triggers refresh+retry, exhausting to
+// CategoryUnavailable (ADP-001a: 401 is recoverable, not Permanent).
 func TestSearchHTTP401(t *testing.T) {
 	t.Parallel()
-	testHTTP4xx(t, http.StatusUnauthorized)
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusUnauthorized)
+	}))
+	defer ts.Close()
+
+	a, err := New(Options{BaseURL: ts.URL, SkipAuthCheck: true})
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+
+	ctx := testContext(t)
+	_, err = a.Search(ctx, types.Query{Text: "golang"})
+	if err == nil {
+		t.Fatalf("Search() expected error for HTTP 401, got nil")
+	}
+	// ADP-001a: 401 now exhausts to CategoryUnavailable, not Permanent.
+	if !errors.Is(err, types.ErrSourceUnavailable) {
+		t.Errorf("errors.Is(err, ErrSourceUnavailable) = false, want true; err = %v", err)
+	}
+	if !errors.Is(err, ErrTokenRefreshExhausted) {
+		t.Errorf("errors.Is(err, ErrTokenRefreshExhausted) = false, want true; err = %v", err)
+	}
+	var se *types.SourceError
+	if errors.As(err, &se) && se.HTTPStatus != 401 {
+		t.Errorf("HTTPStatus = %d, want 401", se.HTTPStatus)
+	}
 }
 
 // TestSearchHTTP403 verifies HTTP 403 -> CategoryPermanent.
@@ -358,7 +385,7 @@ func testHTTP4xx(t *testing.T, statusCode int) {
 	}))
 	defer ts.Close()
 
-	a, err := New(Options{BaseURL: ts.URL})
+	a, err := New(Options{BaseURL: ts.URL, SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -388,7 +415,7 @@ func TestSearchHTTP4xxNoInternalRetry(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	a, err := New(Options{BaseURL: ts.URL})
+	a, err := New(Options{BaseURL: ts.URL, SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -421,7 +448,7 @@ func testHTTP5xx(t *testing.T, statusCode int) {
 	}))
 	defer ts.Close()
 
-	a, err := New(Options{BaseURL: ts.URL})
+	a, err := New(Options{BaseURL: ts.URL, SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -449,7 +476,7 @@ func TestSearchConnectionRefused(t *testing.T) {
 	closedURL := ts.URL
 	ts.Close()
 
-	a, err := New(Options{BaseURL: closedURL})
+	a, err := New(Options{BaseURL: closedURL, SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -476,7 +503,7 @@ func TestSearchUnavailablePreservesUnderlyingError(t *testing.T) {
 	closedURL := ts.URL
 	ts.Close()
 
-	a, err := New(Options{BaseURL: closedURL})
+	a, err := New(Options{BaseURL: closedURL, SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -525,7 +552,7 @@ func testNSFWFilter(t *testing.T, filters []types.Filter, wantIncludeOver18 stri
 	}))
 	defer ts.Close()
 
-	a, err := New(Options{BaseURL: ts.URL})
+	a, err := New(Options{BaseURL: ts.URL, SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -554,7 +581,7 @@ func TestSearchEmptyQueryRejectedNoHTTP(t *testing.T) {
 			}))
 			defer ts.Close()
 
-			a, err := New(Options{BaseURL: ts.URL})
+			a, err := New(Options{BaseURL: ts.URL, SkipAuthCheck: true})
 			if err != nil {
 				t.Fatalf("New() error = %v", err)
 			}
@@ -596,7 +623,7 @@ func TestSearchConcurrentSafe(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	a, err := New(Options{BaseURL: ts.URL})
+	a, err := New(Options{BaseURL: ts.URL, SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -664,7 +691,7 @@ func TestSearchE2ELatencyStubP95(t *testing.T) {
 	}))
 	defer ts.Close()
 
-	a, err := New(Options{BaseURL: ts.URL})
+	a, err := New(Options{BaseURL: ts.URL, SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}
@@ -710,7 +737,7 @@ func TestSearchNoGoroutineLeakOnCancel(t *testing.T) {
 	defer ts.Close()
 	defer close(delay)
 
-	a, err := New(Options{BaseURL: ts.URL})
+	a, err := New(Options{BaseURL: ts.URL, SkipAuthCheck: true})
 	if err != nil {
 		t.Fatalf("New() error = %v", err)
 	}

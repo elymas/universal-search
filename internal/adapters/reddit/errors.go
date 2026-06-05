@@ -15,6 +15,23 @@ import (
 // with Category=CategoryPermanent.
 var ErrInvalidQuery = errors.New("reddit: query text empty or whitespace-only")
 
+// ErrMissingCredentials is returned by New when ClientID or ClientSecret is
+// absent and SkipAuthCheck is false and HTTPClient is nil (REQ-ADP-001a-006b).
+// Wrapped in *types.SourceError with Category=CategoryPermanent.
+var ErrMissingCredentials = errors.New("reddit: client credentials required; set REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET env vars")
+
+// ErrTokenAcquisitionFailed is returned when the OAuth token POST returns 401/403
+// (bad credentials) or an unexpected failure (REQ-ADP-001a-005).
+// Wrapped in *types.SourceError with Category=CategoryPermanent for 401/403,
+// CategoryUnavailable for 5xx/network errors.
+var ErrTokenAcquisitionFailed = errors.New("reddit: oauth token acquisition failed")
+
+// ErrTokenRefreshExhausted is returned when a search request returns 401,
+// the token is refreshed, the retry also returns 401, and no further retries
+// are attempted (REQ-ADP-001a-004).
+// Wrapped in *types.SourceError with Category=CategoryUnavailable.
+var ErrTokenRefreshExhausted = errors.New("reddit: token refresh exhausted after 401 retry")
+
 // maxRetryAfter caps the Retry-After duration at 60 seconds per REQ-ADP-003.
 const maxRetryAfter = 60 * time.Second
 
