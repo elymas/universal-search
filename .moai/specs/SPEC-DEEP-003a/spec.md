@@ -2,7 +2,7 @@
 id: SPEC-DEEP-003a
 title: Robust LLM JSON Parsing for Deep-Research Decomposition (Amendment to SPEC-DEEP-003)
 version: 0.1.0
-status: draft
+status: implemented
 created: 2026-06-17
 updated: 2026-06-17
 author: limbowl
