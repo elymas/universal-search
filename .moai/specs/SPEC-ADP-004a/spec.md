@@ -3,7 +3,7 @@ id: SPEC-ADP-004a
 title: GitHub Commit Search (Amendment to SPEC-ADP-004)
 version: 0.1.0
 milestone: M3 — Fanout, adapters, index
-status: draft
+status: implemented
 priority: P1
 owner: expert-backend
 methodology: tdd
