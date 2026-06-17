@@ -12,6 +12,9 @@ dependencies = [
     # SPEC-EVAL-001 REQ-EVAL1-004: DeepEval FaithfulnessMetric judge.
     # Compatible-release pin (~=) allows patch upgrades without breaking changes.
     "deepeval~=1.0",
+    # SPEC-DEEP-003a REQ-DEEP3a-301: third-tier LLM JSON repair parser.
+    # Bounded range caps recovery-shape drift (OQ-1/OQ-4); validated against 0.61.0.
+    "json-repair>=0.61,<1.0",
 ]
 
 [dependency-groups]

@@ -12,6 +12,7 @@ import json
 import logging
 import os
 
+import json_repair
 from fastapi import APIRouter
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -82,34 +83,49 @@ def build_decompose_prompt(
 
 
 def parse_sub_queries(raw: str, breadth: int) -> list[str]:
-    """Parse LLM response into sub-queries, truncating to breadth.
+    """Parse an LLM decomposition response into sub-queries (SPEC-DEEP-003a).
 
-    REQ-DEEP3-003: Truncates excess sub-queries beyond breadth.
+    Three-tier cascade, each tier feeding ONE shared normalization block:
+      1. standard  — json.loads(raw)
+      2. substring — json.loads(raw[first '[' : last ']' + 1])
+      3. repaired  — json_repair.loads(raw)  (tolerates trailing commas,
+         single/unquoted keys, truncated output, prose/fence wrapping)
+    Total failure returns ``[]`` (no exception escapes this function).
+
+    REQ-DEEP3a-101..104: tier ordering, shared normalization, no-raise,
+        tiers 1/2 byte-identical to the parent SPEC on already-passing input.
+    REQ-DEEP3a-201/202: exactly one tier-attribution log per call
+        (standard/substring/repaired/failed); repaired and failed at WARNING.
+    REQ-DEEP3-003: truncate excess sub-queries beyond breadth.
+
+    # @MX:NOTE: [AUTO] Three-tier parse cascade (standard -> substring ->
+    #   repaired -> []) with a no-raise contract and single tier-attribution
+    #   log line per call. fan_in=1 (sole caller: decompose_query).
+    # @MX:SPEC: SPEC-DEEP-003a
+
+    Args:
+        raw: The raw LLM response text.
+        breadth: Maximum number of sub-queries to return.
 
     Returns:
-        List of sub-query strings, at most breadth items.
+        List of sub-query strings, at most ``breadth`` items. Returns ``[]``
+        on total parse failure or when the parsed value is not a usable list.
     """
-    try:
-        parsed = json.loads(raw)
-    except json.JSONDecodeError:
-        # Try to extract JSON array from response text
-        start = raw.find("[")
-        end = raw.rfind("]") + 1
-        if start >= 0 and end > start:
-            try:
-                parsed = json.loads(raw[start:end])
-            except json.JSONDecodeError:
-                logger.warning("Failed to parse LLM response as JSON: %s", raw[:200])
-                return []
-        else:
-            logger.warning("No JSON array found in LLM response: %s", raw[:200])
-            return []
+    parsed, parse_tier = _parse_raw(raw)
 
+    # Shared post-parse normalization (REQ-DEEP3a-102): identical for all
+    # three tiers — list check, str coercion, drop falsy, breadth truncation.
+    # A non-list value from any tier (including a non-list repair output) is a
+    # failed outcome (REQ-DEEP3a-103).
     if not isinstance(parsed, list):
-        logger.warning("LLM response is not a list: %s", type(parsed).__name__)
+        logger.warning(
+            "parse_sub_queries tier=failed: parsed value is not a list (type=%s, source_tier=%s): %s",
+            type(parsed).__name__,
+            parse_tier,
+            raw[:200],
+        )
         return []
 
-    # Filter to strings only
     queries = [str(item) for item in parsed if item]
 
     if len(queries) > breadth:
@@ -120,7 +136,55 @@ def parse_sub_queries(raw: str, breadth: int) -> list[str]:
         )
         queries = queries[:breadth]
 
+    # Tier-attribution logging (REQ-DEEP3a-201/202): exactly one line per
+    # call. The "failed" outcome is already logged above (non-list branch);
+    # here only successful tiers reach this point: repaired at WARNING
+    # (signals reasoning-model JSON drift), standard/substring at INFO.
+    if parse_tier == "repaired":
+        logger.warning("parse_sub_queries tier=repaired: recovered via json-repair: %s", raw[:200])
+    elif parse_tier == "standard":
+        logger.info("parse_sub_queries tier=standard")
+    else:  # substring
+        logger.info("parse_sub_queries tier=substring")
+
     return queries
+
+
+def _parse_raw(raw: str) -> tuple[object, str]:
+    """Run the three-tier parse cascade and return (value, tier-name).
+
+    tier-name is one of: ``standard``, ``substring``, ``repaired``, ``failed``.
+    On ``failed`` the returned value is ``None`` (caller normalizes to ``[]``).
+    The repair tier is guarded so no exception escapes (REQ-DEEP3a-103).
+    """
+    # Tier 1: standard json.loads on the whole response.
+    try:
+        return json.loads(raw), "standard"
+    except (json.JSONDecodeError, ValueError):
+        pass
+
+    # Tier 2: extract the array substring [..] and json.loads that slice.
+    start = raw.find("[")
+    end = raw.rfind("]") + 1
+    if start >= 0 and end > start:
+        try:
+            return json.loads(raw[start:end]), "substring"
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+    # Tier 3: json_repair on the original raw (it strips prose/fences itself).
+    # REQ-DEEP3a-103: guard defensively — any exception yields the failed tier.
+    try:
+        repaired = json_repair.loads(raw)
+    except Exception:  # noqa: BLE001 — broad on purpose; repair tier must not raise
+        return None, "failed"
+
+    # json_repair returns None/empty for unrecoverable input; treat as failure
+    # so the caller returns [] (REQ-DEEP3a-103).
+    if repaired is None:
+        return None, "failed"
+
+    return repaired, "repaired"
 
 
 # @MX:ANCHOR: [AUTO] Decompose endpoint; callers: app router, tests
