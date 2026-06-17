@@ -3,13 +3,13 @@ id: SPEC-ADP-010
 title: Facebook + Threads (Meta) Adapter — Feasibility & Integration Contract
 version: 0.1.0
 milestone: M3 — Fanout, adapters, index
-status: draft
+status: implemented
 priority: P3
 owner: expert-backend
 methodology: tdd
 coverage_target: 85
 created: 2026-06-04
-updated: 2026-06-04
+updated: 2026-06-05
 author: limbowl
 issue_number: null
 depends_on: [SPEC-ADP-006, SPEC-CORE-001, SPEC-IR-001]
