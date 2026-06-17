@@ -3,7 +3,7 @@ id: SPEC-ACC-001
 title: Access Layer WAF Profile Detection + Page-Validity Gate (insane-search v0.5 port)
 version: 0.1.0
 milestone: M3 — Fanout, adapters, index
-status: draft
+status: implemented
 priority: P1
 owner: expert-backend
 methodology: tdd
