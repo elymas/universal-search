@@ -114,6 +114,25 @@ func phase4TLS(
 	}
 
 	if resp.StatusCode == 200 {
+		// SPEC-ACC-001: classify the Phase 4 body. Phase 4 may inherit a
+		// top profile from Phase 3 (threaded via the cascade), but for the
+		// direct-call path hit is nil — validatePage handles that.
+		hits := detectProfiles(resp, body)
+		topHit := topHitOrNil(hits)
+		verdict := validatePage(resp, body, topHit)
+		if verdict == VerdictChallenge || verdict == VerdictBlocked {
+			attempt := &PhaseAttempt{
+				Phase:   4,
+				Outcome: "failure",
+				verdict: verdict,
+			}
+			return nil, attempt, &FetchError{
+				Category:   CategoryUnavailable,
+				Reason:     "silent-200 challenge (phase 4)",
+				HTTPStatus: 200,
+				verdict:    verdict,
+			}
+		}
 		return &FetchedContent{
 			URL:         resp.Request.URL.String(),
 			Body:        body,

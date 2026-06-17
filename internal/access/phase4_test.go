@@ -95,3 +95,39 @@ func TestPhase4_PlainHTTPSuccess(t *testing.T) {
 		t.Error("content body must not be empty")
 	}
 }
+
+// TestPhase4Silent200BlockedNotSuccess: a Phase 4 200 with a tiny body
+// and an Akamai _abck=~-1~ cookie must yield VerdictBlocked and NOT be
+// counted as success. REQ-ACC-021 (Phase 4 variant). The Phase 4
+// validatePage path is the same as Phase 3's; this test pins it for the
+// TLS pass. (SPEC-ACC-001 M5.)
+func TestPhase4Silent200BlockedNotSuccess(t *testing.T) {
+	t.Parallel()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Set-Cookie", "_abck=AAA~~-1~-1~-1~")
+		w.Header().Set("Content-Type", "text/html")
+		w.WriteHeader(200)
+		// Sub-minRealPageBytes body → L2 yes; _abck=~-1~ + akamai hit → L3 yes.
+		_, _ = w.Write([]byte("<html><body>short</body></html>"))
+	}))
+	defer srv.Close()
+
+	content, attempt, err := phase4TLS(
+		t.Context(),
+		srv.URL+"/page",
+		FetchOptions{AllowPrivateNetworks: true},
+		Options{AllowPrivateNetworks: true, MaxBodyBytes: defaultMaxBodyBytes},
+	)
+	if content != nil {
+		t.Errorf("silent-200 Blocked Phase 4 must NOT return content, got %+v", content)
+	}
+	if err == nil {
+		t.Error("silent-200 Blocked Phase 4 must return a FetchError")
+	}
+	if attempt == nil {
+		t.Fatal("attempt must not be nil for a silent-200 Blocked Phase 4")
+	}
+	if attempt.verdict != VerdictBlocked {
+		t.Errorf("Phase 4 attempt.verdict = %q, want VerdictBlocked", attempt.verdict)
+	}
+}

@@ -146,3 +146,68 @@ func TestValidatePageNilResp(t *testing.T) {
 		t.Errorf("validatePage nil resp = %q, want Unknown", got)
 	}
 }
+
+// TestValidatePageDataDomeCookieSensor covers the DataDome L3 branch:
+// a datadome cookie present on the response must drive VerdictBlocked
+// on a sub-threshold body and VerdictChallenge on a normal-size body.
+func TestValidatePageDataDomeCookieSensor(t *testing.T) {
+	t.Parallel()
+	ddHit := &ProfileHit{ProfileID: "datadome", Confidence: 0.5}
+	tinyBody := []byte("<html><body>short</body></html>")
+	bigBody := []byte("<html><body>" + strings.Repeat("datadome ", 80) + "</body></html>")
+
+	// L2 yes (tiny) + L3 yes (datadome cookie) → Blocked.
+	resp := makeResp(200, "datadome=AAAA~xyz~1~1")
+	if got := validatePage(resp, tinyBody, ddHit); got != VerdictBlocked {
+		t.Errorf("datadome tiny body = %q, want Blocked", got)
+	}
+	// L2 no (big) + L3 yes → Challenge.
+	resp2 := makeResp(200, "datadome=AAAA~xyz~1~1")
+	if got := validatePage(resp2, bigBody, ddHit); got != VerdictChallenge {
+		t.Errorf("datadome big body = %q, want Challenge", got)
+	}
+	// datadome hit but no datadome cookie set, and body has no datadome
+	// marker → L1 false, L3 false, L2 false, L4 false → WeakOK.
+	resp3 := makeResp(200)
+	plainBig := []byte("<html><body>" + strings.Repeat("plain text. ", 80) + "</body></html>")
+	if got := validatePage(resp3, plainBig, ddHit); got != VerdictWeakOK {
+		t.Errorf("datadome no-cookie no-marker big body = %q, want WeakOK", got)
+	}
+}
+
+// TestValidatePageNonSensorProfileDefaultFalse covers the L3 default
+// branch: a profile with no sensor-cookie convention (e.g. cloudflare)
+// returns false regardless of cookies.
+func TestValidatePageNonSensorProfileDefaultFalse(t *testing.T) {
+	t.Parallel()
+	cfHit := &ProfileHit{ProfileID: "cloudflare", Confidence: 0.5}
+	bigBody := []byte("<html><body>" + strings.Repeat("plain ", 120) + "</body></html>")
+	resp := makeResp(200, "cf_clearance=abc")
+	if got := validatePage(resp, bigBody, cfHit); got != VerdictWeakOK {
+		t.Errorf("cloudflare L3 default = %q, want WeakOK (no sensor convention)", got)
+	}
+}
+
+// TestLayerChallengeMarkerHitNoMatch covers the L1 branch where a hit
+// is present but its profile's body markers do NOT appear in the body.
+func TestLayerChallengeMarkerHitNoMatch(t *testing.T) {
+	t.Parallel()
+	cfHit := ProfileHit{ProfileID: "cloudflare", Confidence: 0.5}
+	body := []byte("<html><body>" + strings.Repeat("plain text. ", 60) + "</body></html>")
+	if layerChallengeMarker(bytesLower(body), &cfHit) {
+		t.Error("L1 must be false when the hit profile's body markers are absent")
+	}
+}
+
+// bytesLower is a tiny helper to avoid importing bytes in the test
+// header; keeps the L1 unit test self-contained.
+func bytesLower(b []byte) []byte {
+	out := make([]byte, len(b))
+	for i, c := range b {
+		if c >= 'A' && c <= 'Z' {
+			c += 'a' - 'A'
+		}
+		out[i] = c
+	}
+	return out
+}

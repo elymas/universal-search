@@ -249,3 +249,12 @@ func clampConf(v float64) float64 {
 	}
 	return v
 }
+
+// topHitOrNil returns the first (highest-confidence) hit, or nil when the
+// slice is empty. Convenience for passing into validatePage.
+func topHitOrNil(hits []ProfileHit) *ProfileHit {
+	if len(hits) == 0 {
+		return nil
+	}
+	return &hits[0]
+}

@@ -46,8 +46,8 @@ func TestPhase3Get_403WAF_WAFSignal(t *testing.T) {
 	if err == nil {
 		t.Fatal("403 WAF must return error")
 	}
-	if attempt == nil || !attempt.isWAF {
-		t.Errorf("WAF response must set attempt.isWAF=true, attempt=%+v", attempt)
+	if attempt == nil || !attempt.hasWAFProfile() {
+		t.Errorf("WAF response must set a confident profile hit, attempt=%+v", attempt)
 	}
 }
 

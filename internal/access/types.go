@@ -76,6 +76,36 @@ type PhaseAttempt struct {
 	// isJSChallenge reports whether the phase error is a JS-challenge response.
 	// Set by phase4 when a JS challenge body is detected.
 	isJSChallenge bool
-	// isWAF reports whether the error is a WAF-gated response.
-	isWAF bool
+
+	// profileHits is the confidence-ranked WAF detection result
+	// (replaces the v0 isWAF bool). Set by phase3/phase4 via
+	// detectProfiles. Empty when no WAF was detected. SPEC-ACC-001.
+	profileHits []ProfileHit
+	// verdict is the 4-layer page-validity classification. Set by
+	// phase3/phase4 via validatePage on the 200 path. SPEC-ACC-001.
+	verdict Verdict
+}
+
+// topProfile returns the highest-confidence WAF detection hit and true,
+// or a zero ProfileHit and false when no profile was detected.
+// SPEC-ACC-001 REQ-ACC-013.
+func (a *PhaseAttempt) topProfile() (ProfileHit, bool) {
+	if a == nil || len(a.profileHits) == 0 {
+		return ProfileHit{}, false
+	}
+	// profileHits is kept sorted descending by detectProfiles; the first
+	// entry is the top hit.
+	return a.profileHits[0], true
+}
+
+// hasWAFProfile reports whether the top WAF detection hit meets the
+// escalation threshold (wafEscalateThreshold). It replaces the v0
+// isWAF bool as the cascade's WAF-driven escalation predicate.
+// SPEC-ACC-001 REQ-ACC-013.
+func (a *PhaseAttempt) hasWAFProfile() bool {
+	top, ok := a.topProfile()
+	if !ok {
+		return false
+	}
+	return top.Confidence >= wafEscalateThreshold
 }

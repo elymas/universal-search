@@ -55,7 +55,7 @@ func TestDetectProfilesRanking(t *testing.T) {
 	resp := &http.Response{
 		StatusCode: 403,
 		Header: http.Header{
-			"Set-Cookie":         []string{"_abck=ABC~~-1~", "datadome=AAAA-BBB"},
+			"Set-Cookie":          []string{"_abck=ABC~~-1~", "datadome=AAAA-BBB"},
 			"X-Akamai-Request-ID": []string{"abc"},
 		},
 	}
@@ -112,8 +112,8 @@ func TestDetectProfilesConfidenceFormula(t *testing.T) {
 			name: "cookie-plus-header",
 			resp: &http.Response{StatusCode: 403,
 				Header: http.Header{
-					"Set-Cookie":        []string{"_abck=AAA"},
-					"X-Akamai-Req-ID":   []string{"x"},
+					"Set-Cookie":      []string{"_abck=AAA"},
+					"X-Akamai-Req-ID": []string{"x"},
 				}},
 			body: []byte("nothing relevant here"),
 			want: 0.9,
@@ -122,8 +122,8 @@ func TestDetectProfilesConfidenceFormula(t *testing.T) {
 			name: "all-three-clamped",
 			resp: &http.Response{StatusCode: 403,
 				Header: http.Header{
-					"Set-Cookie":        []string{"_abck=AAA"},
-					"X-Akamai-Req-ID":   []string{"x"},
+					"Set-Cookie":      []string{"_abck=AAA"},
+					"X-Akamai-Req-ID": []string{"x"},
 				}},
 			body: []byte("Reference #18.a8d73017"),
 			want: 1.0, // 0.5+0.4+0.3 = 1.2 → clamp 1.0

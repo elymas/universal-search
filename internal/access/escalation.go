@@ -29,8 +29,13 @@ func shouldEscalate(prev *PhaseAttempt) bool {
 		// Disallow (blocked) halts. Timeout halts.
 		return prev.Outcome == "success" || prev.Outcome == "skipped"
 	case 3:
-		// Phase 3 escalates ONLY on TLS error or WAF-pattern response.
-		return prev.isTLSError || prev.isWAF
+		// Phase 3 escalates on TLS error, a confident WAF profile hit,
+		// or a VerdictChallenge/VerdictBlocked on an otherwise-200 body
+		// (the silent-200 trap). SPEC-ACC-001 REQ-ACC-013/021.
+		return prev.isTLSError ||
+			prev.hasWAFProfile() ||
+			prev.verdict == VerdictChallenge ||
+			prev.verdict == VerdictBlocked
 	case 4:
 		// Phase 4 escalates ONLY on JS challenge (and PlaywrightEnabled is checked
 		// in the cascade runner, not here, to keep this function pure).
