@@ -1111,3 +1111,158 @@ func countFDs(t *testing.T) int {
 
 // Ensure gogithub package is used in the test file.
 var _ = gogithub.NewClient
+
+// --- REQ-ADP4a-001 / 004 / 005: commit search tests ---
+
+// TestSearchCommitIntentHappyPath verifies kind=commit routes to /search/commits,
+// returns N docs that all pass Validate, and honours per_page/page rules
+// (REQ-ADP4a-001 / AC-001..003).
+func TestSearchCommitIntentHappyPath(t *testing.T) {
+	t.Parallel()
+	var capturedPath, capturedPerPage, capturedPage string
+	var requestCount int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&requestCount, 1)
+		capturedPath = r.URL.Path
+		capturedPerPage = r.URL.Query().Get("per_page")
+		capturedPage = r.URL.Query().Get("page")
+		writeJSONFile(w, "testdata/search_commits_response.json")
+	}))
+	defer srv.Close()
+	a := newTestAdapter(t, srv.URL)
+
+	docs, err := a.Search(context.Background(), testQuery("fix bug", "commit", 500, ""))
+	if err != nil {
+		t.Fatalf("Search: %v", err)
+	}
+	if got, want := len(docs), 3; got != want {
+		t.Errorf("doc count = %d, want %d (fixture items)", got, want)
+	}
+	if capturedPath != "/search/commits" {
+		t.Errorf("observed path = %q, want /search/commits", capturedPath)
+	}
+	if capturedPerPage != "100" {
+		t.Errorf("per_page = %q, want 100 (MaxResults=500 clamped)", capturedPerPage)
+	}
+	for i, d := range docs {
+		if err := d.Validate(); err != nil {
+			t.Errorf("doc[%d] Validate: %v", i, err)
+		}
+	}
+	if n := atomic.LoadInt32(&requestCount); n != 1 {
+		t.Errorf("requests = %d, want 1", n)
+	}
+
+	// Cursor -> page translation.
+	_, err = a.Search(context.Background(), testQuery("fix bug", "commit", 25, "3"))
+	if err != nil {
+		t.Fatalf("Search with cursor: %v", err)
+	}
+	if capturedPage != "3" {
+		t.Errorf("page with Cursor=3 = %q, want 3", capturedPage)
+	}
+}
+
+// TestSearchCommitRateLimited verifies that a 403 + rate-limit headers under
+// kind=commit maps to CategoryRateLimited via the reused categorizeError
+// rosetta (REQ-ADP4a-004 / AC-010).
+func TestSearchCommitRateLimited(t *testing.T) {
+	t.Parallel()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("X-RateLimit-Remaining", "0")
+		w.Header().Set("X-RateLimit-Reset", strconv.FormatInt(time.Now().Add(30*time.Second).Unix(), 10))
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusForbidden)
+		fmt.Fprint(w, `{"message":"API rate limit exceeded"}`)
+	}))
+	defer srv.Close()
+	a := newTestAdapter(t, srv.URL)
+
+	_, err := a.Search(context.Background(), testQuery("fix bug", "commit", 5, ""))
+	if err == nil {
+		t.Fatal("expected rate-limit error, got nil")
+	}
+	se := mustSourceError(t, err)
+	if se.Category != types.CategoryRateLimited {
+		t.Errorf("Category = %v, want CategoryRateLimited", se.Category)
+	}
+	if se.RetryAfter <= 0 {
+		t.Errorf("RetryAfter = %v, want > 0", se.RetryAfter)
+	}
+	if se.RetryAfter > maxRetryAfter {
+		t.Errorf("RetryAfter = %v, want <= %v (90s cap)", se.RetryAfter, maxRetryAfter)
+	}
+}
+
+// TestSearchCommitIntentAcceptedNotRejected verifies kind=commit is accepted
+// (not ErrInvalidIntent) and the stub observes >=1 request (REQ-ADP4a-005 / AC-012).
+func TestSearchCommitIntentAcceptedNotRejected(t *testing.T) {
+	t.Parallel()
+	var requestCount int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&requestCount, 1)
+		writeJSONFile(w, "testdata/search_commits_response.json")
+	}))
+	defer srv.Close()
+	a := newTestAdapter(t, srv.URL)
+
+	docs, err := a.Search(context.Background(), testQuery("fix bug", "commit", 5, ""))
+	if err != nil {
+		se, ok := err.(*types.SourceError)
+		if ok && se.Cause == ErrInvalidIntent {
+			t.Fatalf("kind=commit must be accepted, got ErrInvalidIntent: %v", err)
+		}
+		// A different error is acceptable only if the stub failed; we treat any
+		// non-ErrInvalidIntent error as acceptable for this test's purpose, but
+		// flag unexpected failures.
+		if !ok {
+			t.Fatalf("Search: unexpected error: %v", err)
+		}
+	}
+	if len(docs) == 0 {
+		t.Error("expected at least 1 doc for kind=commit")
+	}
+	if n := atomic.LoadInt32(&requestCount); n < 1 {
+		t.Errorf("requests = %d, want >= 1 (commit search must be issued)", n)
+	}
+}
+
+// TestSearchInvalidIntentUpdatedMessage verifies kind=users is still rejected
+// with ErrInvalidIntent, zero requests, and the updated message contains
+// "commit" (REQ-ADP4a-005 / AC-011, AC-013).
+func TestSearchInvalidIntentUpdatedMessage(t *testing.T) {
+	t.Parallel()
+	var requestCount int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&requestCount, 1)
+		writeJSONFile(w, "testdata/search_commits_response.json")
+	}))
+	defer srv.Close()
+	a := newTestAdapter(t, srv.URL)
+
+	_, err := a.Search(context.Background(), types.Query{
+		Text:       "golang",
+		MaxResults: 5,
+		Filters:    []types.Filter{{Key: "kind", Value: "users"}},
+	})
+	if err == nil {
+		t.Fatal("expected error for invalid intent, got nil")
+	}
+	se := mustSourceError(t, err)
+	if se.Category != types.CategoryPermanent {
+		t.Errorf("Category = %v, want CategoryPermanent", se.Category)
+	}
+	if se.Cause != ErrInvalidIntent {
+		t.Errorf("Cause = %v, want ErrInvalidIntent", se.Cause)
+	}
+	// The updated message must enumerate "commit".
+	if !strings.Contains(err.Error(), "commit") {
+		t.Errorf("error message = %q, want it to contain substring \"commit\"", err.Error())
+	}
+	if !strings.Contains(ErrInvalidIntent.Error(), "commit") {
+		t.Errorf("ErrInvalidIntent.Error() = %q, want it to contain \"commit\"", ErrInvalidIntent.Error())
+	}
+	if n := atomic.LoadInt32(&requestCount); n != 0 {
+		t.Errorf("outbound requests = %d, want 0 (validation before network)", n)
+	}
+}

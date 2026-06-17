@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/elymas/universal-search/pkg/types"
@@ -247,5 +248,36 @@ func TestNewWithHTTPClientOverride(t *testing.T) {
 	}
 	if a == nil {
 		t.Error("Adapter should not be nil")
+	}
+}
+
+// --- REQ-ADP4a Capabilities Notes extension ---
+
+// TestCapabilitiesNotesCommitCadence verifies the Notes field advertises the
+// commit-search cadence AND still contains the substrings the parent
+// TestCapabilitiesShape asserts ("go-github", "USEARCH_GITHUB_TOKEN"), plus
+// the additional commit/rate-ceiling substrings (SPEC-ADP-004a AC-014..015).
+func TestCapabilitiesNotesCommitCadence(t *testing.T) {
+	t.Parallel()
+	a, err := New(Options{SkipAuthCheck: true})
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	c := a.Capabilities()
+
+	// The 2 substrings the parent TestCapabilitiesShape checks must remain.
+	// The 4 additional substrings (commit cadence + rate-ceiling doc) live here
+	// per plan-auditor D1 (parent test stays at 2).
+	for _, substr := range []string{
+		"go-github",            // dependency identifier
+		"USEARCH_GITHUB_TOKEN", // auth env var
+		"commit",               // commit intent enumerated in routing list
+		"commit search 30/min", // commit cadence advertised
+		"30/min",               // shared search bucket rate ceiling
+		"code search 9/min",    // code sub-ceiling still documented
+	} {
+		if !strings.Contains(c.Notes, substr) {
+			t.Errorf("Notes should contain %q, got: %q", substr, c.Notes)
+		}
 	}
 }

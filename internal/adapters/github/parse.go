@@ -1,10 +1,12 @@
-// Package github — NormalizedDoc parsing for all three search intents.
+// Package github — NormalizedDoc parsing for all four search intents.
 // REQ-ADP4-005: field mapping tables from §6.3.1/6.3.2/6.3.3.
+// REQ-ADP4a-002: commit field mapping from SPEC-ADP-004a §6.2.
 package github
 
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	gogithub "github.com/google/go-github/v73/github"
@@ -260,6 +262,144 @@ func parseRepoResults(result *gogithub.RepositoriesSearchResult, nextPage int, r
 		docs = append(docs, doc)
 	}
 	return docs, nil
+}
+
+// parseCommitResults converts a go-github CommitsSearchResult into []NormalizedDoc.
+// Commits map to DocTypeRepo in v0.1 (Open Question §11.1 defers DocTypeCommit).
+// Field mapping per SPEC-ADP-004a §6.2.
+//
+// @MX:ANCHOR: [AUTO] parseCommitResults — commit field-mapping integrity gate.
+// @MX:REASON: Every commit NormalizedDoc passes through this transform;
+// a mapping error here corrupts all commit search results.
+// @MX:SPEC: SPEC-ADP-004a
+func parseCommitResults(result *gogithub.CommitsSearchResult, nextPage int, retrievedAt time.Time) ([]types.NormalizedDoc, error) {
+	if result == nil {
+		return nil, nil
+	}
+	docs := make([]types.NormalizedDoc, 0, len(result.Commits))
+	for i, cr := range result.Commits {
+		if cr == nil {
+			continue
+		}
+
+		// @MX:NOTE: [AUTO] Nil-guard contract: SHA, Commit, Commit.Author,
+		// Commit.Committer, Author (*User), Committer (*User), Repository,
+		// HTMLURL are all nullable pointers in go-github v73. Reuse safeStr /
+		// safeTime so any nil sub-object yields a non-panicking doc.
+		// @MX:SPEC: SPEC-ADP-004a
+		sha := safeStr(cr.SHA)
+		repoFullName := ""
+		if cr.Repository != nil {
+			repoFullName = safeStr(cr.Repository.FullName)
+		}
+
+		// Skip a commit lacking BOTH sha and repo full name: no deterministic
+		// URL can be synthesized, and Validate() requires a non-empty URL.
+		// (SPEC-ADP-004a §6.2 Validate-safety guard, plan.md Step 3 4b.)
+		if sha == "" && repoFullName == "" {
+			continue
+		}
+
+		// URL: prefer HTMLURL; synthesize the deterministic commit permalink
+		// when the API omits it so URL is never empty (plan.md Step 3 4c).
+		url := safeStr(cr.HTMLURL)
+		if url == "" {
+			url = "https://github.com/" + repoFullName + "/commit/" + sha
+		}
+
+		// Commit metadata (Commit pointer may be nil).
+		var message, title, body, snippet string
+		var publishedAt time.Time
+		var authorName, authorEmail, committerName string
+		var authoredDate, committedDate string
+		if cr.Commit != nil {
+			message = safeStr(cr.Commit.Message)
+			body = message
+			title = firstLineRunes(message, 80)
+			snippet = truncateRunes(message, snippetMaxRunes)
+			if cr.Commit.Author != nil {
+				authorName = safeStr(cr.Commit.Author.Name)
+				authorEmail = safeStr(cr.Commit.Author.Email)
+				if cr.Commit.Author.Date != nil {
+					publishedAt = safeTime(cr.Commit.Author.Date)
+					authoredDate = publishedAt.Format(time.RFC3339)
+				}
+			}
+			if cr.Commit.Committer != nil {
+				committerName = safeStr(cr.Commit.Committer.Name)
+				if cr.Commit.Committer.Date != nil {
+					committedDate = safeTime(cr.Commit.Committer.Date).Format(time.RFC3339)
+				}
+			}
+		}
+
+		// Author: prefer Commit.Author.Name; fall back to the GitHub *User login.
+		author := authorName
+		if author == "" && cr.Author != nil {
+			author = safeStr(cr.Author.Login)
+		}
+
+		id := fmt.Sprintf("github:commit:%s@%s", repoFullName, sha)
+
+		meta := map[string]any{
+			"sha":             sha,
+			"repo_full_name":  repoFullName,
+			"message_subject": title,
+			"kind":            "commit",
+		}
+		if authorName != "" {
+			meta["author_name"] = authorName
+		}
+		if authorEmail != "" {
+			meta["author_email"] = authorEmail
+		}
+		if committerName != "" {
+			meta["committer_name"] = committerName
+		}
+		if authoredDate != "" {
+			meta["authored_date"] = authoredDate
+		}
+		if committedDate != "" {
+			meta["committed_date"] = committedDate
+		}
+
+		doc := types.NormalizedDoc{
+			ID:          id,
+			SourceID:    "github",
+			URL:         url,
+			Title:       title,
+			Body:        body,
+			Snippet:     snippet,
+			PublishedAt: publishedAt,
+			RetrievedAt: retrievedAt,
+			Author:      author,
+			Score:       0.5, // Neutral; commit search has no engagement signal (§2.3).
+			Lang:        "",
+			DocType:     types.DocTypeRepo,
+			Metadata:    meta,
+			Hash:        "",
+		}
+
+		if nextPage > 0 && i == len(result.Commits)-1 {
+			doc.Metadata["next_cursor"] = strconv.Itoa(nextPage)
+		}
+
+		docs = append(docs, doc)
+	}
+	return docs, nil
+}
+
+// firstLineRunes returns the first newline-delimited line of s, truncated to at
+// most maxRunes runes. Used to derive a commit message subject (git convention).
+func firstLineRunes(s string, maxRunes int) string {
+	if idx := strings.IndexByte(s, '\n'); idx >= 0 {
+		s = s[:idx]
+	}
+	runes := []rune(s)
+	if len(runes) > maxRunes {
+		return string(runes[:maxRunes])
+	}
+	return s
 }
 
 // --- nil-safe helpers ---

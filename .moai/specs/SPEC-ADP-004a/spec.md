@@ -68,8 +68,8 @@ depends_on: [SPEC-ADP-004]
   above). No new module dependency is added — `SearchService.Commits`
   is already present in the pinned `v73`.
 
-  5 EARS REQs (3 × P1 + 2 × P1; all P1 — this is a non-blocking
-  enhancement to an implemented adapter), 0 new NFRs (parent NFRs
+  5 EARS REQs, all P1 (this is a non-blocking
+  enhancement to an implemented adapter). 0 new NFRs (parent NFRs
   unchanged; the commit parse path inherits the parent's allocation /
   goroutine-leak / FD discipline transitively). Harness level:
   standard (single package, ≤3 source files touched, no

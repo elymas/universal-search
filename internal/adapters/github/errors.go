@@ -20,7 +20,7 @@ var ErrInvalidQuery = errors.New("github: query text empty or whitespace-only")
 var ErrInvalidCursor = errors.New("github: cursor must be a positive integer page number")
 
 // ErrInvalidIntent is returned by Search when kind filter is set to an unrecognized value.
-var ErrInvalidIntent = errors.New("github: kind filter must be one of: code, issues, repos")
+var ErrInvalidIntent = errors.New("github: kind filter must be one of: code, issues, repos, commit")
 
 // maxRetryAfter caps the Retry-After duration at 90 seconds per REQ-ADP4-003.
 // GitHub's secondary-rate-limit documentation recommends several minutes; 90s is a

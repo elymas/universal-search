@@ -26,6 +26,7 @@ var validIntents = map[string]struct{}{
 	"code":   {},
 	"issues": {},
 	"repos":  {},
+	"commit": {},
 }
 
 // Search implements types.Adapter.Search for the GitHub adapter.
@@ -33,6 +34,7 @@ var validIntents = map[string]struct{}{
 // Routing:
 //   - kind=code   → /search/code
 //   - kind=issues → /search/issues
+//   - kind=commit → /search/commits
 //   - kind=repos  → /search/repositories (default)
 //
 // @MX:ANCHOR: [AUTO] Search — sole entry point for all GitHub fanout calls.
@@ -105,6 +107,8 @@ func (a *Adapter) Search(ctx context.Context, q types.Query) ([]types.Normalized
 		return a.searchCode(ctx, queryStr, opts, retrievedAt)
 	case "issues":
 		return a.searchIssues(ctx, queryStr, opts, retrievedAt)
+	case "commit":
+		return a.searchCommits(ctx, queryStr, opts, retrievedAt)
 	default: // "repos"
 		return a.searchRepos(ctx, queryStr, opts, retrievedAt)
 	}
@@ -169,6 +173,35 @@ func (a *Adapter) searchRepos(ctx context.Context, query string, opts *gogithub.
 		nextPage = resp.NextPage
 	}
 	docs, pErr := parseRepoResults(result, nextPage, retrievedAt)
+	if pErr != nil {
+		return nil, &types.SourceError{
+			Adapter:  "github",
+			Category: types.CategoryPermanent,
+			Cause:    pErr,
+		}
+	}
+	return docs, nil
+}
+
+// searchCommits calls /search/commits (go-github SearchService.Commits) and
+// normalizes the typed *CommitsSearchResult via parseCommitResults. Mirrors
+// searchRepos exactly; error taxonomy reuses categorizeError unchanged.
+//
+// @MX:NOTE: [AUTO] commit intent helper — routing target for kind=commit.
+// @MX:SPEC: SPEC-ADP-004a
+func (a *Adapter) searchCommits(ctx context.Context, query string, opts *gogithub.SearchOptions, retrievedAt time.Time) ([]types.NormalizedDoc, error) {
+	result, resp, err := a.ghClient.Search.Commits(ctx, query, opts)
+	if err != nil {
+		if se := categorizeError(err); se != nil {
+			return nil, se
+		}
+		return nil, err
+	}
+	nextPage := 0
+	if resp != nil {
+		nextPage = resp.NextPage
+	}
+	docs, pErr := parseCommitResults(result, nextPage, retrievedAt)
 	if pErr != nil {
 		return nil, &types.SourceError{
 			Adapter:  "github",
