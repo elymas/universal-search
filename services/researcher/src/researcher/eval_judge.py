@@ -103,9 +103,7 @@ def make_router(judge: Judge) -> APIRouter:
             is_supported, rationale = judge(claim.text, bodies)
             if is_supported:
                 supported += 1
-            scores.append(
-                ClaimScore(text=claim.text, supported=is_supported, judge_rationale=rationale)
-            )
+            scores.append(ClaimScore(text=claim.text, supported=is_supported, judge_rationale=rationale))
 
         total = len(req.claims)
         # Vacuously faithful when there are no claims (avoid divide-by-zero).
