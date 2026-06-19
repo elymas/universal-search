@@ -405,4 +405,3 @@ func determineExitCode(
 	}
 	return ExitSystemError
 }
-

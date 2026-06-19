@@ -145,8 +145,8 @@ func TestQueryE2EWithStubs(t *testing.T) {
 	cmd.Env = append(os.Environ(),
 		// Adapter base URLs: include the path the adapter expects.
 		"REDDIT_BASE_URL="+reddit.URL+"/search.json",
-ttt"REDDIT_CLIENT_ID=test_integration_id",
-ttt"REDDIT_CLIENT_SECRET=test_integration_secret",
+		"REDDIT_CLIENT_ID=test_integration_id",
+		"REDDIT_CLIENT_SECRET=test_integration_secret",
 		"HN_BASE_URL="+hn.URL+"/api/v1/search",
 		"RESEARCHER_BASE_URL="+researcher.URL,
 		"RESEARCHER_REQUEST_TIMEOUT_SECONDS=5",

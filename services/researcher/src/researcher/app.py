@@ -14,7 +14,8 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from researcher.deep_tree import router as deep_tree_router
-from researcher.eval_judge import deepeval_judge, make_router as make_eval_judge_router
+from researcher.eval_judge import deepeval_judge
+from researcher.eval_judge import make_router as make_eval_judge_router
 from researcher.faithfulness_endpoint import router as faithfulness_router
 from researcher.gateway import Gateway
 from researcher.models import SynthesizeRequest, SynthesizeResponse

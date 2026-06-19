@@ -207,8 +207,8 @@ func (h *Handler) handleStreamQuery(w http.ResponseWriter, r *http.Request) {
 			// Emit sentence without citations (REQ-SYN4-001c says skip uncited,
 			// but for the API endpoint we emit all sentences for completeness).
 			data, _ := json.Marshal(map[string]interface{}{
-				"text":       sentence,
-				"citations":  []interface{}{},
+				"text":      sentence,
+				"citations": []interface{}{},
 			})
 			_ = sw.WriteEvent("sentence", data)
 			_ = sw.Flush()
@@ -231,8 +231,8 @@ func (h *Handler) handleStreamQuery(w http.ResponseWriter, r *http.Request) {
 
 		// Emit sentence event.
 		data, _ := json.Marshal(map[string]interface{}{
-			"text":       sentence,
-			"citations":  citedRefs,
+			"text":      sentence,
+			"citations": citedRefs,
 		})
 		_ = sw.WriteEvent("sentence", data)
 		_ = sw.Flush()

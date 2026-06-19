@@ -161,26 +161,26 @@ func (a *Adapter) acquireToken(ctx context.Context) (string, time.Time, error) {
 	body, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseBytes))
 	if err != nil {
 		return "", time.Time{}, &types.SourceError{
-			Adapter:    "reddit",
-			Category:   types.CategoryUnavailable,
-			Cause:      ErrTokenAcquisitionFailed,
+			Adapter:  "reddit",
+			Category: types.CategoryUnavailable,
+			Cause:    ErrTokenAcquisitionFailed,
 		}
 	}
 
 	var tokenResp tokenResponse
 	if err := json.Unmarshal(body, &tokenResp); err != nil {
 		return "", time.Time{}, &types.SourceError{
-			Adapter:    "reddit",
-			Category:   types.CategoryUnavailable,
-			Cause:      ErrTokenAcquisitionFailed,
+			Adapter:  "reddit",
+			Category: types.CategoryUnavailable,
+			Cause:    ErrTokenAcquisitionFailed,
 		}
 	}
 
 	if tokenResp.AccessToken == "" {
 		return "", time.Time{}, &types.SourceError{
-			Adapter:    "reddit",
-			Category:   types.CategoryUnavailable,
-			Cause:      ErrTokenAcquisitionFailed,
+			Adapter:  "reddit",
+			Category: types.CategoryUnavailable,
+			Cause:    ErrTokenAcquisitionFailed,
 		}
 	}
 

@@ -16,6 +16,11 @@ linters:
       - path: _test\.go
         linters:
           - errcheck
+      # sanitize.go deliberately embeds U+200B (zero-width space) runes to
+      # neutralize prompt-injection markers; the literal form is intentional
+      # and must not be rewritten, so ST1018 is excluded for this file only.
+      - path: internal/security/prompt/sanitize\.go
+        text: "ST1018"
 
 formatters:
   enable:

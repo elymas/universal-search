@@ -55,7 +55,7 @@ func main() {
 func run(root string, check bool, outDir string, stdout, stderr io.Writer) int {
 	absRoot, err := filepath.Abs(root)
 	if err != nil {
-		fmt.Fprintf(stderr, "gen-adapter-ref: abs root: %v\n", err)
+		_, _ = fmt.Fprintf(stderr, "gen-adapter-ref: abs root: %v\n", err)
 		return 1
 	}
 
@@ -66,7 +66,7 @@ func run(root string, check bool, outDir string, stdout, stderr io.Writer) int {
 
 	if !check {
 		if err := os.MkdirAll(outputDir, 0o755); err != nil {
-			fmt.Fprintf(stderr, "gen-adapter-ref: mkdir %s: %v\n", outputDir, err)
+			_, _ = fmt.Fprintf(stderr, "gen-adapter-ref: mkdir %s: %v\n", outputDir, err)
 			return 1
 		}
 	}
@@ -81,13 +81,13 @@ func run(root string, check bool, outDir string, stdout, stderr io.Writer) int {
 
 		fields, err := extract(absFile, spec.funcName)
 		if err != nil {
-			fmt.Fprintf(stderr, "gen-adapter-ref: extract %s (%s): %v\n", sourceID, absFile, err)
+			_, _ = fmt.Fprintf(stderr, "gen-adapter-ref: extract %s (%s): %v\n", sourceID, absFile, err)
 			return 1
 		}
 
 		// Verify the extracted SourceID matches the registry key.
 		if fields.SourceID != sourceID {
-			fmt.Fprintf(stderr, "gen-adapter-ref: %s: extracted SourceID %q != registry key %q\n",
+			_, _ = fmt.Fprintf(stderr, "gen-adapter-ref: %s: extracted SourceID %q != registry key %q\n",
 				absFile, fields.SourceID, sourceID)
 			return 1
 		}
@@ -110,7 +110,7 @@ func run(root string, check bool, outDir string, stdout, stderr io.Writer) int {
 
 		outJSON, err := json.MarshalIndent(out, "", "  ")
 		if err != nil {
-			fmt.Fprintf(stderr, "gen-adapter-ref: marshal %s: %v\n", sourceID, err)
+			_, _ = fmt.Fprintf(stderr, "gen-adapter-ref: marshal %s: %v\n", sourceID, err)
 			return 1
 		}
 		outJSON = append(outJSON, '\n')
@@ -121,29 +121,29 @@ func run(root string, check bool, outDir string, stdout, stderr io.Writer) int {
 			// Read committed file and compare (ignoring extractedAt timestamp).
 			committed, readErr := os.ReadFile(outPath)
 			if readErr != nil {
-				fmt.Fprintf(stderr, "gen-adapter-ref --check: cannot read committed %s: %v\n", outPath, readErr)
+				_, _ = fmt.Fprintf(stderr, "gen-adapter-ref --check: cannot read committed %s: %v\n", outPath, readErr)
 				drifted = true
 				continue
 			}
 			if diffCapabilities(committed, outJSON) {
-				fmt.Fprintf(stderr, "DRIFT: %s\n  committed extractedAt stripped and compared\n", outPath)
+				_, _ = fmt.Fprintf(stderr, "DRIFT: %s\n  committed extractedAt stripped and compared\n", outPath)
 				drifted = true
 			}
 		} else {
 			if err := os.WriteFile(outPath, outJSON, 0o644); err != nil {
-				fmt.Fprintf(stderr, "gen-adapter-ref: write %s: %v\n", outPath, err)
+				_, _ = fmt.Fprintf(stderr, "gen-adapter-ref: write %s: %v\n", outPath, err)
 				return 1
 			}
-			fmt.Fprintf(stdout, "wrote %s\n", outPath)
+			_, _ = fmt.Fprintf(stdout, "wrote %s\n", outPath)
 		}
 	}
 
 	if check && drifted {
-		fmt.Fprintln(stderr, "gen-adapter-ref: drift detected — committed JSON does not match source")
+		_, _ = fmt.Fprintln(stderr, "gen-adapter-ref: drift detected — committed JSON does not match source")
 		return 1
 	}
 	if check && !drifted {
-		fmt.Fprintln(stdout, "gen-adapter-ref: no drift detected")
+		_, _ = fmt.Fprintln(stdout, "gen-adapter-ref: no drift detected")
 	}
 	return 0
 }

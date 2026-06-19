@@ -28,10 +28,6 @@ func newFakeResolver(vals map[string]string) *fakeResolver {
 	return &fakeResolver{vals: vals}
 }
 
-func newErrResolver(err error) *fakeResolver {
-	return &fakeResolver{err: err}
-}
-
 func (f *fakeResolver) Get(_ context.Context, key string) (string, error) {
 	f.calls = append(f.calls, key)
 	if f.err != nil {
@@ -116,8 +112,8 @@ func TestGithubTokenViaResolver(t *testing.T) {
 	t.Parallel()
 
 	fr := newFakeResolver(map[string]string{
-		"NAVER_CLIENT_ID":     "n-id",
-		"NAVER_CLIENT_SECRET": "n-secret",
+		"NAVER_CLIENT_ID":      "n-id",
+		"NAVER_CLIENT_SECRET":  "n-secret",
 		"USEARCH_GITHUB_TOKEN": "resolved-github-token",
 	})
 

@@ -9,7 +9,9 @@ FROM python:3.11-slim AS builder
 
 WORKDIR /build
 
-# hadolint ignore=DL3008
+# Upgrading pip itself to the latest resolver; pinning pip's own version adds
+# churn without benefit, so DL3013 (pin versions in pip) is ignored here.
+# hadolint ignore=DL3013
 RUN pip install --no-cache-dir --upgrade pip
 
 # Copy pyproject.toml and source. The src-layout package

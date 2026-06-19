@@ -26,15 +26,15 @@ type graphError struct {
 
 // keywordSearchPost represents a single post in the keyword_search response.
 type keywordSearchPost struct {
-	ID           string `json:"id"`
-	Username     string `json:"username"`
-	Text         string `json:"text"`
-	Permalink    string `json:"permalink"`
-	Timestamp    string `json:"timestamp"`
-	MediaType    string `json:"media_type"`
-	HasReplies   *bool  `json:"has_replies,omitempty"`
-	IsReply      *bool  `json:"is_reply,omitempty"`
-	IsQuotePost  *bool  `json:"is_quote_post,omitempty"`
+	ID          string `json:"id"`
+	Username    string `json:"username"`
+	Text        string `json:"text"`
+	Permalink   string `json:"permalink"`
+	Timestamp   string `json:"timestamp"`
+	MediaType   string `json:"media_type"`
+	HasReplies  *bool  `json:"has_replies,omitempty"`
+	IsReply     *bool  `json:"is_reply,omitempty"`
+	IsQuotePost *bool  `json:"is_quote_post,omitempty"`
 }
 
 // @MX:ANCHOR: [AUTO] Every Threads doc passes through this transform.
