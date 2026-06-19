@@ -115,6 +115,20 @@ func TestSourceErrorErrorString(t *testing.T) {
 			t.Errorf("Error() = %q does not contain %q", msg, sub)
 		}
 	}
+
+	// A bodyless 4xx (Cause == nil) must still surface the HTTP status
+	// instead of only printing "<nil cause>".
+	bodyless := &types.SourceError{
+		Adapter:    "bluesky",
+		Category:   types.CategoryPermanent,
+		HTTPStatus: 403,
+	}
+	bmsg := bodyless.Error()
+	for _, sub := range []string{"bluesky", "403"} {
+		if !contains(bmsg, sub) {
+			t.Errorf("Error() = %q does not contain %q", bmsg, sub)
+		}
+	}
 }
 
 // TestCategorizeErrorTable covers the canonical input shapes for
