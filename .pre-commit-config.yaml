@@ -17,7 +17,8 @@ exclude: |
     web/\.next/.*|
     web/pnpm-lock\.yaml|
     uv\.lock|
-    docs/licenses/.*
+    docs/licenses/.*|
+    internal/eval/golden/corpus/.*
   )$
 
 repos:
@@ -103,3 +104,5 @@ repos:
     hooks:
       - id: yamllint
         args: [-d, relaxed]
+        # Helm chart templates are Go-templated ({{- ... }}), not standalone YAML.
+        exclude: ^charts/.*/templates/.*

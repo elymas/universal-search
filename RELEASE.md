@@ -1,9 +1,9 @@
 # Release Manual: v1.0.0 Ceremony
 
-**Audience**: Maintainer (limbowl) + release engineer  
-**Scope**: SPEC-REL-001 release ceremony operational procedures  
-**Frozen-tag policy**: No force-push; tag is immutable after push  
-**KST timezone**: Preferred tag push window 09:00–18:00 KST (UTC+9 = 00:00–09:00 UTC)  
+**Audience**: Maintainer (limbowl) + release engineer
+**Scope**: SPEC-REL-001 release ceremony operational procedures
+**Frozen-tag policy**: No force-push; tag is immutable after push
+**KST timezone**: Preferred tag push window 09:00–18:00 KST (UTC+9 = 00:00–09:00 UTC)
 
 ---
 
@@ -235,7 +235,7 @@ Once the issue is fixed:
 2. **Document the incident**: Add an entry to `ops/release-incidents.md`:
    ```
    ## v1.0.0 Rollback — [ISO-8601 timestamp]
-   
+
    **Issue**: [Description of failure]
    **Resolution**: [What was fixed]
    **New Tag**: v1.0.1
@@ -336,5 +336,5 @@ git tag -v v1.0.0
 
 ---
 
-**Last updated**: 2026-05-31  
+**Last updated**: 2026-05-31
 **SPEC**: SPEC-REL-001 REQ-REL-005
