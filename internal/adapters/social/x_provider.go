@@ -27,13 +27,13 @@ type XProvider interface {
 // Providers map their native response format into XTweet; the adapter then
 // normalizes XTweet into types.NormalizedDoc via normalizeXTweets.
 type XTweet struct {
-	ID            string // Tweet ID from the provider
-	Text          string // Full tweet text
-	AuthorHandle  string // @handle of the tweet author (may be empty)
-	URL           string // Canonical URL from provider (may be empty; adapter constructs fallback)
-	LikeCount     int    // Public like count
-	RepostCount   int    // Public repost/retweet count
-	ReplyCount    int    // Public reply count
-	QuoteCount    int    // Public quote count
-	CreatedAt     string // Provider's timestamp string (best-effort parse)
+	ID           string // Tweet ID from the provider
+	Text         string // Full tweet text
+	AuthorHandle string // @handle of the tweet author (may be empty)
+	URL          string // Canonical URL from provider (may be empty; adapter constructs fallback)
+	LikeCount    int    // Public like count
+	RepostCount  int    // Public repost/retweet count
+	ReplyCount   int    // Public reply count
+	QuoteCount   int    // Public quote count
+	CreatedAt    string // Provider's timestamp string (best-effort parse)
 }

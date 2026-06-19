@@ -17,7 +17,7 @@ import (
 // scripted values per key; unset keys yield an error matching EnvResolver
 // semantics. No t.Setenv needed — safe under -race with t.Parallel.
 type fakeResolver struct {
-	vals map[string]string
+	vals  map[string]string
 	calls []string // records which keys were looked up
 }
 

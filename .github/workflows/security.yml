@@ -20,6 +20,8 @@ on:
 
 permissions:
   contents: read
+  # gitleaks-action v2 reads PR metadata via the API on pull_request events.
+  pull-requests: read
 
 jobs:
   # ── gitleaks: secret scanning (REQ-SEC-004) ─────────────────────────────────
@@ -38,6 +40,8 @@ jobs:
       - name: Run gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:
+          # gitleaks-action v2 requires GITHUB_TOKEN to scan pull requests.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # GITLEAKS_LICENSE is only required for org-level usage; unset for
           # this repo (free for individual + public use).
           GITLEAKS_CONFIG: .gitleaks.toml
@@ -54,7 +58,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Trivy config scan (Dockerfiles + IaC)
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.33.1
         with:
           scan-type: config
           scan-ref: .
@@ -79,7 +83,7 @@ jobs:
             -f services/${{ matrix.service }}/Dockerfile services/${{ matrix.service }}
 
       - name: Trivy image scan (${{ matrix.service }})
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.33.1
         with:
           scan-type: image
           image-ref: usearch/${{ matrix.service }}:ci
@@ -91,7 +95,7 @@ jobs:
           hide-progress: "true"
 
       - name: Trivy SBOM (CycloneDX) for ${{ matrix.service }}
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@v0.33.1
         with:
           scan-type: image
           image-ref: usearch/${{ matrix.service }}:ci

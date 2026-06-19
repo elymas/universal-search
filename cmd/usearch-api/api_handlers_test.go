@@ -23,7 +23,6 @@ import (
 type fakeSearchService struct {
 	searchResult *SearchResult
 	searchErr    error
-	streamErr    error
 	sources      []SourceInfo
 }
 

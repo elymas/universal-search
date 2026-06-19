@@ -5,28 +5,7 @@ import (
 	"testing"
 
 	"github.com/elymas/universal-search/internal/pipeline"
-	"github.com/elymas/universal-search/pkg/types"
 )
-
-// nopAdapter is a minimal test adapter that satisfies types.Adapter.
-type nopAdapter struct {
-	name string
-	caps types.Capabilities
-}
-
-func (a *nopAdapter) Name() string                     { return a.name }
-func (a *nopAdapter) Capabilities() types.Capabilities { return a.caps }
-func (a *nopAdapter) Search(_ context.Context, _ types.Query) ([]types.NormalizedDoc, error) {
-	return nil, nil
-}
-func (a *nopAdapter) Healthcheck(_ context.Context) error { return nil }
-
-func nopCaps(name string, dt ...types.DocType) types.Capabilities {
-	return types.Capabilities{
-		SourceID: name,
-		DocTypes: dt,
-	}
-}
 
 // --- BuildProductionRegistry tests ---
 

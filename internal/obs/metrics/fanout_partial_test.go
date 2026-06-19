@@ -186,9 +186,9 @@ func TestCardinalityBudget12AdaptersUnder200Series(t *testing.T) {
 
 	totalSeries := 0
 	targetFamilies := map[string]bool{
-		"usearch_fanout_partial_total":    true,
-		"usearch_adapter_health_status":   true,
-		"usearch_adapter_circuit_state":   true,
+		"usearch_fanout_partial_total":  true,
+		"usearch_adapter_health_status": true,
+		"usearch_adapter_circuit_state": true,
 	}
 
 	for _, mf := range mfs {

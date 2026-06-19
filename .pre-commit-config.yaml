@@ -17,7 +17,8 @@ exclude: |
     web/\.next/.*|
     web/pnpm-lock\.yaml|
     uv\.lock|
-    docs/licenses/.*
+    docs/licenses/.*|
+    internal/eval/golden/corpus/.*
   )$
 
 repos:
@@ -29,6 +30,9 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
         args: [--allow-multiple-documents]
+        # Helm chart templates contain Go templating ({{- ... }}) that is not
+        # valid standalone YAML; check-yaml cannot parse them.
+        exclude: ^charts/.*/templates/.*
       - id: check-added-large-files
         args: [--maxkb=1000]
 
@@ -100,3 +104,5 @@ repos:
     hooks:
       - id: yamllint
         args: [-d, relaxed]
+        # Helm chart templates are Go-templated ({{- ... }}), not standalone YAML.
+        exclude: ^charts/.*/templates/.*

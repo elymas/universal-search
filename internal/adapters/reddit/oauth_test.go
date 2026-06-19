@@ -42,21 +42,6 @@ func tokenEndpointStub(t *testing.T, statusCode int, accessToken string, expires
 	return ts, &count
 }
 
-// tokenEndpointStubWithBody creates a token endpoint stub that returns a custom
-// body and tracks request count.
-func tokenEndpointStubWithBody(t *testing.T, body string, statusCode int) (*httptest.Server, *atomic.Int32) {
-	t.Helper()
-	var count atomic.Int32
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		count.Add(1)
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(statusCode)
-		w.Write([]byte(body))
-	}))
-	t.Cleanup(ts.Close)
-	return ts, &count
-}
-
 // newAdapterWithStubs creates an adapter with both token and search endpoint stubs.
 func newAdapterWithStubs(t *testing.T, tokenTS, searchTS *httptest.Server) *Adapter {
 	t.Helper()
@@ -732,7 +717,7 @@ func TestNewSkipAuthCheckSucceeds(t *testing.T) {
 	defer ts.Close()
 
 	a, err := New(Options{
-		BaseURL:      ts.URL,
+		BaseURL:       ts.URL,
 		SkipAuthCheck: true,
 	})
 	if err != nil {

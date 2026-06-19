@@ -63,19 +63,19 @@ func (p *xOfficialProvider) Name() string { return "x-official" }
 
 // xOfficialSearchResponse is the JSON envelope from GET /2/tweets/search/recent.
 type xOfficialSearchResponse struct {
-	Data     []xOfficialTweet `json:"data"`
-	Meta     xOfficialMeta    `json:"meta"`
-	Errors   []xOfficialError `json:"errors"`
+	Data   []xOfficialTweet `json:"data"`
+	Meta   xOfficialMeta    `json:"meta"`
+	Errors []xOfficialError `json:"errors"`
 }
 
 // xOfficialTweet is a single tweet from the official API v2.
 type xOfficialTweet struct {
-	ID            string                   `json:"id"`
-	Text          string                   `json:"text"`
-	AuthorID      string                   `json:"author_id"`
-	CreatedAt     string                   `json:"created_at"`
-	PublicMetrics xOfficialPublicMetrics   `json:"public_metrics"`
-	Entities      *xOfficialEntities       `json:"entities,omitempty"`
+	ID            string                 `json:"id"`
+	Text          string                 `json:"text"`
+	AuthorID      string                 `json:"author_id"`
+	CreatedAt     string                 `json:"created_at"`
+	PublicMetrics xOfficialPublicMetrics `json:"public_metrics"`
+	Entities      *xOfficialEntities     `json:"entities,omitempty"`
 }
 
 // xOfficialPublicMetrics holds engagement counts.

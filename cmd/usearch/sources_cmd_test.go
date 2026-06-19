@@ -59,9 +59,9 @@ func (f *fakeAdapter) hcCallCount() int {
 // makeFakeCaps creates Capabilities with sensible defaults.
 func makeFakeCaps(name string, opts ...func(*types.Capabilities)) types.Capabilities {
 	caps := types.Capabilities{
-		SourceID:   name,
+		SourceID:    name,
 		DisplayName: name + " display",
-		DocTypes:   []types.DocType{types.DocTypeArticle},
+		DocTypes:    []types.DocType{types.DocTypeArticle},
 	}
 	for _, o := range opts {
 		o(&caps)
@@ -271,8 +271,8 @@ func TestSourcesStatusClassifiesDisabled(t *testing.T) {
 func TestSourcesStatusClassifiesNotConfigured(t *testing.T) {
 	// Register an auth-requiring adapter with SkipAuthCheck, but don't set the env var.
 	f := &fakeAdapter{
-		name: "nokey-adapter",
-		caps: makeFakeCaps("nokey-adapter", withAuth("MISSING_KEY_12345")),
+		name:     "nokey-adapter",
+		caps:     makeFakeCaps("nokey-adapter", withAuth("MISSING_KEY_12345")),
 		hcResult: nil,
 	}
 	reg, _ := buildSourcesTestRegistry(f)
@@ -832,7 +832,7 @@ func TestSourcesListEmptyRegistryJSON(t *testing.T) {
 	}
 
 	var result struct {
-		SchemaVersion string `json:"schema_version"`
+		SchemaVersion string     `json:"schema_version"`
 		Sources       []struct{} `json:"sources"`
 	}
 	if parseErr := json.Unmarshal(buf.Bytes(), &result); parseErr != nil {
@@ -1025,7 +1025,7 @@ func TestSourcesShowEmptyDocTypesAndLangs(t *testing.T) {
 	f := &fakeAdapter{
 		name: "minimal",
 		caps: types.Capabilities{
-			SourceID:   "minimal",
+			SourceID:    "minimal",
 			DisplayName: "Minimal",
 		},
 	}

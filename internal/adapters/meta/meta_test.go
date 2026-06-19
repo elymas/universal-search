@@ -3,8 +3,6 @@ package meta
 import (
 	"errors"
 	"net"
-	"net/http"
-	"net/http/httptest"
 	"reflect"
 	"strings"
 	"testing"
@@ -265,18 +263,4 @@ func TestThreadsTokenNotInCapabilities(t *testing.T) {
 			t.Errorf("token leaked into AuthEnvVars entry %q", ev)
 		}
 	}
-}
-
-// ---------------------------------------------------------------------------
-// Helper: newTestThreadsAdapter creates a Threads adapter with a test server.
-// ---------------------------------------------------------------------------
-
-func newTestThreadsAdapter(handler http.Handler) (*Adapter, *httptest.Server) {
-	ts := httptest.NewServer(handler)
-	a, _ := NewThreads(ThreadsOptions{
-		AccessToken: "test-token",
-		BaseURL:     ts.URL,
-		HTTPClient:  ts.Client(),
-	})
-	return a, ts
 }

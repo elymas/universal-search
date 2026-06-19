@@ -149,10 +149,10 @@ func classifyAdapters(ctx context.Context, reg *adapters.Registry, timeout time.
 
 	// Determine which adapters need probing vs pre-probe classification.
 	type probeJob struct {
-		index    int
-		id       string
-		adapter  types.Adapter
-		caps     types.Capabilities
+		index   int
+		id      string
+		adapter types.Adapter
+		caps    types.Capabilities
 	}
 	var jobs []probeJob
 
@@ -453,12 +453,9 @@ func formatSourcesStatusJSON(w io.Writer, statuses []adapterStatus) error {
 
 	sources := make([]jsonSource, 0, len(statuses))
 	for _, s := range statuses {
-		sources = append(sources, jsonSource{
-			Name:   s.Name,
-			Status: s.Status,
-			KeySet: s.KeySet,
-			Error:  s.Error,
-		})
+		// adapterStatus and jsonSource have identical fields (tags aside),
+		// so a direct conversion is equivalent to a field-by-field copy.
+		sources = append(sources, jsonSource(s))
 	}
 
 	out := struct {

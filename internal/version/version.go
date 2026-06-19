@@ -15,9 +15,10 @@ import (
 
 // @MX:NOTE: These variables are injected at build time via go build -ldflags.
 // Default values are suitable for development; release builds override via:
-//  -X github.com/elymas/universal-search/internal/version.Version=1.0.0
-//  -X github.com/elymas/universal-search/internal/version.Commit=<sha>
-//  -X github.com/elymas/universal-search/internal/version.BuildDate=<iso8601>
+//
+//	-X github.com/elymas/universal-search/internal/version.Version=1.0.0
+//	-X github.com/elymas/universal-search/internal/version.Commit=<sha>
+//	-X github.com/elymas/universal-search/internal/version.BuildDate=<iso8601>
 var (
 	Version   = "0.1.0-dev"
 	Commit    = "unknown"
