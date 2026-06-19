@@ -94,6 +94,11 @@ func (e *SourceError) Error() string {
 	if e.Cause != nil {
 		cause = e.Cause.Error()
 	}
+	// Surface the upstream HTTP status when present so a bodyless 4xx/5xx
+	// (Cause == nil) is still diagnosable instead of printing "<nil cause>".
+	if e.HTTPStatus != 0 {
+		return fmt.Sprintf("adapter %q: %s (HTTP %d): %s", e.Adapter, e.Category, e.HTTPStatus, cause)
+	}
 	return fmt.Sprintf("adapter %q: %s: %s", e.Adapter, e.Category, cause)
 }
 

@@ -362,3 +362,35 @@ services:
     restart: unless-stopped
     networks:
       - app
+
+  # ── usearch-api (Go HTTP API for the web UI) ────────────────────────────────
+  # SPEC-API-001: serves /api/query, /api/query/stream, /api/sources, /api/history.
+  usearch-api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.usearch-api
+    # Host 8090 avoids the searxng 8080 collision; container still listens on 8080.
+    ports:
+      - "${USEARCH_API_PORT:-8090}:8080"
+    environment:
+      USEARCH_API_PORT: "8080"
+      LITELLM_BASE_URL: http://litellm:4000
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY}
+      USEARCH_SEARXNG_URL: http://searxng:8080
+      YOUTUBE_BASE_URL: http://youtube-extract:8084
+      LOG_LEVEL: ${USEARCH_API_LOG_LEVEL:-info}
+    depends_on:
+      litellm:
+        condition: service_healthy
+      searxng:
+        condition: service_healthy
+    # distroless image has no shell/curl — probe via the binary's own flag.
+    healthcheck:
+      test: ["CMD", "/usearch-api", "--healthcheck"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - app
