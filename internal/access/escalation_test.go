@@ -68,9 +68,15 @@ func TestShouldEscalate_Phase3_TLSError(t *testing.T) {
 
 func TestShouldEscalate_Phase3_WAF(t *testing.T) {
 	t.Parallel()
-	a := &PhaseAttempt{Phase: 3, Outcome: "blocked", isWAF: true}
+	// SPEC-ACC-001: a confident WAF profile hit (>= wafEscalateThreshold)
+	// drives the escalation that isWAF used to drive.
+	a := &PhaseAttempt{
+		Phase:       3,
+		Outcome:     "blocked",
+		profileHits: []ProfileHit{{ProfileID: "akamai", Confidence: 0.5}},
+	}
 	if !shouldEscalate(a) {
-		t.Error("phase 3 WAF block must escalate to phase 4")
+		t.Error("phase 3 WAF profile hit must escalate to phase 4")
 	}
 }
 
@@ -121,5 +127,108 @@ func TestShouldEscalate_UnknownPhase_NoEscalate(t *testing.T) {
 	a := &PhaseAttempt{Phase: 99, Outcome: "failure"}
 	if shouldEscalate(a) {
 		t.Error("unknown phase must NOT escalate")
+	}
+}
+
+// --- SPEC-ACC-001 REQ-ACC-013: profile-hit driven escalation ---
+
+// TestPhaseAttemptTopProfile asserts topProfile returns the highest-
+// confidence hit, false when empty.
+func TestPhaseAttemptTopProfile(t *testing.T) {
+	t.Parallel()
+	// Empty → false.
+	var empty *PhaseAttempt
+	if _, ok := empty.topProfile(); ok {
+		t.Error("nil attempt topProfile must return false")
+	}
+	a := &PhaseAttempt{}
+	if _, ok := a.topProfile(); ok {
+		t.Error("empty profileHits topProfile must return false")
+	}
+	// Multi-hit → highest confidence (slice is pre-sorted desc).
+	a = &PhaseAttempt{profileHits: []ProfileHit{
+		{ProfileID: "akamai", Confidence: 0.9},
+		{ProfileID: "datadome", Confidence: 0.5},
+	}}
+	top, ok := a.topProfile()
+	if !ok {
+		t.Fatal("multi-hit topProfile must return true")
+	}
+	if top.ProfileID != "akamai" || top.Confidence != 0.9 {
+		t.Errorf("topProfile = %+v, want {akamai 0.9}", top)
+	}
+}
+
+// TestPhaseAttemptHasWAFProfile asserts the threshold gate.
+// 0.5 ≥ 0.3 → true; 0.2 < 0.3 → false.
+func TestPhaseAttemptHasWAFProfile(t *testing.T) {
+	t.Parallel()
+	high := &PhaseAttempt{profileHits: []ProfileHit{{ProfileID: "akamai", Confidence: 0.5}}}
+	if !high.hasWAFProfile() {
+		t.Error("0.5 confidence must meet wafEscalateThreshold")
+	}
+	low := &PhaseAttempt{profileHits: []ProfileHit{{ProfileID: "unknown", Confidence: 0.2}}}
+	if low.hasWAFProfile() {
+		t.Error("0.2 confidence must NOT meet wafEscalateThreshold")
+	}
+	empty := &PhaseAttempt{}
+	if empty.hasWAFProfile() {
+		t.Error("empty profileHits must not have a WAF profile")
+	}
+}
+
+// TestShouldEscalatePhase3OnWAFProfile asserts a 0.5-confidence hit
+// escalates Phase 3 → 4.
+func TestShouldEscalatePhase3OnWAFProfile(t *testing.T) {
+	t.Parallel()
+	a := &PhaseAttempt{
+		Phase:       3,
+		Outcome:     "failure",
+		profileHits: []ProfileHit{{ProfileID: "akamai", Confidence: 0.5}},
+	}
+	if !shouldEscalate(a) {
+		t.Error("phase 3 with 0.5-confidence WAF hit must escalate")
+	}
+}
+
+// TestShouldEscalatePhase3OnVerdictChallenge asserts a silent-200
+// challenge verdict drives escalation even without a profile hit.
+func TestShouldEscalatePhase3OnVerdictChallenge(t *testing.T) {
+	t.Parallel()
+	a := &PhaseAttempt{
+		Phase:   3,
+		Outcome: "failure",
+		verdict: VerdictChallenge,
+	}
+	if !shouldEscalate(a) {
+		t.Error("phase 3 VerdictChallenge must escalate")
+	}
+}
+
+// TestShouldEscalatePhase3OnVerdictBlocked asserts a Blocked verdict
+// also escalates.
+func TestShouldEscalatePhase3OnVerdictBlocked(t *testing.T) {
+	t.Parallel()
+	a := &PhaseAttempt{
+		Phase:   3,
+		Outcome: "failure",
+		verdict: VerdictBlocked,
+	}
+	if !shouldEscalate(a) {
+		t.Error("phase 3 VerdictBlocked must escalate")
+	}
+}
+
+// TestShouldEscalatePhase3_UnknownProfileOnly_NoEscalate asserts that an
+// unknown@0.2 hit alone does NOT escalate (0.2 < 0.3 threshold, OQ §11.6).
+func TestShouldEscalatePhase3_UnknownProfileOnly_NoEscalate(t *testing.T) {
+	t.Parallel()
+	a := &PhaseAttempt{
+		Phase:       3,
+		Outcome:     "failure",
+		profileHits: []ProfileHit{{ProfileID: "unknown", Confidence: 0.2}},
+	}
+	if shouldEscalate(a) {
+		t.Error("phase 3 unknown@0.2 alone must NOT escalate (below threshold)")
 	}
 }

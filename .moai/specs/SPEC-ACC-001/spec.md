@@ -3,7 +3,7 @@ id: SPEC-ACC-001
 title: Access Layer WAF Profile Detection + Page-Validity Gate (insane-search v0.5 port)
 version: 0.1.0
 milestone: M3 — Fanout, adapters, index
-status: draft
+status: implemented
 priority: P1
 owner: expert-backend
 methodology: tdd
@@ -279,12 +279,15 @@ to avoid single-signal false positives. The four layers:
 | L3 Cookie sensor state | profile cookie sensor indicates "still challenging" (e.g. Akamai `_abck` value contains `~-1~`; DataDome cookie present on a 403) | the WAF has NOT cleared the client |
 | L4 Success-selector proof | body contains a real-content CSS selector (`<main`, `<article`, `id="content"`, `class="content"`) | a real page rendered |
 
-**Verdict mapping.** §6.3 is the authoritative truth table; the bullets
-below restate it in prose and MUST agree with it on every input
-combination. The mapping is a complete, mutually-exclusive partition:
+**Verdict mapping.** §6.3 is AUTHORITATIVE; the bullets below restate
+the table in prose and are intuition only — on any apparent conflict,
+§6.3 wins. The mapping is a complete, mutually-exclusive partition:
 first split on whether a challenge signal is present (L1 or L3), then
-within each branch disambiguate on body size (L2) and the success
-selector (L4).
+within each branch disambiguate on body size (L2, NOT L4) and finally on
+the success selector (L4). Note that `NOT L2` (normal-size body) is a
+precondition for both OK verdicts AND for `VerdictChallenge` — a
+challenge signal on a sub-threshold body yields `VerdictBlocked`, not
+`VerdictChallenge`.
 
 - `VerdictChallenge` — (L1 present OR L3 present) AND NOT L2 (a
   challenge is in flight and the body is NOT sub-threshold). This is the
@@ -331,7 +334,7 @@ even on HTTP 200.
 
 | ID | Name | Requirement |
 |----|------|-------------|
-| NFR-ACC-001 | Detection performance (pure path) | `detectProfiles(resp, body)` AND `validatePage(resp, body, hit)` SHALL together execute with mean wall-clock ≤ 1 ms per op over `go test -bench=BenchmarkDetectAndValidate -benchtime=100x -count=5 ./internal/access/...` against the `waf_akamai_abck_challenged.json` + `page_strong_ok.html` fixtures (median of 5 runs is the assertion value). The benchmark threshold is amd64-pinned (the published-CI gate architecture); on the darwin/arm64 dev host the same 1 ms ceiling is trivially generous for a pure substring scan, so the pin does not affect local runnability. Both functions are pure (no I/O); the cost is body-substring scanning bounded by `MaxBodyBytes`. Benchmarks do not count toward coverage. |
+| NFR-ACC-001 | Detection performance (pure path) | `detectProfiles(resp, body)` AND `validatePage(resp, body, hit)` SHALL together execute with mean wall-clock ≤ 1 ms per op over `go test -bench=BenchmarkDetectAndValidate -benchtime=100x -count=5 ./internal/access/...` against the `waf_akamai_abck_challenged.json` + `page_strong_ok.html` fixtures (median of 5 runs is the assertion value). The 1 ms ceiling is platform-agnostic — both functions are pure (no I/O) and the cost is body-substring scanning bounded by `MaxBodyBytes`, so the threshold holds on every supported host architecture. Benchmarks do not count toward coverage. |
 | NFR-ACC-002 | No new network surface | The SPEC SHALL NOT add any new outbound network operation. `detectProfiles` and `validatePage` operate on the response + body already fetched by Phase 3/4 — they add zero network ops. Verified by `TestNoNewNetworkCalls` (a Phase 3 → 4 cascade against one stub server observes NO MORE requests than the measured SPEC-CACHE-001 baseline for the same fixture; the test captures that baseline and asserts the profile/Verdict additions issue zero additional requests). |
 | NFR-ACC-003 | Race-clean concurrent detection | The new pure functions and the modified `PhaseAttempt` fields SHALL introduce zero shared mutable state. `internal/access/concurrent_test.go::TestFetchConcurrent` (the existing CACHE-001 workload) SHALL continue to pass under `go test -race ./internal/access/...` with the profile/Verdict additions, with zero new race-detector alarms attributable to the access package. |
 

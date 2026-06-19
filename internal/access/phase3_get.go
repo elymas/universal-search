@@ -26,9 +26,15 @@ var wafHeaders = []string{
 
 // phase3Get performs a standard HTTP GET and returns FetchedContent on success.
 //
-// Escalation signals embedded in PhaseAttempt:
+// Escalation signals embedded in PhaseAttempt (SPEC-ACC-001):
 //   - isTLSError = true when a TLS handshake error occurs
-//   - isWAF = true when a 403/503 with WAF header is received
+//   - profileHits = confidence-ranked WAF detection result (non-empty on
+//     a 403/503 with a vendor match, or on a 200 whose body/cookies match)
+//   - verdict = the 4-layer page-validity Verdict on a 200 body
+//
+// A non-200 with a confident profile hit is a hard WAF-gated failure; a
+// 200 is always run through validatePage, which decides success vs the
+// silent-200 trap.
 func phase3Get(
 	ctx context.Context,
 	rawURL string,
@@ -85,13 +91,25 @@ func phase3Get(
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	// Detect WAF patterns that should trigger Phase 4 escalation.
-	if isWAFResponse(resp) {
-		attempt := &PhaseAttempt{Phase: 3, isWAF: true, Outcome: "failure"}
-		return nil, attempt, &FetchError{
-			Category:   CategoryUnavailable,
-			Reason:     "WAF-gated response",
-			HTTPStatus: resp.StatusCode,
+	// SPEC-ACC-001: route the response through the WAF profile table +
+	// the 4-layer validity gate. A non-200 with a confident profile hit
+	// is a hard WAF-gated failure (no body to validate). A 200 is always
+	// run through validatePage — a cookie-only hit on a 200 may still be
+	// a real page (L3 sensor cleared), so the Verdict decides success.
+	if resp.StatusCode != 200 {
+		profileHits := detectProfiles(resp, nil)
+		if len(profileHits) > 0 {
+			attempt := &PhaseAttempt{
+				Phase:       3,
+				Outcome:     "failure",
+				profileHits: profileHits,
+			}
+			return nil, attempt, &FetchError{
+				Category:    CategoryUnavailable,
+				Reason:      "WAF-gated response",
+				HTTPStatus:  resp.StatusCode,
+				profileHits: profileHits,
+			}
 		}
 	}
 
@@ -100,6 +118,27 @@ func phase3Get(
 		body, err := readBody(resp, opts.MaxBodyBytes)
 		if err != nil {
 			return nil, nil, &FetchError{Category: CategoryUnavailable, Reason: "body read failed", Cause: err}
+		}
+		// SPEC-ACC-001: classify with the real body, then run the 4-layer
+		// validity gate. The Verdict decides success vs silent-200 trap.
+		hits := detectProfiles(resp, body)
+		topHit := topHitOrNil(hits)
+		verdict := validatePage(resp, body, topHit)
+		if verdict == VerdictChallenge || verdict == VerdictBlocked {
+			// Silent-200 trap: a 200 that is actually a challenge/block.
+			attempt := &PhaseAttempt{
+				Phase:       3,
+				Outcome:     "failure",
+				profileHits: hits,
+				verdict:     verdict,
+			}
+			return nil, attempt, &FetchError{
+				Category:    CategoryUnavailable,
+				Reason:      "silent-200 challenge",
+				HTTPStatus:  200,
+				profileHits: hits,
+				verdict:     verdict,
+			}
 		}
 		return &FetchedContent{
 			URL:         resp.Request.URL.String(),

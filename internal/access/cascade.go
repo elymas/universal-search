@@ -215,10 +215,18 @@ func (f *Fetcher) runPhase(ctx context.Context, phaseNum int, u *url.URL, opts F
 	}
 
 	// Copy escalation signals from FetchError into the attempt for shouldEscalate.
+	// SPEC-ACC-001: profileHits/verdict are now carried on the attempt itself
+	// (set by phase3/phase4 directly), so only the TLS/JS signals are copied
+	// from the FetchError here.
 	if fe, ok := phaseErr.(*FetchError); ok && fe != nil {
 		attempt.isTLSError = fe.isTLSSignal
-		attempt.isWAF = fe.isWAFSignal
 		attempt.isJSChallenge = fe.isJSChallengeSignal
+		if fe.profileHits != nil {
+			attempt.profileHits = fe.profileHits
+		}
+		if fe.verdict != "" {
+			attempt.verdict = fe.verdict
+		}
 	}
 
 	if phaseErr != nil {
@@ -250,23 +258,17 @@ func (f *Fetcher) dispatchPhase(
 	case 3:
 		content, attempt, err := phase3Get(ctx, rawURL, opts, f.opts)
 		if attempt != nil {
-			// Copy escalation signals back to the caller's runPhase via a
-			// temporary mechanism: store in the FetchError itself is not
-			// ideal, so we embed the signals in the returned attempt and
-			// merge them in runPhase. For simplicity, we use the content
-			// nil + err path and embed the signals in phaseAttempt which
-			// runPhase already reads from its local variable.
-			//
-			// NOTE: The runPhase wrapper reads attempt.isTLSError and
-			// attempt.isWAF from the PhaseAttempt returned by runPhase itself,
-			// not from dispatchPhase. We need to propagate them differently.
-			//
-			// Solution: return a special error type that carries the signals.
-			if attempt.isTLSError || attempt.isWAF {
-				fe, ok := err.(*FetchError)
-				if ok {
-					fe.isTLSSignal = attempt.isTLSError
-					fe.isWAFSignal = attempt.isWAF
+			// Carry the escalation signals from phase3's local attempt onto
+			// the FetchError so runPhase can merge them into its own attempt.
+			// SPEC-ACC-001: carries isTLSError + the new profileHits/verdict.
+			fe, ok := err.(*FetchError)
+			if ok {
+				fe.isTLSSignal = attempt.isTLSError
+				if attempt.profileHits != nil {
+					fe.profileHits = attempt.profileHits
+				}
+				if attempt.verdict != "" {
+					fe.verdict = attempt.verdict
 				}
 			}
 		}
@@ -274,10 +276,17 @@ func (f *Fetcher) dispatchPhase(
 
 	case 4:
 		content, attempt, err := phase4TLS(ctx, rawURL, opts, f.opts)
-		if attempt != nil && attempt.isJSChallenge {
+		if attempt != nil {
 			fe, ok := err.(*FetchError)
 			if ok {
-				fe.isJSChallengeSignal = true
+				if attempt.isJSChallenge {
+					fe.isJSChallengeSignal = true
+				}
+				// SPEC-ACC-001: carry the verdict on the 200 path so
+				// runPhase can demote a silent-200 challenge.
+				if attempt.verdict != "" {
+					fe.verdict = attempt.verdict
+				}
 			}
 		}
 		return content, err

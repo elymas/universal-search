@@ -1,0 +1,9 @@
+{
+  "status": 403,
+  "headers": {
+    "Content-Type": ["text/html"],
+    "Set-Cookie": ["_abck=ABCDEF~~-1~-1~-1~", "ak_bmsc=465D2EE3; Path=/; Domain=."],
+    "X-Akamai-Request-ID": ["abc123"]
+  },
+  "body": "<html><head><title>Access Denied</title></head><body><p>Reference #18.a8d73017</p></body></html>"
+}

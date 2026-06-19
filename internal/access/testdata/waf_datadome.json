@@ -1,0 +1,9 @@
+{
+  "status": 403,
+  "headers": {
+    "Content-Type": ["text/html"],
+    "Set-Cookie": ["datadome=AAAAAA-BB-CCCC; Path=/; Domain=."],
+    "X-DataDome": ["abc123"]
+  },
+  "body": "<html><body>datadome captcha required</body></html>"
+}

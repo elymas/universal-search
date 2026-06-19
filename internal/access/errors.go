@@ -67,8 +67,13 @@ type FetchError struct {
 	// Internal escalation signals — set by dispatchPhase when the error
 	// carries phase-level metadata that shouldEscalate needs.
 	isTLSSignal         bool
-	isWAFSignal         bool
 	isJSChallengeSignal bool
+	// profileHits carries the WAF detection result (SPEC-ACC-001); nil
+	// when no WAF was detected.
+	profileHits []ProfileHit
+	// verdict carries the 4-layer page-validity classification
+	// (SPEC-ACC-001); empty string when validatePage was not run.
+	verdict Verdict
 }
 
 func (e *FetchError) Error() string {
