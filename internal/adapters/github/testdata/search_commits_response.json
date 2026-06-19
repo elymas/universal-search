@@ -1,0 +1,45 @@
+{
+  "total_count": 3,
+  "incomplete_results": false,
+  "items": [
+    {
+      "sha": "abc123def4567890abcdef1234567890abcdef12",
+      "commit": {
+        "author": {"name": "Alice Lee", "email": "alice@example.com", "date": "2026-05-01T10:15:30Z"},
+        "committer": {"name": "Alice Lee", "email": "alice@example.com", "date": "2026-05-01T10:16:00Z"},
+        "message": "fix: handle nil pointer in search dispatch\n\nAdds a nil-guard for the Commit pointer so malformed commits do not panic.\n\nReviewed-by: bob."
+      },
+      "author": {"login": "alice", "id": 1001, "type": "User"},
+      "committer": {"login": "alice", "id": 1001, "type": "User"},
+      "html_url": "https://github.com/elymas/universal-search/commit/abc123def4567890abcdef1234567890abcdef12",
+      "repository": {"full_name": "elymas/universal-search", "html_url": "https://github.com/elymas/universal-search"},
+      "score": 1.0
+    },
+    {
+      "sha": "def456abc7890123abcdef4567890abcdef45678",
+      "commit": {
+        "author": {"name": "Bob Kim", "email": "bob@example.com", "date": "2026-05-02T09:00:00Z"},
+        "committer": {"name": "Bob Kim", "email": "bob@example.com", "date": "2026-05-02T09:05:00Z"},
+        "message": "docs: update README install steps"
+      },
+      "author": null,
+      "committer": null,
+      "html_url": "https://github.com/golang/go/commit/def456abc7890123abcdef4567890abcdef45678",
+      "repository": {"full_name": "golang/go", "html_url": "https://github.com/golang/go"},
+      "score": 0.8
+    },
+    {
+      "sha": "999002ffffffffffffffffffffffffffffffff",
+      "commit": {
+        "author": {"name": "Cara Nguyen", "email": "cara@example.com", "date": "2026-05-03T12:00:00Z"},
+        "committer": {"name": "Cara Nguyen", "email": "cara@example.com", "date": "2026-05-03T12:01:00Z"},
+        "message": "minimal"
+      },
+      "author": null,
+      "committer": null,
+      "html_url": null,
+      "repository": {"full_name": "kubernetes/kubernetes", "html_url": "https://github.com/kubernetes/kubernetes"},
+      "score": 0.5
+    }
+  ]
+}

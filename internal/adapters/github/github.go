@@ -151,10 +151,10 @@ func (a *Adapter) Capabilities() types.Capabilities {
 			"v73.0.0 used at implementation time — deviation documented). " +
 			"PAT auth via USEARCH_GITHUB_TOKEN env var (public_repo scope; " +
 			"private-repo search out of v0.1 scope). Multi-intent routing " +
-			"via Query.Filters[Key=\"kind\"] in {code, issues, repos}; " +
+			"via Query.Filters[Key=\"kind\"] in {code, issues, repos, commit}; " +
 			"default repos when omitted. Rate ceilings: code search 9/min vs " +
-			"issues/repos 30/min — Capabilities advertises the conservative 30/min. " +
-			"5000 req/hr primary (authenticated). Retry-After cap 90s " +
+			"issues/repos/commit 30/min — Capabilities advertises the conservative 30/min. " +
+			"5000 req/hr primary (authenticated). commit search 30/min. Retry-After cap 90s " +
 			"(vs 60s in Reddit/HN; GitHub secondary-rate-limit recovery semantics). " +
 			"Path A (wrapping github/github-mcp-server) rejected — see SPEC-ADP-004 §2.2.",
 	}
