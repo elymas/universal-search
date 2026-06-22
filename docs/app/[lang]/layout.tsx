@@ -1,28 +1,28 @@
-import { Footer, Layout, Navbar } from 'nextra-theme-docs'
-import { Head } from 'nextra/components'
-import { getPageMap } from 'nextra/page-map'
-import type { ReactNode } from 'react'
+import { Footer, Layout, Navbar } from "nextra-theme-docs";
+import { Head } from "nextra/components";
+import { getPageMap } from "nextra/page-map";
+import type { ReactNode } from "react";
 
 type LayoutProps = {
-  children: ReactNode
-  params: Promise<{ lang: string }>
-}
+  children: ReactNode;
+  params: Promise<{ lang: string }>;
+};
 
 export default async function LocaleLayout({ children, params }: LayoutProps) {
-  const { lang } = await params
-  const pageMap = await getPageMap(`/${lang}`)
+  const { lang } = await params;
+  const pageMap = await getPageMap(`/${lang}`);
 
   const navbar = (
     <Navbar
       logo={<strong>Universal Search</strong>}
       projectLink="https://github.com/elymas/universal-search"
     />
-  )
+  );
 
   const footer = (
     <Footer>
       <span>
-        Universal Search Docs — Apache-2.0 ·{' '}
+        Universal Search Docs — Apache-2.0 ·{" "}
         <a
           href="https://github.com/elymas/universal-search/blob/main/CHANGELOG.md"
           target="_blank"
@@ -32,7 +32,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
         </a>
       </span>
     </Footer>
-  )
+  );
 
   return (
     <>
@@ -47,12 +47,12 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
         editLink="Edit this page on GitHub"
         sidebar={{ defaultMenuCollapseLevel: 1, toggleButton: true }}
         i18n={[
-          { locale: 'en', name: 'English' },
-          { locale: 'ko', name: '한국어' },
+          { locale: "en", name: "English" },
+          { locale: "ko", name: "한국어" },
         ]}
       >
         {children ?? null}
       </Layout>
     </>
-  )
+  );
 }

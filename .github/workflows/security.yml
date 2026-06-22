@@ -134,16 +134,21 @@ jobs:
         with:
           go-version-file: go.mod
 
+      - name: Install gosec
+        # Build gosec with the runner's Go (1.25.8 from go.mod) rather than the
+        # securego/gosec docker image, whose bundled Go (1.23.1) is older than
+        # go.mod's required 1.25.8 and fails to load packages under
+        # GOTOOLCHAIN=local ("go.mod requires go >= 1.25.8").
+        run: go install github.com/securego/gosec/v2/cmd/gosec@v2.27.1
+
       - name: Run gosec (HIGH-severity gate)
-        uses: securego/gosec@v2.21.4
-        with:
-          # -severity high : only HIGH findings set a non-zero exit (block).
-          # -exclude-dir   : skip tests/vendor/web (dir exclusion is a CLI flag,
-          #                  not a -conf key — gosec ignores exclude-dir in config).
-          # -conf          : project config (#nosec audit). Must be JSON; gosec's
-          #                  -conf parser rejects YAML (fails on the leading '#').
-          # MEDIUM/LOW still print as annotations but do not fail the job.
-          args: "-severity high -confidence medium -exclude-dir testdata -exclude-dir vendor -exclude-dir node_modules -exclude-dir web -conf .gosec.json ./..."
+        # -severity high : only HIGH findings set a non-zero exit (block).
+        # -exclude-dir   : skip tests/vendor/web (dir exclusion is a CLI flag,
+        #                  not a -conf key — gosec ignores exclude-dir in config).
+        # -conf          : project config (#nosec audit). Must be JSON; gosec's
+        #                  -conf parser rejects YAML (fails on the leading '#').
+        # MEDIUM/LOW still print as annotations but do not fail the job.
+        run: gosec -severity high -confidence medium -exclude-dir testdata -exclude-dir vendor -exclude-dir node_modules -exclude-dir web -conf .gosec.json ./...
 
   # ── semgrep: pattern-based SAST (REQ-SEC-010) ───────────────────────────────
   # Rule sets p/golang + p/owasp-top-ten + p/jwt. New findings (outside

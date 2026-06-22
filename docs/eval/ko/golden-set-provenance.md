@@ -12,20 +12,20 @@ shapes.
 
 - KR-001 .. KR-050: **synthetic, authored 2026-05-30** by a native Korean
   speaker for this benchmark, modeled on Naver DataLab public trending-keyword
-  *shapes* (category, length, vocabulary register) without copying any
+  _shapes_ (category, length, vocabulary register) without copying any
   individual user query. No personal names, phone numbers, emails, or account
   identifiers appear in any query.
 
 ## Per-category notes
 
-| Category | IDs | Provenance |
-|----------|-----|------------|
-| news | KR-001..KR-012 | synthetic, authored 2026-05-30 — generic daily-news shapes (시황/금리/날씨/스포츠 등). |
-| blog | KR-013..KR-022 | synthetic, authored 2026-05-30 — Naver-blog-style how-to/후기 shapes. |
-| shopping | KR-023..KR-030 | synthetic, authored 2026-05-30 — product-comparison shapes (no brand-specific PII). |
-| academic-tech | KR-031..KR-038 | synthetic, authored 2026-05-30 — arXiv/GitHub-targeting technical shapes. |
-| code-mixed | KR-039..KR-044 | synthetic, authored 2026-05-30 — 한영 혼용 (5:5 and 7:3 ratios). |
-| cultural | KR-045..KR-050 | synthetic, authored 2026-05-30 — Korean cultural/holiday shapes. |
+| Category      | IDs            | Provenance                                                                             |
+| ------------- | -------------- | -------------------------------------------------------------------------------------- |
+| news          | KR-001..KR-012 | synthetic, authored 2026-05-30 — generic daily-news shapes (시황/금리/날씨/스포츠 등). |
+| blog          | KR-013..KR-022 | synthetic, authored 2026-05-30 — Naver-blog-style how-to/후기 shapes.                  |
+| shopping      | KR-023..KR-030 | synthetic, authored 2026-05-30 — product-comparison shapes (no brand-specific PII).    |
+| academic-tech | KR-031..KR-038 | synthetic, authored 2026-05-30 — arXiv/GitHub-targeting technical shapes.              |
+| code-mixed    | KR-039..KR-044 | synthetic, authored 2026-05-30 — 한영 혼용 (5:5 and 7:3 ratios).                       |
+| cultural      | KR-045..KR-050 | synthetic, authored 2026-05-30 — Korean cultural/holiday shapes.                       |
 
 ## PII guarantee
 

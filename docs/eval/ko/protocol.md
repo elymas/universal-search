@@ -65,15 +65,15 @@ For each `query_id` you fill one row per rater. Steps:
    list the round coordinator provides).
 3. Fill the row:
 
-| Column | Type | How to judge |
-|--------|------|--------------|
-| `ranking_score` | int 1–5 | Overall: do the top results match what a Korean user expects for this query? See `rubric.md` anchors. |
-| `source_relevance` | int 1–5 | Are the SOURCES right (Naver for blog/shop/news, arXiv/GitHub for academic-tech)? |
-| `code_switching_handling` | int 1–5 | **Required for code-mixed rows.** Korean segments tokenized with mecab-ko, English segments passed through, no over-segmentation of code identifiers. |
-| `tokenization_quality` | int 1–5 | Were Korean terms segmented sensibly (mecab-ko)? |
-| `top3_naver_hit` | bool | Is there a `naver`-source result in the top 3? (For `expected_naver_relevant:false` queries this is normally `false`.) |
-| `mrr_top10` | float 0.0–1.0 | 1/(rank of first naver hit in top-10), or 0.0 if none. |
-| `notes` | text | Optional rationale. |
+| Column                    | Type          | How to judge                                                                                                                                          |
+| ------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ranking_score`           | int 1–5       | Overall: do the top results match what a Korean user expects for this query? See `rubric.md` anchors.                                                 |
+| `source_relevance`        | int 1–5       | Are the SOURCES right (Naver for blog/shop/news, arXiv/GitHub for academic-tech)?                                                                     |
+| `code_switching_handling` | int 1–5       | **Required for code-mixed rows.** Korean segments tokenized with mecab-ko, English segments passed through, no over-segmentation of code identifiers. |
+| `tokenization_quality`    | int 1–5       | Were Korean terms segmented sensibly (mecab-ko)?                                                                                                      |
+| `top3_naver_hit`          | bool          | Is there a `naver`-source result in the top 3? (For `expected_naver_relevant:false` queries this is normally `false`.)                                |
+| `mrr_top10`               | float 0.0–1.0 | 1/(rank of first naver hit in top-10), or 0.0 if none.                                                                                                |
+| `notes`                   | text          | Optional rationale.                                                                                                                                   |
 
 5 = best on every 1–5 scale. Always anchor to `rubric.md`; do not invent your
 own scale.
@@ -92,14 +92,14 @@ blanks). Judge whether:
 
 ## 4. Source expectations by category
 
-| Category | Expected top sources | `naver` in top-3? |
-|----------|----------------------|--------------------|
-| news | `naver` (news vertical), `koreanews` | yes |
-| blog | `naver` (blog vertical) | yes |
-| shopping | `naver` (shop vertical) | yes |
-| academic-tech | `arxiv`, `github` (NON-Naver) | no (`expected_naver_relevant:false`) |
-| code-mixed | mixed — `github`/`arxiv`, sometimes `naver` | depends on the row |
-| cultural | `naver` (blog/news), `koreanews` | yes |
+| Category      | Expected top sources                        | `naver` in top-3?                    |
+| ------------- | ------------------------------------------- | ------------------------------------ |
+| news          | `naver` (news vertical), `koreanews`        | yes                                  |
+| blog          | `naver` (blog vertical)                     | yes                                  |
+| shopping      | `naver` (shop vertical)                     | yes                                  |
+| academic-tech | `arxiv`, `github` (NON-Naver)               | no (`expected_naver_relevant:false`) |
+| code-mixed    | mixed — `github`/`arxiv`, sometimes `naver` | depends on the row                   |
+| cultural      | `naver` (blog/news), `koreanews`            | yes                                  |
 
 Naver verticals come from the result `DocType` (`post`→blog, `article`→news,
 `other`→web/shop/datalab); `other` is ambiguous and counts as a SourceID-only

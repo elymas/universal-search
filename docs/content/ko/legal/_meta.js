@@ -1,3 +1,3 @@
 export default {
-  licenses: '라이선스',
-}
+  licenses: "라이선스",
+};

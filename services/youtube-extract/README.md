@@ -31,6 +31,7 @@ python -m youtube_extract
 See `.env.example` for all available variables.
 
 Key variables:
+
 - `YT_EXTRACT_PORT` — listen port (default 8084)
 - `YT_COOKIES_PATH` — optional cookies file for IP-block mitigation
 - `YT_SLEEP_REQUESTS` / `YT_SLEEP_INTERVAL` / `YT_MAX_SLEEP_INTERVAL` — rate-limiting flags

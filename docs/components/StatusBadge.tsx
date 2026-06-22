@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * StatusBadge — renders a lifecycle badge for an adapter based on the
@@ -15,55 +15,56 @@
  * Falls back to "Status unknown" when the adapter key is missing or malformed.
  */
 
-import adapterStatusRaw from '../content/en/reference/adapters/_generated/adapter-status.json'
+import adapterStatusRaw from "../content/en/reference/adapters/_generated/adapter-status.json";
 
-export type Lifecycle = 'stable' | 'beta' | 'disabled' | 'deprecated'
+export type Lifecycle = "stable" | "beta" | "disabled" | "deprecated";
 
 export interface AdapterStatusEntry {
-  lifecycle: Lifecycle
-  successRate7d?: number
-  verifiedAt?: string
+  lifecycle: Lifecycle;
+  successRate7d?: number;
+  verifiedAt?: string;
 }
 
 // Re-type the imported JSON as a record we can safely query.
-const adapterStatus = adapterStatusRaw as Record<string, unknown>
+const adapterStatus = adapterStatusRaw as Record<string, unknown>;
 
 function parseEntry(raw: unknown): AdapterStatusEntry | null {
-  if (typeof raw !== 'object' || raw === null) return null
-  const obj = raw as Record<string, unknown>
-  if (typeof obj.lifecycle !== 'string') return null
-  const lifecycle = obj.lifecycle as string
-  if (!['stable', 'beta', 'disabled', 'deprecated'].includes(lifecycle)) return null
+  if (typeof raw !== "object" || raw === null) return null;
+  const obj = raw as Record<string, unknown>;
+  if (typeof obj.lifecycle !== "string") return null;
+  const lifecycle = obj.lifecycle as string;
+  if (!["stable", "beta", "disabled", "deprecated"].includes(lifecycle))
+    return null;
   return {
     lifecycle: lifecycle as Lifecycle,
     successRate7d:
-      typeof obj.successRate7d === 'number' ? obj.successRate7d : undefined,
-    verifiedAt: typeof obj.verifiedAt === 'string' ? obj.verifiedAt : undefined,
-  }
+      typeof obj.successRate7d === "number" ? obj.successRate7d : undefined,
+    verifiedAt: typeof obj.verifiedAt === "string" ? obj.verifiedAt : undefined,
+  };
 }
 
-const BADGE_STYLES: Record<Lifecycle | 'unknown', string> = {
+const BADGE_STYLES: Record<Lifecycle | "unknown", string> = {
   stable:
-    'inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800',
-  beta: 'inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800',
+    "inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800",
+  beta: "inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800",
   disabled:
-    'inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600',
+    "inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600",
   deprecated:
-    'inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800',
+    "inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800",
   unknown:
-    'inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500',
-}
+    "inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500",
+};
 
-const BADGE_LABELS: Record<Lifecycle | 'unknown', string> = {
-  stable: 'stable',
-  beta: 'beta',
-  disabled: 'disabled — not available in V1',
-  deprecated: 'deprecated',
-  unknown: 'Status unknown',
-}
+const BADGE_LABELS: Record<Lifecycle | "unknown", string> = {
+  stable: "stable",
+  beta: "beta",
+  disabled: "disabled — not available in V1",
+  deprecated: "deprecated",
+  unknown: "Status unknown",
+};
 
 interface Props {
-  adapter: string
+  adapter: string;
 }
 
 /**
@@ -71,19 +72,15 @@ interface Props {
  * for the given adapter SourceID.
  */
 export function StatusBadge({ adapter }: Props) {
-  const rawEntry = adapterStatus[adapter]
-  const entry = parseEntry(rawEntry)
+  const rawEntry = adapterStatus[adapter];
+  const entry = parseEntry(rawEntry);
 
   if (!entry) {
-    return (
-      <span className={BADGE_STYLES.unknown}>
-        {BADGE_LABELS.unknown}
-      </span>
-    )
+    return <span className={BADGE_STYLES.unknown}>{BADGE_LABELS.unknown}</span>;
   }
 
-  const style = BADGE_STYLES[entry.lifecycle]
-  const label = BADGE_LABELS[entry.lifecycle]
+  const style = BADGE_STYLES[entry.lifecycle];
+  const label = BADGE_LABELS[entry.lifecycle];
 
   return (
     <span className={style}>
@@ -99,7 +96,7 @@ export function StatusBadge({ adapter }: Props) {
         </span>
       )}
     </span>
-  )
+  );
 }
 
-export default StatusBadge
+export default StatusBadge;

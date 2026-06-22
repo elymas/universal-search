@@ -8,8 +8,8 @@ FROM alpine:3.21 AS downloader
 
 ARG MIGRATE_VERSION=v4.18.2
 
-RUN apk add --no-cache curl && \
-    curl -L "https://github.com/golang-migrate/migrate/releases/download/${MIGRATE_VERSION}/migrate.linux-amd64.tar.gz" | \
+RUN apk add --no-cache curl && mkdir -p /out && \
+    curl -fL "https://github.com/golang-migrate/migrate/releases/download/${MIGRATE_VERSION}/migrate.linux-amd64.tar.gz" | \
     tar xvz -C /tmp/ && \
     mv /tmp/migrate /out/migrate && \
     chmod +x /out/migrate

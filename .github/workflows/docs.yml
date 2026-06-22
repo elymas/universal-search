@@ -121,7 +121,7 @@ jobs:
     name: doc-claims-advisory
     needs: build
     runs-on: ubuntu-latest
-    continue-on-error: true   # advisory — never blocks merge
+    continue-on-error: true # advisory — never blocks merge
     steps:
       - uses: actions/checkout@v4
 

@@ -1,27 +1,27 @@
 export default {
   index: {
-    title: 'Introduction',
-    type: 'page',
+    title: "Introduction",
+    type: "page",
   },
   introduction: {
-    title: 'Introduction',
+    title: "Introduction",
   },
-  'getting-started': {
-    title: 'Getting Started',
+  "getting-started": {
+    title: "Getting Started",
   },
-  'end-users': {
-    title: 'End Users',
+  "end-users": {
+    title: "End Users",
   },
   operators: {
-    title: 'Operators',
+    title: "Operators",
   },
   reference: {
-    title: 'Reference',
+    title: "Reference",
   },
   troubleshooting: {
-    title: 'Troubleshooting',
+    title: "Troubleshooting",
   },
   legal: {
-    title: 'Legal',
+    title: "Legal",
   },
-}
+};

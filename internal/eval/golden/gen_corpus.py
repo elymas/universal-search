@@ -1,17 +1,27 @@
 #!/usr/bin/env python3
 """Generate 200+ NormalizedDoc fixture files for SPEC-EVAL-001 golden corpus."""
+
 import json
 import os
 import hashlib
-import sys
 from datetime import datetime, timezone, timedelta
 
 OUT = "/Users/masterp/Projects/superwork/universal-search/internal/eval/golden/corpus"
 
 SOURCES = [
-    "reddit", "hackernews", "arxiv", "github", "youtube",
-    "bluesky", "x", "searxng", "naver", "daum",
-    "korea_news", "rss", "polymarket",
+    "reddit",
+    "hackernews",
+    "arxiv",
+    "github",
+    "youtube",
+    "bluesky",
+    "x",
+    "searxng",
+    "naver",
+    "daum",
+    "korea_news",
+    "rss",
+    "polymarket",
 ]
 
 DOCTYPES = ["article", "post", "paper", "video", "repo", "issue", "social", "other"]
@@ -84,6 +94,7 @@ KO_TOPICS = [
     "한국 스마트시티 데이터 플랫폼 구축",
 ]
 
+
 def make_hash(source_id, url, title, body):
     h = hashlib.sha256()
     sep = "\x00"
@@ -95,6 +106,7 @@ def make_hash(source_id, url, title, body):
     h.update(sep.encode())
     h.update(body.encode())
     return h.hexdigest()[:16]
+
 
 def gen_doc(idx):
     source = SOURCES[idx % len(SOURCES)]
@@ -138,6 +150,7 @@ def gen_doc(idx):
     }
     return doc_id, doc
 
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     count = 210  # 200 minimum + 10 buffer
@@ -150,6 +163,7 @@ def main():
             json.dump(doc, f, indent=2)
     print(f"Generated {count} docs in {OUT}")
     print(f"IDs: {ids[:5]}...{ids[-5:]}")
+
 
 if __name__ == "__main__":
     main()

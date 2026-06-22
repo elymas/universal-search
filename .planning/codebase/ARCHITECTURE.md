@@ -1,4 +1,5 @@
 <!-- refreshed: 2026-06-04 -->
+
 # Architecture
 
 **Analysis Date:** 2026-06-04
@@ -43,26 +44,27 @@
 
 ## Component Responsibilities
 
-| Component | Responsibility | File |
-|-----------|----------------|------|
-| CLI root | Cobra command tree, global flags, obs/LLM init | `cmd/usearch/root.go` |
-| Query orchestrator | Drives classify → fanout → synthesize for `usearch query` | `cmd/usearch/query.go` |
-| Deep command | Stub wiring for multi-agent deep research (not yet wired) | `cmd/usearch/deep_cmd.go` |
-| Adapter contract | 4-method interface every source implements | `pkg/types/adapter.go` |
-| Adapter registry | Register/Get/List, auth env validation, per-call obs wrapping | `internal/adapters/registry.go` |
-| Intent router | Classifies query → category, lang, adapter set | `internal/router/router.go` |
-| Fanout dispatcher | Parallel adapter dispatch, dedup, sort, partial-failure handling | `internal/fanout/dispatch.go` |
-| Synthesis client | LLM synthesis of docs into cited answer | `internal/synthesis/client.go` |
-| Orchestrator (lib) | Reusable `Search()` pipeline shared by API/MCP | `internal/orchestrator/search.go` |
-| Deep agent | Researcher→Reviewer→Writer→Verifier pipeline | `internal/deepagent/orchestrator.go` |
-| LLM client | LiteLLM-backed provider, retry, cost, streaming | `internal/llm/client.go` |
-| Observability | OTel traces, slog logs, Prometheus metrics, reqid | `internal/obs/obs.go` |
+| Component          | Responsibility                                                   | File                                 |
+| ------------------ | ---------------------------------------------------------------- | ------------------------------------ |
+| CLI root           | Cobra command tree, global flags, obs/LLM init                   | `cmd/usearch/root.go`                |
+| Query orchestrator | Drives classify → fanout → synthesize for `usearch query`        | `cmd/usearch/query.go`               |
+| Deep command       | Stub wiring for multi-agent deep research (not yet wired)        | `cmd/usearch/deep_cmd.go`            |
+| Adapter contract   | 4-method interface every source implements                       | `pkg/types/adapter.go`               |
+| Adapter registry   | Register/Get/List, auth env validation, per-call obs wrapping    | `internal/adapters/registry.go`      |
+| Intent router      | Classifies query → category, lang, adapter set                   | `internal/router/router.go`          |
+| Fanout dispatcher  | Parallel adapter dispatch, dedup, sort, partial-failure handling | `internal/fanout/dispatch.go`        |
+| Synthesis client   | LLM synthesis of docs into cited answer                          | `internal/synthesis/client.go`       |
+| Orchestrator (lib) | Reusable `Search()` pipeline shared by API/MCP                   | `internal/orchestrator/search.go`    |
+| Deep agent         | Researcher→Reviewer→Writer→Verifier pipeline                     | `internal/deepagent/orchestrator.go` |
+| LLM client         | LiteLLM-backed provider, retry, cost, streaming                  | `internal/llm/client.go`             |
+| Observability      | OTel traces, slog logs, Prometheus metrics, reqid                | `internal/obs/obs.go`                |
 
 ## Pattern Overview
 
 **Overall:** Layered pipeline architecture with a plugin (adapter) registry, behind multiple thin entry-point binaries that share a common orchestration core.
 
 **Key Characteristics:**
+
 - Standard Go project layout: `cmd/` thin binaries, `internal/` private packages, `pkg/` public contracts.
 - Plugin pattern — all sources implement the `types.Adapter` interface and self-register in a `Registry`; orchestration code never imports a concrete adapter except in the CLI's `buildProductionRegistry`.
 - Interface-driven seams (`synthClientIface`, `adapters.Registry`, `router.Router`) enable test injection via functional options.
@@ -72,6 +74,7 @@
 ## Layers
 
 **Entry-point layer (`cmd/`):**
+
 - Purpose: Process boot, flag parsing, dependency wiring, exit-code mapping.
 - Location: `cmd/usearch`, `cmd/usearch-api`, `cmd/usearch-mcp`, `cmd/eval`.
 - Contains: cobra commands, HTTP handlers, MCP tool wiring, output formatters.
@@ -79,20 +82,24 @@
 - Used by: end users (CLI), web frontend (API), MCP clients.
 
 **Orchestration layer (`internal/router`, `internal/fanout`, `internal/synthesis`, `internal/orchestrator`, `internal/deepagent`):**
+
 - Purpose: Turn a query into ranked, synthesized results.
 - Depends on: adapter registry, LLM client, obs.
 - Used by: all entry points.
 
 **Source layer (`internal/adapters/*`):**
+
 - Purpose: Per-source HTTP/API integration returning `[]types.NormalizedDoc`.
 - Depends on: `pkg/types` contracts only.
 - Used by: fanout via the registry.
 
 **Indexing/retrieval layer (`internal/index`, `internal/idx5`, `internal/embedder`, `internal/synthcluster`):**
+
 - Purpose: Hybrid retrieval (meili/qdrant/pg), embeddings, dedup clustering.
 - Used by: deep pipeline and index-backed adapters.
 
 **Contract layer (`pkg/types`, `pkg/client`):**
+
 - Purpose: Public, importable types (`Adapter`, `Query`, `NormalizedDoc`, `Capabilities`, errors) and a thin client.
 - Depends on: stdlib only.
 
@@ -124,47 +131,56 @@
 3. The shared `internal/orchestrator.Search` (`internal/orchestrator/search.go:68`) is the reusable pipeline for non-CLI callers.
 
 **State Management:**
+
 - Request-scoped: request ID + deadline carried on `context.Context` (`internal/obs/reqid`).
 - Persistent: history in `internal/usearch/history`; audit chains in `internal/audit`; vector/keyword indexes in external qdrant/meilisearch/postgres.
 
 ## Key Abstractions
 
 **Adapter:**
+
 - Purpose: Uniform contract for every search source (`Name`, `Search`, `Healthcheck`, `Capabilities`).
 - Examples: `internal/adapters/reddit`, `internal/adapters/arxiv`, `internal/adapters/searxng`.
 - Pattern: Interface in `pkg/types/adapter.go` (`@MX:ANCHOR`, fan_in ≥ 12); registry wraps each impl for observability.
 
 **Registry:**
+
 - Purpose: Thread-safe adapter directory with auth-env validation and per-call telemetry wrapping.
 - Examples: `internal/adapters/registry.go`.
 - Pattern: `sync.RWMutex`, sorted `List()`, duplicate detection.
 
 **RoutingDecision:**
+
 - Purpose: Output of classification (category, lang, adapter set) consumed by fanout.
 - Examples: `internal/router/routing_decision.go`.
 
 **NormalizedDoc:**
+
 - Purpose: Canonical cross-source document shape feeding dedup and synthesis.
 - Examples: `pkg/types/normalized_doc.go`.
 
 ## Entry Points
 
 **`cmd/usearch` (CLI):**
+
 - Location: `cmd/usearch/main.go` → `root.go`.
 - Triggers: shell invocation `usearch query|deep|config|history|repl|sources|login`.
 - Responsibilities: flag parsing, obs/LLM init, pipeline orchestration, exit codes.
 
 **`cmd/usearch-api` (HTTP backend):**
+
 - Location: `cmd/usearch-api/main.go` + `handlers/`.
 - Triggers: HTTP requests from `web/` frontend.
 - Responsibilities: deep + synthesis endpoints, SSE streaming.
 
 **`cmd/usearch-mcp` (MCP server):**
+
 - Location: `cmd/usearch-mcp/main.go`; tools in `internal/mcpserver/tools/`.
 - Triggers: MCP clients over stdio/HTTP.
 - Responsibilities: `search`, `deep_research`, `get_citation`, `list_sources` tools.
 
 **`cmd/eval` (evaluation harness):**
+
 - Location: `cmd/eval/main.go`.
 - Triggers: eval runs against `.moai/eval` / `tests/eval`.
 
@@ -194,6 +210,7 @@
 **Strategy:** Wrapped sentinel errors with categories; exit codes mapped at the CLI boundary.
 
 **Patterns:**
+
 - Sources wrap raw errors in `*types.SourceError` with a `Category` (`pkg/types/errors.go`); fanout aggregates them into `AdapterErrors` for partial-failure reporting.
 - Registry returns `*RegistryError` (`ErrDuplicateAdapter`, `ErrMissingAuth`, `ErrAdapterNotFound`) — classify via `errors.Is` / `errors.As`.
 - CLI maps outcomes to exit codes 0/1/2/3 via `exitError` (`cmd/usearch/exitcode.go`, `root.go:191`).
@@ -208,4 +225,4 @@
 
 ---
 
-*Architecture analysis: 2026-06-04*
+_Architecture analysis: 2026-06-04_

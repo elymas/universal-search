@@ -146,7 +146,7 @@ chain; it adds no new chain or verify job.
 When `usearch_audit_chain_violations_total` increments (chain break detected):
 
 1. **Alert-first, lock-later.** V1 default is `audit.hash_chain.fail_closed:
-   false` — a break raises a CRITICAL alert but does NOT lock the audit
+false` — a break raises a CRITICAL alert but does NOT lock the audit
    subsystem (prevents lockout from a botched migration or transient race).
 2. **Investigate the break point** — run `VerifyChain` for the affected
    `(tenant_id, event_type)` to find the first non-matching `this_hash`.

@@ -5,12 +5,12 @@ per SPEC-DOC-001 REQ-DOC-010 and SPEC-DOC-002 REQ-ADPDOC-017 / NFR-ADPDOC-006.
 
 ## Tier-1 Review Log (SPEC-DOC-002)
 
-| Page | File | Reviewer | Status | Review date | Notes |
-|------|------|----------|--------|-------------|-------|
-| 어댑터 카탈로그 | `ko/reference/adapters/index.mdx` | manager-docs (limbowl) | pending native review | 2026-05-31 | Awaiting native Korean speaker signoff |
-| Naver 어댑터 | `ko/reference/adapters/naver.mdx` | manager-docs (limbowl) | pending native review | 2026-05-31 | Awaiting native Korean speaker signoff |
-| Korean News 어댑터 | `ko/reference/adapters/koreanews.mdx` | manager-docs (limbowl) | pending native review | 2026-05-31 | Awaiting native Korean speaker signoff |
-| 오류 분류 체계 | `ko/reference/adapters/errors.mdx` | manager-docs (limbowl) | pending native review | 2026-05-31 | Awaiting native Korean speaker signoff |
+| Page               | File                                  | Reviewer               | Status                | Review date | Notes                                  |
+| ------------------ | ------------------------------------- | ---------------------- | --------------------- | ----------- | -------------------------------------- |
+| 어댑터 카탈로그    | `ko/reference/adapters/index.mdx`     | manager-docs (limbowl) | pending native review | 2026-05-31  | Awaiting native Korean speaker signoff |
+| Naver 어댑터       | `ko/reference/adapters/naver.mdx`     | manager-docs (limbowl) | pending native review | 2026-05-31  | Awaiting native Korean speaker signoff |
+| Korean News 어댑터 | `ko/reference/adapters/koreanews.mdx` | manager-docs (limbowl) | pending native review | 2026-05-31  | Awaiting native Korean speaker signoff |
+| 오류 분류 체계     | `ko/reference/adapters/errors.mdx`    | manager-docs (limbowl) | pending native review | 2026-05-31  | Awaiting native Korean speaker signoff |
 
 ## How to Review
 

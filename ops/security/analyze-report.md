@@ -8,14 +8,14 @@ live codebase at branch `feature/SPEC-SEC-001`.
 
 ### 1.1 SSRF guards (SPEC-CACHE-001 REQ-CACHE-013)
 
-| File | Symbol | Visibility | Behavior |
-|------|--------|-----------|----------|
-| `internal/access/ssrf.go` | `validateScheme(u)` | unexported | Allows `http`/`https`; blocks all else with `*FetchError{CategoryBlocked}` |
-| `internal/access/ssrf.go` | `validateHost(ctx, u, opts, fopts)` | unexported | Resolves host; blocks if any resolved IP is private/loopback/link-local. Dual override: `opts.AllowPrivateNetworks \|\| fopts.AllowPrivateNetworks` |
-| `internal/access/ssrf.go` | `validateRedirect(next, opts, fopts, hopCount)` | unexported | Hop cap (default 5) + re-runs scheme + host check |
-| `internal/access/ssrf.go` | `isPrivateOrLoopback(ip)` | unexported | CIDR membership: 10/8, 172.16/12, 192.168/16, 169.254/16, fc00::/7, fe80::/10, ::1/128, 127/8, 100.64/10 |
-| `internal/access/dialer.go` | `pinnedDialContext(ctx, host, opts, fopts)` | unexported | Resolves once, pins IP, rejects private pinned IP (DNS-rebind mitigation) |
-| `internal/access/dialer.go` | `dialContextWithPinnedIP(ip)` | unexported | Forces all TCP dials to the pinned IP |
+| File                        | Symbol                                          | Visibility | Behavior                                                                                                                                            |
+| --------------------------- | ----------------------------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `internal/access/ssrf.go`   | `validateScheme(u)`                             | unexported | Allows `http`/`https`; blocks all else with `*FetchError{CategoryBlocked}`                                                                          |
+| `internal/access/ssrf.go`   | `validateHost(ctx, u, opts, fopts)`             | unexported | Resolves host; blocks if any resolved IP is private/loopback/link-local. Dual override: `opts.AllowPrivateNetworks \|\| fopts.AllowPrivateNetworks` |
+| `internal/access/ssrf.go`   | `validateRedirect(next, opts, fopts, hopCount)` | unexported | Hop cap (default 5) + re-runs scheme + host check                                                                                                   |
+| `internal/access/ssrf.go`   | `isPrivateOrLoopback(ip)`                       | unexported | CIDR membership: 10/8, 172.16/12, 192.168/16, 169.254/16, fc00::/7, fe80::/10, ::1/128, 127/8, 100.64/10                                            |
+| `internal/access/dialer.go` | `pinnedDialContext(ctx, host, opts, fopts)`     | unexported | Resolves once, pins IP, rejects private pinned IP (DNS-rebind mitigation)                                                                           |
+| `internal/access/dialer.go` | `dialContextWithPinnedIP(ip)`                   | unexported | Forces all TCP dials to the pinned IP                                                                                                               |
 
 Non-test call sites (verified via grep):
 
@@ -29,11 +29,11 @@ All 22 verified GREEN against unchanged code at T01.
 
 ### 1.2 OIDC discovery SSRF guard (SPEC-AUTH-001 D8)
 
-| File | Symbol | Behavior |
-|------|--------|----------|
-| `internal/auth/private_ip.go` | `checkPrivateIP(host)` | Resolves host; rejects private/loopback/link-local via `net/netip` predicates |
-| `internal/auth/private_ip.go` | `isPrivateIP(ipStr)` | Boolean private-range predicate |
-| `internal/auth/discovery.go` | `validateIssuerURL(url, allowPrivate)` | HTTPS enforcement + private-IP block (bypassable for dev/CI) |
+| File                          | Symbol                                 | Behavior                                                                      |
+| ----------------------------- | -------------------------------------- | ----------------------------------------------------------------------------- |
+| `internal/auth/private_ip.go` | `checkPrivateIP(host)`                 | Resolves host; rejects private/loopback/link-local via `net/netip` predicates |
+| `internal/auth/private_ip.go` | `isPrivateIP(ipStr)`                   | Boolean private-range predicate                                               |
+| `internal/auth/discovery.go`  | `validateIssuerURL(url, allowPrivate)` | HTTPS enforcement + private-IP block (bypassable for dev/CI)                  |
 
 This is a **duplicate** of the access private-IP classification using a
 different implementation (`net/netip` vs `net.IPNet` CIDR table). DDD IMPROVE
@@ -82,16 +82,16 @@ Existing label names include `reason`, `component`-adjacent `adapter`,
 
 ## 2. Identified gaps (SEC-001 closes)
 
-| Gap | REQ | Phase/Task |
-|-----|-----|------------|
-| SSRF guards are access-internal (unexported); not reusable by auth/adapters | REQ-SEC-007 | T04 |
-| No cloud-metadata hostname blocklist (only IP 169.254/16 covered) | REQ-SEC-008 | T04 |
-| No SSRF block metric (`ssrf_blocks_total`) | REQ-SEC-009 | T04 |
-| Duplicate private-IP logic in access vs auth | REQ-SEC-007 | T04 |
-| No secret scanning (gitleaks) — pre-commit or CI | REQ-SEC-004 | T02 |
-| No container CVE scan (Trivy) | REQ-SEC-001 | T03 |
-| No UNFIXED-CVE exception tracking with deadlines | REQ-SEC-003 | T03 |
-| 7-type security event taxonomy not emitted into AUTH-003 chain | REQ-SEC-017 | T05 |
+| Gap                                                                                                           | REQ         | Phase/Task                  |
+| ------------------------------------------------------------------------------------------------------------- | ----------- | --------------------------- |
+| SSRF guards are access-internal (unexported); not reusable by auth/adapters                                   | REQ-SEC-007 | T04                         |
+| No cloud-metadata hostname blocklist (only IP 169.254/16 covered)                                             | REQ-SEC-008 | T04                         |
+| No SSRF block metric (`ssrf_blocks_total`)                                                                    | REQ-SEC-009 | T04                         |
+| Duplicate private-IP logic in access vs auth                                                                  | REQ-SEC-007 | T04                         |
+| No secret scanning (gitleaks) — pre-commit or CI                                                              | REQ-SEC-004 | T02                         |
+| No container CVE scan (Trivy)                                                                                 | REQ-SEC-001 | T03                         |
+| No UNFIXED-CVE exception tracking with deadlines                                                              | REQ-SEC-003 | T03                         |
+| 7-type security event taxonomy not emitted into AUTH-003 chain                                                | REQ-SEC-017 | T05                         |
 | `secret.scan.finding` / `ssrf.blocked` / `ratelimit.exceeded` / `prompt.sanitized` EventType constants absent | REQ-SEC-017 | T05 (AUTH-003 coordination) |
 
 ## 3. PRESERVE safety net (T01 deliverable)

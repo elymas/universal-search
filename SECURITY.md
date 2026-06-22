@@ -19,12 +19,12 @@ coordinated a disclosure timeline with you.
 
 We aim to acknowledge and triage reports on the following targets:
 
-| Severity (CVSS) | Acknowledgement | Target fix |
-|-----------------|-----------------|------------|
-| CRITICAL (>= 9.0) | 24 hours | <= 7 days |
-| HIGH (7.0-8.9) | 72 hours | <= 30 days |
-| MEDIUM (4.0-6.9) | 7 days | best effort |
-| LOW (< 4.0) | best effort | best effort |
+| Severity (CVSS)   | Acknowledgement | Target fix  |
+| ----------------- | --------------- | ----------- |
+| CRITICAL (>= 9.0) | 24 hours        | <= 7 days   |
+| HIGH (7.0-8.9)    | 72 hours        | <= 30 days  |
+| MEDIUM (4.0-6.9)  | 7 days          | best effort |
+| LOW (< 4.0)       | best effort     | best effort |
 
 ## Scope
 

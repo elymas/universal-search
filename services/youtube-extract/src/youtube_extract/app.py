@@ -12,16 +12,14 @@ import logging
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Optional
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 from .models import (
     ErrorDetail,
     ErrorResponse,
-    HealthResponse,
     SearchRequest,
     SearchResponse,
-    YTItem,
 )
 from .ytdlp_runner import YtdlpError, get_ytdlp_version, run_search
 

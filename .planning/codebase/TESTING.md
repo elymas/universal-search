@@ -7,21 +7,25 @@ The repo has three test planes: **Go** (the primary plane — 346 `*_test.go` fi
 ## Test Framework
 
 **Go:**
+
 - Runner: standard library `testing` (`go test`). No `testify`/`go-cmp` as the default — assertions are hand-written `if got != want { t.Errorf(...) }`.
   - `testify` appears in only 16 test files; `go-cmp` is not used; `reflect.DeepEqual` appears in 6 files. Prefer plain stdlib assertions to match the dominant style.
 - Race detector and coverage are always on in CI and the Makefile.
 - Config: none beyond `go.mod` (Go 1.25.8).
 
 **Web:**
+
 - Runner: **Vitest 4** with `@vitejs/plugin-react` (`web/vitest.config.ts`)
 - Assertions: `@testing-library/jest-dom/vitest` matchers + `@testing-library/react` / `user-event`
 - Environment: `jsdom`, `globals: true`, setup file `web/src/__tests__/setup.ts`
 - Include glob: `src/**/*.{test,spec}.{ts,tsx}`
 
 **Python:**
+
 - `pytest` per service via `uv run --directory services/$svc pytest` (`Makefile` `test-py`)
 
 **Run Commands:**
+
 ```bash
 # Go — all packages, race + coverage (Makefile test-go and CI)
 go test ./... -race -cover
@@ -49,17 +53,20 @@ make test
 ## Test File Organization
 
 **Location:**
+
 - **Go:** co-located in the same package as the code under test. Unit tests use the production package name (white-box) — e.g., `package access` in `internal/access/cascade_helpers_test.go`, allowing tests to exercise unexported funcs like `contextOutcome`, `derivePhaseCtx`, `toFloat`.
 - **Integration tests** in `tests/integration/` use an external test package (`package integration_test` in `tests/integration/deep_tree_test.go`).
 - **Web:** `__tests__/` subfolders adjacent to the code (`web/src/components/__tests__/`, `web/src/app/admin/_components/__tests__/`).
 
 **Naming:**
+
 - Unit: `<subject>_test.go` (`errors_test.go`, `cap_check_test.go`)
 - Integration: `<subject>_integration_test.go` or files under `tests/integration/` guarded by a build tag
 - Benchmarks: `bench_test.go` (one per adapter package, e.g., `internal/adapters/naver/bench_test.go`)
 - Web: `<subject>.test.tsx` / `<subject>.test.ts`
 
 **Structure:**
+
 ```
 internal/<domain>/
 ├── <feature>.go
@@ -73,6 +80,7 @@ internal/<domain>/
 ## Test Structure
 
 **Test function pattern (Go):** one test function per behavior, descriptive name encoding the scenario, `t.Parallel()` at the top:
+
 ```go
 func TestDerivePhaseCtx_RespectsParentDeadline(t *testing.T) {
     t.Parallel()
@@ -94,9 +102,11 @@ func TestDerivePhaseCtx_RespectsParentDeadline(t *testing.T) {
     }
 }
 ```
+
 Source: `internal/access/cascade_helpers_test.go:24-44`.
 
 **Patterns observed:**
+
 - **`t.Parallel()`** in 184 test files — the default for independent unit tests.
 - **`t.Context()`** (Go 1.24+) used for auto-cancelled test contexts in 16 files — preferred over manual `context.Background()` + cleanup.
 - **`t.Helper()`** marks helper functions (46 files) so failures report the caller's line.
@@ -108,6 +118,7 @@ Source: `internal/access/cascade_helpers_test.go:24-44`.
 ## Table-Driven Tests
 
 The canonical pattern: a `[]struct` slice of named cases iterated with `t.Run`:
+
 ```go
 func TestToFloatCoversAllBranches(t *testing.T) {
     t.Parallel()
@@ -133,9 +144,11 @@ func TestToFloatCoversAllBranches(t *testing.T) {
     }
 }
 ```
+
 Source: `internal/deepagent/costguard/cap_check_test.go:270-292`.
 
 **Conventions:**
+
 - Slice variable named `tests`, `cases`, or `testCases`; loop variable `tc` (most common) or `tt`.
 - First struct field is `name string`, used as the `t.Run` subtest label.
 - Fields ordered: `name`, inputs, then `want...` expectations.
@@ -145,6 +158,7 @@ Source: `internal/deepagent/costguard/cap_check_test.go:270-292`.
 ## Mocking
 
 **No mock-generation framework** (no `mock_*.go`, no gomock, no mockery). Mocking is done by **hand-written fakes implementing small interfaces**, defined inside the `_test.go` file:
+
 ```go
 // fakeResponseWriter is a minimal http.ResponseWriter + http.Flusher.
 type fakeResponseWriter struct {
@@ -156,13 +170,16 @@ func newFakeRW() *fakeResponseWriter {
     return &fakeResponseWriter{buf: &bytes.Buffer{}, header: make(http.Header)}
 }
 ```
+
 Source: `internal/streamsynth/streamsynth_test.go:18-26`. Similar in-test fakes appear in `internal/sse/writer_test.go`, `internal/deepagent/agents_test.go`, `internal/access/phase3_test.go`, `internal/security/prompt/sanitize_test.go`.
 
 **What to mock:**
+
 - External I/O boundaries: HTTP `ResponseWriter`/`Flusher` for SSE, LLM clients (the `llm.Client` interface in `internal/llm/llm.go:100` is the seam — production code depends on the interface, tests substitute a fake).
 - Dependencies are injected through constructors (`New(cfg, o)`), so a fake is passed in place of the real impl.
 
 **What NOT to mock:**
+
 - Real `context.Context` behavior — tests use genuine `context.WithTimeout`/`t.Context()` to exercise cancellation and deadlines rather than faking it (`internal/access/cascade_helpers_test.go`).
 - Standard library types you can construct directly (`bytes.Buffer`, `httptest`).
 
@@ -184,6 +201,7 @@ Source: `internal/streamsynth/streamsynth_test.go:18-26`. Similar in-test fakes 
 **Branch-targeted tests:** files/functions named `..._CoversAllBranches` and `coverage_gap_test.go` (`internal/deepagent/coverage_gap_test.go`) exist specifically to push branch coverage to the gate threshold — mirror this naming when filling coverage gaps.
 
 **View Coverage:**
+
 ```bash
 go test ./... -coverprofile=coverage.out
 go tool cover -func=coverage.out          # per-function + total
@@ -193,27 +211,32 @@ go tool cover -html=coverage.out          # browser report
 ## Test Types
 
 **Unit Tests:**
+
 - White-box, co-located, `t.Parallel()`, table-driven where multiple cases apply.
 - Cover pure functions, context/deadline logic, error wrapping/sentinels, SSE wire formatting.
 - No external services required.
 
 **Integration Tests:**
+
 - Gated by `//go:build integration` (first line of file): `tests/integration/deep_tree_test.go`, `internal/index/index_integration_test.go`.
 - Excluded from the default `go test ./...` run — only execute with `-tags=integration`.
 - Require live infrastructure. `internal/index/index_integration_test.go` header documents the dependencies: live **Qdrant, Meilisearch, PostgreSQL** via `docker compose -f deploy/docker-compose.yml up -d`.
 - Use `httptest` servers and real JSON marshalling rather than mocks.
 
 **Benchmarks:**
+
 - `bench_test.go` per adapter package, with `func TestMain` for benchmark setup (`internal/fanout/bench_test.go`, `internal/embedder/bench_test.go`).
 - Run with `go test -bench . ./internal/adapters/...`.
 
 **E2E / Web:**
+
 - Web component + a11y + security-regression tests via Vitest + Testing Library (`web/src/app/admin/_components/__tests__/a11y.test.tsx`, `security-regression.test.tsx`).
 - No browser E2E runner (Playwright/Cypress) configured in this repo.
 
 ## Common Patterns
 
 **Build-tag header (integration):**
+
 ```go
 //go:build integration
 
@@ -221,9 +244,11 @@ go tool cover -html=coverage.out          # browser report
 // Run with: go test -tags=integration ./internal/index/... -v
 package index
 ```
+
 Source: `internal/index/index_integration_test.go:1-11`.
 
 **Context / deadline testing:**
+
 ```go
 parent, cancel := context.WithTimeout(t.Context(), 50*time.Millisecond)
 defer cancel()
@@ -231,6 +256,7 @@ defer cancel()
 ```
 
 **Error testing (sentinel + wrapping):**
+
 ```go
 _, err := parseFloat("abc")
 if err == nil {
@@ -238,12 +264,14 @@ if err == nil {
 }
 // For sentinels, assert with errors.Is(err, pkg.ErrSomething) rather than string match.
 ```
+
 Source: `internal/deepagent/costguard/cap_check_test.go:307-314`.
 
 **SPEC linkage in tests:**
+
 - Test names cite the requirement: `TestSSEEmitsSectionStartPerSection verifies REQ-DEEP1-005...` (`internal/streamsynth/longform_test.go:46`)
 - `@MX:SPEC` comments tie release-gate tests to their SPEC (`internal/streamsynth/emit_marshal_error_test.go:6`, `internal/sse/close_test.go:5`)
 
 ---
 
-*Testing analysis: 2026-06-04*
+_Testing analysis: 2026-06-04_

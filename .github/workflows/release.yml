@@ -4,22 +4,22 @@ name: release
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
-      - 'v[0-9]+.[0-9]+.[0-9]+-*'
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-*"
   # REQ-REL-015 + NFR-REL-006: Dry-run mode via workflow_dispatch
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Skip publish, only build and verify'
+        description: "Skip publish, only build and verify"
         required: false
-        default: 'false'
+        default: "false"
         type: boolean
 
 permissions:
-  contents: write       # GitHub Release creation + tag verification
-  id-token: write       # cosign keyless OIDC + SLSA provenance OIDC
-  packages: write       # ghcr.io image operations
-  actions: read         # Cross-workflow status queries (G5–G9)
+  contents: write # GitHub Release creation + tag verification
+  id-token: write # cosign keyless OIDC + SLSA provenance OIDC
+  packages: write # ghcr.io image operations
+  actions: read # Cross-workflow status queries (G5–G9)
 
 jobs:
   # ========== G1–G12 Pre-tag Verification ==========
@@ -48,7 +48,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25'
+          go-version: "1.25"
           cache: true
 
       # G1: Code health (go vet, go test, coverage ≥ 85%)
@@ -253,7 +253,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25'
+          go-version: "1.25"
           cache: true
 
       # cosign binary is required by the `signs:` block in .goreleaser.yml

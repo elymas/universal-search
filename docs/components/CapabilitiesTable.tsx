@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * CapabilitiesTable — renders the auto-extracted Capabilities fields from a
@@ -11,20 +11,20 @@
  */
 
 interface CapabilitiesData {
-  sourceID: string
-  requiresAuth: boolean
-  authEnvVars: string[]
-  rateLimitPerMin: number
-  defaultMaxResults: number
-  sourcePath: string
-  sourceLine: number
-  extractedAt: string
+  sourceID: string;
+  requiresAuth: boolean;
+  authEnvVars: string[];
+  rateLimitPerMin: number;
+  defaultMaxResults: number;
+  sourcePath: string;
+  sourceLine: number;
+  extractedAt: string;
 }
 
 interface Props {
   /** Path to the capabilities JSON relative to the component file, e.g.
    *  `../_generated/reddit.capabilities.json`. Passed as imported JSON object. */
-  data: CapabilitiesData
+  data: CapabilitiesData;
 }
 
 /**
@@ -48,7 +48,7 @@ export function CapabilitiesTable({ data }: Props) {
           </tr>
           <tr className="border-b">
             <td className="py-1 pr-4 font-mono text-xs">RequiresAuth</td>
-            <td className="py-1">{data.requiresAuth ? 'Yes' : 'No'}</td>
+            <td className="py-1">{data.requiresAuth ? "Yes" : "No"}</td>
           </tr>
           <tr className="border-b">
             <td className="py-1 pr-4 font-mono text-xs">AuthEnvVars</td>
@@ -70,7 +70,7 @@ export function CapabilitiesTable({ data }: Props) {
             <td className="py-1 pr-4 font-mono text-xs">RateLimitPerMin</td>
             <td className="py-1">
               {data.rateLimitPerMin === 0
-                ? '0 (see rate limits section)'
+                ? "0 (see rate limits section)"
                 : data.rateLimitPerMin}
             </td>
           </tr>
@@ -81,14 +81,14 @@ export function CapabilitiesTable({ data }: Props) {
         </tbody>
       </table>
       <p className="mt-2 text-xs text-gray-500">
-        Extracted from{' '}
+        Extracted from{" "}
         <code>
           {data.sourcePath}:{data.sourceLine}
-        </code>{' '}
+        </code>{" "}
         — auto-generated, do not edit by hand.
       </p>
     </div>
-  )
+  );
 }
 
-export default CapabilitiesTable
+export default CapabilitiesTable;

@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * AdapterCatalog — filterable table listing all 10 adapters.
@@ -7,129 +7,131 @@
  * SPEC-DOC-002 REQ-ADPDOC-003
  */
 
-import { useState } from 'react'
-import { StatusBadge } from './StatusBadge'
+import { useState } from "react";
+import { StatusBadge } from "./StatusBadge";
 
 export type AdapterCategory =
-  | 'search-engine'
-  | 'social'
-  | 'academic'
-  | 'news'
-  | 'korean-locale'
+  | "search-engine"
+  | "social"
+  | "academic"
+  | "news"
+  | "korean-locale";
 
 export interface AdapterMeta {
-  sourceID: string
-  displayName: string
-  category: AdapterCategory
-  requiresAuth: boolean
-  koreanLocaleOptimized: boolean
-  detailPath: string
+  sourceID: string;
+  displayName: string;
+  category: AdapterCategory;
+  requiresAuth: boolean;
+  koreanLocaleOptimized: boolean;
+  detailPath: string;
 }
 
 // Static catalog metadata — category and Korean-locale flags are hand-curated
 // since they are not in the Capabilities struct.
 const ADAPTERS: AdapterMeta[] = [
   {
-    sourceID: 'arxiv',
-    displayName: 'arXiv',
-    category: 'academic',
+    sourceID: "arxiv",
+    displayName: "arXiv",
+    category: "academic",
     requiresAuth: false,
     koreanLocaleOptimized: false,
-    detailPath: '/en/reference/adapters/arxiv',
+    detailPath: "/en/reference/adapters/arxiv",
   },
   {
-    sourceID: 'reddit',
-    displayName: 'Reddit',
-    category: 'social',
+    sourceID: "reddit",
+    displayName: "Reddit",
+    category: "social",
     requiresAuth: false,
     koreanLocaleOptimized: false,
-    detailPath: '/en/reference/adapters/reddit',
+    detailPath: "/en/reference/adapters/reddit",
   },
   {
-    sourceID: 'hackernews',
-    displayName: 'Hacker News',
-    category: 'social',
+    sourceID: "hackernews",
+    displayName: "Hacker News",
+    category: "social",
     requiresAuth: false,
     koreanLocaleOptimized: false,
-    detailPath: '/en/reference/adapters/hackernews',
+    detailPath: "/en/reference/adapters/hackernews",
   },
   {
-    sourceID: 'github',
-    displayName: 'GitHub',
-    category: 'search-engine',
+    sourceID: "github",
+    displayName: "GitHub",
+    category: "search-engine",
     requiresAuth: true,
     koreanLocaleOptimized: false,
-    detailPath: '/en/reference/adapters/github',
+    detailPath: "/en/reference/adapters/github",
   },
   {
-    sourceID: 'youtube',
-    displayName: 'YouTube',
-    category: 'social',
+    sourceID: "youtube",
+    displayName: "YouTube",
+    category: "social",
     requiresAuth: false,
     koreanLocaleOptimized: false,
-    detailPath: '/en/reference/adapters/youtube',
+    detailPath: "/en/reference/adapters/youtube",
   },
   {
-    sourceID: 'bluesky',
-    displayName: 'Bluesky',
-    category: 'social',
+    sourceID: "bluesky",
+    displayName: "Bluesky",
+    category: "social",
     requiresAuth: false,
     koreanLocaleOptimized: false,
-    detailPath: '/en/reference/adapters/bluesky',
+    detailPath: "/en/reference/adapters/bluesky",
   },
   {
-    sourceID: 'x',
-    displayName: 'X (Twitter)',
-    category: 'social',
+    sourceID: "x",
+    displayName: "X (Twitter)",
+    category: "social",
     requiresAuth: false,
     koreanLocaleOptimized: false,
-    detailPath: '/en/reference/adapters/x',
+    detailPath: "/en/reference/adapters/x",
   },
   {
-    sourceID: 'searxng',
-    displayName: 'SearXNG',
-    category: 'search-engine',
+    sourceID: "searxng",
+    displayName: "SearXNG",
+    category: "search-engine",
     requiresAuth: false,
     koreanLocaleOptimized: false,
-    detailPath: '/en/reference/adapters/searxng',
+    detailPath: "/en/reference/adapters/searxng",
   },
   {
-    sourceID: 'naver',
-    displayName: 'Naver',
-    category: 'korean-locale',
+    sourceID: "naver",
+    displayName: "Naver",
+    category: "korean-locale",
     requiresAuth: true,
     koreanLocaleOptimized: true,
-    detailPath: '/en/reference/adapters/naver',
+    detailPath: "/en/reference/adapters/naver",
   },
   {
-    sourceID: 'koreanews',
-    displayName: 'Korean News',
-    category: 'news',
+    sourceID: "koreanews",
+    displayName: "Korean News",
+    category: "news",
     requiresAuth: false,
     koreanLocaleOptimized: true,
-    detailPath: '/en/reference/adapters/koreanews',
+    detailPath: "/en/reference/adapters/koreanews",
   },
-]
+];
 
-const CATEGORIES: Array<{ value: AdapterCategory | 'all'; label: string }> = [
-  { value: 'all', label: 'All' },
-  { value: 'search-engine', label: 'Search engine' },
-  { value: 'social', label: 'Social' },
-  { value: 'academic', label: 'Academic' },
-  { value: 'news', label: 'News' },
-  { value: 'korean-locale', label: 'Korean-locale' },
-]
+const CATEGORIES: Array<{ value: AdapterCategory | "all"; label: string }> = [
+  { value: "all", label: "All" },
+  { value: "search-engine", label: "Search engine" },
+  { value: "social", label: "Social" },
+  { value: "academic", label: "Academic" },
+  { value: "news", label: "News" },
+  { value: "korean-locale", label: "Korean-locale" },
+];
 
 /**
  * AdapterCatalog renders a filterable table of all adapters.
  */
 export function AdapterCatalog() {
-  const [categoryFilter, setCategoryFilter] = useState<AdapterCategory | 'all'>('all')
+  const [categoryFilter, setCategoryFilter] = useState<AdapterCategory | "all">(
+    "all",
+  );
 
   const filtered =
-    categoryFilter === 'all'
+    categoryFilter === "all"
       ? ADAPTERS
-      : ADAPTERS.filter((a) => a.category === categoryFilter)
+      : ADAPTERS.filter((a) => a.category === categoryFilter);
 
   return (
     <div>
@@ -138,13 +140,13 @@ export function AdapterCatalog() {
         {CATEGORIES.map(({ value, label }) => (
           <button
             key={value}
-            onClick={() => setCategoryFilter(value as AdapterCategory | 'all')}
+            onClick={() => setCategoryFilter(value as AdapterCategory | "all")}
             className={[
-              'px-3 py-1 rounded-full text-xs font-medium border transition-colors',
+              "px-3 py-1 rounded-full text-xs font-medium border transition-colors",
               categoryFilter === value
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50',
-            ].join(' ')}
+                ? "bg-blue-600 text-white border-blue-600"
+                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50",
+            ].join(" ")}
           >
             {label}
           </button>
@@ -159,8 +161,12 @@ export function AdapterCatalog() {
               <th className="text-left py-2 px-3 font-semibold">Adapter</th>
               <th className="text-left py-2 px-3 font-semibold">Status</th>
               <th className="text-left py-2 px-3 font-semibold">Category</th>
-              <th className="text-left py-2 px-3 font-semibold">Auth required</th>
-              <th className="text-left py-2 px-3 font-semibold">Korean-locale</th>
+              <th className="text-left py-2 px-3 font-semibold">
+                Auth required
+              </th>
+              <th className="text-left py-2 px-3 font-semibold">
+                Korean-locale
+              </th>
               <th className="text-left py-2 px-3 font-semibold">Reference</th>
             </tr>
           </thead>
@@ -172,11 +178,13 @@ export function AdapterCatalog() {
                   <StatusBadge adapter={adapter.sourceID} />
                 </td>
                 <td className="py-2 px-3 capitalize">
-                  {adapter.category.replace('-', ' ')}
+                  {adapter.category.replace("-", " ")}
                 </td>
-                <td className="py-2 px-3">{adapter.requiresAuth ? 'Yes' : 'No'}</td>
                 <td className="py-2 px-3">
-                  {adapter.koreanLocaleOptimized ? 'Yes' : 'No'}
+                  {adapter.requiresAuth ? "Yes" : "No"}
+                </td>
+                <td className="py-2 px-3">
+                  {adapter.koreanLocaleOptimized ? "Yes" : "No"}
                 </td>
                 <td className="py-2 px-3">
                   <a
@@ -192,11 +200,18 @@ export function AdapterCatalog() {
         </table>
       </div>
       <p className="mt-2 text-xs text-gray-500">
-        Showing {filtered.length} of {ADAPTERS.length} adapters.
-        Common error categories: see the <a href="/en/reference/adapters/errors" className="text-blue-600 hover:underline">Error taxonomy</a> page.
+        Showing {filtered.length} of {ADAPTERS.length} adapters. Common error
+        categories: see the{" "}
+        <a
+          href="/en/reference/adapters/errors"
+          className="text-blue-600 hover:underline"
+        >
+          Error taxonomy
+        </a>{" "}
+        page.
       </p>
     </div>
-  )
+  );
 }
 
-export default AdapterCatalog
+export default AdapterCatalog;

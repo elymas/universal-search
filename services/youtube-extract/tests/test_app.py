@@ -8,9 +8,7 @@ from __future__ import annotations
 import json
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from fastapi.testclient import TestClient
-
 
 # ---------------------------------------------------------------------------
 # /health endpoint tests (REQ-ADP5a-002)
@@ -80,11 +78,26 @@ class TestSearchEndpoint:
         # Field names match parse.go exactly.
         item = body["items"][0]
         expected_fields = {
-            "id", "url", "title", "description", "channel", "channel_id",
-            "channel_url", "uploader", "uploader_id", "duration_seconds",
-            "view_count", "like_count", "upload_date", "thumbnail_url",
-            "tags", "available_transcript_langs", "transcript_snippet",
-            "transcript_lang", "transcript_is_auto", "error",
+            "id",
+            "url",
+            "title",
+            "description",
+            "channel",
+            "channel_id",
+            "channel_url",
+            "uploader",
+            "uploader_id",
+            "duration_seconds",
+            "view_count",
+            "like_count",
+            "upload_date",
+            "thumbnail_url",
+            "tags",
+            "available_transcript_langs",
+            "transcript_snippet",
+            "transcript_lang",
+            "transcript_is_auto",
+            "error",
         }
         assert set(item.keys()) == expected_fields
 
@@ -139,9 +152,7 @@ class TestSearchEndpoint:
         assert body["error"]["category"] == "permanent"
 
     @patch("youtube_extract.ytdlp_runner.asyncio.create_subprocess_exec")
-    def test_search_returns_empty_items_when_no_results(
-        self, mock_exec: AsyncMock, client: TestClient
-    ) -> None:
+    def test_search_returns_empty_items_when_no_results(self, mock_exec: AsyncMock, client: TestClient) -> None:
         """Empty search results return empty items list."""
         mock_exec.return_value = self._mock_ytdlp([])
 
@@ -161,9 +172,7 @@ class TestSearchEndpoint:
         assert body["has_more"] is False
 
     @patch("youtube_extract.ytdlp_runner.asyncio.create_subprocess_exec")
-    def test_signed_in_challenge_returns_503_envelope(
-        self, mock_exec: AsyncMock, client: TestClient
-    ) -> None:
+    def test_signed_in_challenge_returns_503_envelope(self, mock_exec: AsyncMock, client: TestClient) -> None:
         """REQ-ADP5a-006: 'Sign in to confirm' → 503 + unavailable envelope."""
         from tests.conftest import make_mock_process
 
@@ -189,9 +198,7 @@ class TestSearchEndpoint:
         assert "signed-in challenge" in body["error"]["message"]
 
     @patch("youtube_extract.ytdlp_runner.asyncio.create_subprocess_exec")
-    def test_rate_limit_returns_429_retry_after(
-        self, mock_exec: AsyncMock, client: TestClient
-    ) -> None:
+    def test_rate_limit_returns_429_retry_after(self, mock_exec: AsyncMock, client: TestClient) -> None:
         """REQ-ADP5a-006: Rate-limiting → 429 + Retry-After header."""
         from tests.conftest import make_mock_process
 

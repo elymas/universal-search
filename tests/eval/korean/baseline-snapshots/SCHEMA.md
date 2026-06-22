@@ -20,20 +20,20 @@ to `baseline-snapshots/archive/` by the writer's retention policy
 
 ## Fields
 
-| Field | Type | Required | Meaning |
-|-------|------|----------|---------|
-| `release_tag` | string | yes | Release this round baselines (e.g. `v1.0.0`). Doubles as the filename stem. |
-| `round_date` | string (YYYY-MM-DD) | yes | Date the round was scored. |
-| `rater_ids` | string[] | yes | Anonymous rater IDs only (R1/R2/R3…). No PII (D8). |
-| `mean_kappa` | float | yes | Light's mean-κ for the round. Must be ≥ 0.6 for a snapshot to exist. |
-| `top3_naver_recall` | float [0,1] | yes | Aggregate top-3 Naver recall — the only V1 gate metric (≥ 0.80 at M3 exit). |
-| `top3_naver_recall_per_category` | map<category,float> | yes | Per-category recall for the 6 buckets. Observational, non-gating (REQ-EVAL-006). |
-| `mrr_top10` | float [0,1] | yes | Supplementary MRR@10 over Naver-relevant queries. Non-gating. |
-| `mean_ranking_score` | float [1,5] | yes | Mean rater `ranking_score`. |
-| `router_class_accuracy_mixed` | float [0,1] | yes | % of code-mixed queries SPEC-IR-001 classified as `mixed` (REQ-EVAL-007). |
-| `tokenizer_version` | string | yes | mecab-ko version pin (D6). |
-| `adapter_versions` | map<sourceID,string> | yes | **Registered** adapter SourceID → version pin. Phantom IDs (`naver-news`, `daum-news`, …) are rejected. |
-| `golden_set_sha256` | string (64 hex) | yes | SHA256 of the exact `golden-set.jsonl` scored. Binds the snapshot to its corpus. |
+| Field                            | Type                 | Required | Meaning                                                                                                 |
+| -------------------------------- | -------------------- | -------- | ------------------------------------------------------------------------------------------------------- |
+| `release_tag`                    | string               | yes      | Release this round baselines (e.g. `v1.0.0`). Doubles as the filename stem.                             |
+| `round_date`                     | string (YYYY-MM-DD)  | yes      | Date the round was scored.                                                                              |
+| `rater_ids`                      | string[]             | yes      | Anonymous rater IDs only (R1/R2/R3…). No PII (D8).                                                      |
+| `mean_kappa`                     | float                | yes      | Light's mean-κ for the round. Must be ≥ 0.6 for a snapshot to exist.                                    |
+| `top3_naver_recall`              | float [0,1]          | yes      | Aggregate top-3 Naver recall — the only V1 gate metric (≥ 0.80 at M3 exit).                             |
+| `top3_naver_recall_per_category` | map<category,float>  | yes      | Per-category recall for the 6 buckets. Observational, non-gating (REQ-EVAL-006).                        |
+| `mrr_top10`                      | float [0,1]          | yes      | Supplementary MRR@10 over Naver-relevant queries. Non-gating.                                           |
+| `mean_ranking_score`             | float [1,5]          | yes      | Mean rater `ranking_score`.                                                                             |
+| `router_class_accuracy_mixed`    | float [0,1]          | yes      | % of code-mixed queries SPEC-IR-001 classified as `mixed` (REQ-EVAL-007).                               |
+| `tokenizer_version`              | string               | yes      | mecab-ko version pin (D6).                                                                              |
+| `adapter_versions`               | map<sourceID,string> | yes      | **Registered** adapter SourceID → version pin. Phantom IDs (`naver-news`, `daum-news`, …) are rejected. |
+| `golden_set_sha256`              | string (64 hex)      | yes      | SHA256 of the exact `golden-set.jsonl` scored. Binds the snapshot to its corpus.                        |
 
 ## Invariants
 

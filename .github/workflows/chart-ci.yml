@@ -3,12 +3,12 @@ name: Chart CI
 on:
   pull_request:
     paths:
-      - 'charts/universal-search/**'
-      - 'deploy/Dockerfile.*'
+      - "charts/universal-search/**"
+      - "deploy/Dockerfile.*"
   push:
     branches: [main]
     paths:
-      - 'charts/universal-search/**'
+      - "charts/universal-search/**"
 
 jobs:
   lint:

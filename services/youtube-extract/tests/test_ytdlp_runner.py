@@ -7,11 +7,11 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from tests.conftest import make_mock_process
 from youtube_extract.ytdlp_runner import (
     YtdlpError,
     _build_argv,
@@ -20,8 +20,6 @@ from youtube_extract.ytdlp_runner import (
     _truncate_runes,
     run_search,
 )
-from tests.conftest import make_mock_process
-
 
 # ---------------------------------------------------------------------------
 # _build_argv tests (REQ-ADP5a-007)
@@ -170,10 +168,7 @@ class TestRunSearch:
     @patch("youtube_extract.ytdlp_runner.asyncio.create_subprocess_exec")
     async def test_slices_by_cursor_offset(self, mock_exec: AsyncMock) -> None:
         """REQ-ADP5a-003: results sliced by cursor_offset."""
-        entries = [
-            {"id": f"vid{i}", "title": f"Video {i}", "upload_date": "20260101"}
-            for i in range(5)
-        ]
+        entries = [{"id": f"vid{i}", "title": f"Video {i}", "upload_date": "20260101"} for i in range(5)]
         stdout = "\n".join(json.dumps(e) for e in entries)
         mock_exec.return_value = make_mock_process(stdout=stdout, returncode=0)
 
@@ -199,7 +194,9 @@ class TestRunSearch:
     async def test_subprocess_failure_raises_ytdlp_error(self, mock_exec: AsyncMock) -> None:
         """Non-zero exit code raises YtdlpError."""
         mock_exec.return_value = make_mock_process(
-            stdout="", stderr="ERROR: something went wrong", returncode=1,
+            stdout="",
+            stderr="ERROR: something went wrong",
+            returncode=1,
         )
 
         with pytest.raises(YtdlpError) as exc_info:

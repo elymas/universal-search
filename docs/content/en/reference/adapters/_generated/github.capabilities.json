@@ -1,9 +1,7 @@
 {
   "sourceID": "github",
   "requiresAuth": true,
-  "authEnvVars": [
-    "USEARCH_GITHUB_TOKEN"
-  ],
+  "authEnvVars": ["USEARCH_GITHUB_TOKEN"],
   "rateLimitPerMin": 30,
   "defaultMaxResults": 25,
   "sourcePath": "internal/adapters/github/github.go",

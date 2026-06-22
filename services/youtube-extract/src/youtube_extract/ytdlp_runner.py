@@ -13,7 +13,6 @@ import asyncio
 import json
 import logging
 import os
-import signal
 from typing import Any, Optional
 
 from .models import YTItem
@@ -269,9 +268,11 @@ async def _fetch_transcripts(items: list[YTItem], preferred_lang: str) -> list[Y
     for i, item in enumerate(items):
         # available_transcript_langs already populated from metadata if present.
         # For now, set to empty list (v0.1; full implementation in SPEC-SYN-001).
-        items[i] = item.model_copy(update={
-            "available_transcript_langs": item.available_transcript_langs or [],
-        })
+        items[i] = item.model_copy(
+            update={
+                "available_transcript_langs": item.available_transcript_langs or [],
+            }
+        )
     return items
 
 

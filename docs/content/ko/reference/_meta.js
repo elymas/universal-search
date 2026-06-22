@@ -1,6 +1,6 @@
 export default {
   note: {
-    title: '참고',
-    type: 'separator',
+    title: "참고",
+    type: "separator",
   },
-}
+};

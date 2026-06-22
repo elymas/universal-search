@@ -9,11 +9,11 @@ A scoring round requires at least 3 raters (REQ-EVAL-004, EC-001).
 
 ## Pool
 
-| Rater ID | Fluency self-attestation date | Status |
-|----------|-------------------------------|--------|
-| _R1_ | _TBD — recorded at recruitment_ | _pending operational round_ |
-| _R2_ | _TBD — recorded at recruitment_ | _pending operational round_ |
-| _R3_ | _TBD — recorded at recruitment_ | _pending operational round_ |
+| Rater ID | Fluency self-attestation date   | Status                      |
+| -------- | ------------------------------- | --------------------------- |
+| _R1_     | _TBD — recorded at recruitment_ | _pending operational round_ |
+| _R2_     | _TBD — recorded at recruitment_ | _pending operational round_ |
+| _R3_     | _TBD — recorded at recruitment_ | _pending operational round_ |
 
 > This pool is a **template**. The real entries are filled at the offline
 > 3-rater round (task T09, operational). No raters have been recruited in this

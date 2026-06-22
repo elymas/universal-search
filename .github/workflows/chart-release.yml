@@ -2,7 +2,7 @@ name: Chart Release
 
 on:
   push:
-    tags: ['v*.*.*']
+    tags: ["v*.*.*"]
 
 env:
   REGISTRY: ghcr.io

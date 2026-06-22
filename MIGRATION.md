@@ -134,6 +134,7 @@ The manifest structure is locked for 1.x.
 ## 8. REST/GraphQL Endpoint Schema
 
 SPEC-SYN-004 (M7) defines the REST endpoint landscape:
+
 - `POST /query` — query synthesis with JSON request/response
 - `POST /query/stream` — SSE streaming endpoint (M7 additive)
 
@@ -289,19 +290,19 @@ helm rollback universal-search <REVISION>
 
 ## Appendix: Quick Reference
 
-| Change | v1.0.0 Status | Breaking? | Migration Required |
-|--------|---------------|-----------|-------------------|
-| CLI commands/flags | Stable | No | No |
+| Change                               | v1.0.0 Status | Breaking?     | Migration Required  |
+| ------------------------------------ | ------------- | ------------- | ------------------- |
+| CLI commands/flags                   | Stable        | No            | No                  |
 | Config schema (deep.yaml, auth.yaml) | Mostly stable | Additive only | No, but recommended |
-| Environment variables | Stable | No | No |
-| MCP protocol | Stable | No | No |
-| Adapter interface | Stable | No | No |
-| REST endpoints | Stable | No | No |
-| Database schema | Forward-only | No backward | No, run migrations |
-| Skill manifest | Stable | No | No |
+| Environment variables                | Stable        | No            | No                  |
+| MCP protocol                         | Stable        | No            | No                  |
+| Adapter interface                    | Stable        | No            | No                  |
+| REST endpoints                       | Stable        | No            | No                  |
+| Database schema                      | Forward-only  | No backward   | No, run migrations  |
+| Skill manifest                       | Stable        | No            | No                  |
 
 **Summary**: v1.0.0 introduces minimal breaking changes because it is the first official release. All documented surfaces are frozen for 1.x. Code written for 0.x-dev will work with v1.0.0 without modification.
 
 ---
 
-*Last updated: 2026-05-31*
+_Last updated: 2026-05-31_

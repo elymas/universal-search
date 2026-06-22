@@ -7,8 +7,8 @@ a hard CI failure).
 
 Each entry: date, finding (rule + file:line), classification rationale.
 
-| Date | Finding (rule @ location) | Rationale |
-|------|---------------------------|-----------|
+| Date       | Finding (rule @ location)            | Rationale                                  |
+| ---------- | ------------------------------------ | ------------------------------------------ |
 | 2026-05-29 | (baseline established — no findings) | Initial T02 baseline scan. See note below. |
 
 ## Baseline note (T02)

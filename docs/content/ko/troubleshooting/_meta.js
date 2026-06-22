@@ -1,3 +1,3 @@
 export default {
-  index: '문제 해결 가이드',
-}
+  index: "문제 해결 가이드",
+};

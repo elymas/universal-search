@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import json
-import os
 import sys
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -14,8 +13,7 @@ from fastapi.testclient import TestClient
 # Ensure the package is importable from the test environment.
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from youtube_extract.app import app, _ready, _ytdlp_version
-from youtube_extract.ytdlp_runner import YtdlpError
+from youtube_extract.app import app
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 

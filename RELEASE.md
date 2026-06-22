@@ -189,6 +189,7 @@ git push origin v1.0.0
 ```
 
 **Important**:
+
 1. Replace `[Paste CHANGELOG...]` with the actual CHANGELOG.md `[1.0.0]` section first 30 lines.
 2. The `-s` flag signs the tag with GPG. Ensure your GPG key is configured (`git config user.signingkey <KEY_ID>`).
 3. Once pushed, the tag is immutable. Do NOT use `git push --force`.
@@ -233,6 +234,7 @@ Once the issue is fixed:
 
 1. **Increment the tag**: Use `v1.0.1` instead (not `v1.0.0` again).
 2. **Document the incident**: Add an entry to `ops/release-incidents.md`:
+
    ```
    ## v1.0.0 Rollback — [ISO-8601 timestamp]
 
@@ -241,6 +243,7 @@ Once the issue is fixed:
    **New Tag**: v1.0.1
    **Reference PR**: [Link to fix PR]
    ```
+
 3. Repeat the tag creation + push with the new version.
 
 ---
@@ -278,6 +281,7 @@ The tag MUST be pushed during **KST business hours** (09:00–18:00 KST, UTC+9 =
 ### Release Notification
 
 After successful publish, send a notification to:
+
 - Internal team (if Slack webhook configured): Automated via release.yml `post-release-tasks`
 - Public community (GitHub Discussions): Manual message with installation instructions + verification guide
 

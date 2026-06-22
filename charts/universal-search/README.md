@@ -34,11 +34,11 @@ helm install usearch charts/universal-search \
 
 ### Secret Backend (3-tier strategy)
 
-| Tier | Backend | Use Case | Production? |
-|------|---------|----------|-------------|
-| 1 | `values` | Dev/CI only — secrets in values.yaml | NO |
-| 2 | `existingSecret` | Small team — operator pre-creates K8s Secrets | YES (recommended) |
-| 3 | `externalSecrets` | Enterprise — ESO syncs from Vault/cloud SM | YES |
+| Tier | Backend           | Use Case                                      | Production?       |
+| ---- | ----------------- | --------------------------------------------- | ----------------- |
+| 1    | `values`          | Dev/CI only — secrets in values.yaml          | NO                |
+| 2    | `existingSecret`  | Small team — operator pre-creates K8s Secrets | YES (recommended) |
+| 3    | `externalSecrets` | Enterprise — ESO syncs from Vault/cloud SM    | YES               |
 
 ```bash
 # Tier 2: Pre-create secrets
@@ -95,15 +95,15 @@ Full operator documentation: https://elymas.github.io/universal-search/operators
 
 See values.yaml for the complete configuration reference (~300 keys).
 
-| Key | Default | Description |
-|-----|---------|-------------|
-| `secrets.backend` | `values` | Secret backend tier: values, existingSecret, externalSecrets |
-| `usearch.api.enabled` | `true` | Enable the API server |
-| `usearch.api.replicas` | `1` | Number of API replicas |
-| `usearch.api.hpa.enabled` | `true` | Enable horizontal pod autoscaler |
-| `usearch.api.ingress.enabled` | `false` | Enable HTTP ingress |
-| `postgresql.enabled` | `true` | Deploy Bitnami PostgreSQL subchart |
-| `redis.enabled` | `true` | Deploy Bitnami Redis subchart |
-| `qdrant.enabled` | `true` | Deploy Qdrant subchart |
-| `embedder.gpu.enabled` | `false` | Enable GPU support for embedder |
-| `observability.serviceMonitor.enabled` | `true` | Deploy ServiceMonitor CRDs |
+| Key                                    | Default  | Description                                                  |
+| -------------------------------------- | -------- | ------------------------------------------------------------ |
+| `secrets.backend`                      | `values` | Secret backend tier: values, existingSecret, externalSecrets |
+| `usearch.api.enabled`                  | `true`   | Enable the API server                                        |
+| `usearch.api.replicas`                 | `1`      | Number of API replicas                                       |
+| `usearch.api.hpa.enabled`              | `true`   | Enable horizontal pod autoscaler                             |
+| `usearch.api.ingress.enabled`          | `false`  | Enable HTTP ingress                                          |
+| `postgresql.enabled`                   | `true`   | Deploy Bitnami PostgreSQL subchart                           |
+| `redis.enabled`                        | `true`   | Deploy Bitnami Redis subchart                                |
+| `qdrant.enabled`                       | `true`   | Deploy Qdrant subchart                                       |
+| `embedder.gpu.enabled`                 | `false`  | Enable GPU support for embedder                              |
+| `observability.serviceMonitor.enabled` | `true`   | Deploy ServiceMonitor CRDs                                   |

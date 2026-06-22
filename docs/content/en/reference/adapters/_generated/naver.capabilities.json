@@ -1,10 +1,7 @@
 {
   "sourceID": "naver",
   "requiresAuth": true,
-  "authEnvVars": [
-    "NAVER_CLIENT_ID",
-    "NAVER_CLIENT_SECRET"
-  ],
+  "authEnvVars": ["NAVER_CLIENT_ID", "NAVER_CLIENT_SECRET"],
   "rateLimitPerMin": 10,
   "defaultMaxResults": 25,
   "sourcePath": "internal/adapters/naver/naver.go",
