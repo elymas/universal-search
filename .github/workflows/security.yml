@@ -123,7 +123,7 @@ jobs:
 
   # ── gosec: Go static analysis (REQ-SEC-010) ────────────────────────────────
   # HIGH severity blocks merge; MEDIUM/LOW are informational. Config in
-  # .gosec.yml excludes tests/testdata. #nosec suppressions require a reason.
+  # .gosec.json + -exclude-dir flags skip tests/vendor/web. #nosec needs a reason.
   gosec:
     name: gosec (static analysis)
     runs-on: ubuntu-24.04
@@ -138,9 +138,12 @@ jobs:
         uses: securego/gosec@v2.21.4
         with:
           # -severity high : only HIGH findings set a non-zero exit (block).
-          # -conf          : project config (exclusions, #nosec audit).
+          # -exclude-dir   : skip tests/vendor/web (dir exclusion is a CLI flag,
+          #                  not a -conf key — gosec ignores exclude-dir in config).
+          # -conf          : project config (#nosec audit). Must be JSON; gosec's
+          #                  -conf parser rejects YAML (fails on the leading '#').
           # MEDIUM/LOW still print as annotations but do not fail the job.
-          args: "-severity high -confidence medium -conf .gosec.yml ./..."
+          args: "-severity high -confidence medium -exclude-dir testdata -exclude-dir vendor -exclude-dir node_modules -exclude-dir web -conf .gosec.json ./..."
 
   # ── semgrep: pattern-based SAST (REQ-SEC-010) ───────────────────────────────
   # Rule sets p/golang + p/owasp-top-ten + p/jwt. New findings (outside
