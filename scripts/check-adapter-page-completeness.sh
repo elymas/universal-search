@@ -18,7 +18,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 EN_ADAPTERS_DIR="${PROJECT_ROOT}/docs/content/en/reference/adapters"
 
-# Expected H2 headings in order (per D1 / REQ-ADPDOC-002)
+# Expected H2 headings in order (per D1 / REQ-ADPDOC-002).
+# Reference catalogue only — the live order check below uses `expected_order`.
+# shellcheck disable=SC2034  # documented superset, not consumed directly
 EXPECTED_SECTIONS=(
   "Status & Compatibility"
   "Status &amp; Compatibility"

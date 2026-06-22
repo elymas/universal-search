@@ -32,7 +32,12 @@ HEX40_PATTERN='[0-9a-fA-F]{40}'
 # JWT: three base64url segments separated by dots (yyy.yyy.yyy pattern)
 JWT_PATTERN='eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}'
 
-# Naver client secret: 32-char alphanumeric (typical Naver API secret format)
+# Naver client secret: 32-char alphanumeric (typical Naver API secret format).
+# TODO(SPEC-DOC-002): not yet wired into the scan — the pattern uses a PCRE
+# negative lookahead `(?!...)` that grep -E (ERE) cannot evaluate, and a bare
+# 32-char alnum match would flood false positives. Wiring it needs grep -P plus
+# a false-positive review; left as a documented gap, not silently dropped.
+# shellcheck disable=SC2034  # intentionally defined-but-unwired pending the above
 NAVER_SECRET_PATTERN='[A-Za-z0-9]{32}(?![A-Za-z0-9>_])'
 
 # Placeholder patterns that are ALLOWED (grep -v to exclude from matches)

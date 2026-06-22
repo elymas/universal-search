@@ -37,7 +37,7 @@ for dir in "${TIER1_DIRS[@]}"; do
 
     # Count .mdx files in EN (exclude _meta.js)
     while IFS= read -r -d '' en_file; do
-        rel="${en_file#${en_dir}/}"
+        rel="${en_file#"${en_dir}"/}"
         en_base="${rel%.mdx}"
         ko_file="${ko_dir}/${rel}"
 
