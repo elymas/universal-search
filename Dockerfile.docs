@@ -35,7 +35,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm build
 
 # Verify the build produced servable HTML (not just directory structure)
-RUN test -f ./out/index.html && echo "Build output verified: ./out/index.html exists" || (echo "ERROR: ./out/index.html not found — static export incomplete" && exit 1)
+RUN if test -f ./out/index.html; then \
+        echo "Build output verified: ./out/index.html exists"; \
+    else \
+        echo "ERROR: ./out/index.html not found — static export incomplete"; \
+        exit 1; \
+    fi
 
 # ── Stage 3: Caddy static server ─────────────────────────────────────────────
 FROM caddy:2-alpine AS runner

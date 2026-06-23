@@ -8,6 +8,13 @@ FROM alpine:3.21 AS downloader
 
 ARG MIGRATE_VERSION=v4.18.2
 
+# DL4006: enable pipefail so the `curl | tar` pipe fails on a curl error.
+# Alpine's default /bin/sh is busybox ash, so target /bin/ash explicitly.
+SHELL ["/bin/ash", "-o", "pipefail", "-c"]
+
+# Ephemeral --no-cache downloader stage; floating apk versions track the Alpine
+# base-image patch level and are discarded — version pins would be brittle.
+# hadolint ignore=DL3018
 RUN apk add --no-cache curl && mkdir -p /out && \
     curl -fL "https://github.com/golang-migrate/migrate/releases/download/${MIGRATE_VERSION}/migrate.linux-amd64.tar.gz" | \
     tar xvz -C /tmp/ && \

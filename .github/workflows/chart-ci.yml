@@ -24,6 +24,15 @@ jobs:
       - name: Set up chart-testing
         uses: helm/chart-testing-action@v2.7.0
 
+      # Register the Helm repos that Chart.lock pins so the `helm dependency
+      # build` invoked internally by `ct lint` can resolve postgresql/redis
+      # (bitnami) and qdrant. URLs match Chart.lock (HTTPS, NOT OCI) so the
+      # locked digest is not invalidated. See SPEC-CICD-001 REQ-CICD-010/020.
+      - name: Register Helm dependency repositories
+        run: |
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo add qdrant https://qdrant.github.io/qdrant-helm
+
       - name: Run chart-testing lint
         run: ct lint --charts charts/universal-search --check-version-increment=false
 
