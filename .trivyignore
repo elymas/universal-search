@@ -1,0 +1,11 @@
+# Trivy ignore list — fixed-upstream-but-unreachable CVEs.
+# Each entry MUST be mirrored in ops/security/vuln-exceptions.yaml with a
+# rationale + 90-day review deadline (enforced by the vuln-exceptions CI job).
+# Reachable fixes must be bumped, not listed here (SPEC-SEC-005 REQ-SEC5-070).
+
+# CVE-2026-0994 — protobuf 4.25.9 (researcher image). Fixed upstream in
+# protobuf 5.29.6 / 6.33.5, but deepeval~=1.0 transitively caps protobuf to
+# >=3.19,<5.0 (via opentelemetry-exporter-otlp-proto-grpc), so the fixed
+# version is unsatisfiable without replacing the DeepEval judge (SPEC-EVAL-001).
+# Re-evaluate when DeepEval relaxes the protobuf<5.0 constraint.
+CVE-2026-0994

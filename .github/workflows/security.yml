@@ -93,6 +93,10 @@ jobs:
           ignore-unfixed: "true"
           exit-code: "1"
           hide-progress: "true"
+          # .trivyignore suppresses fixed-upstream-but-unreachable CVEs (e.g. a
+          # transitive cap that blocks the fixed version). Each entry is mirrored
+          # in ops/security/vuln-exceptions.yaml with a 90-day review deadline.
+          trivyignores: ".trivyignore"
 
       - name: Trivy SBOM (CycloneDX) for ${{ matrix.service }}
         uses: aquasecurity/trivy-action@v0.33.1

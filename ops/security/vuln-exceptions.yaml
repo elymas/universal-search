@@ -19,7 +19,19 @@
 
 version: 1
 
-exceptions: []
+exceptions:
+  - cve_id: CVE-2026-0994
+    dependency: protobuf
+    severity: high
+    rationale: >
+      protobuf 4.25.9 in the researcher image. Fixed upstream in 5.29.6 /
+      6.33.5, but deepeval~=1.0 transitively caps protobuf >=3.19,<5.0 (via
+      opentelemetry-exporter-otlp-proto-grpc), making the fixed version
+      unsatisfiable without replacing the DeepEval judge (SPEC-EVAL-001).
+      Suppressed in .trivyignore. Re-evaluate when DeepEval relaxes the cap.
+    discovered_at: 2026-06-23
+    review_deadline: 2026-09-21
+    owner: elymas
 # Example (commented — copy and uncomment when adding a real exception):
 #   - cve_id: PYSEC-2026-87
 #     dependency: lxml
