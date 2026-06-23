@@ -39,7 +39,12 @@ jobs:
 
       - name: Install deps
         working-directory: docs
-        run: pnpm install --frozen-lockfile
+        # --ignore-workspace: docs is listed in the root pnpm-workspace.yaml, so a
+        # bare `pnpm install` here resolves the ROOT lockfile (next 16.2.7, no
+        # patchedDependencies) and drops docs/patches/nextra-theme-docs@4.6.1.patch,
+        # which re-triggers the /en Server-Components prerender failure (SPEC-DOC-003).
+        # Forcing standalone resolution uses docs/pnpm-lock.yaml (next 16.2.6 + patch).
+        run: pnpm install --frozen-lockfile --ignore-workspace
 
       - name: Build (static export)
         working-directory: docs
