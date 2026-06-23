@@ -5,7 +5,7 @@
 
 # Output format
 format = "markdown"
-verbose = false
+verbose = "info"
 
 # Timeout for HTTP requests (seconds)
 timeout = 20

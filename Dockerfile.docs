@@ -17,7 +17,10 @@ WORKDIR /app
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@9 --activate
 
+# docs/package.json declares pnpm.patchedDependencies (nextra-theme-docs), so
+# the patch files must be present before install or pnpm aborts (exit 254).
 COPY docs/package.json docs/pnpm-lock.yaml* ./
+COPY docs/patches/ ./patches/
 RUN pnpm install --frozen-lockfile
 
 # ── Stage 2: Build static export ─────────────────────────────────────────────
