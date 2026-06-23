@@ -1,10 +1,13 @@
 {
   "sourceID": "reddit",
-  "requiresAuth": false,
-  "authEnvVars": [],
-  "rateLimitPerMin": 10,
+  "requiresAuth": true,
+  "authEnvVars": [
+    "REDDIT_CLIENT_ID",
+    "REDDIT_CLIENT_SECRET"
+  ],
+  "rateLimitPerMin": 60,
   "defaultMaxResults": 25,
   "sourcePath": "internal/adapters/reddit/reddit.go",
-  "sourceLine": 100,
-  "extractedAt": "2026-05-30T22:44:16Z"
+  "sourceLine": 151,
+  "extractedAt": "2026-06-23T04:38:16Z"
 }

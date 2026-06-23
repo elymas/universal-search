@@ -1,72 +1,52 @@
 ---
 title: usearch config
-description: Manage usearch configuration
+description: Auto-generated reference for usearch config
 generated: true
-lastUpdated: 2026-05-30
+source: usearch config --help
+lastGenerated: 2026-06-23T05:03:39Z
 ---
 
 # usearch config
 
-Manage the usearch configuration file (TOML, XDG-compliant).
-
-## Synopsis
+> This page is auto-generated from `usearch config --help`.
+> Run `make gen-docs` after CLI changes to keep it in sync.
 
 ```
-usearch config <subcommand> [flags]
+Manage the usearch configuration file.
+
+Configuration is loaded from an XDG-compliant TOML file with layered precedence:
+  1. Command-line flags (highest)
+  2. Environment variables (USEARCH_* prefix)
+  3. Config file (~/.config/usearch/config.toml)
+  4. Built-in defaults (lowest)
+
+Usage:
+  usearch config [command]
+
+Examples:
+  usearch config path
+  usearch config show
+  usearch config init
+  usearch config get server.endpoint
+  usearch config set server.endpoint http://localhost:9090
+
+Available Commands:
+  get         Print the value of a single config key
+  init        Create a default config file
+  path        Print the resolved config file path
+  set         Set a config key value in the config file
+  show        Print the effective merged configuration
+
+Flags:
+  -h, --help   help for config
+
+Global Flags:
+      --repl   force interactive REPL mode
+
+Use "usearch config [command] --help" for more information about a command.
 ```
 
-## Subcommands
+---
 
-| Subcommand | Description |
-|---|---|
-| `path` | Print the resolved config file path |
-| `show` | Print current configuration (TOML) |
-| `init` | Create default config file |
-| `get <key>` | Get a specific config value |
-| `set <key> <value>` | Set a config value |
-
-## Configuration Precedence
-
-1. Command-line flags (highest priority)
-2. Environment variables (`USEARCH_*` prefix)
-3. Config file (`~/.config/usearch/config.toml`)
-4. Built-in defaults (lowest priority)
-
-## Examples
-
-```bash
-# Show config file path
-usearch config path
-# Output: /Users/you/.config/usearch/config.toml
-
-# Create default config
-usearch config init
-
-# Show full config
-usearch config show
-
-# Get a specific value
-usearch config get server.endpoint
-
-# Set a value
-usearch config set server.endpoint http://localhost:9090
-usearch config set llm.model claude-3-5-sonnet-20241022
-usearch config set search.timeout 60s
-```
-
-## Key Configuration Values
-
-| Key | Default | Description |
-|---|---|---|
-| `server.endpoint` | `http://localhost:8081` | usearch server URL |
-| `llm.model` | `claude-3-5-sonnet-20241022` | LLM model for synthesis |
-| `llm.provider` | `anthropic` | LLM provider (anthropic, openai, ollama) |
-| `search.timeout` | `30s` | Default query timeout |
-| `search.locale` | `en` | Default search locale |
-| `output.format` | `markdown` | Default output format (markdown, json) |
-
-See [Configuration Reference](/en/reference/configuration) for the full list.
-
-## Related
-
-- [Configuration Reference](/en/reference/configuration) — all config options
+*Generated: 2026-06-23T05:03:39Z*
+*Source: `usearch config --help`*

@@ -1,81 +1,42 @@
 ---
 title: usearch repl
-description: Interactive REPL mode for conversational search
+description: Auto-generated reference for usearch repl
 generated: true
-lastUpdated: 2026-05-30
+source: usearch repl --help
+lastGenerated: 2026-06-23T05:03:39Z
 ---
 
 # usearch repl
 
-Launch an interactive REPL (Read-Eval-Print Loop) for conversational search sessions.
-
-## Synopsis
-
-```
-usearch repl [flags]
-```
-
-## Flags
-
-| Flag | Default | Description |
-|---|---|---|
-| `--locale <code>` | `en` | Default locale for REPL session |
-| `--no-history` | false | Disable session history persistence |
-
-## Examples
-
-```bash
-# Start REPL
-usearch repl
-
-# REPL with Korean locale
-usearch repl --locale ko
-```
-
-## REPL Commands
-
-Inside the REPL:
-
-| Command | Description |
-|---|---|
-| `<query text>` | Run a search query |
-| `/deep <query>` | Run deep research mode |
-| `/history` | Show session history |
-| `/sources` | List active adapters |
-| `/locale <code>` | Change locale for this session |
-| `/help` | Show REPL help |
-| `/quit` or `Ctrl+D` | Exit REPL |
-
-## Session Example
+> This page is auto-generated from `usearch repl --help`.
+> Run `make gen-docs` after CLI changes to keep it in sync.
 
 ```
-usearch> what is Raft consensus?
-Searching... [web, academic]
+Start an interactive read-eval-print loop.
 
-Raft is a consensus algorithm designed to be more understandable than Paxos...
+Type queries to search, or use slash commands:
+  /help    Show available commands
+  /quit    Exit the REPL
+  /sources List available search adapters
+  /history Show recent query history
+  /config  Show current configuration
 
-Sources: [1] raft.github.io, [2] etcd.io
+Each query is automatically saved to history.
 
-usearch> /deep compare it to Paxos
-Running deep research (this may take 30-120s)...
+Usage:
+  usearch repl [flags]
 
-# Research Report: Raft vs Paxos
-...
+Aliases:
+  repl, interactive, i
 
-usearch> /history
-[1] what is Raft consensus?       (2026-05-30 14:22)
-[2] compare it to Paxos           (2026-05-30 14:25)
+Flags:
+  -h, --help   help for repl
 
-usearch> /quit
+Global Flags:
+      --repl   force interactive REPL mode
 ```
 
-## Notes
+---
 
-- REPL maintains conversational context within the session (subsequent queries can reference prior results)
-- Session history is persisted to the shared Meilisearch index unless `--no-history` is used
-- Press `Ctrl+C` to cancel a running query without exiting
-
-## Related
-
-- [`usearch query`](/en/reference/cli/query) — non-interactive query
-- [CLI Tour](/en/end-users/cli-tour) — guided walkthrough
+*Generated: 2026-06-23T05:03:39Z*
+*Source: `usearch repl --help`*

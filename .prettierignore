@@ -11,6 +11,11 @@ node_modules/
 web/pnpm-lock.yaml
 uv.lock
 docs/licenses/
+# Machine-generated docs — owned by gen-adapter-ref / gen-cli-reference; the
+# drift-check CI jobs compare against the generators' exact output, so prettier
+# must not reformat them (doing so caused gen-*-drift failures).
+docs/content/en/reference/adapters/_generated/
+docs/content/en/reference/cli/
 
 # Test fixtures (intentionally malformed)
 **/testdata/

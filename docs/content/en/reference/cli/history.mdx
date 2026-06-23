@@ -1,64 +1,51 @@
 ---
 title: usearch history
-description: View and manage query history
+description: Auto-generated reference for usearch history
 generated: true
-lastUpdated: 2026-05-30
+source: usearch history --help
+lastGenerated: 2026-06-23T05:03:39Z
 ---
 
 # usearch history
 
-View and manage the shared query history stored in Meilisearch.
-
-## Synopsis
-
-```
-usearch history <subcommand> [flags]
-```
-
-## Subcommands
-
-| Subcommand | Description |
-|---|---|
-| `list` | List recent queries |
-| `show <id>` | Show full result for a query |
-| `search <term>` | Full-text search across past queries |
-| `delete <id>` | Delete a query from history |
-| `clear` | Clear all history (requires confirmation) |
-
-## Examples
-
-```bash
-# List recent queries (default: last 20)
-usearch history list
-
-# List with more entries
-usearch history list --limit 50
-
-# Show a specific query result
-usearch history show --id q_abc123
-
-# Search past queries
-usearch history search "raft consensus"
-
-# Delete a query
-usearch history delete --id q_abc123
-
-# Clear all history
-usearch history clear
-# Prompts: "Are you sure? This cannot be undone. [y/N]"
-```
-
-## List Output
+> This page is auto-generated from `usearch history --help`.
+> Run `make gen-docs` after CLI changes to keep it in sync.
 
 ```
-ID          QUERY                           DATE         SOURCES   CONFIDENCE
-q_abc123    what is Raft consensus?         2026-05-30   5         0.94
-q_def456    compare Kafka vs Pulsar         2026-05-29   8         0.87
-...
+Manage query and deep invocation history.
+
+History is persisted to a JSONL file by default. Entries include prompt,
+summary, adapters used, latency, and cost.
+
+Usage:
+  usearch history [command]
+
+Examples:
+  usearch history list
+  usearch history list --limit 5
+  usearch history list --since 7d
+  usearch history show abc123
+  usearch history search "golang"
+  usearch history clear
+  usearch history clear --confirm
+  usearch history clear --since 30d --confirm
+
+Available Commands:
+  clear       Clear history entries
+  list        List recent history entries
+  search      Search history by prompt substring
+  show        Show details of a history entry
+
+Flags:
+  -h, --help   help for history
+
+Global Flags:
+      --repl   force interactive REPL mode
+
+Use "usearch history [command] --help" for more information about a command.
 ```
 
-## Notes
+---
 
-- History is stored in the shared Meilisearch index — accessible to all authenticated team members
-- `history search` runs full-text search across all past query texts and synthesized answers
-- History entries are also stored in Qdrant for semantic similarity search
+*Generated: 2026-06-23T05:03:39Z*
+*Source: `usearch history --help`*

@@ -1,96 +1,38 @@
 ---
 title: usearch deep
-description: Multi-agent deep research with comprehensive citations
+description: Auto-generated reference for usearch deep
 generated: true
-lastUpdated: 2026-05-30
+source: usearch deep --help
+lastGenerated: 2026-06-23T05:03:39Z
 ---
 
 # usearch deep
 
-Run multi-agent deep research for comprehensive, citation-rich reports. Uses a Researcher → Reviewer → Writer → Verifier pipeline.
-
-## Synopsis
-
-```
-usearch deep [flags] <research-question>
-```
-
-## Flags
-
-| Flag | Default | Description |
-|---|---|---|
-| `--timeout <duration>` | `5m` | Total pipeline deadline (max 30m) |
-| `--json` | false | Output as JSON |
-| `--sources <list>` | all | Comma-separated adapters to use |
-| `--depth <n>` | `3` | Research depth (1=quick, 3=standard, 5=comprehensive) |
-| `--cost-limit <usd>` | `1.00` | Maximum LLM cost cap (SPEC-MCP-001 CapChecker) |
-
-## Examples
-
-```bash
-# Deep research (30-120 seconds)
-usearch deep "compare Raft vs Paxos consensus algorithms"
-
-# With higher depth
-usearch deep --depth 5 "AI search market landscape 2026"
-
-# JSON output
-usearch deep --json "quantum computing applications" | jq .
-
-# Limited cost
-usearch deep --cost-limit 0.50 "startup fundraising trends"
-```
-
-## Pipeline
+> This page is auto-generated from `usearch deep --help`.
+> Run `make gen-docs` after CLI changes to keep it in sync.
 
 ```
-User query
-    ↓
-Researcher agent   ← web + academic + social sources
-    ↓
-Reviewer agent     ← validates sources, flags contradictions
-    ↓
-Writer agent       ← synthesizes long-form report with citations
-    ↓
-Verifier agent     ← checks citation faithfulness
-    ↓
-Output: Markdown report with per-claim citations
+Run the multi-agent deep research pipeline.
+
+Invokes the full pipeline: Researcher → Reviewer → Writer → Verifier.
+Shows progress for each stage. Supports cost limit via --budget flag.
+
+Usage:
+  usearch deep [flags] <prompt>
+
+Examples:
+  usearch deep "comprehensive analysis of AI safety"
+	  usearch deep --budget 0.50 "latest quantum computing breakthroughs"
+
+Flags:
+      --budget float   cost limit in USD (default: $1.00) (default 1)
+  -h, --help           help for deep
+
+Global Flags:
+      --repl   force interactive REPL mode
 ```
 
-## Output Format
+---
 
-```markdown
-# Research Report: Compare Raft vs Paxos
-
-## Executive Summary
-...
-
-## Section 1: Raft Algorithm
-[1] Raft was designed for understandability...
-
-## Section 2: Paxos Algorithm
-[2][3] Paxos was introduced by Lamport in 1989...
-
-## Comparison
-...
-
-## References
-[1] Ongaro & Ousterhout (2014). "In Search of an Understandable Consensus Algorithm"
-[2] Lamport (1998). "The Part-Time Parliament"
-[3] ...
-```
-
-## Cost Control
-
-The `--cost-limit` flag uses the SPEC-MCP-001 CapChecker to enforce a maximum LLM cost. When the limit is reached, the pipeline returns the partial result.
-
-## Notes
-
-- `deep` is significantly more expensive than `query` — typically 5–20x more LLM tokens
-- Results are stored in history and accessible via `usearch history`
-- Use `query` for quick lookups; use `deep` for research reports that require high citation quality
-
-## Related
-
-- [`usearch query`](/en/reference/cli/query) — fast single-pass search
-- [MCP Tools: deep_research](/en/reference/mcp) — same pipeline via MCP
+*Generated: 2026-06-23T05:03:39Z*
+*Source: `usearch deep --help`*

@@ -5,6 +5,6 @@
   "rateLimitPerMin": 0,
   "defaultMaxResults": 0,
   "sourcePath": "internal/adapters/social/social.go",
-  "sourceLine": 165,
-  "extractedAt": "2026-05-30T22:44:16Z"
+  "sourceLine": 178,
+  "extractedAt": "2026-06-23T04:38:16Z"
 }
