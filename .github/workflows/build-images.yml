@@ -1,9 +1,16 @@
 name: Build Images
 
+# Cost trim (Actions minutes): every job here is a multi-arch (amd64+arm64,
+# arm64 via QEMU emulation) image build + push + cosign sign + SBOM — the most
+# expensive workflow in the repo. Per-commit `main`/`sha` images are not
+# consumed anywhere (deploy/docker-compose.yml builds services locally; helm
+# charts pin version tags like usearch-api:0.1.0), so building on every main
+# push was pure waste. Build & publish on version tags only; use
+# workflow_dispatch for ad-hoc manual builds.
 on:
   push:
-    branches: [main]
     tags: ["v*.*.*"]
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io

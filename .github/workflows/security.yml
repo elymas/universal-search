@@ -69,6 +69,11 @@ jobs:
 
   trivy-image:
     name: trivy (image — ${{ matrix.service }})
+    # Cost trim (Actions minutes): this builds all 5 service images just to CVE-
+    # scan them. Image CVEs drift slowly, so run on the weekly schedule + manual
+    # dispatch only — NOT on every push/PR. Code SAST (semgrep, gosec) and
+    # Dockerfile misconfig (trivy-config) still gate every push/PR.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false

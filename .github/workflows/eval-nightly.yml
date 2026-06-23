@@ -1,13 +1,17 @@
 # SPEC-EVAL-001: Nightly regression benchmark.
 #
-# Runs the full 50-query benchmark at 03:00 UTC daily.
+# Runs the full 50-query benchmark at 03:00 UTC weekly (Monday).
 # Writes history to .moai/eval/history/ and updates latest.md.
 # REQ-EVAL1-010: Nightly baseline for regression detection.
 name: eval-nightly
 
 on:
   schedule:
-    - cron: "0 3 * * *"
+    # Cost trim (Actions minutes): weekly (Mon 03:00 UTC), was daily. The full
+    # benchmark is still deferred (see note below), and the Go/Python unit tests
+    # this runs also run in Go CI / Python CI on every push — so a daily cadence
+    # was largely redundant. Bump back to daily once the live benchmark lands.
+    - cron: "0 3 * * 1"
   workflow_dispatch:
 
 jobs:
