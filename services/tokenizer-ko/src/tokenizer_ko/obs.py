@@ -92,7 +92,7 @@ def log_tokenize(
 def log_invalid_input(*, request_id: str, error: str) -> None:
     """Emit one WARN-level log record for invalid input (REQ-IDX-003-004)."""
     extra = {"request_id": request_id, "error": error}
-    logger.warning(
+    logger.warning(  # nosemgrep: python.lang.security.audit.logging.logger-credential-leak -- `error` is a static validation-error string (e.g. "empty text"), never a secret
         "tokenize: invalid_input request_id=%s error=%s",
         request_id,
         error,

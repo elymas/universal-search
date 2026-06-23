@@ -161,6 +161,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Merge-blocking semgrep rulesets (the ONLY findings that block a merge):
+      #   p/golang, p/owasp-top-ten, p/jwt
+      # The Python logging ruleset `python.lang.security.audit.logging.*`
+      # (lives in p/python) is NOT in this gate. Python SAST is advisory-only,
+      # obtained via ad-hoc `semgrep --config p/python` scans; its findings do
+      # NOT block merges (decision per SPEC-SEC-004 REQ-SEC4-020). The four
+      # logger-credential-leak false positives are suppressed inline with
+      # `# nosemgrep` so an ad-hoc p/python scan stays clean.
       - name: Run semgrep
         run: semgrep ci --config p/golang --config p/owasp-top-ten --config p/jwt
         env:

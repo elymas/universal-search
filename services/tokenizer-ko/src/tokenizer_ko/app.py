@@ -147,7 +147,7 @@ async def tokenize_endpoint(
         latency_ms = timer.elapsed_ms
         result["latency_ms"] = latency_ms
     except Exception as exc:
-        logger.error(
+        logger.error(  # nosemgrep: python.lang.security.audit.logging.logger-credential-leak -- logs request_id (UUID) + exception text only, no secret
             "tokenize: internal error request_id=%s: %s",
             req.request_id,
             exc,

@@ -102,7 +102,7 @@ async def synthesize_endpoint(req: SynthesizeRequest) -> SynthesizeResponse:
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Catch-all exception handler to prevent 500 leaking stack traces."""
-    logger.error({"message": "Unhandled exception", "error": str(exc)})
+    logger.error({"message": "Unhandled exception", "error": str(exc)})  # nosemgrep: python.lang.security.audit.logging.logger-credential-leak -- generic handler logs exception string only, no secret
     return JSONResponse(
         status_code=500,
         content={"error": "internal_error", "detail": str(exc)},
