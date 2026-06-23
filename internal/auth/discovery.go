@@ -38,18 +38,22 @@ func DiscoverProviderWithClient(ctx context.Context, issuerURL string, timeout t
 	if client == nil {
 		client = http.DefaultClient
 	}
-	// Skip TLS verification for test environments
-	// @MX:WARN: [AUTO] InsecureSkipVerify is only used in test builds
-	// @MX:REASON: production code paths never set this flag; it's gated by allowPrivateIssuer
+	// TLS certificate verification is disabled ONLY when allow_private_issuer is
+	// enabled in OIDC config. This path is configuration-gated (NOT build-tag-gated)
+	// and is runtime-reachable whenever allow_private_issuer: true is set, intended
+	// for dev/CI OIDC against self-signed issuers. Disabled by default.
+	// @MX:WARN: [AUTO] InsecureSkipVerify is config-gated by allowPrivateIssuer, off by default
+	// @MX:REASON: runtime-reachable when allow_private_issuer is enabled; a startup WARN is logged so operators have evidence the insecure path is active
 	if allowPrivateIssuer {
+		slog.Warn("auth: TLS certificate verification disabled for OIDC discovery (allow_private_issuer enabled)", "issuer", issuerURL)
 		if transport, ok := client.Transport.(*http.Transport); ok {
 			if transport.TLSClientConfig == nil {
-				transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //nolint:gosec // test-only
+				transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402 -- gated behind allow_private_issuer, disabled by default
 			}
 		} else if client.Transport == nil {
 			client = &http.Client{
 				Transport: &http.Transport{
-					TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, //nolint:gosec // test-only
+					TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 -- gated behind allow_private_issuer, disabled by default
 				},
 			}
 		}

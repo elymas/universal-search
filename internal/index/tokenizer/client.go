@@ -50,7 +50,7 @@ func (c *Client) Tokenize(ctx context.Context, requestID, text string) (*Result,
 	for attempt := 0; attempt <= c.cfg.MaxRetries; attempt++ {
 		if attempt > 0 {
 			// Apply jitter: ± 10% of the base delay.
-			jitter := time.Duration(float64(delay) * (0.9 + 0.2*rand.Float64()))
+			jitter := time.Duration(float64(delay) * (0.9 + 0.2*rand.Float64())) // #nosec G404 -- non-cryptographic jitter for retry/backoff, not a security context
 			select {
 			case <-ctx.Done():
 				return nil, fmt.Errorf("tokenizer: %w", ErrTimeout)

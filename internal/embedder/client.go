@@ -182,7 +182,7 @@ func (c *Client) withRetry(ctx context.Context, fn func() error) error {
 		if attempt > 0 {
 			// Exponential backoff with ±10% jitter.
 			base := retryBase * time.Duration(retryMult*(attempt))
-			jitter := time.Duration(float64(base) * retryJitter * (rand.Float64()*2 - 1))
+			jitter := time.Duration(float64(base) * retryJitter * (rand.Float64()*2 - 1)) // #nosec G404 -- non-cryptographic jitter for retry/backoff, not a security context
 			delay := base + jitter
 			select {
 			case <-ctx.Done():

@@ -74,7 +74,7 @@ func (idx *Index) parallelSearch(
 		var err error
 
 		filter := buildQdrantFilter(q)
-		scored, searchErr := idx.qd.Search(storeCtx, vector, filter, uint64(maxRes))
+		scored, searchErr := idx.qd.Search(storeCtx, vector, filter, uint64(maxRes)) // #nosec G115 -- maxRes clamped > 0 above (lines 63-64), no overflow
 		if searchErr != nil {
 			err = searchErr
 		} else {

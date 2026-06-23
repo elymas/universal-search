@@ -268,7 +268,7 @@ func withRetry(ctx context.Context, maxRetries int, fn func() error) error {
 		if attempt == 1 {
 			base = 1500 * time.Millisecond
 		}
-		jitter := time.Duration(float64(base) * retryJitter * (rand.Float64()*2 - 1))
+		jitter := time.Duration(float64(base) * retryJitter * (rand.Float64()*2 - 1)) // #nosec G404 -- non-cryptographic jitter for retry/backoff, not a security context
 		delay := base + jitter
 		select {
 		case <-ctx.Done():

@@ -53,7 +53,7 @@ func isNonRetryable(err error) bool {
 func jitter(d time.Duration) time.Duration {
 	// ±10% of d
 	delta := float64(d) * 0.1
-	jitterVal := (rand.Float64()*2 - 1) * delta //nolint:gosec // non-crypto jitter
+	jitterVal := (rand.Float64()*2 - 1) * delta // #nosec G404 -- non-cryptographic jitter for retry/backoff, not a security context
 	return d + time.Duration(jitterVal)
 }
 

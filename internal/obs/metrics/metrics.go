@@ -383,7 +383,7 @@ func StartAdminServer(ctx context.Context, addr string, reg *Registry) (string, 
 	}()
 
 	// Stop server when context is cancelled.
-	go func() {
+	go func() { // #nosec G118 -- shutdown path triggered by ctx.Done(); request context is already cancelled, so a fresh background context bounds the drain window
 		<-ctx.Done()
 		shutCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()

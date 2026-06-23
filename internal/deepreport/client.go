@@ -207,7 +207,7 @@ func backoff(attempt int) time.Duration {
 		base = retryMaxDelay
 	}
 	// Add ±10% jitter.
-	jitter := time.Duration(float64(base) * 0.1 * (rand.Float64()*2 - 1))
+	jitter := time.Duration(float64(base) * 0.1 * (rand.Float64()*2 - 1)) // #nosec G404 -- non-cryptographic jitter for retry/backoff, not a security context
 	delay := base + jitter
 	if delay < 0 {
 		delay = base

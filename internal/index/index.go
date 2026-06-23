@@ -98,7 +98,11 @@ func New(ctx context.Context, opts Options) (*Index, error) {
 // ensureAllSchemas bootstraps schema on all three stores.
 func (idx *Index) ensureAllSchemas(ctx context.Context) error {
 	// Qdrant collection.
-	if err := idx.qd.EnsureCollection(ctx, collectionName, uint64(idx.embedder.Dimensions())); err != nil {
+	dims := idx.embedder.Dimensions()
+	if dims <= 0 {
+		return fmt.Errorf("qdrant: invalid embedder dimensions %d", dims)
+	}
+	if err := idx.qd.EnsureCollection(ctx, collectionName, uint64(dims)); err != nil { // #nosec G115 -- dims guarded > 0 above, no overflow
 		return fmt.Errorf("qdrant: %w", err)
 	}
 
