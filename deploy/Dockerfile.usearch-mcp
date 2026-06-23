@@ -4,7 +4,9 @@
 # =============================================================================
 
 # -- Builder stage
-FROM golang:1.24-alpine AS builder
+# Go 1.25.8 matches go.mod (go 1.25.8); golang:1.24 < required version fails
+# `go mod download` under GOTOOLCHAIN=local ("go.mod requires go >= 1.25.8").
+FROM golang:1.25.8-alpine AS builder
 
 # Ephemeral --no-cache builder stage; floating apk versions track the Alpine
 # base-image patch level and are discarded — version pins would be brittle.
