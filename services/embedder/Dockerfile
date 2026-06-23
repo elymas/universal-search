@@ -2,13 +2,13 @@
 # Embedder service — BGE-M3 embedding sidecar (SPEC-IDX-002)
 # Multi-stage: deps layer cached separately from source for fast rebuilds.
 # hadolint ignore=DL3008
-FROM python:3.11-slim AS base
+FROM python:3.11-slim@sha256:ae52c5bef62a6bdd42cd1e8dffef86b9cd284bde9427da79839de7a4b983e7ca AS base
 
 WORKDIR /app
 
 # System setup: pip upgrade + non-root user in one layer.
 # hadolint ignore=DL3013
-RUN pip install --no-cache-dir --upgrade pip \
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
  && useradd --create-home --shell /bin/bash --uid 1001 appuser
 
 # Build tools for C-extension deps. FlagEmbedding pulls zlib-state, which has

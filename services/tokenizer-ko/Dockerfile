@@ -5,7 +5,7 @@
 # Stage 2: runtime — copy only the installed package and app source.
 
 # --- Stage 1: builder ---
-FROM python:3.11-slim AS builder
+FROM python:3.11-slim@sha256:ae52c5bef62a6bdd42cd1e8dffef86b9cd284bde9427da79839de7a4b983e7ca AS builder
 
 # Install system build dependencies for mecab-ko C extension.
 # hadolint ignore=DL3008
@@ -28,7 +28,7 @@ RUN pip install --no-cache-dir --prefix=/install ".[dev]" 2>/dev/null || \
     pip install --no-cache-dir --prefix=/install .
 
 # --- Stage 2: runtime ---
-FROM python:3.11-slim AS runtime
+FROM python:3.11-slim@sha256:ae52c5bef62a6bdd42cd1e8dffef86b9cd284bde9427da79839de7a4b983e7ca AS runtime
 
 # Runtime system deps: mecab-ko-dic dictionary is bundled in the wheel,
 # but libstdc++ is needed for the C extension.
@@ -36,6 +36,11 @@ FROM python:3.11-slim AS runtime
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libstdc++6 \
     && rm -rf /var/lib/apt/lists/*
+
+# Upgrade the base-image pip toolchain to clear FIXED HIGH CVEs in the bundled
+# setuptools/wheel vendor tree (CVE-2026-23949, CVE-2026-24049).
+# hadolint ignore=DL3013
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
 WORKDIR /app
 
