@@ -36,7 +36,7 @@ jobs:
 
       - name: Determine tag and dry-run flag
         id: tag
-        run: |
+        run: | # nosemgrep: yaml.github-actions.security.run-shell-injection.run-shell-injection -- interpolates only trusted GitHub contexts (github.ref, github.ref_name, dry_run choice input), no untrusted PR title/body
           if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
             TAG="${{ github.ref_name }}"
           else
@@ -198,7 +198,7 @@ jobs:
 
       # G11: Signed tag verification (informational, non-blocking)
       - name: G11 — Signed tag (informational)
-        run: |
+        run: | # nosemgrep: yaml.github-actions.security.run-shell-injection.run-shell-injection -- interpolates only trusted GitHub contexts (github.ref, github.ref_name), no untrusted PR title/body
           echo "=== G11: Signed tag verification (informational, non-blocking) ==="
           if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
             if git verify-tag ${{ github.ref_name }} 2>&1 | grep -q "Good signature"; then

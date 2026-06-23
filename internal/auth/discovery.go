@@ -48,12 +48,12 @@ func DiscoverProviderWithClient(ctx context.Context, issuerURL string, timeout t
 		slog.Warn("auth: TLS certificate verification disabled for OIDC discovery (allow_private_issuer enabled)", "issuer", issuerURL)
 		if transport, ok := client.Transport.(*http.Transport); ok {
 			if transport.TLSClientConfig == nil {
-				transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // #nosec G402 -- gated behind allow_private_issuer, disabled by default
+				transport.TLSClientConfig = &tls.Config{MinVersion: tls.VersionTLS12, InsecureSkipVerify: true} // #nosec G402 -- gated behind allow_private_issuer, disabled by default
 			}
 		} else if client.Transport == nil {
 			client = &http.Client{
 				Transport: &http.Transport{
-					TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // #nosec G402 -- gated behind allow_private_issuer, disabled by default
+					TLSClientConfig: &tls.Config{MinVersion: tls.VersionTLS12, InsecureSkipVerify: true}, // #nosec G402 -- gated behind allow_private_issuer, disabled by default
 				},
 			}
 		}

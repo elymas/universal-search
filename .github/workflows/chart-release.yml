@@ -42,7 +42,7 @@ jobs:
 
       - name: Package chart
         id: package
-        run: |
+        run: | # nosemgrep: yaml.github-actions.security.run-shell-injection.run-shell-injection -- interpolates only github.ref_name (trusted git tag that triggered the release), no untrusted PR title/body
           helm package charts/universal-search \
             --destination ./dist \
             --app-version ${{ github.ref_name }}

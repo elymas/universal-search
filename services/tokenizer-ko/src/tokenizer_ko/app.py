@@ -62,7 +62,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     app.state.tagger = tagger
     app.state.dict_version = dict_ver
 
-    logger.info(
+    logger.info(  # nosemgrep: python.lang.security.audit.logging.logger-credential-leak.python-logger-credential-disclosure -- logs static dict_version + package version only, no secret
         "tokenizer-ko ready: dict_version=%s version=%s",
         dict_ver,
         __version__,
@@ -147,7 +147,7 @@ async def tokenize_endpoint(
         latency_ms = timer.elapsed_ms
         result["latency_ms"] = latency_ms
     except Exception as exc:
-        logger.error(  # nosemgrep: python.lang.security.audit.logging.logger-credential-leak -- logs request_id (UUID) + exception text only, no secret
+        logger.error(  # nosemgrep: python.lang.security.audit.logging.logger-credential-leak.python-logger-credential-disclosure -- logs request_id (UUID) + exception text only, no secret
             "tokenize: internal error request_id=%s: %s",
             req.request_id,
             exc,

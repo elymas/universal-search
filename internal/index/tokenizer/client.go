@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand/v2"
+	"math/rand/v2" // nosemgrep: go.lang.security.audit.crypto.math_random.math-random-used -- non-crypto backoff jitter only (see #nosec G404 at usage site)
 	"net/http"
 	"time"
 )
