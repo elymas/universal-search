@@ -31,9 +31,12 @@ jobs:
         # SPEC-WEB-001 REQ-WEB-070: regression observed — CI resolved react@18.3.1
         # despite web/pnpm-lock.yaml pinning react@19.2.5, breaking tsc type
         # resolution (TS2307/TS7016 for react, react/jsx-runtime, vitest,
-        # @testing-library/*). --frozen-lockfile forbids re-resolution so the
-        # react@19 pin is honored. Lockfile verified in sync (frozen+offline OK).
-        run: pnpm --dir web install --frozen-lockfile
+        # @testing-library/*). Root cause: the repo-root pnpm-workspace.yaml makes
+        # `pnpm --dir web install` resolve the WORKSPACE (root react@18) into the
+        # repo-root node_modules and never create web/node_modules, so web's tsc
+        # walks up to root react@18. --ignore-workspace forces a standalone web
+        # install from web/pnpm-lock.yaml (react@19.2.5) into web/node_modules.
+        run: pnpm --dir web install --frozen-lockfile --ignore-workspace
 
       - name: Type check
         run: pnpm --dir web typecheck
