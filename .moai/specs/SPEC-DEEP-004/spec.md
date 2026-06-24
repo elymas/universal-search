@@ -1,9 +1,9 @@
 ---
 id: SPEC-DEEP-004
 version: 0.1.1
-status: implemented
+status: in-progress
 created: 2026-05-21
-updated: 2026-05-21
+updated: 2026-06-24
 author: limbowl
 priority: P0
 issue_number: 20
@@ -101,6 +101,23 @@ blocks: []
   14 EARS REQs (12 × P0 + 2 × P1), 10 NFRs, 5 modules (Identity / Haiku Screen /
   Cost Ledger / Cap Enforcement / Cache & Observability). Methodology: TDD,
   coverage target 85%, harness: standard. Owner: expert-backend.
+
+---
+
+## Implementation Status (2026-06-24 audit correction)
+
+The cost-guard library (`internal/deepagent/costguard`: Haiku pre-screen, Redis cap
+enforcement, Postgres ledger, prompt-cache reuse) is fully implemented and unit-tested
+(72/72 Go tests pass).
+
+Deferred — pipeline unreachable end-to-end: `costguard` guards the `/deep` pipeline,
+but that pipeline is not reachable because `NewDeepHandler` is never mounted in
+`cmd/usearch-api/main.go` (see SPEC-DEEP-001 evidence) and `FanoutFn` is a stub
+(see SPEC-DEEP-003 evidence), so the cost guard is never exercised in production.
+
+Remediation path: wiring requires an `llm.Client` (LITELLM) + a real `FanoutFn`
+(DEEP-003 Phase E) + mounting `NewDeepHandler` on the usearch-api mux + a storm sidecar
+client; tracked for a future implementation pass.
 
 ---
 

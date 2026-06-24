@@ -1,9 +1,9 @@
 ---
 id: SPEC-DEEP-003
 version: 0.1.2
-status: implemented
+status: in-progress
 created: 2026-05-21
-updated: 2026-05-22
+updated: 2026-06-24
 author: limbowl
 priority: P0
 issue_number: 19
@@ -207,6 +207,22 @@ blocks: [SPEC-DEEP-004]
   coverage target 85%, harness: standard. Owner: expert-backend.
   `issue_number: 0` 상태이며 plan-auditor 리뷰 + annotation cycle
   통과 후 status `draft → approved` 전이.
+
+---
+
+## Implementation Status (2026-06-24 audit correction)
+
+The tree exploration library (`internal/deepagent/tree.go`, budget pre-check, node
+types, Postgres persistence) is fully implemented and unit-tested (72/72 Go tests pass).
+
+Deferred — REQ-DEEP3-009b unmet: `internal/deepagent/tree.go:61` `ExpandTree` has zero
+non-test callers; `ResearcherHTTPClient.Fanout` in
+`internal/deepagent/researcher_http.go:101-103` is a permanent stub returning
+`nil, nil, 0, nil` (Phase E unimplemented), so the tree expansion cannot run end-to-end.
+
+Remediation path: wiring requires an `llm.Client` (LITELLM) + a real `FanoutFn`
+(DEEP-003 Phase E) + mounting `NewDeepHandler` on the usearch-api mux + a storm sidecar
+client; tracked for a future implementation pass.
 
 ---
 

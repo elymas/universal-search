@@ -1,9 +1,9 @@
 ---
 id: SPEC-DEEP-001
 version: 0.3.1
-status: implemented
+status: in-progress
 created: 2026-05-10
-updated: 2026-05-10
+updated: 2026-06-24
 author: limbowl
 priority: P0
 issue_number: 0
@@ -184,6 +184,22 @@ blocks: [SPEC-DEEP-002, SPEC-DEEP-003, SPEC-DEEP-004]
   SPEC-DEEP-003, semantic faithfulness scoring to SPEC-EVAL-001
   (M8). No GitHub issue tracking on this SPEC (`issue_number: 0`).
   Ready for plan-auditor review and annotation cycle.
+
+---
+
+## Implementation Status (2026-06-24 audit correction)
+
+The STORM sidecar service and `NewDeepHandler` (storm + agents modes, SSE/buffered
+streaming) are fully implemented and unit-tested (72/72 Go tests pass).
+
+Deferred — HTTP entrypoint unmounted: `cmd/usearch-api/handlers/deep.go:40`
+`NewDeepHandler` is built but never registered on the mux in
+`cmd/usearch-api/main.go` (which registers only `/`, `/query/stream`, `/api/admin/*`).
+The `/deep` surface is therefore unreachable end-to-end.
+
+Remediation path: wiring requires an `llm.Client` (LITELLM) + a real `FanoutFn`
+(DEEP-003 Phase E) + mounting `NewDeepHandler` on the usearch-api mux + a storm sidecar
+client; tracked for a future implementation pass.
 
 ---
 

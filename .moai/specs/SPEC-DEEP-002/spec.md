@@ -1,9 +1,9 @@
 ---
 id: SPEC-DEEP-002
 version: 0.1.2
-status: implemented
+status: in-progress
 created: 2026-05-21
-updated: 2026-05-22
+updated: 2026-06-24
 author: limbowl
 priority: P0
 issue_number: 18
@@ -135,6 +135,23 @@ blocks: [SPEC-DEEP-003, SPEC-DEEP-004]
   target 85%, harness: standard. Owner: expert-backend.
   `issue_number: 0` 상태이며 plan-auditor 리뷰 + annotation
   cycle 통과 후 status `draft → approved` 전이.
+
+---
+
+## Implementation Status (2026-06-24 audit correction)
+
+The multi-agent pipeline logic (Researcher/Reviewer/Writer/Verifier orchestration,
+SSE/buffered modes, retry semantics) is fully implemented and unit-tested (72/72 Go tests pass).
+
+Deferred — HTTP entrypoint unmounted and FanoutFn stub: same as SPEC-DEEP-001 — the
+`/deep` handler is never mounted in `cmd/usearch-api/main.go`; additionally the
+production `DeepPipelineFn` cannot bind a real `FanoutFn` because
+`ResearcherHTTPClient.Fanout` in `internal/deepagent/researcher_http.go:101-103`
+is a permanent stub returning `nil, nil, 0, nil` (DEEP-003 Phase E unimplemented).
+
+Remediation path: wiring requires an `llm.Client` (LITELLM) + a real `FanoutFn`
+(DEEP-003 Phase E) + mounting `NewDeepHandler` on the usearch-api mux + a storm sidecar
+client; tracked for a future implementation pass.
 
 ---
 

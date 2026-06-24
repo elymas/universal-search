@@ -3,13 +3,13 @@ id: SPEC-CLI-002
 title: usearch CLI v1 — Full Subcommand Tree, Interactive Mode, Streaming
 version: 1.0.0
 milestone: M7 — Surfaces
-status: implemented
+status: in-progress
 priority: P1
 owner: expert-backend
 methodology: tdd
 coverage_target: 85
 created: 2026-05-22
-updated: 2026-05-26
+updated: 2026-06-24
 author: limbowl
 issue_number: null
 depends_on: [SPEC-CLI-001, SPEC-SYN-004, SPEC-DEEP-001, SPEC-DEEP-004, SPEC-IR-001, SPEC-OBS-001]
@@ -50,6 +50,22 @@ blocks: [SPEC-SKILL-001]
   14 EARS REQs (4 × P0 + 8 × P1 + 2 × P2) + 5 NFRs. Five EARS patterns
   used (Ubiquitous + Event-Driven + State-Driven + Unwanted + Optional).
   Status `draft` pending plan-auditor + annotation cycle.
+
+---
+
+## Implementation Status (2026-06-24 audit correction)
+
+The broader CLI subcommand tree (cobra migration, `sources`, `history`, `config`, `login`,
+streaming, `--format markdown`, shell completions) is implemented and unit-tested
+(72/72 tests pass).
+
+Deferred — REQ-CLI2-003 (`usearch deep`): `cmd/usearch/deep_cmd.go:29-44` RunE prints
+placeholder stage labels and returns an error with the message "Deep research pipeline
+not yet wired (requires LLM client)." — the `@MX:TODO` at line 32 tracks the wiring.
+
+Remediation path: wiring requires an `llm.Client` (LITELLM) + a real `FanoutFn`
+(DEEP-003 Phase E) + mounting `NewDeepHandler` on the usearch-api mux + a storm sidecar
+client; tracked for a future implementation pass.
 
 ---
 
