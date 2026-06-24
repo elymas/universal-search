@@ -149,18 +149,6 @@ func BuildProductionRegistryWithResolverAndError(resolver secretstore.Resolver) 
 
 	// --- Non-credentialed adapters (unchanged from pre-SPEC) ---
 
-	redditClientID := os.Getenv("REDDIT_CLIENT_ID")
-	redditClientSecret := os.Getenv("REDDIT_CLIENT_SECRET")
-	if redditClientID != "" && redditClientSecret != "" {
-		if a, err := reddit.New(reddit.Options{
-			BaseURL:      os.Getenv("REDDIT_BASE_URL"),
-			ClientID:     redditClientID,
-			ClientSecret: redditClientSecret,
-			OAuthURL:     os.Getenv("REDDIT_OAUTH_URL"),
-		}); err == nil {
-			_ = reg.Register(a)
-		}
-	}
 	if a, err := hn.New(hn.Options{
 		BaseURL: os.Getenv("HN_BASE_URL"),
 	}); err == nil {
@@ -226,6 +214,28 @@ func BuildProductionRegistryWithResolverAndError(resolver secretstore.Resolver) 
 		if a, err := github.New(github.Options{
 			BaseURL: os.Getenv("GITHUB_BASE_URL"),
 			Token:   githubToken,
+		}); err == nil {
+			_ = reg.RegisterWithOptions(a, adapters.RegisterOptions{SkipAuthCheck: true})
+		}
+	}
+
+	// Reddit: resolve REDDIT_CLIENT_ID / REDDIT_CLIENT_SECRET via Resolver
+	// (SPEC-SEC-002 REQ-SEC2-002). BASE_URL/OAUTH_URL are config, not secrets,
+	// and stay on os.Getenv. Missing optional creds → silent skip (pre-SPEC parity).
+	redditClientID, redditIDErr := r.Get(ctx, "REDDIT_CLIENT_ID")
+	if errors.Is(redditIDErr, secretstore.ErrNotImplemented) {
+		return nil, fmt.Errorf("credential resolution failed: vault backend is not implemented; use env or k8s backend: %w", redditIDErr)
+	}
+	redditClientSecret, redditSecretErr := r.Get(ctx, "REDDIT_CLIENT_SECRET")
+	if errors.Is(redditSecretErr, secretstore.ErrNotImplemented) {
+		return nil, fmt.Errorf("credential resolution failed: vault backend is not implemented; use env or k8s backend: %w", redditSecretErr)
+	}
+	if redditIDErr == nil && redditSecretErr == nil && redditClientID != "" && redditClientSecret != "" {
+		if a, err := reddit.New(reddit.Options{
+			BaseURL:      os.Getenv("REDDIT_BASE_URL"),
+			ClientID:     redditClientID,
+			ClientSecret: redditClientSecret,
+			OAuthURL:     os.Getenv("REDDIT_OAUTH_URL"),
 		}); err == nil {
 			_ = reg.RegisterWithOptions(a, adapters.RegisterOptions{SkipAuthCheck: true})
 		}

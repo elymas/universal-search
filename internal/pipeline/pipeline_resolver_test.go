@@ -164,6 +164,56 @@ func TestGithubSkippedWhenNoTokenResolves(t *testing.T) {
 	}
 }
 
+// --- NFR-SEC2-004: reddit creds via injected Resolver (regression guard) ---
+
+// TestRedditClientCredsViaResolver proves that the reddit adapter's
+// CLIENT_ID/CLIENT_SECRET resolve through the injected Resolver, NOT os.Getenv.
+// This is the NFR-SEC2-004 regression guard: it fails if reddit ever reverts to
+// reading raw os.Getenv, since the fakeResolver (not the process env) is the
+// sole credential source here.
+func TestRedditClientCredsViaResolver(t *testing.T) {
+	t.Parallel()
+
+	fr := newFakeResolver(map[string]string{
+		"REDDIT_CLIENT_ID":     "reddit-id-from-resolver",
+		"REDDIT_CLIENT_SECRET": "reddit-secret-from-resolver",
+	})
+
+	reg := pipeline.BuildProductionRegistryWithResolver(fr)
+
+	// (a) reddit must be registered using only Resolver-supplied creds.
+	if !registryContains(t, reg, "reddit") {
+		t.Error("expected reddit to be registered via Resolver creds")
+	}
+
+	// (b) the Resolver must have been consulted for both secrets — proving
+	// the creds flow through the Resolver, not os.Getenv.
+	if !fr.called("REDDIT_CLIENT_ID") {
+		t.Error("Resolver was not called for REDDIT_CLIENT_ID")
+	}
+	if !fr.called("REDDIT_CLIENT_SECRET") {
+		t.Error("Resolver was not called for REDDIT_CLIENT_SECRET")
+	}
+}
+
+// TestRedditSkippedWhenCredsNotResolved verifies that reddit is silently
+// skipped when the Resolver does not provide its creds (pre-SPEC parity:
+// missing optional creds do not hard-fail).
+func TestRedditSkippedWhenCredsNotResolved(t *testing.T) {
+	t.Parallel()
+
+	// Resolver provides only github token — no reddit creds.
+	fr := newFakeResolver(map[string]string{
+		"USEARCH_GITHUB_TOKEN": "token-only",
+	})
+
+	reg := pipeline.BuildProductionRegistryWithResolver(fr)
+
+	if registryContains(t, reg, "reddit") {
+		t.Error("expected reddit to be skipped when creds not resolved")
+	}
+}
+
 // --- REQ-SEC2-004: vault stub surfaces ---
 
 // TestVaultBackendReturnsNotImplemented verifies that the vault backend

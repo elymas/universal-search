@@ -9,7 +9,7 @@ owner: expert-backend
 methodology: tdd
 coverage_target: 85
 created: 2026-06-04
-updated: 2026-06-04
+updated: 2026-06-24
 author: limbowl
 issue_number: null
 labels: [security, secrets, adapters, M8]
@@ -94,6 +94,32 @@ blocks: []
   would break house consistency; this is the same accepted firewall
   deviation those siblings carry (plan-audit review-1 MP-3 noted it as a
   project-wide convention).
+
+- 2026-06-24 (revision r2 — reddit misclassification corrected, limbowl via manager-spec):
+  A 2026-06-24 audit found that §2.1(b) misclassified reddit as a
+  non-credentialed adapter. `internal/adapters/reddit/reddit.go:159-160`
+  confirms `RequiresAuth: true, AuthEnvVars: []string{"REDDIT_CLIENT_ID",
+  "REDDIT_CLIENT_SECRET"}`. Reddit IS credentialed and now resolves its
+  credentials through `secretstore.Resolver` in
+  `internal/pipeline/pipeline.go` (lines 222-240), registered with
+  `RegisterOptions{SkipAuthCheck: true}` — identical pattern to naver/github.
+  `REDDIT_BASE_URL` / `REDDIT_OAUTH_URL` remain plain config (`os.Getenv`),
+  not secrets.
+
+  NFR-SEC2-004 regression tests now exist:
+  `internal/pipeline/pipeline_resolver_test.go`
+  `TestRedditClientCredsViaResolver` (asserts `fakeResolver.called(
+  "REDDIT_CLIENT_ID"/"REDDIT_CLIENT_SECRET")`) and
+  `TestRedditSkippedWhenCredsNotResolved` (asserts reddit absent from registry
+  when creds not provided by the Resolver).
+
+  Known gap (NOT fixed here, deferred): Threads (`THREADS_ACCESS_TOKEN`) and
+  X (`X_BEARER_TOKEN`) in `cmd/usearch-mcp` still read raw `os.Getenv` and
+  are NOT yet routed through the Resolver. That wiring is deferred to a
+  separate pass; these adapters remain outside SEC-002 scope.
+
+  Changes: §2.1(b) adapter classification, NFR-SEC2-004 acceptance text,
+  §2.2 Threads/X deferral note.
 
 - 2026-06-04 (revision r1 — plan-audit fixes, limbowl via manager-spec):
   Resolved plan-audit `SPEC-SEC-002-review-1.md` (PASS-WITH-FIXES, 0.62).
@@ -205,7 +231,7 @@ the real Vault client stays OUT of scope (follow-on; §2.2).
 | Ref | Item |
 |-----|------|
 | a | Construct ONE `secretstore.Resolver` in the CLI from the `security.yaml` `secrets.backend` (`env`/`k8s`/`vault`) and `secrets.k8s_mount_path` values, via the existing `secretstore.NewResolver(backend, mountPath)` (`factory.go:22`). The Resolver is built ONCE per process and passed into `buildProductionRegistry` (`cmd/usearch/query.go`). An unknown backend SHALL fail process startup with the factory's config error (`factory.go:33-34`). |
-| b | Thread the Resolver into `buildProductionRegistry` and into the two credentialed adapter constructors. `buildProductionRegistry` SHALL accept the Resolver (signature extension or struct field — exact shape deferred to plan.md) and pass it to naver and github construction. Non-credentialed adapters (reddit, hn, arxiv, youtube, searxng, social, koreanews) are constructed UNCHANGED — they have `AuthEnvVars: nil` and resolve no secrets. Credentialed adapters whose key the Resolver supplied SHALL be registered via `Registry.RegisterWithOptions(a, RegisterOptions{SkipAuthCheck: true})` so the registry's env-only auth gate (`registry.go:151-153`) does NOT re-reject them on a non-env backend (see (i) and REQ-SEC2-007). Non-credentialed adapters keep using plain `Register` (their gate is a no-op since `RequiresAuth` is false). |
+| b | Thread the Resolver into `buildProductionRegistry` and into the three credentialed adapter constructors. `buildProductionRegistry` SHALL accept the Resolver (signature extension or struct field — exact shape deferred to plan.md) and pass it to naver, github, and reddit construction. Non-credentialed adapters (hn, arxiv, youtube, searxng, social, koreanews) are constructed UNCHANGED — they have `AuthEnvVars: nil` and resolve no secrets. Reddit is a credentialed adapter: `internal/adapters/reddit/reddit.go:159-160` sets `RequiresAuth: true, AuthEnvVars: []string{"REDDIT_CLIENT_ID","REDDIT_CLIENT_SECRET"}`; its credentials resolve through the injected Resolver (`internal/pipeline/pipeline.go:222-240`) exactly like naver and github. `REDDIT_BASE_URL` / `REDDIT_OAUTH_URL` are plain config constants (os.Getenv), not secrets. Credentialed adapters whose key the Resolver supplied SHALL be registered via `Registry.RegisterWithOptions(a, RegisterOptions{SkipAuthCheck: true})` so the registry's env-only auth gate (`registry.go:151-153`) does NOT re-reject them on a non-env backend (see (i) and REQ-SEC2-007). Non-credentialed adapters keep using plain `Register` (their gate is a no-op since `RequiresAuth` is false). |
 | c | Refactor naver credential resolution — remove the package-global `var secretEnv = secretstore.NewEnvResolver()` (`naver.go:23`) and accept an injected `Resolver` via `naver.Options`. `naver.New` SHALL resolve `NAVER_CLIENT_ID` / `NAVER_CLIENT_SECRET` through the injected Resolver (falling back to the existing env resolver only when no Resolver is injected, to preserve test ergonomics). The existing `Options.ClientID` / `Options.ClientSecret` direct-override path (`naver.go:67-72,119-133`) is PRESERVED and takes precedence over Resolver lookup, so existing naver tests that inject literal credentials keep working. |
 | d | Refactor github token resolution — the CLI SHALL resolve `USEARCH_GITHUB_TOKEN` through the injected Resolver and pass the resolved value into `github.New` via the existing `Options.Token` field (`github.go:46-48`). The `github` package itself is NOT modified (it already takes the token by injection; only the CLI's raw `os.Getenv` site at `cmd/usearch/query.go` changes). The `GITHUB_TOKEN` fallback alias behavior is preserved (resolve `USEARCH_GITHUB_TOKEN` first, then `GITHUB_TOKEN`), but both lookups go through the Resolver. |
 | e | Preserve the env-backend default — when `secrets.backend` is `env` or unset, the constructed Resolver is `EnvResolver` (`factory.go:24-25`), which has identical os.Getenv semantics to today's behavior. Existing deployments with `NAVER_CLIENT_*` / `USEARCH_GITHUB_TOKEN` in the process environment SHALL behave exactly as before (same adapters registered, same skip-on-missing semantics). |
@@ -272,6 +298,11 @@ out of frame; this list prevents scope creep.
   admin-view `os.LookupEnv` key-presence display (`registry.go:266-274`)
   is a SEPARATE telemetry concern owned by SPEC-UI-002 and is NOT fixed
   here — it is flagged as OQ-5.
+- **NOT routing Threads / X credentials through the Resolver** (deferred) —
+  `cmd/usearch-mcp` reads `THREADS_ACCESS_TOKEN` and `X_BEARER_TOKEN` via raw
+  `os.Getenv` and those sites are NOT yet wired through `secretstore.Resolver`.
+  This is a known remaining gap as of 2026-06-24; closure requires a separate
+  pass over the MCP server path.
 - **NOT GitHub Issue tracking on this SPEC** (`issue_number: null`).
 
 ### 2.3 Forward-Looking / Dependency Notes
@@ -318,7 +349,7 @@ only the CLI's token-resolution site changes — so an explicit ADP-004
 | NFR-SEC2-001 | No secret in logs/metrics/errors | [HARD] Across ALL code paths touched by this SPEC (Resolver construction, naver/github credential resolution, the vault/unknown-backend error paths), zero resolved secret values SHALL appear in slog records, Prometheus labels, OTel span attributes, or returned error strings. CI SHALL assert this with a fake Resolver that returns a sentinel secret value and a log/span capture that fails if the sentinel value (not its key name) appears anywhere. This is the security-critical NFR; a violation is a release blocker. |
 | NFR-SEC2-002 | Test isolation without `t.Setenv` under `-race` | [HARD] All backend-selection and credential-resolution tests SHALL drive secret state by injecting a fake `Resolver` (or fake env-lookup closure), NOT by mutating process env via `os.Setenv` / `t.Setenv`. Rationale: `t.Setenv` is goroutine-unsafe under `-race` for parallel tests (per Go testing docs; same discipline as SPEC-ADP-006 H1). The full SPEC-SEC-002 test set SHALL pass under `go test -race ./...` with `t.Parallel()` enabled where applicable. CI SHALL contain no `t.Setenv` in the new test files. |
 | NFR-SEC2-003 | Backend-selection determinism | Given a fixed `security.yaml` `secrets.backend` value and `k8s_mount_path`, `secretstore.NewResolver` SHALL produce a deterministic concrete Resolver type (`env`→`*EnvResolver`, `k8s`→`*K8sResolver`, `vault`→`*VaultResolver`, unknown→config error). The CLI's Resolver construction SHALL be a pure function of the config values (no hidden global state, no order-dependence). A table-driven test SHALL assert the backend-string→Resolver-type mapping including the empty-string→env default and the unknown→error case. |
-| NFR-SEC2-004 | Single source of truth for adapter credentials | After this SPEC there SHALL be exactly one mechanism by which a production adapter obtains a credential: the injected `Resolver`. The naver package-global `secretEnv` (`naver.go:23`) SHALL be removed; the CLI's raw `os.Getenv` token site SHALL be removed. A regression test SHALL assert that no credentialed adapter resolves its key by a path other than the injected Resolver (grep-based: no `os.Getenv` of a credential env var inside adapter constructors or the github token site in `cmd/usearch`). Non-credentialed adapters (AuthEnvVars: nil) are exempt — they resolve nothing. |
+| NFR-SEC2-004 | Single source of truth for adapter credentials | After this SPEC there SHALL be exactly one mechanism by which a production adapter obtains a credential: the injected `Resolver`. The naver package-global `secretEnv` (`naver.go:23`) SHALL be removed; the CLI's raw `os.Getenv` token site SHALL be removed. A regression test SHALL assert that no credentialed adapter resolves its key by a path other than the injected Resolver (grep-based: no `os.Getenv` of a credential env var inside adapter constructors or the github token site in `cmd/usearch`). Non-credentialed adapters (AuthEnvVars: nil) are exempt — they resolve nothing. **Implemented and verified:** `internal/pipeline/pipeline_resolver_test.go` contains `TestRedditClientCredsViaResolver` (asserts `fakeResolver.called("REDDIT_CLIENT_ID")` and `fakeResolver.called("REDDIT_CLIENT_SECRET")` — proves reddit creds flow through the injected Resolver, not raw os.Getenv) and `TestRedditSkippedWhenCredsNotResolved` (asserts reddit is absent from the registry when the Resolver does not supply its creds). Known remaining gap: Threads/X in `cmd/usearch-mcp` still use raw os.Getenv (see §2.2 deferral). |
 
 ---
 
@@ -394,6 +425,12 @@ requirement.
 ### NFR-SEC2-004 — single source of truth
 
 - Grep regression: no credentialed adapter resolves its key off-Resolver.
+- `TestRedditClientCredsViaResolver`: fakeResolver called for both
+  `REDDIT_CLIENT_ID` and `REDDIT_CLIENT_SECRET`; reddit present in registry.
+- `TestRedditSkippedWhenCredsNotResolved`: reddit absent from registry when
+  Resolver supplies no reddit creds.
+- Known remaining gap: Threads/X in `cmd/usearch-mcp` still use raw
+  os.Getenv — deferred (see §2.2).
 
 ---
 

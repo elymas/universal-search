@@ -199,7 +199,11 @@ func xCapabilitiesLive(prov XProvider) types.Capabilities {
 		SupportedLangs:    nil,
 		SupportsSince:     false,
 		RequiresAuth:      true,
-		AuthEnvVars:       nil,
+		// X_BEARER_TOKEN is the exact key the production provider reads
+		// (cmd/usearch-mcp buildXProvider). Declaring it lets the registry
+		// auth gate (registry.go) and admin `sources status` reflect X's
+		// real credential requirement (SPEC-SEC-002 cred-01).
+		AuthEnvVars:       []string{"X_BEARER_TOKEN"},
 		RateLimitPerMin:   0,
 		DefaultMaxResults: 25,
 		Notes: "X (Twitter) social LIVE via configured XProvider. Enabled by " +
