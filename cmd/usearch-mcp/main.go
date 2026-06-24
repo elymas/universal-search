@@ -16,8 +16,15 @@ import (
 	"github.com/elymas/universal-search/internal/adapters/social"
 	"github.com/elymas/universal-search/internal/mcpserver"
 	"github.com/elymas/universal-search/internal/obs"
+	"github.com/elymas/universal-search/internal/security/secretstore"
 	vver "github.com/elymas/universal-search/internal/version"
 )
+
+// xEnabledLookup resolves the USEARCH_X_ENABLED config flag. It is a seam over
+// os.Getenv so tests can drive the flag deterministically without mutating the
+// process environment (which is unsafe under -race). The flag is config, not a
+// secret, so it stays off the secretstore.Resolver path.
+var xEnabledLookup = os.Getenv
 
 func main() {
 	// Parse flags.
@@ -70,29 +77,50 @@ func adminAddr() string {
 	return ""
 }
 
-// buildProductionRegistry constructs the adapter registry for the MCP server.
-// Adapters are registered conditionally based on environment variables.
-// REQ-ADP10-001: Threads is registered only when THREADS_ACCESS_TOKEN is set.
-// REQ-ADP10-008: Facebook is NOT registered (no viable search path).
+// buildProductionRegistry constructs the adapter registry for the MCP server
+// using the default (env) Resolver. Thin backward-compatible wrapper over
+// buildProductionRegistryWithResolver.
 func buildProductionRegistry() *adapters.Registry {
+	return buildProductionRegistryWithResolver(nil)
+}
+
+// buildProductionRegistryWithResolver constructs the adapter registry for the
+// MCP server, resolving credentialed adapters' SECRETS through the injected
+// secretstore.Resolver (SPEC-SEC-002 cred-02). When resolver is nil, an
+// EnvResolver is used, preserving prior env-only behavior. The non-secret
+// USEARCH_X_ENABLED flag stays on the env path (config, not a secret).
+//
+// Credentialed adapters (Threads, X) declare RequiresAuth + AuthEnvVars, so
+// they MUST be registered with SkipAuthCheck: true — otherwise the registry's
+// env-only auth gate would reject a token sourced from a non-env backend.
+//
+// REQ-ADP10-001: Threads is registered only when THREADS_ACCESS_TOKEN resolves.
+// REQ-ADP10-008: Facebook is NOT registered (no viable search path).
+func buildProductionRegistryWithResolver(r secretstore.Resolver) *adapters.Registry {
+	if r == nil {
+		r = secretstore.NewEnvResolver()
+	}
+	ctx := context.Background()
 	reg := adapters.NewRegistry(nil)
 
-	// Threads: env-gated registration (SPEC-ADP-010 D1).
-	if os.Getenv("THREADS_ACCESS_TOKEN") != "" {
-		a, err := meta.NewThreads(meta.ThreadsOptions{})
-		if err == nil {
-			_ = reg.Register(a)
+	// Threads: secret-gated registration via Resolver (SPEC-ADP-010 D1,
+	// SPEC-SEC-002 cred-02). Missing creds (incl. vault ErrNotImplemented) →
+	// silent skip, matching prior optional-adapter behavior.
+	if token, err := r.Get(ctx, "THREADS_ACCESS_TOKEN"); err == nil && token != "" {
+		if a, err := meta.NewThreads(meta.ThreadsOptions{AccessToken: token}); err == nil {
+			_ = reg.RegisterWithOptions(a, adapters.RegisterOptions{SkipAuthCheck: true})
 		}
 	}
 
-	// X (Twitter): env-gated registration (SPEC-ADP-006-XENABLE).
+	// X (Twitter): env-gated registration (SPEC-ADP-006-XENABLE). The enable
+	// flag is config (os.Getenv); the bearer token is a secret (Resolver).
 	// @MX:WARN: [AUTO] ToS + secret gate for a ToS-grey source.
 	// @MX:REASON: registering X without the env + ToS-ack gates violates tech.md:147.
 	// @MX:SPEC: SPEC-ADP-006-XENABLE
-	if os.Getenv("USEARCH_X_ENABLED") == "true" {
-		if prov, ok := buildXProvider(); ok {
+	if xEnabledLookup("USEARCH_X_ENABLED") == "true" {
+		if prov, ok := buildXProvider(ctx, r); ok {
 			if a, err := social.NewX(social.XOptions{Provider: prov}); err == nil {
-				_ = reg.Register(a)
+				_ = reg.RegisterWithOptions(a, adapters.RegisterOptions{SkipAuthCheck: true})
 			}
 		}
 	}
@@ -100,12 +128,13 @@ func buildProductionRegistry() *adapters.Registry {
 	return reg
 }
 
-// buildXProvider constructs an X provider from environment credentials.
-// Returns (provider, true) when credentials are present; (nil, false) otherwise.
+// buildXProvider constructs an X provider, resolving the bearer token via the
+// injected Resolver (SPEC-SEC-002 cred-02). Returns (provider, true) when the
+// token resolves; (nil, false) otherwise (incl. resolver error / empty token).
 // SPEC-ADP-006-XENABLE: Option A (X official API v2) is the default provider.
-func buildXProvider() (social.XProvider, bool) {
-	bearerToken := os.Getenv("X_BEARER_TOKEN")
-	if bearerToken == "" {
+func buildXProvider(ctx context.Context, r secretstore.Resolver) (social.XProvider, bool) {
+	bearerToken, err := r.Get(ctx, "X_BEARER_TOKEN")
+	if err != nil || bearerToken == "" {
 		return nil, false
 	}
 	prov, err := social.NewXOfficialProvider(social.XOfficialOptions{
