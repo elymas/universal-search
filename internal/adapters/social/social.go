@@ -41,6 +41,7 @@ type Adapter struct {
 	xProvider         XProvider           // nil = disabled; non-nil = live (SPEC-ADP-006-XENABLE)
 	// @MX:NOTE: [AUTO] The live/disabled discriminator for X. Nil = disabled; non-nil = live.
 	// @MX:SPEC: SPEC-ADP-006-XENABLE
+	bearerToken string // Bluesky session accessJwt; "" = unauthenticated (searchPosts now 403s without it)
 }
 
 // BlueskyOptions configures the Bluesky adapter. All fields are optional;
@@ -59,6 +60,12 @@ type BlueskyOptions struct {
 	// HealthcheckTarget overrides the TCP address for Healthcheck.
 	// Default: "public.api.bsky.app:443".
 	HealthcheckTarget string
+
+	// Handle and AppPassword authenticate the adapter via createSession.
+	// Required since searchPosts rejects unauthenticated requests (HTTP 403).
+	// When either is empty, the adapter stays unauthenticated.
+	Handle      string
+	AppPassword string
 }
 
 // XOptions configures the X (Twitter) adapter.
@@ -80,11 +87,6 @@ type XOptions struct {
 // @MX:REASON: called by registry at startup; fan_in >= 3 from registry + tests.
 // @MX:SPEC: SPEC-ADP-006
 func NewBluesky(opts BlueskyOptions) (*Adapter, error) {
-	base := opts.BaseURL
-	if base == "" {
-		base = defaultBlueskyBaseURL
-	}
-
 	version := opts.UserAgentVersion
 	if version == "" {
 		version = defaultUAVersion
@@ -101,6 +103,31 @@ func NewBluesky(opts BlueskyOptions) (*Adapter, error) {
 		target = defaultBlueskyHealthcheckTarget
 	}
 
+	// Authenticate when credentials are supplied. searchPosts returns HTTP 403
+	// for unauthenticated requests, so without creds the adapter still builds
+	// but its searches will fail at query time (parity with pre-auth behavior).
+	var token string
+	if opts.Handle != "" && opts.AppPassword != "" {
+		t, err := createBlueskySession(context.Background(), client, opts.Handle, opts.AppPassword)
+		if err != nil {
+			return nil, err
+		}
+		token = t
+	}
+
+	// Select endpoint. The public AppView (public.api.bsky.app) only serves
+	// unauthenticated requests, but searchPosts now rejects those (403). An
+	// authenticated session JWT is only accepted by the PDS host (bsky.social),
+	// so route authenticated searches there. Explicit BaseURL always wins.
+	base := opts.BaseURL
+	if base == "" {
+		if token != "" {
+			base = authedBlueskyBaseURL
+		} else {
+			base = defaultBlueskyBaseURL
+		}
+	}
+
 	return &Adapter{
 		httpClient:        client,
 		baseURL:           base,
@@ -108,6 +135,7 @@ func NewBluesky(opts BlueskyOptions) (*Adapter, error) {
 		healthcheckTarget: target,
 		subSource:         "bluesky",
 		envLookup:         os.Getenv,
+		bearerToken:       token,
 	}, nil
 }
 

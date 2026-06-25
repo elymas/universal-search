@@ -15,8 +15,12 @@ import (
 	"github.com/elymas/universal-search/pkg/types"
 )
 
-// defaultBlueskyBaseURL is the Bluesky AppView XRPC search endpoint.
+// defaultBlueskyBaseURL is the Bluesky AppView XRPC search endpoint (unauthenticated).
 const defaultBlueskyBaseURL = "https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts"
+
+// authedBlueskyBaseURL is the PDS XRPC search endpoint. The AppView rejects
+// session JWTs (403); only the PDS host accepts an authenticated searchPosts.
+const authedBlueskyBaseURL = "https://bsky.social/xrpc/app.bsky.feed.searchPosts"
 
 // defaultMaxResults is the default limit when Query.MaxResults == 0.
 const defaultMaxResults = 25
@@ -84,6 +88,9 @@ func (a *Adapter) searchBluesky(ctx context.Context, q types.Query) ([]types.Nor
 			Category: types.CategoryPermanent,
 			Cause:    fmt.Errorf("social: failed to create request: %w", err),
 		}
+	}
+	if a.bearerToken != "" {
+		req.Header.Set("Authorization", "Bearer "+a.bearerToken)
 	}
 
 	resp, err := a.doRequest(req)
