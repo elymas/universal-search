@@ -66,6 +66,12 @@ jobs:
           exit-code: "1"
           # Misconfig + secret detection on Dockerfiles and compose files.
           hide-progress: "true"
+          # Pin a newer Trivy than the action's v0.65.0 default: the bundled
+          # setup-trivy install.sh for 0.65.0 dies right after version lookup
+          # ("found version 0.65.0" → exit 1, no scan). cache:false skips the
+          # buggy binary-cache restore/save path.
+          version: "v0.71.2"
+          cache: "false"
 
   trivy-image:
     name: trivy (image — ${{ matrix.service }})
