@@ -69,9 +69,19 @@ class YTItem(BaseModel):
     # upload_date) which a bare `str` field rejects. Coerce None -> "" so a
     # single missing field never fails the whole search response.
     @field_validator(
-        "id", "url", "title", "description", "channel", "channel_id",
-        "channel_url", "uploader", "uploader_id", "upload_date",
-        "thumbnail_url", "transcript_snippet", "transcript_lang",
+        "id",
+        "url",
+        "title",
+        "description",
+        "channel",
+        "channel_id",
+        "channel_url",
+        "uploader",
+        "uploader_id",
+        "upload_date",
+        "thumbnail_url",
+        "transcript_snippet",
+        "transcript_lang",
         mode="before",
     )
     @classmethod
