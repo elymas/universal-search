@@ -169,8 +169,13 @@ func BuildProductionRegistryWithResolverAndError(resolver secretstore.Resolver) 
 	if a, err := searxng.New(searxng.Options{}); err == nil {
 		_ = reg.Register(a)
 	}
+	// Bluesky: searchPosts requires an authenticated session (HTTP 403 otherwise).
+	// Handle is config; the app password is a secret resolved via the Resolver
+	// below. Missing creds → adapter builds but searches fail at query time.
 	if a, err := social.NewBluesky(social.BlueskyOptions{
-		BaseURL: os.Getenv("BLUESKY_BASE_URL"),
+		BaseURL:     os.Getenv("BLUESKY_BASE_URL"),
+		Handle:      os.Getenv("BLUESKY_HANDLE"),
+		AppPassword: blueskyAppPassword(resolver),
 	}); err == nil {
 		_ = reg.Register(a)
 	}
@@ -241,7 +246,51 @@ func BuildProductionRegistryWithResolverAndError(resolver secretstore.Resolver) 
 		}
 	}
 
+	// X (Twitter): gated by USEARCH_X_ENABLED (SPEC-ADP-006-XENABLE). Provider is
+	// selected by which credential is present: TWITTERAPI_IO_KEY (twitterapi.io,
+	// no X dev-console approval) is preferred; X_BEARER_TOKEN (official API v2) is
+	// the fallback. Missing gate or both keys → silent skip.
+	if os.Getenv("USEARCH_X_ENABLED") == "true" {
+		if prov := buildXProvider(ctx, r); prov != nil {
+			if a, aerr := social.NewX(social.XOptions{Provider: prov}); aerr == nil {
+				_ = reg.RegisterWithOptions(a, adapters.RegisterOptions{SkipAuthCheck: true})
+			}
+		}
+	}
+
 	return reg, nil
+}
+
+// buildXProvider selects an X search provider from available credentials.
+// Preference order: twitterapi.io (TWITTERAPI_IO_KEY) → official API (X_BEARER_TOKEN).
+// Returns nil when no credential resolves.
+func buildXProvider(ctx context.Context, r secretstore.Resolver) social.XProvider {
+	if key, err := r.Get(ctx, "TWITTERAPI_IO_KEY"); err == nil && key != "" {
+		if prov, perr := social.NewTwitterAPIProvider(social.TwitterAPIOptions{APIKey: key}); perr == nil {
+			return prov
+		}
+	}
+	if token, err := r.Get(ctx, "X_BEARER_TOKEN"); err == nil && token != "" {
+		if prov, perr := social.NewXOfficialProvider(social.XOfficialOptions{BearerToken: token}); perr == nil {
+			return prov
+		}
+	}
+	return nil
+}
+
+// blueskyAppPassword resolves BLUESKY_APP_PASSWORD via the given Resolver,
+// falling back to the env resolver when none is injected. Returns "" on any
+// error so a missing secret degrades to an unauthenticated adapter.
+func blueskyAppPassword(resolver secretstore.Resolver) string {
+	r := resolver
+	if r == nil {
+		r = secretstore.NewEnvResolver()
+	}
+	v, err := r.Get(context.Background(), "BLUESKY_APP_PASSWORD")
+	if err != nil {
+		return ""
+	}
+	return v
 }
 
 // BuildRouter constructs the Intent Router from a registry.
