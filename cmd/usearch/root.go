@@ -171,7 +171,16 @@ and LLM synthesis. Output goes to stdout; progress/errors to stderr.`,
 				}
 			}
 
-			code := Execute(ctx, allArgs, cmd.OutOrStdout(), cmd.ErrOrStderr())
+			// Wire the history backend so queries are persisted (best-effort:
+			// a history failure must not block the search itself).
+			var execOpts []executeOption
+			if derr := ensureDataDir(); derr == nil {
+				if backend, herr := openHistoryBackend(); herr == nil {
+					execOpts = append(execOpts, withHistory(backend))
+				}
+			}
+
+			code := Execute(ctx, allArgs, cmd.OutOrStdout(), cmd.ErrOrStderr(), execOpts...)
 			if code != 0 {
 				return exitError{code: code}
 			}

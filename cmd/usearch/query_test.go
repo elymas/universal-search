@@ -12,8 +12,11 @@ import (
 	"testing"
 	"time"
 
+	"path/filepath"
+
 	"github.com/elymas/universal-search/internal/adapters"
 	"github.com/elymas/universal-search/internal/pipeline"
+	"github.com/elymas/universal-search/internal/usearch/history"
 	"github.com/elymas/universal-search/pkg/types"
 	"go.uber.org/goleak"
 )
@@ -105,6 +108,45 @@ func buildTestRegistry(adaps ...types.Adapter) *adapters.Registry {
 		}
 	}
 	return reg
+}
+
+// --- Query persists a history entry when a backend is wired (bugfix) ---
+
+func TestQueryPersistsHistory(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	backend, err := history.NewJSONLBackend(filepath.Join(t.TempDir(), "history.jsonl"), 100, 30)
+	if err != nil {
+		t.Fatalf("NewJSONLBackend: %v", err)
+	}
+	reg := buildTestRegistry(&mockAdapter{name: "reddit", docs: makeDocs(2, "reddit")})
+	code := Execute(
+		context.Background(),
+		[]string{"--no-obs", "history persistence prompt"},
+		&stdout, &stderr,
+		withRegistry(reg),
+		withSynth(&mockSynthClient{summary: "synth summary"}),
+		withHistory(backend),
+	)
+	if code != ExitSuccess {
+		t.Fatalf("exit %d, want %d (stderr: %s)", code, ExitSuccess, stderr.String())
+	}
+	entries, err := backend.List(0)
+	if err != nil {
+		t.Fatalf("List: %v", err)
+	}
+	if len(entries) != 1 {
+		t.Fatalf("want 1 history entry, got %d", len(entries))
+	}
+	e := entries[0]
+	if e.Prompt != "history persistence prompt" {
+		t.Errorf("prompt = %q, want %q", e.Prompt, "history persistence prompt")
+	}
+	if e.Command != "query" {
+		t.Errorf("command = %q, want %q", e.Command, "query")
+	}
+	if e.ExitCode != ExitSuccess {
+		t.Errorf("exit_code = %d, want %d", e.ExitCode, ExitSuccess)
+	}
 }
 
 // --- REQ-CLI-007: Empty prompt rejection ---

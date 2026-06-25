@@ -174,7 +174,7 @@ func BuildProductionRegistryWithResolverAndError(resolver secretstore.Resolver) 
 	}); err == nil {
 		_ = reg.Register(a)
 	}
-	if a, err := koreanews.New(koreanews.Options{}); err == nil {
+	if a, err := koreanews.New(koreanews.OptionsFromEnv()); err == nil {
 		_ = reg.Register(a)
 	}
 

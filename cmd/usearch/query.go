@@ -22,11 +22,14 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 
+	"github.com/oklog/ulid/v2"
+
 	"github.com/elymas/universal-search/internal/adapters"
 	"github.com/elymas/universal-search/internal/fanout"
 	"github.com/elymas/universal-search/internal/obs/reqid"
 	"github.com/elymas/universal-search/internal/pipeline"
 	"github.com/elymas/universal-search/internal/router"
+	"github.com/elymas/universal-search/internal/usearch/history"
 	"github.com/elymas/universal-search/pkg/types"
 )
 
@@ -62,6 +65,7 @@ type executeOption func(*executeConfig)
 type executeConfig struct {
 	registry *adapters.Registry
 	synth    synthClientIface
+	history  history.Backend
 }
 
 // withRegistry injects a custom adapter registry for testing.
@@ -72,6 +76,13 @@ func withRegistry(reg *adapters.Registry) executeOption {
 // withSynth injects a custom synthesis client for testing.
 func withSynth(s synthClientIface) executeOption {
 	return func(c *executeConfig) { c.synth = s }
+}
+
+// withHistory wires a history backend so each query persists an entry.
+// When nil (the default), history recording is skipped — keeping unit tests
+// free of filesystem side effects.
+func withHistory(b history.Backend) executeOption {
+	return func(c *executeConfig) { c.history = b }
 }
 
 // Execute is the public entry point for the query subcommand.
@@ -85,6 +96,8 @@ func Execute(ctx context.Context, args []string, stdout, stderr io.Writer, opts 
 	for _, o := range opts {
 		o(cfg)
 	}
+
+	start := time.Now()
 
 	// Parse flags.
 	flags, prompt, err := parseQueryFlags(args)
@@ -234,6 +247,27 @@ func Execute(ctx context.Context, args []string, stdout, stderr io.Writer, opts 
 
 	// Determine exit code (REQ-CLI-008).
 	exitCode := determineExitCode(docs, adapterErrs, synthResp, synthErr)
+
+	// Persist a history entry (best-effort; warn but never fail the query).
+	if cfg.history != nil {
+		entry := history.Entry{
+			ID:            "query-" + ulid.Make().String(),
+			Timestamp:     start,
+			Command:       "query",
+			Prompt:        prompt,
+			Category:      string(decision.Category),
+			Adapters:      effectiveSet,
+			Summary:       synthResp.Text,
+			Citations:     len(resp.Citations),
+			ExitCode:      exitCode,
+			LatencyMs:     time.Since(start).Milliseconds(),
+			RequestID:     rid,
+			SchemaVersion: 1,
+		}
+		if werr := cfg.history.Write(entry); werr != nil {
+			_, _ = fmt.Fprintf(stderr, "usearch query: warning: failed to save history: %v\n", werr)
+		}
+	}
 
 	// Emit synthesis warning on nop client (REQ-CLI-009).
 	if errors.Is(synthErr, errSynthUnavailable) {
