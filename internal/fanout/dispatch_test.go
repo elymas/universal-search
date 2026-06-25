@@ -3,7 +3,6 @@ package fanout_test
 import (
 	"context"
 	"errors"
-	"runtime"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -407,7 +406,6 @@ func TestDispatchAlreadyCancelledCtx(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // pre-cancel
 
-	before := runtime.NumGoroutine()
 	start := time.Now()
 	result, err := f.Dispatch(ctx, makeDecision("ad1", "ad2", "ad3"), types.Query{})
 	elapsed := time.Since(start)
@@ -426,10 +424,9 @@ func TestDispatchAlreadyCancelledCtx(t *testing.T) {
 	if elapsed > 10*time.Millisecond {
 		t.Fatalf("elapsed %v too long for already-cancelled ctx (want < 10ms)", elapsed)
 	}
-	after := runtime.NumGoroutine()
-	if after > before+3 {
-		t.Fatalf("goroutine leak: before=%d after=%d", before, after)
-	}
+	// Goroutine-leak detection is handled suite-wide by goleak.VerifyTestMain
+	// (bench_test.go). A per-test runtime.NumGoroutine() delta is flaky under
+	// t.Parallel() because the global count includes sibling parallel tests.
 }
 
 // TestDispatchIgnoresQueryDeadline verifies Query.Deadline is not consumed by Dispatch.
