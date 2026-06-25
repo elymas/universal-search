@@ -160,7 +160,8 @@ async def embed(req: EmbedRequest) -> JSONResponse:
             )
         except MemoryError as exc:
             outcome = "error_oom"
-            logger.error(  # nosemgrep: python.lang.security.audit.logging.logger-credential-leak -- logs request_id + exception class name only, no secret
+            # logs request_id + exception class name only, no secret
+            logger.error(  # nosemgrep: python.lang.security.audit.logging.logger-credential-leak
                 "embed.oom",
                 extra={
                     "request_id": req.request_id,
@@ -176,7 +177,8 @@ async def embed(req: EmbedRequest) -> JSONResponse:
             )
         except Exception as exc:
             outcome = "error_internal"
-            logger.error(  # nosemgrep: python.lang.security.audit.logging.logger-credential-leak -- logs request_id + exception class name only, no secret
+            # logs request_id + exception class name only, no secret
+            logger.error(  # nosemgrep: python.lang.security.audit.logging.logger-credential-leak
                 "embed.error",
                 extra={
                     "request_id": req.request_id,

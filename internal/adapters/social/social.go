@@ -193,12 +193,12 @@ func xCapabilities() types.Capabilities {
 // xCapabilitiesLive returns the LIVE Capabilities descriptor when a provider is configured.
 func xCapabilitiesLive(prov XProvider) types.Capabilities {
 	return types.Capabilities{
-		SourceID:          "x",
-		DisplayName:       "X (Twitter)",
-		DocTypes:          []types.DocType{types.DocTypePost},
-		SupportedLangs:    nil,
-		SupportsSince:     false,
-		RequiresAuth:      true,
+		SourceID:       "x",
+		DisplayName:    "X (Twitter)",
+		DocTypes:       []types.DocType{types.DocTypePost},
+		SupportedLangs: nil,
+		SupportsSince:  false,
+		RequiresAuth:   true,
 		// X_BEARER_TOKEN is the exact key the production provider reads
 		// (cmd/usearch-mcp buildXProvider). Declaring it lets the registry
 		// auth gate (registry.go) and admin `sources status` reflect X's
