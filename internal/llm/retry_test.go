@@ -47,14 +47,21 @@ func makeTestObs(t *testing.T) *obs.Obs {
 	return o
 }
 
-// TestClientCompleteRetriesOn5xx verifies that 503 responses trigger retries.
-// Stub returns 503 three times then 200 → 4 outbound requests.
-// REQ-LLM-004
+// TestClientCompleteRetriesOn5xx verifies that 503 responses trigger retries
+// within a single provider's retry budget (REQ-LLM-004: max 3 retries).
+//
+// The stub returns 503 twice then 200, so the FIRST provider succeeds on its
+// third attempt → exactly 3 outbound requests (1 initial + 2 retries), no
+// provider fallthrough. This keeps the test deterministic: the previous version
+// returned 503 three times and relied on fallthrough to a second provider for
+// the 4th request, which coupled the assertion to the 3-provider Summary config,
+// circuit-breaker state, and backoff timing — flaky under CI load. Cross-provider
+// fallthrough is covered separately by TestClientCompleteFailsThroughToNextProvider.
 func TestClientCompleteRetriesOn5xx(t *testing.T) {
 	var count atomic.Int32
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		n := count.Add(1)
-		if n <= 3 {
+		if n <= 2 {
 			w.WriteHeader(http.StatusServiceUnavailable)
 			_, _ = w.Write([]byte(`{"error":{"message":"service unavailable","type":"server_error","code":503}}`))
 			return
@@ -75,8 +82,8 @@ func TestClientCompleteRetriesOn5xx(t *testing.T) {
 	if resp.Text == "" {
 		t.Error("expected non-empty response text")
 	}
-	if count.Load() != 4 {
-		t.Errorf("outbound requests: got %d, want 4", count.Load())
+	if count.Load() != 3 {
+		t.Errorf("outbound requests: got %d, want 3 (1 initial + 2 retries)", count.Load())
 	}
 }
 
