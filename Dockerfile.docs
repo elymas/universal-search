@@ -51,8 +51,11 @@ FROM caddy:2-alpine AS runner
 # Copy static export
 COPY --from=builder /app/out /srv
 
-# Caddy config: serve /srv, gzip, cache headers
-RUN printf 'http://:80 {\n\
+# Caddy config: serve /srv on an unprivileged port (8080) so the container can
+# run as a non-root user (trivy DS-0002). Port 8080 instead of 80 avoids the
+# privileged-bind requirement; this image is build-verify-only (not published,
+# not in compose), so the port change has no downstream consumers.
+RUN printf 'http://:8080 {\n\
     root * /srv\n\
     encode gzip\n\
     file_server {\n\
@@ -61,12 +64,17 @@ RUN printf 'http://:80 {\n\
     header Cache-Control "public, max-age=3600, must-revalidate"\n\
     # SPA fallback for Next.js static export\n\
     try_files {path} {path}.html {path}/index.html /404.html\n\
-}\n' > /etc/caddy/Caddyfile
+}\n' > /etc/caddy/Caddyfile \
+    && adduser -D -H -u 10001 appuser \
+    && chown -R appuser /srv /data /config
 
-EXPOSE 80
+# Run as non-root (trivy DS-0002: avoid root in container)
+USER appuser
+
+EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD wget -qO- http://localhost:80/ || exit 1
+    CMD wget -qO- http://localhost:8080/ || exit 1
 
 CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]

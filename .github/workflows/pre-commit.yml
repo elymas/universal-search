@@ -43,7 +43,11 @@ jobs:
           cache-dependency-path: "web/pnpm-lock.yaml"
 
       - name: Install web dependencies (required so `pnpm exec eslint` resolves)
-        run: pnpm --dir web install --frozen-lockfile
+        # --ignore-workspace: without it, the repo-root pnpm-workspace.yaml makes
+        # this install resolve into repo-root node_modules and never create
+        # web/node_modules, so `pnpm -C web exec eslint` reports "eslint not found"
+        # (exit 254). Mirrors the same flag in web.yml.
+        run: pnpm --dir web install --frozen-lockfile --ignore-workspace
 
       - name: Install hadolint binary (required by hadolint pre-commit hook)
         run: |

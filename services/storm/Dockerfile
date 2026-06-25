@@ -27,7 +27,9 @@ RUN useradd --create-home --shell /bin/bash appuser
 # Upgrade the base-image pip toolchain to clear FIXED HIGH CVEs in the bundled
 # setuptools/wheel vendor tree (CVE-2026-23949, CVE-2026-24049). The app runs
 # from /app/.venv, but trivy still scans the base system site-packages.
-# hadolint ignore=DL3013
+# DL3059: the toolchain upgrade is intentionally its own layer (separate concern
+# from useradd above); merging them would mix user setup with pip in one RUN.
+# hadolint ignore=DL3013,DL3059
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
 # Copy venv from builder
