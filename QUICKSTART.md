@@ -82,9 +82,9 @@ set -a; . ./.env; set +a # 현재 셸에 export
 
 ## 문제 해결
 
-| 증상 | 원인 | 해결 |
-|---|---|---|
-| `no adapters matched` | 라우팅 결과 비어있음 | 질의 구체화 또는 `--source` 지정 |
-| `synthesis: unavailable` | LLM 키 미설정 | `.env`의 `LITELLM_MASTER_KEY` 확인 |
-| koreanews `no feed URLs` | RSS 피드 env 미설정 | `USEARCH_ADP009_RSS_FEEDS` 로드 |
-| 어댑터 `HTTP 403/timeout` | 업스트림 차단/지연 | 외부 문제, 다른 소스 사용 또는 재시도 |
+| 증상                      | 원인                 | 해결                                  |
+| ------------------------- | -------------------- | ------------------------------------- |
+| `no adapters matched`     | 라우팅 결과 비어있음 | 질의 구체화 또는 `--source` 지정      |
+| `synthesis: unavailable`  | LLM 키 미설정        | `.env`의 `LITELLM_MASTER_KEY` 확인    |
+| koreanews `no feed URLs`  | RSS 피드 env 미설정  | `USEARCH_ADP009_RSS_FEEDS` 로드       |
+| 어댑터 `HTTP 403/timeout` | 업스트림 차단/지연   | 외부 문제, 다른 소스 사용 또는 재시도 |
