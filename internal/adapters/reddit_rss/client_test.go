@@ -91,6 +91,7 @@ func TestNew_UserAgentVersion(t *testing.T) {
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
+	a.SetRetryParamsForTest(0, 1) // single-shot: this test only checks the UA header
 	_, _ = a.Search(context.Background(), types.Query{Text: "golang"})
 
 	want := "usearch-reddit-rss/9.9.9 (+https://github.com/elymas/universal-search)"
