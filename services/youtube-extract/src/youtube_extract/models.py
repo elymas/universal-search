@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 # ---------------------------------------------------------------------------
 # Request models
@@ -64,6 +64,19 @@ class YTItem(BaseModel):
     transcript_is_auto: bool = False
     # non-null signals per-item extraction failure; adapter skips silently (parse.go:116).
     error: Optional[str] = None
+
+    # yt-dlp includes keys with explicit None (e.g. description, channel_id,
+    # upload_date) which a bare `str` field rejects. Coerce None -> "" so a
+    # single missing field never fails the whole search response.
+    @field_validator(
+        "id", "url", "title", "description", "channel", "channel_id",
+        "channel_url", "uploader", "uploader_id", "upload_date",
+        "thumbnail_url", "transcript_snippet", "transcript_lang",
+        mode="before",
+    )
+    @classmethod
+    def _none_to_empty_str(cls, v: object) -> object:
+        return "" if v is None else v
 
 
 class SearchResponse(BaseModel):
