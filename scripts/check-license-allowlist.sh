@@ -37,8 +37,13 @@ LICENSE_DIR="${LICENSE_DIR:-${ROOT}/docs/licenses}"
 # SearXNG AGPL-3.0 is the only exception (service-boundary, below).
 DISALLOWED="GPL-[0-9]|AGPL-[0-9]|LGPL-[0-9]|SSPL|UNLICENSED|Proprietary|Commercial"
 
-# Service-boundary pre-approved exceptions (matching lines are skipped)
-EXCEPTIONS="searxng/searxng"
+# Service-boundary pre-approved exceptions (matching lines are skipped).
+#   searxng/searxng — AGPL service-boundary (separate process, not linked).
+#   nvidia-* — NVIDIA CUDA runtime libraries (cuBLAS, cuDNN, cuSPARSE, NVTX,
+#     cu13 tree, ...). Proprietary but freely redistributable, pulled
+#     transitively by torch for GPU inference (embedder). Not statically linked
+#     into shipped artifacts; standard and unavoidable for any CUDA torch build.
+EXCEPTIONS="searxng/searxng|nvidia-"
 
 found_bad=0
 
