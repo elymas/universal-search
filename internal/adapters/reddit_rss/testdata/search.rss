@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Reddit search: golang generics</title>
+    <link>https://www.reddit.com/search.rss?q=golang+generics&amp;sort=relevance</link>
+    <description>Search results on Reddit for 'golang generics'</description>
+    <item>
+      <title>Using generics in Go 1.21 — a practical guide</title>
+      <link>https://www.reddit.com/r/golang/comments/abc123/using_generics_in_go_121_a_practical_guide/</link>
+      <guid>https://www.reddit.com/r/golang/comments/abc123/using_generics_in_go_121_a_practical_guide/</guid>
+      <pubDate>Mon, 23 Jun 2026 10:00:00 +0000</pubDate>
+      <author>gopher_dev</author>
+      <description>&lt;p&gt;A deep dive into Go generics usage patterns.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Go generics: constraints &amp; type sets explained</title>
+      <link>https://www.reddit.com/r/golang/comments/def456/go_generics_constraints_type_sets_explained/</link>
+      <guid>https://www.reddit.com/r/golang/comments/def456/go_generics_constraints_type_sets_explained/</guid>
+      <pubDate>Sun, 22 Jun 2026 08:30:00 +0000</pubDate>
+      <author>type_wizard</author>
+      <description>&lt;p&gt;Type sets are the core concept behind Go generics constraints.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Why Go generics feel different from other languages</title>
+      <link>https://www.reddit.com/r/golang/comments/ghi789/why_go_generics_feel_different_from_other_languages/</link>
+      <guid>https://www.reddit.com/r/golang/comments/ghi789/why_go_generics_feel_different_from_other_languages/</guid>
+      <pubDate>Sat, 21 Jun 2026 15:45:00 +0000</pubDate>
+      <author>lang_compare</author>
+      <description>&lt;p&gt;Go generics trade expressive power for simplicity and compile speed.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Item missing link (should be skipped)</title>
+      <link></link>
+      <guid>no-link-item</guid>
+      <pubDate>Fri, 20 Jun 2026 09:00:00 +0000</pubDate>
+      <description>&lt;p&gt;This item has no link and must be skipped.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Item without pubDate (zero PublishedAt)</title>
+      <link>https://www.reddit.com/r/golang/comments/nopub/item_without_pubdate/</link>
+      <guid>https://www.reddit.com/r/golang/comments/nopub/item_without_pubdate/</guid>
+      <description>&lt;p&gt;No publication date on this item.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
