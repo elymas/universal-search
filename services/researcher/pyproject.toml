@@ -41,6 +41,12 @@ line-length = 120
 select = ["E", "F", "I"]
 
 [tool.pytest.ini_options]
+# Disable deepeval's auto-loaded pytest11 plugin (entry-point name "plugins").
+# It imports langchain.schema at load time, which langchain 1.x removed (moved to
+# langchain_core), crashing collection. Our tests use injectable/lazy judges and
+# never need deepeval's assert_test plugin. Drop this once deepeval is bumped to a
+# langchain-1.x-compatible release.
+addopts = "-p no:plugins"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
