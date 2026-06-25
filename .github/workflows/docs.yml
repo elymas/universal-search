@@ -85,11 +85,14 @@ jobs:
       - name: Install lychee
         uses: lycheeverse/lychee-action@v2
         with:
-          # Internal links only — fail on broken
+          # Internal links only — fail on broken.
+          # --root-dir (absolute) resolves root-absolute links like /en and
+          # /_next; --base only rebases relative links, so the bundled lychee
+          # resolved /en against the filesystem root and 404'd everything.
           args: >-
             --config docs/lychee.toml
             --no-progress
-            --base ${{ github.workspace }}/docs/out
+            --root-dir ${{ github.workspace }}/docs/out
             'docs/out/**/*.html'
           fail: true
 
