@@ -81,6 +81,10 @@ func newAdapter(t *testing.T, baseURL string) *redditrss.Adapter {
 	if err != nil {
 		t.Fatalf("redditrss.New: %v", err)
 	}
+	// Default test adapter is single-shot (no 429 cooldown-retry) to preserve the
+	// original fast, one-request behavior of the existing scenarios. Tests that
+	// specifically exercise retry override this via SetRetryParamsForTest.
+	a.SetRetryParamsForTest(0, 1)
 	return a
 }
 
@@ -597,6 +601,7 @@ func TestNew_CustomUserAgent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
+	a.SetRetryParamsForTest(0, 1) // single-shot: this test only checks the UA header
 
 	_, _ = a.Search(context.Background(), types.Query{Text: "golang"})
 	if gotUA != customUA {
@@ -622,6 +627,7 @@ func TestNew_DefaultUserAgent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("New: %v", err)
 	}
+	a.SetRetryParamsForTest(0, 1) // single-shot: this test only checks the UA header
 
 	_, _ = a.Search(context.Background(), types.Query{Text: "golang"})
 	if gotUA == "" {

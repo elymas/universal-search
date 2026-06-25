@@ -3,7 +3,6 @@ package fanout_test
 import (
 	"context"
 	"errors"
-	"runtime"
 	"testing"
 
 	"github.com/elymas/universal-search/internal/fanout"
@@ -41,7 +40,6 @@ func TestDispatchEmptyAdapterSetRejected(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	before := runtime.NumGoroutine()
 
 	// nil AdapterSet.
 	result, dErr := f.Dispatch(ctx, router.RoutingDecision{AdapterSet: nil}, types.Query{})
@@ -66,10 +64,7 @@ func TestDispatchEmptyAdapterSetRejected(t *testing.T) {
 	if result2.Stats.AdapterCount != 0 {
 		t.Fatalf("empty AdapterSet: want AdapterCount==0, got %d", result2.Stats.AdapterCount)
 	}
-
-	after := runtime.NumGoroutine()
-	// Allow ±2 goroutines for test goroutine bookkeeping.
-	if after > before+2 {
-		t.Fatalf("goroutine leak: before=%d after=%d", before, after)
-	}
+	// Goroutine-leak detection is handled suite-wide by goleak.VerifyTestMain
+	// (bench_test.go). A per-test runtime.NumGoroutine() delta is flaky under
+	// t.Parallel() because the global count includes sibling parallel tests.
 }

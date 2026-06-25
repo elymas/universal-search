@@ -14,6 +14,16 @@ const (
 	// defaultTimeout is the per-request timeout (REQ-ADP1B-004).
 	defaultTimeout = 10 * time.Second
 
+	// defaultCooldown is the wait before re-issuing a request after HTTP 429.
+	// Reddit's anonymous RSS endpoint rate-limits hard (~1 req/short window/IP),
+	// so a single Search secures this cooldown before its next attempt. A
+	// Retry-After header, when larger, takes precedence.
+	defaultCooldown = 5 * time.Second
+
+	// defaultMaxAttempts is the total number of Search attempts (initial + retries)
+	// made on repeated HTTP 429 responses before giving up.
+	defaultMaxAttempts = 3
+
 	// defaultUserAgentVersion is the version string embedded in the default UA.
 	defaultUserAgentVersion = "0.1.0"
 
