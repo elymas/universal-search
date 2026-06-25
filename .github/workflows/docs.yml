@@ -53,6 +53,14 @@ jobs:
           # Suppress Next.js telemetry in CI
           NEXT_TELEMETRY_DISABLED: "1"
 
+      - name: Repair locale links (Nextra i18n + static export)
+        working-directory: docs
+        # Nextra v4 emits some sidebar/nav links without the locale prefix; the
+        # runtime middleware that would add it cannot run under output:export.
+        # This rewrites lang-less internal links to the page's locale so deep
+        # links resolve and the lychee internal link-check passes.
+        run: node scripts/fix-locale-links.mjs
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:

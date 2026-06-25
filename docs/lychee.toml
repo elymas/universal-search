@@ -36,6 +36,15 @@ exclude = [
     "ops/security/.*",
     "https://github.com/elymas/universal-search/blob/main/ops/security/.*",
 
+    # Forward references to not-yet-written / not-yet-translated pages.
+    # deployment-helm: Helm guide is "Planned (SPEC-DEPLOY-001)" per
+    #   operators/deployment.mdx; adapter pages already link the future page.
+    # surface-comparison: end-user surface comparison page not yet authored.
+    # ko/reference/architecture: architecture is EN-only (KO is Tier-1 partial).
+    "operators/deployment-helm",
+    "end-users/surface-comparison",
+    "ko/reference/architecture",
+
     # Localhost URLs (deployment-specific, not checkable in CI)
     "^http://localhost",
     "^http://127\\.0\\.0\\.1",
