@@ -362,6 +362,50 @@ func TestNormalizeXTweetsScore(t *testing.T) {
 	}
 }
 
+// --- Test 22: TestNormalizeXTweetsTwitterNativeDate (regression) ---
+// twitterapi.io advanced_search returns Twitter's native createdAt format,
+// e.g. "Thu Jun 25 13:54:13 +0000 2026" (Go layout "Mon Jan 02 15:04:05 -0700 2006"),
+// NOT RFC3339. Before the fix, transformXTweet only tried RFC3339 layouts, so every
+// live X doc got a zero-value PublishedAt — breaking recency sort / since-filter.
+func TestNormalizeXTweetsTwitterNativeDate(t *testing.T) {
+	t.Parallel()
+	retrievedAt := time.Date(2026, 6, 25, 14, 0, 0, 0, time.UTC)
+
+	cases := []struct {
+		name      string
+		createdAt string
+		want      time.Time
+	}{
+		{
+			name:      "twitter native ruby date",
+			createdAt: "Thu Jun 25 13:54:13 +0000 2026",
+			want:      time.Date(2026, 6, 25, 13, 54, 13, 0, time.UTC),
+		},
+		{
+			name:      "rfc3339 still parses",
+			createdAt: "2026-06-04T10:00:00Z",
+			want:      time.Date(2026, 6, 4, 10, 0, 0, 0, time.UTC),
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			tweet := XTweet{ID: "ts", Text: "x", AuthorHandle: "g", CreatedAt: tc.createdAt}
+			docs, err := normalizeXTweets([]XTweet{tweet}, "", retrievedAt)
+			if err != nil {
+				t.Fatalf("normalizeXTweets: %v", err)
+			}
+			if docs[0].PublishedAt.IsZero() {
+				t.Fatalf("PublishedAt is zero — createdAt %q not parsed", tc.createdAt)
+			}
+			if !docs[0].PublishedAt.Equal(tc.want) {
+				t.Errorf("PublishedAt: got %v, want %v", docs[0].PublishedAt, tc.want)
+			}
+		})
+	}
+}
+
 // helper: extract map keys.
 func mapKeys(m map[string]any) []string {
 	keys := make([]string, 0, len(m))

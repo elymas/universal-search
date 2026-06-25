@@ -61,6 +61,9 @@ func transformXTweet(tweet XTweet, retrievedAt time.Time) types.NormalizedDoc {
 			time.RFC3339Nano,
 			"2006-01-02T15:04:05Z",
 			"2006-01-02T15:04:05.000Z",
+			// twitterapi.io / X native format, e.g. "Thu Jun 25 13:54:13 +0000 2026".
+			"Mon Jan 02 15:04:05 -0700 2006",
+			time.RubyDate, // "Mon Jan _2 15:04:05 -0700 2006" (space-padded single-digit day)
 		} {
 			if t, err := time.Parse(layout, tweet.CreatedAt); err == nil {
 				publishedAt = t.UTC()
