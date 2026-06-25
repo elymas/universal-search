@@ -1,0 +1,75 @@
+1:"$Sreact.fragment"
+2:I[22417,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"TOCProvider"]
+3:I[22312,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"Sidebar"]
+4:I[75003,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"ClientWrapper"]
+6:I[82566,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"ToggleWordWrapButton"]
+7:I[76068,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"CopyToClipboard"]
+1f:I[71628,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js"],"OutletBoundary"]
+20:"$Sreact.suspense"
+5:T4c9,---
+title: usearch query
+description: Auto-generated reference for usearch query
+generated: true
+source: usearch query --help
+lastGenerated: 2026-06-23T05:03:39Z
+---
+
+# usearch query
+
+> This page is auto-generated from `usearch query --help`.
+> Run `make gen-docs` after CLI changes to keep it in sync.
+
+```
+Query the universal search system.
+
+Routes the prompt through intent classification, fan-out to adapters,
+and LLM synthesis. Output goes to stdout; progress/errors to stderr.
+
+Usage:
+  usearch query [flags] <prompt>
+
+Examples:
+  usearch query "latest AI research"
+  usearch query --format json --source reddit "golang generics"
+  usearch query --timeout 10s "quick lookup"
+
+Flags:
+      --format string    output format: text (default), json, or markdown (default "text")
+  -h, --help             help for query
+      --no-llm           skip LLM client initialisation
+      --no-obs           disable observability init (test flag)
+      --source string    comma-separated adapter names (empty = all enabled)
+      --timeout string   total pipeline deadline (max 5m) (default "30s")
+
+Global Flags:
+      --repl   force interactive REPL mode
+```
+
+---
+
+*Generated: 2026-06-23T05:03:39Z*
+*Source: `usearch query --help`*0:{"rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"title":"usearch query","description":"Auto-generated reference for usearch query","generated":true,"source":"usearch query --help","lastGenerated":"2026-06-23T05:03:39Z","filePath":"content/en/reference/cli/query.mdx","timestamp":1782352722000},"sourceCode":"$5","children":[["$","div",null,{"id":"nextra-skip-nav"}],["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["usearch query","$undefined"]}],"\n",["$","blockquote",null,{"className":"x:not-first:mt-[1.25em] x:border-gray-300 x:italic x:text-gray-700 x:dark:border-gray-700 x:dark:text-gray-400 x:border-s-2 x:ps-[1.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["This page is auto-generated from ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"usearch query --help"}],".\nRun ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"make gen-docs"}]," after CLI changes to keep it in sync."]}],"\n"]}],"\n",["$","div",null,{"data-pagefind-ignore":"all","className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":["$undefined",["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-2","children":[["$","$L6",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],["$","$L7",null,{"className":""}]]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":[["$","span",null,{"children":["$","span",null,{"children":"Query the universal search system."}]}],"\n",["$","span",null,{"children":["$","span",null,{}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"Routes the prompt through intent classification, fan-out to adapters,"}]}],"\n","$L8","\n","$L9","\n","$La","\n","$Lb","\n","$Lc","\n","$Ld","\n","$Le","\n","$Lf","\n","$L10","\n","$L11","\n","$L12","\n","$L13","\n","$L14","\n","$L15","\n","$L16","\n","$L17","\n","$L18","\n","$L19","\n","$L1a","\n","$L1b"]}]]}]]}],"\n","$L1c","\n","$L1d"]}]]}]]}]}],null,"$L1e"]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"jAxU7kTdH6KdR2jtj7LLb"}
+8:["$","span",null,{"children":["$","span",null,{"children":"and LLM synthesis. Output goes to stdout; progress/errors to stderr."}]}]
+9:["$","span",null,{"children":["$","span",null,{}]}]
+a:["$","span",null,{"children":["$","span",null,{"children":"Usage:"}]}]
+b:["$","span",null,{"children":["$","span",null,{"children":"  usearch query [flags] <prompt>"}]}]
+c:["$","span",null,{"children":["$","span",null,{}]}]
+d:["$","span",null,{"children":["$","span",null,{"children":"Examples:"}]}]
+e:["$","span",null,{"children":["$","span",null,{"children":"  usearch query \"latest AI research\""}]}]
+f:["$","span",null,{"children":["$","span",null,{"children":"  usearch query --format json --source reddit \"golang generics\""}]}]
+10:["$","span",null,{"children":["$","span",null,{"children":"  usearch query --timeout 10s \"quick lookup\""}]}]
+11:["$","span",null,{"children":["$","span",null,{}]}]
+12:["$","span",null,{"children":["$","span",null,{"children":"Flags:"}]}]
+13:["$","span",null,{"children":["$","span",null,{"children":"      --format string    output format: text (default), json, or markdown (default \"text\")"}]}]
+14:["$","span",null,{"children":["$","span",null,{"children":"  -h, --help             help for query"}]}]
+15:["$","span",null,{"children":["$","span",null,{"children":"      --no-llm           skip LLM client initialisation"}]}]
+16:["$","span",null,{"children":["$","span",null,{"children":"      --no-obs           disable observability init (test flag)"}]}]
+17:["$","span",null,{"children":["$","span",null,{"children":"      --source string    comma-separated adapter names (empty = all enabled)"}]}]
+18:["$","span",null,{"children":["$","span",null,{"children":"      --timeout string   total pipeline deadline (max 5m) (default \"30s\")"}]}]
+19:["$","span",null,{"children":["$","span",null,{}]}]
+1a:["$","span",null,{"children":["$","span",null,{"children":"Global Flags:"}]}]
+1b:["$","span",null,{"children":["$","span",null,{"children":"      --repl   force interactive REPL mode"}]}]
+1c:["$","hr",null,{"className":"x:my-[2em] nextra-border"}]
+1d:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","em",null,{"children":"Generated: 2026-06-23T05:03:39Z"}],"\n",["$","em",null,{"children":["Source: ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"usearch query --help"}]]}]]}]
+1e:["$","$L1f",null,{"children":["$","$20",null,{"name":"Next.MetadataOutlet","children":"$@21"}]}]
+21:null

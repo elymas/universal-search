@@ -1,0 +1,84 @@
+1:"$Sreact.fragment"
+2:I[22417,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"TOCProvider"]
+3:I[22312,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"Sidebar"]
+4:I[75003,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"ClientWrapper"]
+19:I[88040,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"HeadingAnchor"]
+1a:I[71628,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js"],"OutletBoundary"]
+1b:"$Sreact.suspense"
+5:T7c3,---
+title: Security
+description: Security documentation overview — SPEC-SEC-001 forward reference
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# Security
+
+<Callout type="warning">
+  **Forward Reference — SPEC-SEC-001 Pending**
+
+  The full security documentation is delivered by **SPEC-SEC-001** (PR #42, pending merge into main).
+
+  This section is a placeholder. It will be expanded when SPEC-SEC-001 merges.
+
+  Track progress: [SPEC-SEC-001 status](https://github.com/elymas/universal-search/issues)
+</Callout>
+
+## Security Documentation
+
+When SPEC-SEC-001 merges, this section will include:
+
+- **Security Runbook** — incident response procedures
+- **OWASP ASVS Checklist** — Application Security Verification Standard evidence
+- **STRIDE Threat Model** — threat analysis for all surfaces (CLI, MCP, Web UI, REST API)
+
+## Current Security Posture (V1)
+
+Until SPEC-SEC-001 merges, apply these baseline practices:
+
+### Authentication
+- Use OAuth/OIDC for all production deployments
+- Rotate MCP tokens every 90 days
+- Never use the default/example credentials in production
+
+### Network
+- Do not expose Qdrant (6333), Meilisearch (7700), or PostgreSQL (5432) ports to the public internet
+- Use a reverse proxy (Caddy, nginx) with TLS for the public endpoint
+- Restrict SearXNG to internal access only
+
+### Secrets
+- Generate strong secrets: `openssl rand -hex 32`
+- Store secrets in a secrets manager (Vault, AWS SSM, Kubernetes Secrets)
+- Never commit `.env` to version control
+
+### Updates
+- Monitor this repository for security advisories
+- Keep Docker base images updated (run `docker compose pull` regularly)
+- Subscribe to upstream security notices for SearXNG, Qdrant, Meilisearch
+
+## Reporting Vulnerabilities
+
+To report a security vulnerability in Universal Search, please open a **private** security advisory on the GitHub repository (Security tab → Report a vulnerability).
+
+Do **not** report security vulnerabilities in public issues.0:{"rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[{"value":"Security Documentation","id":"security-documentation","depth":2},{"value":"Current Security Posture (V1)","id":"current-security-posture-v1","depth":2},{"value":"Authentication","id":"authentication","depth":3},{"value":"Network","id":"network","depth":3},{"value":"Secrets","id":"secrets","depth":3},{"value":"Updates","id":"updates","depth":3},{"value":"Reporting Vulnerabilities","id":"reporting-vulnerabilities","depth":2}],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"title":"Security","description":"Security documentation overview — SPEC-SEC-001 forward reference","lastUpdated":"2026-05-30","filePath":"content/en/operators/security/index.mdx","timestamp":1782352722000},"sourceCode":"$5","children":[["$","div",null,{"id":"nextra-skip-nav"}],["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["Security","$undefined"]}],"\n",["$","div",null,{"className":"nextra-callout x:overflow-x-auto x:not-first:mt-[1.25em] x:flex x:rounded-lg x:border x:py-[.5em] x:pe-[1em] x:contrast-more:border-current! x:bg-yellow-50 x:dark:bg-yellow-700/30 x:text-yellow-700 x:dark:text-yellow-500 x:border-yellow-700","children":[["$","div",null,{"className":"x:select-none x:text-[1.25em] x:ps-[.6em] x:pe-[.4em]","style":{"fontFamily":"\"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\""},"data-pagefind-ignore":"all","children":"$L6"}],"$L7"]}],"\n","$L8","\n","$L9","\n","$La","\n","$Lb","\n","$Lc","\n","$Ld","\n","$Le","\n","$Lf","\n","$L10","\n","$L11","\n","$L12","\n","$L13","\n","$L14","\n","$L15","\n","$L16","\n","$L17"]}]]}]]}]}],null,"$L18"]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"jAxU7kTdH6KdR2jtj7LLb"}
+6:["$","svg",null,{"viewBox":"0 0 16 16","fill":"currentColor","height":".8em","className":"x:mt-[.3em]","children":["$","path",null,{"d":"M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"}]}]
+7:["$","div",null,{"className":"x:w-full x:min-w-0","children":[["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["$","strong",null,{"children":"Forward Reference — SPEC-SEC-001 Pending"}]}],["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["The full security documentation is delivered by ",["$","strong",null,{"children":"SPEC-SEC-001"}]," (PR #42, pending merge into main)."]}],["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"This section is a placeholder. It will be expanded when SPEC-SEC-001 merges."}],["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["Track progress: ",["$","a",null,{"href":"https://github.com/elymas/universal-search/issues","target":"_blank","rel":"noreferrer","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":["SPEC-SEC-001 status",[" ",["$","svg",null,{"fill":"none","stroke":"currentColor","strokeLinecap":"round","strokeLinejoin":"round","strokeWidth":1.7,"viewBox":"0 0 24 24","height":"1em","className":"x:inline x:align-baseline x:shrink-0","children":[["$","path",null,{"d":"M7 17L17 7"}],["$","path",null,{"d":"M7 7h10v10"}]]}]]]}]]}]]}]
+8:["$","h2",null,{"id":"security-documentation","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Security Documentation",["$","$L19",null,{"id":"security-documentation"}]]}]
+9:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"When SPEC-SEC-001 merges, this section will include:"}]
+a:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Security Runbook"}]," — incident response procedures"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"OWASP ASVS Checklist"}]," — Application Security Verification Standard evidence"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"STRIDE Threat Model"}]," — threat analysis for all surfaces (CLI, MCP, Web UI, REST API)"]}],"\n"]}]
+b:["$","h2",null,{"id":"current-security-posture-v1","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Current Security Posture (V1)",["$","$L19",null,{"id":"current-security-posture-v1"}]]}]
+c:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Until SPEC-SEC-001 merges, apply these baseline practices:"}]
+d:["$","h3",null,{"id":"authentication","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Authentication",["$","$L19",null,{"id":"authentication"}]]}]
+e:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"Use OAuth/OIDC for all production deployments"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Rotate MCP tokens every 90 days"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Never use the default/example credentials in production"}],"\n"]}]
+f:["$","h3",null,{"id":"network","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Network",["$","$L19",null,{"id":"network"}]]}]
+10:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"Do not expose Qdrant (6333), Meilisearch (7700), or PostgreSQL (5432) ports to the public internet"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Use a reverse proxy (Caddy, nginx) with TLS for the public endpoint"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Restrict SearXNG to internal access only"}],"\n"]}]
+11:["$","h3",null,{"id":"secrets","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Secrets",["$","$L19",null,{"id":"secrets"}]]}]
+12:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":["Generate strong secrets: ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"openssl rand -hex 32"}]]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Store secrets in a secrets manager (Vault, AWS SSM, Kubernetes Secrets)"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["Never commit ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":".env"}]," to version control"]}],"\n"]}]
+13:["$","h3",null,{"id":"updates","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Updates",["$","$L19",null,{"id":"updates"}]]}]
+14:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"Monitor this repository for security advisories"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["Keep Docker base images updated (run ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"docker compose pull"}]," regularly)"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Subscribe to upstream security notices for SearXNG, Qdrant, Meilisearch"}],"\n"]}]
+15:["$","h2",null,{"id":"reporting-vulnerabilities","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Reporting Vulnerabilities",["$","$L19",null,{"id":"reporting-vulnerabilities"}]]}]
+16:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["To report a security vulnerability in Universal Search, please open a ",["$","strong",null,{"children":"private"}]," security advisory on the GitHub repository (Security tab → Report a vulnerability)."]}]
+17:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["Do ",["$","strong",null,{"children":"not"}]," report security vulnerabilities in public issues."]}]
+18:["$","$L1a",null,{"children":["$","$1b",null,{"name":"Next.MetadataOutlet","children":"$@1c"}]}]
+1c:null

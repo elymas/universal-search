@@ -1,0 +1,91 @@
+1:"$Sreact.fragment"
+2:I[22417,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"TOCProvider"]
+3:I[22312,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"Sidebar"]
+4:I[75003,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"ClientWrapper"]
+18:I[88040,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"HeadingAnchor"]
+19:I[82566,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"ToggleWordWrapButton"]
+1a:I[76068,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"CopyToClipboard"]
+1b:I[31817,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],""]
+1c:I[71628,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js"],"OutletBoundary"]
+1d:"$Sreact.suspense"
+5:Te18,---
+title: Universal Search란?
+description: Universal Search 개요 — 팀 규모의 소스 기반 연구 메타 에이전트
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# Universal Search란?
+
+**Universal Search**는 팀 규모의 소스 기반 연구 메타 에이전트입니다. 웹, 소셜, 학술, 기술, 한국어 로케일 검색을 단일 쿼리 플레인으로 통합하고, 결과를 하이브리드 LLM 합성으로 제공합니다 (기본: 요약+인용, `/deep` 사용 시: 멀티 에이전트 심층 연구).
+
+세 가지 검증된 오픈소스 계보의 조합입니다:
+
+- **접근 레이어**: `fivetaku/insane-search` 기반 (5단계 적응형 스케줄러, TLS 핑거프린트 스푸핑, Playwright 폴백)
+- **연구 오케스트레이션**: `assafelovic/gpt-researcher` 기반 (Apache-2.0 플래너-실행자-퍼블리셔 워크플로, 인용 추적, MCP 서버)
+- **광범위/실시간 신호**: `mvanhorn/last30days-skill` 기반 (Reddit/X/YouTube/HN/Polymarket/GitHub 소셜 참여 점수 집계)
+- **인용 보고서 생성**: Stanford **STORM** 기반 (주장별 출처를 포함한 장형 지식 큐레이션)
+- **메타검색 팬아웃**: **SearXNG** (70개 이상 엔진 제공자, 프라이버시 보호, 자체 호스팅 가능)
+
+## 문제 정의
+
+현재 연구 작업의 문제점:
+
+- 사용자가 5–10개 탭을 오가며 작업 (Google, Reddit, arXiv, GitHub, 네이버, YouTube, 내부 문서 등)
+- 각 검색이 원시 링크를 반환 — 합성은 수동으로 해야 함
+- 기존 "AI 검색" 제품(Perplexity, ChatGPT Search)은 **단일 테넌트, 폐쇄적, 감사 불가**이며, 한국어 로케일 소스와 롱테일 소셜 플랫폼에 취약
+- 팀에게 공유, 감사 가능한 연구 경로 없음 — 같은 질문이 반복되고, 답변이 변동되며, 출처가 사라짐
+
+Universal Search는 팀에게 **단일 쿼리 → 다중 소스 → 단일 인용 합성 → 단일 공유·재검색 가능한 메모리**를 제공합니다.
+
+## 아키텍처
+
+```
+cmd/usearch     → Go CLI 바이너리 (7개 서브커맨드: query, config, history, deep, sources, login, repl)
+internal/       → 도메인 패키지 (어댑터, LLM 라우팅, MCP 서버, 인증, 관측가능성)
+services/       → Python 사이드카 (researcher, storm, embedder)
+web/            → Next.js 16 App Router 웹 프론트엔드
+deploy/         → docker-compose 개발 스택
+```
+
+## V1 범위
+
+**V1 포함 기능**:
+- 4가지 소스 카테고리: 웹+소셜, 학술+기술, 한국어 로케일, 개인 컨텍스트 (읽기 전용, V1.1)
+- 하이브리드 합성: 기본 요약+인용, `/deep`은 멀티 에이전트 파이프라인 (Researcher → Reviewer → Writer → Verifier)
+- 팀 인증 + 공유 하이브리드 인덱스 (Qdrant 계층형 멀티테넌시 + Meilisearch + Postgres)
+- 다중 인터페이스: CLI, MCP 서버, Claude Skill, 웹 UI
+- LiteLLM 프록시를 통한 혼합 LLM 라우팅 (Claude 기본, OpenAI 호환, 로컬 Ollama/vLLM 폴백)
+- 관측가능성: 쿼리 로그, 인용 충실도 평가, 소스별 성공률
+
+<Callout type="info">
+  Universal Search는 SearXNG(AGPL-3.0)를 별도 Docker 컨테이너로 실행합니다. SearXNG 소스 코드는 번들에 포함되지 않으며, 수정 또는 재배포되지 않습니다. 전체 기여 내역은 [라이선스](/ko/legal/licenses)를 참조하세요.
+</Callout>
+
+## 관련 SPEC
+
+- SPEC-CLI-001, SPEC-CLI-002: CLI 인터페이스
+- SPEC-MCP-001: MCP 서버와 도구
+- SPEC-UI-001: 웹 UI
+- SPEC-AUTH-001/002/003: 인증
+- SPEC-OBS-001: 관측가능성0:{"rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[{"value":"문제 정의","id":"문제-정의","depth":2},{"value":"아키텍처","id":"아키텍처","depth":2},{"value":"V1 범위","id":"v1-범위","depth":2},{"value":"관련 SPEC","id":"관련-spec","depth":2}],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"title":"Universal Search란?","description":"Universal Search 개요 — 팀 규모의 소스 기반 연구 메타 에이전트","lastUpdated":"2026-05-30","filePath":"content/ko/introduction/what-is.mdx","timestamp":1782352722000},"sourceCode":"$5","children":[["$","div",null,{"id":"nextra-skip-nav"}],["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["Universal Search란?","$undefined"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Universal Search"}],"는 팀 규모의 소스 기반 연구 메타 에이전트입니다. 웹, 소셜, 학술, 기술, 한국어 로케일 검색을 단일 쿼리 플레인으로 통합하고, 결과를 하이브리드 LLM 합성으로 제공합니다 (기본: 요약+인용, ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"/deep"}]," 사용 시: 멀티 에이전트 심층 연구)."]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"세 가지 검증된 오픈소스 계보의 조합입니다:"}],"\n",["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n","$L6","\n","$L7","\n","$L8","\n","$L9","\n","$La","\n"]}],"\n","$Lb","\n","$Lc","\n","$Ld","\n","$Le","\n","$Lf","\n","$L10","\n","$L11","\n","$L12","\n","$L13","\n","$L14","\n","$L15","\n","$L16"]}]]}]]}]}],null,"$L17"]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"jAxU7kTdH6KdR2jtj7LLb"}
+6:["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"접근 레이어"}],": ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"fivetaku/insane-search"}]," 기반 (5단계 적응형 스케줄러, TLS 핑거프린트 스푸핑, Playwright 폴백)"]}]
+7:["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"연구 오케스트레이션"}],": ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"assafelovic/gpt-researcher"}]," 기반 (Apache-2.0 플래너-실행자-퍼블리셔 워크플로, 인용 추적, MCP 서버)"]}]
+8:["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"광범위/실시간 신호"}],": ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"mvanhorn/last30days-skill"}]," 기반 (Reddit/X/YouTube/HN/Polymarket/GitHub 소셜 참여 점수 집계)"]}]
+9:["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"인용 보고서 생성"}],": Stanford ",["$","strong",null,{"children":"STORM"}]," 기반 (주장별 출처를 포함한 장형 지식 큐레이션)"]}]
+a:["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"메타검색 팬아웃"}],": ",["$","strong",null,{"children":"SearXNG"}]," (70개 이상 엔진 제공자, 프라이버시 보호, 자체 호스팅 가능)"]}]
+b:["$","h2",null,{"id":"문제-정의","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["문제 정의",["$","$L18",null,{"id":"문제-정의"}]]}]
+c:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"현재 연구 작업의 문제점:"}]
+d:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"사용자가 5–10개 탭을 오가며 작업 (Google, Reddit, arXiv, GitHub, 네이버, YouTube, 내부 문서 등)"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"각 검색이 원시 링크를 반환 — 합성은 수동으로 해야 함"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["기존 “AI 검색” 제품(Perplexity, ChatGPT Search)은 ",["$","strong",null,{"children":"단일 테넌트, 폐쇄적, 감사 불가"}],"이며, 한국어 로케일 소스와 롱테일 소셜 플랫폼에 취약"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"팀에게 공유, 감사 가능한 연구 경로 없음 — 같은 질문이 반복되고, 답변이 변동되며, 출처가 사라짐"}],"\n"]}]
+e:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["Universal Search는 팀에게 ",["$","strong",null,{"children":"단일 쿼리 → 다중 소스 → 단일 인용 합성 → 단일 공유·재검색 가능한 메모리"}],"를 제공합니다."]}]
+f:["$","h2",null,{"id":"아키텍처","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["아키텍처",["$","$L18",null,{"id":"아키텍처"}]]}]
+10:["$","div",null,{"data-pagefind-ignore":"all","className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":["$undefined",["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-2","children":[["$","$L19",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],["$","$L1a",null,{"className":""}]]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":[["$","span",null,{"children":["$","span",null,{"children":"cmd/usearch     → Go CLI 바이너리 (7개 서브커맨드: query, config, history, deep, sources, login, repl)"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"internal/       → 도메인 패키지 (어댑터, LLM 라우팅, MCP 서버, 인증, 관측가능성)"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"services/       → Python 사이드카 (researcher, storm, embedder)"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"web/            → Next.js 16 App Router 웹 프론트엔드"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"deploy/         → docker-compose 개발 스택"}]}]]}]]}]]}]
+11:["$","h2",null,{"id":"v1-범위","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["V1 범위",["$","$L18",null,{"id":"v1-범위"}]]}]
+12:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"V1 포함 기능"}],":"]}]
+13:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"4가지 소스 카테고리: 웹+소셜, 학술+기술, 한국어 로케일, 개인 컨텍스트 (읽기 전용, V1.1)"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["하이브리드 합성: 기본 요약+인용, ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"/deep"}],"은 멀티 에이전트 파이프라인 (Researcher → Reviewer → Writer → Verifier)"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"팀 인증 + 공유 하이브리드 인덱스 (Qdrant 계층형 멀티테넌시 + Meilisearch + Postgres)"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"다중 인터페이스: CLI, MCP 서버, Claude Skill, 웹 UI"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"LiteLLM 프록시를 통한 혼합 LLM 라우팅 (Claude 기본, OpenAI 호환, 로컬 Ollama/vLLM 폴백)"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"관측가능성: 쿼리 로그, 인용 충실도 평가, 소스별 성공률"}],"\n"]}]
+14:["$","div",null,{"className":"nextra-callout x:overflow-x-auto x:not-first:mt-[1.25em] x:flex x:rounded-lg x:border x:py-[.5em] x:pe-[1em] x:contrast-more:border-current! x:bg-blue-100 x:dark:bg-blue-900/30 x:text-blue-700 x:dark:text-blue-400 x:border-blue-700 x:dark:border-blue-600","children":[["$","div",null,{"className":"x:select-none x:text-[1.25em] x:ps-[.6em] x:pe-[.4em]","style":{"fontFamily":"\"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\""},"data-pagefind-ignore":"all","children":["$","svg",null,{"viewBox":"0 0 16 16","fill":"currentColor","height":".8em","className":"x:mt-[.3em]","children":["$","path",null,{"d":"M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"}]}]}],["$","div",null,{"className":"x:w-full x:min-w-0","children":["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["Universal Search는 SearXNG(AGPL-3.0)를 별도 Docker 컨테이너로 실행합니다. SearXNG 소스 코드는 번들에 포함되지 않으며, 수정 또는 재배포되지 않습니다. 전체 기여 내역은 ",["$","$L1b",null,{"href":"/ko/legal/licenses","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"라이선스"}],"를 참조하세요."]}]}]]}]
+15:["$","h2",null,{"id":"관련-spec","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["관련 SPEC",["$","$L18",null,{"id":"관련-spec"}]]}]
+16:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"SPEC-CLI-001, SPEC-CLI-002: CLI 인터페이스"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"SPEC-MCP-001: MCP 서버와 도구"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"SPEC-UI-001: 웹 UI"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"SPEC-AUTH-001/002/003: 인증"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"SPEC-OBS-001: 관측가능성"}],"\n"]}]
+17:["$","$L1c",null,{"children":["$","$1d",null,{"name":"Next.MetadataOutlet","children":"$@1e"}]}]
+1e:null

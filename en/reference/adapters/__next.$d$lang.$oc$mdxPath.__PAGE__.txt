@@ -1,0 +1,65 @@
+1:"$Sreact.fragment"
+2:I[22417,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"TOCProvider"]
+3:I[22312,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"Sidebar"]
+4:I[75003,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"ClientWrapper"]
+6:I[31817,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],""]
+7:I[34415,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"AdapterCatalog"]
+13:I[88040,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"HeadingAnchor"]
+14:I[71628,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js"],"OutletBoundary"]
+15:"$Sreact.suspense"
+5:T73b,---
+title: Adapter Catalog
+description: Filterable catalog of all 10 Universal Search production adapters with status badges
+lastVerified: 2026-05-31
+---
+
+import { AdapterCatalog } from '../../../../components/AdapterCatalog'
+
+# Adapter Catalog
+
+Universal Search includes 10 production adapters. Each adapter wraps a search source and implements the common `Adapter` interface (`pkg/types.Adapter`).
+
+Use the category filter below to narrow the list. For shared error categories, see the [Error Taxonomy](/en/reference/adapters/errors) page.
+
+<AdapterCatalog />
+
+## Adapter Lifecycle
+
+Status badges reflect the adapter's lifecycle classification (SPEC-DOC-002 D5):
+
+| Badge | Meaning |
+|-------|---------|
+| **stable** | success rate ≥ 0.95 (7-day rolling) |
+| **beta** | success rate 0.80–0.94 |
+| **disabled** | compile/flag-gated stub — no live path in V1 (currently: `x`) |
+| **deprecated** | reserved for post-V1 adapter removal |
+
+Status data is sourced from the EVAL-002 reliability dashboard. For live reliability metrics, see [SPEC-EVAL-002 Adapter Reliability Dashboard](/en/reference/architecture).
+
+## Korean-Locale Adapters
+
+Two adapters are optimised for Korean-language content:
+
+- **[Naver](/en/reference/adapters/naver)** — requires `NAVER_CLIENT_ID` + `NAVER_CLIENT_SECRET`; Korean UTF-8 queries forwarded verbatim
+- **[Korean News](/en/reference/adapters/koreanews)** — public RSS + optional KNC sidecar; mecab-ko-aware dedup
+
+See [Korean Locale Setup](/en/operators/korean-locale-setup) for index-side tokenization prerequisites.
+
+## Related
+
+- [Error Taxonomy](/en/reference/adapters/errors) — shared `Category` reference
+- [Architecture reference](/en/reference/architecture) — adapter interface contract
+- [Korean Locale Setup](/en/operators/korean-locale-setup)
+- [Deployment guide](/en/operators/deployment-helm)0:{"rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[{"value":"Adapter Lifecycle","id":"adapter-lifecycle","depth":2},{"value":"Korean-Locale Adapters","id":"korean-locale-adapters","depth":2},{"value":"Related","id":"related","depth":2}],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"title":"Adapter Catalog","description":"Filterable catalog of all 10 Universal Search production adapters with status badges","lastVerified":"2026-05-31","filePath":"content/en/reference/adapters/index.mdx","timestamp":1782352722000},"sourceCode":"$5","children":[["$","div",null,{"id":"nextra-skip-nav"}],["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["Adapter Catalog","$undefined"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["Universal Search includes 10 production adapters. Each adapter wraps a search source and implements the common ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"Adapter"}]," interface (",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pkg/types.Adapter"}],")."]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["Use the category filter below to narrow the list. For shared error categories, see the ",["$","$L6",null,{"href":"/en/reference/adapters/errors","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"Error Taxonomy"}]," page."]}],"\n",["$","$L7",null,{}],"\n",["$","h2",null,{"id":"adapter-lifecycle","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Adapter Lifecycle","$L8"]}],"\n","$L9","\n","$La","\n","$Lb","\n","$Lc","\n","$Ld","\n","$Le","\n","$Lf","\n","$L10","\n","$L11"]}]]}]]}]}],null,"$L12"]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"jAxU7kTdH6KdR2jtj7LLb"}
+8:["$","$L13",null,{"id":"adapter-lifecycle"}]
+9:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Status badges reflect the adapter’s lifecycle classification (SPEC-DOC-002 D5):"}]
+a:["$","table",null,{"className":"x:block x:overflow-x-auto nextra-scrollbar x:not-first:mt-[1.25em] x:p-0","children":[["$","thead",null,{"children":["$","tr",null,{"children":[["$","th",null,{"children":"Badge","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}],["$","th",null,{"children":"Meaning","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]}],["$","tbody",null,{"children":[["$","tr",null,{"children":[["$","td",null,{"children":["$","strong",null,{"children":"stable"}],"className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"success rate ≥ 0.95 (7-day rolling)","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":["$","strong",null,{"children":"beta"}],"className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"success rate 0.80–0.94","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":["$","strong",null,{"children":"disabled"}],"className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":["compile/flag-gated stub — no live path in V1 (currently: ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"x"}],")"],"className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":["$","strong",null,{"children":"deprecated"}],"className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"reserved for post-V1 adapter removal","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]]}]]}]
+b:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["Status data is sourced from the EVAL-002 reliability dashboard. For live reliability metrics, see ",["$","$L6",null,{"href":"/en/reference/architecture","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"SPEC-EVAL-002 Adapter Reliability Dashboard"}],"."]}]
+c:["$","h2",null,{"id":"korean-locale-adapters","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Korean-Locale Adapters",["$","$L13",null,{"id":"korean-locale-adapters"}]]}]
+d:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Two adapters are optimised for Korean-language content:"}]
+e:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":["$","$L6",null,{"href":"/en/reference/adapters/naver","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"Naver"}]}]," — requires ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"NAVER_CLIENT_ID"}]," + ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"NAVER_CLIENT_SECRET"}],"; Korean UTF-8 queries forwarded verbatim"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":["$","$L6",null,{"href":"/en/reference/adapters/koreanews","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"Korean News"}]}]," — public RSS + optional KNC sidecar; mecab-ko-aware dedup"]}],"\n"]}]
+f:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["See ",["$","$L6",null,{"href":"/en/operators/korean-locale-setup","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"Korean Locale Setup"}]," for index-side tokenization prerequisites."]}]
+10:["$","h2",null,{"id":"related","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Related",["$","$L13",null,{"id":"related"}]]}]
+11:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","$L6",null,{"href":"/en/reference/adapters/errors","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"Error Taxonomy"}]," — shared ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"Category"}]," reference"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","$L6",null,{"href":"/en/reference/architecture","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"Architecture reference"}]," — adapter interface contract"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["$","$L6",null,{"href":"/en/operators/korean-locale-setup","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"Korean Locale Setup"}]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["$","$L6",null,{"href":"/en/operators/deployment-helm","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"Deployment guide"}]}],"\n"]}]
+12:["$","$L14",null,{"children":["$","$15",null,{"name":"Next.MetadataOutlet","children":"$@16"}]}]
+16:null

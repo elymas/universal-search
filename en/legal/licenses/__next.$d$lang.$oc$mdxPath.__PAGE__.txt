@@ -1,0 +1,80 @@
+1:"$Sreact.fragment"
+2:I[22417,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"TOCProvider"]
+3:I[22312,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"Sidebar"]
+4:I[75003,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"ClientWrapper"]
+6:I[88040,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"HeadingAnchor"]
+15:I[82566,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"ToggleWordWrapButton"]
+16:I[76068,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"CopyToClipboard"]
+19:I[71628,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js"],"OutletBoundary"]
+1a:"$Sreact.suspense"
+5:T66e,---
+title: Licenses
+description: License information for Universal Search and its dependencies
+lastUpdated: 2026-05-30
+---
+
+# Licenses
+
+Universal Search is licensed under the **Apache License 2.0**.
+
+## Project License
+
+```
+Copyright 2026 Universal Search Contributors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+```
+
+## SearXNG Service Boundary Note
+
+Universal Search runs SearXNG (AGPL-3.0) as a **separate Docker container**.
+
+- No SearXNG source code is bundled, modified, or redistributed
+- Network communication across the service boundary does not create a derivative work under AGPL-3.0
+- If Universal Search is ever offered as a hosted SaaS product, this relationship must be re-evaluated
+
+## Dependency Licenses
+
+See the auto-generated dependency manifest for the complete list:
+
+- [docs/dependencies.md](https://github.com/elymas/universal-search/blob/main/docs/dependencies.md) — full Go module + Python + Node.js dependency list with licenses
+
+Key dependency licenses:
+
+| Package | License |
+|---|---|
+| SearXNG | AGPL-3.0 (separate container) |
+| Qdrant | Apache-2.0 |
+| Meilisearch | MIT / SSPL |
+| PostgreSQL | PostgreSQL License |
+| Redis | BSD-3-Clause |
+| LiteLLM | MIT |
+| gpt-researcher | Apache-2.0 |
+| Next.js | MIT |
+| Cobra | Apache-2.0 |
+| Nextra | MIT |
+
+## Contributing
+
+See `CONTRIBUTING.md` in the repository root for contribution guidelines. By contributing, you agree that your contributions will be licensed under the Apache License 2.0.0:{"rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[{"value":"Project License","id":"project-license","depth":2},{"value":"SearXNG Service Boundary Note","id":"searxng-service-boundary-note","depth":2},{"value":"Dependency Licenses","id":"dependency-licenses","depth":2},{"value":"Contributing","id":"contributing","depth":2}],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"title":"Licenses","description":"License information for Universal Search and its dependencies","lastUpdated":"2026-05-30","filePath":"content/en/legal/licenses.mdx","timestamp":1782352722000},"sourceCode":"$5","children":[["$","div",null,{"id":"nextra-skip-nav"}],["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["Licenses","$undefined"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["Universal Search is licensed under the ",["$","strong",null,{"children":"Apache License 2.0"}],"."]}],"\n",["$","h2",null,{"id":"project-license","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Project License",["$","$L6",null,{"id":"project-license"}]]}],"\n",["$","div",null,{"data-pagefind-ignore":"all","className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":["$undefined",["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-2","children":["$L7","$L8"]}],"$L9"]}]]}],"\n","$La","\n","$Lb","\n","$Lc","\n","$Ld","\n","$Le","\n","$Lf","\n","$L10","\n","$L11","\n","$L12","\n","$L13"]}]]}]]}]}],null,"$L14"]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"jAxU7kTdH6KdR2jtj7LLb"}
+7:["$","$L15",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}]
+8:["$","$L16",null,{"className":""}]
+9:["$","code",null,{"className":"nextra-code","dir":"ltr","children":[["$","span",null,{"children":["$","span",null,{"children":"Copyright 2026 Universal Search Contributors"}]}],"\n",["$","span",null,{"children":["$","span",null,{}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"Licensed under the Apache License, Version 2.0 (the \"License\");"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"you may not use this file except in compliance with the License."}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"You may obtain a copy of the License at"}]}],"\n",["$","span",null,{"children":["$","span",null,{}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"    http://www.apache.org/licenses/LICENSE-2.0"}]}]]}]
+a:["$","h2",null,{"id":"searxng-service-boundary-note","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["SearXNG Service Boundary Note",["$","$L6",null,{"id":"searxng-service-boundary-note"}]]}]
+b:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["Universal Search runs SearXNG (AGPL-3.0) as a ",["$","strong",null,{"children":"separate Docker container"}],"."]}]
+c:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"No SearXNG source code is bundled, modified, or redistributed"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Network communication across the service boundary does not create a derivative work under AGPL-3.0"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"If Universal Search is ever offered as a hosted SaaS product, this relationship must be re-evaluated"}],"\n"]}]
+d:["$","h2",null,{"id":"dependency-licenses","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Dependency Licenses",["$","$L6",null,{"id":"dependency-licenses"}]]}]
+e:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"See the auto-generated dependency manifest for the complete list:"}]
+f:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","a",null,{"href":"https://github.com/elymas/universal-search/blob/main/docs/dependencies.md","target":"_blank","rel":"noreferrer","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":["docs/dependencies.md",[" ",["$","svg",null,{"fill":"none","stroke":"currentColor","strokeLinecap":"round","strokeLinejoin":"round","strokeWidth":1.7,"viewBox":"0 0 24 24","height":"1em","className":"x:inline x:align-baseline x:shrink-0","children":[["$","path",null,{"d":"M7 17L17 7"}],["$","path",null,{"d":"M7 7h10v10"}]]}]]]}]," — full Go module + Python + Node.js dependency list with licenses"]}],"\n"]}]
+10:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Key dependency licenses:"}]
+11:["$","table",null,{"className":"x:block x:overflow-x-auto nextra-scrollbar x:not-first:mt-[1.25em] x:p-0","children":[["$","thead",null,{"children":["$","tr",null,{"children":[["$","th",null,{"children":"Package","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}],["$","th",null,{"children":"License","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]}],["$","tbody",null,{"children":[["$","tr",null,{"children":[["$","td",null,{"children":"SearXNG","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"AGPL-3.0 (separate container)","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":"Qdrant","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"Apache-2.0","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":"Meilisearch","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"MIT / SSPL","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":"PostgreSQL","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"PostgreSQL License","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":"Redis","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"BSD-3-Clause","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":"LiteLLM","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"MIT","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":"gpt-researcher","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"Apache-2.0","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":"Next.js","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"MIT","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],"$L17","$L18"]}]]}]
+12:["$","h2",null,{"id":"contributing","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Contributing",["$","$L6",null,{"id":"contributing"}]]}]
+13:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["See ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"CONTRIBUTING.md"}]," in the repository root for contribution guidelines. By contributing, you agree that your contributions will be licensed under the Apache License 2.0."]}]
+14:["$","$L19",null,{"children":["$","$1a",null,{"name":"Next.MetadataOutlet","children":"$@1b"}]}]
+17:["$","tr",null,{"children":[["$","td",null,{"children":"Cobra","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"Apache-2.0","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]
+18:["$","tr",null,{"children":[["$","td",null,{"children":"Nextra","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"MIT","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]
+1b:null

@@ -1,0 +1,57 @@
+1:"$Sreact.fragment"
+2:I[22417,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"TOCProvider"]
+3:I[22312,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"Sidebar"]
+4:I[75003,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"ClientWrapper"]
+e:I[88040,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"HeadingAnchor"]
+f:I[71628,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js"],"OutletBoundary"]
+10:"$Sreact.suspense"
+5:T551,---
+title: STRIDE Threat Model
+description: Threat analysis for all surfaces — SPEC-SEC-001 forward reference
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# STRIDE Threat Model
+
+<Callout type="warning">
+  **Forward Reference — SPEC-SEC-001 Pending**
+
+  The full STRIDE threat model for Universal Search is delivered by **SPEC-SEC-001** (PR #42, pending merge into main).
+
+  This page is a placeholder. It will be expanded when SPEC-SEC-001 merges.
+</Callout>
+
+## Surfaces in Scope
+
+Universal Search exposes four attack surfaces:
+
+| Surface | Protocol | Authentication |
+|---------|----------|---------------|
+| CLI (`usearch`) | Local subprocess | OS user |
+| MCP Server (`usearch-mcp`) | stdio / SSE | MCP token |
+| Web UI | HTTPS | OAuth/OIDC |
+| REST API | HTTPS | JWT |
+
+## What the Threat Model Will Cover
+
+When SPEC-SEC-001 merges, this page will include full STRIDE analysis:
+
+- **Spoofing** — identity threats for each surface
+- **Tampering** — data integrity threats (query results, citations)
+- **Repudiation** — audit log and non-repudiation controls
+- **Information Disclosure** — sensitive data exposure risks
+- **Denial of Service** — rate limiting and resource exhaustion
+- **Elevation of Privilege** — privilege escalation vectors
+
+Attack trees and mitigation controls will be documented per surface.0:{"rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[{"value":"Surfaces in Scope","id":"surfaces-in-scope","depth":2},{"value":"What the Threat Model Will Cover","id":"what-the-threat-model-will-cover","depth":2}],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"title":"STRIDE Threat Model","description":"Threat analysis for all surfaces — SPEC-SEC-001 forward reference","lastUpdated":"2026-05-30","filePath":"content/en/operators/security/threat-model.mdx","timestamp":1782352722000},"sourceCode":"$5","children":[["$","div",null,{"id":"nextra-skip-nav"}],["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["STRIDE Threat Model","$undefined"]}],"\n",["$","div",null,{"className":"nextra-callout x:overflow-x-auto x:not-first:mt-[1.25em] x:flex x:rounded-lg x:border x:py-[.5em] x:pe-[1em] x:contrast-more:border-current! x:bg-yellow-50 x:dark:bg-yellow-700/30 x:text-yellow-700 x:dark:text-yellow-500 x:border-yellow-700","children":[["$","div",null,{"className":"x:select-none x:text-[1.25em] x:ps-[.6em] x:pe-[.4em]","style":{"fontFamily":"\"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\""},"data-pagefind-ignore":"all","children":["$","svg",null,{"viewBox":"0 0 16 16","fill":"currentColor","height":".8em","className":"x:mt-[.3em]","children":["$","path",null,{"d":"M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"}]}]}],["$","div",null,{"className":"x:w-full x:min-w-0","children":[["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["$","strong",null,{"children":"Forward Reference — SPEC-SEC-001 Pending"}]}],["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["The full STRIDE threat model for Universal Search is delivered by ",["$","strong",null,{"children":"SPEC-SEC-001"}]," (PR #42, pending merge into main)."]}],["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"This page is a placeholder. It will be expanded when SPEC-SEC-001 merges."}]]}]]}],"\n","$L6","\n","$L7","\n","$L8","\n","$L9","\n","$La","\n","$Lb","\n","$Lc"]}]]}]]}]}],null,"$Ld"]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"jAxU7kTdH6KdR2jtj7LLb"}
+6:["$","h2",null,{"id":"surfaces-in-scope","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Surfaces in Scope",["$","$Le",null,{"id":"surfaces-in-scope"}]]}]
+7:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Universal Search exposes four attack surfaces:"}]
+8:["$","table",null,{"className":"x:block x:overflow-x-auto nextra-scrollbar x:not-first:mt-[1.25em] x:p-0","children":[["$","thead",null,{"children":["$","tr",null,{"children":[["$","th",null,{"children":"Surface","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}],["$","th",null,{"children":"Protocol","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}],["$","th",null,{"children":"Authentication","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]}],["$","tbody",null,{"children":[["$","tr",null,{"children":[["$","td",null,{"children":["CLI (",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"usearch"}],")"],"className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"Local subprocess","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"OS user","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":["MCP Server (",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"usearch-mcp"}],")"],"className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"stdio / SSE","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"MCP token","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":"Web UI","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"HTTPS","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"OAuth/OIDC","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":"REST API","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"HTTPS","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"JWT","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]]}]]}]
+9:["$","h2",null,{"id":"what-the-threat-model-will-cover","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["What the Threat Model Will Cover",["$","$Le",null,{"id":"what-the-threat-model-will-cover"}]]}]
+a:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"When SPEC-SEC-001 merges, this page will include full STRIDE analysis:"}]
+b:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Spoofing"}]," — identity threats for each surface"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Tampering"}]," — data integrity threats (query results, citations)"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Repudiation"}]," — audit log and non-repudiation controls"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Information Disclosure"}]," — sensitive data exposure risks"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Denial of Service"}]," — rate limiting and resource exhaustion"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Elevation of Privilege"}]," — privilege escalation vectors"]}],"\n"]}]
+c:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Attack trees and mitigation controls will be documented per surface."}]
+d:["$","$Lf",null,{"children":["$","$10",null,{"name":"Next.MetadataOutlet","children":"$@11"}]}]
+11:null

@@ -1,0 +1,76 @@
+1:"$Sreact.fragment"
+2:I[22417,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"TOCProvider"]
+3:I[22312,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"Sidebar"]
+4:I[75003,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"ClientWrapper"]
+16:I[88040,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"HeadingAnchor"]
+17:I[71628,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js"],"OutletBoundary"]
+18:"$Sreact.suspense"
+5:T75a,---
+title: 보안
+description: 보안 문서 개요 — SPEC-SEC-001 포워드 레퍼런스
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# 보안
+
+<Callout type="warning">
+  **포워드 레퍼런스 — SPEC-SEC-001 미완료**
+
+  전체 보안 문서는 **SPEC-SEC-001** (PR #42, main 브랜치 머지 대기 중)에서 제공됩니다.
+
+  이 섹션은 플레이스홀더입니다. SPEC-SEC-001이 머지되면 확장됩니다.
+
+  진행 상황 추적: [SPEC-SEC-001 상태](https://github.com/elymas/universal-search/issues)
+</Callout>
+
+## 보안 문서
+
+SPEC-SEC-001이 머지되면 이 섹션에 다음이 포함됩니다:
+
+- **보안 런북** — 인시던트 대응 절차
+- **OWASP ASVS 체크리스트** — 애플리케이션 보안 검증 표준 증거
+- **STRIDE 위협 모델** — 모든 인터페이스(CLI, MCP, 웹 UI, REST API) 위협 분석
+
+## 현재 보안 상태 (V1)
+
+SPEC-SEC-001이 머지될 때까지 다음 기본 보안 관행을 적용하세요:
+
+### 인증
+- 모든 프로덕션 배포에 OAuth/OIDC 사용
+- MCP 토큰 90일마다 교체
+- 프로덕션에서 기본/예제 자격 증명 절대 사용 금지
+
+### 네트워크
+- Qdrant(6333), Meilisearch(7700), PostgreSQL(5432) 포트를 공용 인터넷에 노출하지 마세요
+- 공용 엔드포인트에 TLS를 갖춘 리버스 프록시(Caddy, nginx) 사용
+- SearXNG를 내부 접근 전용으로 제한
+
+### 시크릿
+- 강력한 시크릿 생성: `openssl rand -hex 32`
+- 시크릿 관리 도구에 저장 (Vault, AWS SSM, Kubernetes Secrets)
+- `.env`를 버전 관리에 커밋하지 마세요
+
+## 취약점 보고
+
+Universal Search의 보안 취약점을 보고하려면 GitHub 저장소에서 **비공개** 보안 어드바이저리를 열어주세요 (Security 탭 → Report a vulnerability).
+
+보안 취약점을 공개 이슈로 보고하지 **마세요**.0:{"rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[{"value":"보안 문서","id":"보안-문서","depth":2},{"value":"현재 보안 상태 (V1)","id":"현재-보안-상태-v1","depth":2},{"value":"인증","id":"인증","depth":3},{"value":"네트워크","id":"네트워크","depth":3},{"value":"시크릿","id":"시크릿","depth":3},{"value":"취약점 보고","id":"취약점-보고","depth":2}],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"title":"보안","description":"보안 문서 개요 — SPEC-SEC-001 포워드 레퍼런스","lastUpdated":"2026-05-30","filePath":"content/ko/operators/security/index.mdx","timestamp":1782352722000},"sourceCode":"$5","children":[["$","div",null,{"id":"nextra-skip-nav"}],["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["보안","$undefined"]}],"\n",["$","div",null,{"className":"nextra-callout x:overflow-x-auto x:not-first:mt-[1.25em] x:flex x:rounded-lg x:border x:py-[.5em] x:pe-[1em] x:contrast-more:border-current! x:bg-yellow-50 x:dark:bg-yellow-700/30 x:text-yellow-700 x:dark:text-yellow-500 x:border-yellow-700","children":[["$","div",null,{"className":"x:select-none x:text-[1.25em] x:ps-[.6em] x:pe-[.4em]","style":{"fontFamily":"\"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\""},"data-pagefind-ignore":"all","children":["$","svg",null,{"viewBox":"0 0 16 16","fill":"currentColor","height":".8em","className":"x:mt-[.3em]","children":["$","path",null,{"d":"M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"}]}]}],["$","div",null,{"className":"x:w-full x:min-w-0","children":[["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["$","strong",null,{"children":"포워드 레퍼런스 — SPEC-SEC-001 미완료"}]}],["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["전체 보안 문서는 ",["$","strong",null,{"children":"SPEC-SEC-001"}]," (PR #42, main 브랜치 머지 대기 중)에서 제공됩니다."]}],["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"이 섹션은 플레이스홀더입니다. SPEC-SEC-001이 머지되면 확장됩니다."}],["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["진행 상황 추적: ",["$","a",null,{"href":"https://github.com/elymas/universal-search/issues","target":"_blank","rel":"noreferrer","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":["SPEC-SEC-001 상태","$L6"]}]]}]]}]]}],"\n","$L7","\n","$L8","\n","$L9","\n","$La","\n","$Lb","\n","$Lc","\n","$Ld","\n","$Le","\n","$Lf","\n","$L10","\n","$L11","\n","$L12","\n","$L13","\n","$L14"]}]]}]]}]}],null,"$L15"]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"jAxU7kTdH6KdR2jtj7LLb"}
+6:[" ",["$","svg",null,{"fill":"none","stroke":"currentColor","strokeLinecap":"round","strokeLinejoin":"round","strokeWidth":1.7,"viewBox":"0 0 24 24","height":"1em","className":"x:inline x:align-baseline x:shrink-0","children":[["$","path",null,{"d":"M7 17L17 7"}],["$","path",null,{"d":"M7 7h10v10"}]]}]]
+7:["$","h2",null,{"id":"보안-문서","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["보안 문서",["$","$L16",null,{"id":"보안-문서"}]]}]
+8:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"SPEC-SEC-001이 머지되면 이 섹션에 다음이 포함됩니다:"}]
+9:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"보안 런북"}]," — 인시던트 대응 절차"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"OWASP ASVS 체크리스트"}]," — 애플리케이션 보안 검증 표준 증거"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"STRIDE 위협 모델"}]," — 모든 인터페이스(CLI, MCP, 웹 UI, REST API) 위협 분석"]}],"\n"]}]
+a:["$","h2",null,{"id":"현재-보안-상태-v1","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["현재 보안 상태 (V1)",["$","$L16",null,{"id":"현재-보안-상태-v1"}]]}]
+b:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"SPEC-SEC-001이 머지될 때까지 다음 기본 보안 관행을 적용하세요:"}]
+c:["$","h3",null,{"id":"인증","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["인증",["$","$L16",null,{"id":"인증"}]]}]
+d:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"모든 프로덕션 배포에 OAuth/OIDC 사용"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"MCP 토큰 90일마다 교체"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"프로덕션에서 기본/예제 자격 증명 절대 사용 금지"}],"\n"]}]
+e:["$","h3",null,{"id":"네트워크","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["네트워크",["$","$L16",null,{"id":"네트워크"}]]}]
+f:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"Qdrant(6333), Meilisearch(7700), PostgreSQL(5432) 포트를 공용 인터넷에 노출하지 마세요"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"공용 엔드포인트에 TLS를 갖춘 리버스 프록시(Caddy, nginx) 사용"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"SearXNG를 내부 접근 전용으로 제한"}],"\n"]}]
+10:["$","h3",null,{"id":"시크릿","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["시크릿",["$","$L16",null,{"id":"시크릿"}]]}]
+11:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":["강력한 시크릿 생성: ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"openssl rand -hex 32"}]]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"시크릿 관리 도구에 저장 (Vault, AWS SSM, Kubernetes Secrets)"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","code",null,{"className":"nextra-code","dir":"ltr","children":".env"}],"를 버전 관리에 커밋하지 마세요"]}],"\n"]}]
+12:["$","h2",null,{"id":"취약점-보고","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["취약점 보고",["$","$L16",null,{"id":"취약점-보고"}]]}]
+13:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["Universal Search의 보안 취약점을 보고하려면 GitHub 저장소에서 ",["$","strong",null,{"children":"비공개"}]," 보안 어드바이저리를 열어주세요 (Security 탭 → Report a vulnerability)."]}]
+14:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["보안 취약점을 공개 이슈로 보고하지 ",["$","strong",null,{"children":"마세요"}],"."]}]
+15:["$","$L17",null,{"children":["$","$18",null,{"name":"Next.MetadataOutlet","children":"$@19"}]}]
+19:null

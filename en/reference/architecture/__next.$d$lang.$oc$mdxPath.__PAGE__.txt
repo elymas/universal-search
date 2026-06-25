@@ -1,0 +1,152 @@
+1:"$Sreact.fragment"
+2:I[22417,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"TOCProvider"]
+3:I[22312,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"Sidebar"]
+4:I[75003,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"ClientWrapper"]
+9:I[88040,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"HeadingAnchor"]
+a:I[82566,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"ToggleWordWrapButton"]
+b:I[76068,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"CopyToClipboard"]
+27:I[71628,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js"],"OutletBoundary"]
+28:"$Sreact.suspense"
+2d:I[31817,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],""]
+5:T1a2f,---
+title: Architecture Overview
+description: Technical architecture of Universal Search
+lastUpdated: 2026-05-30
+---
+
+# Architecture Overview
+
+Universal Search is composed of a Go orchestration plane, Python sidecars, and a Next.js web UI, all wired together via Docker Compose.
+
+## High-Level Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Client Surfaces                                            │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  │
+│  │ CLI      │  │ Web UI   │  │ MCP      │  │ Claude   │  │
+│  │ usearch  │  │ Next.js  │  │ Server   │  │ Skill    │  │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘  │
+└───────┼─────────────┼─────────────┼──────────────┼─────────┘
+        │             │             │              │
+        ▼             ▼             ▼              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Go Orchestration Plane (cmd/usearch, internal/)            │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │  Router → Fanout → Adapters → Synthesis → Output     │   │
+│  └──────────────────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────┐   │
+│  │  Auth (JWT/OIDC) │ Observability (OTel, slog)       │   │
+│  └──────────────────────────────────────────────────────┘   │
+└─────────────────────────┬───────────────────────────────────┘
+                          │
+        ┌─────────────────┼─────────────────────┐
+        ▼                 ▼                     ▼
+┌────────────┐   ┌────────────────┐   ┌──────────────────┐
+│  SearXNG   │   │  Python        │   │  Storage Layer   │
+│  (AGPL-3   │   │  Sidecars      │   │  ┌────────────┐  │
+│  separate  │   │  ┌──────────┐  │   │  │  Qdrant    │  │
+│  container)│   │  │researcher│  │   │  │  (vectors) │  │
+└────────────┘   │  │storm     │  │   │  ├────────────┤  │
+                 │  │embedder  │  │   │  │Meilisearch │  │
+                 │  └──────────┘  │   │  │(full-text) │  │
+                 └────────────────┘   │  ├────────────┤  │
+                                      │  │ PostgreSQL │  │
+                                      │  │ (relational│  │
+                                      │  └────────────┘  │
+                                      └──────────────────┘
+```
+
+## Repository Structure
+
+```
+cmd/
+  usearch/         → Go CLI binary (cobra, 7 subcommands)
+internal/
+  adapters/        → Source adapters (searxng, arxiv, naver, github, hn, reddit, youtube, social)
+  deepagent/       → Multi-agent deep research pipeline
+  fanout/          → Parallel adapter fan-out with circuit breaker
+  llm/             → LLM routing via LiteLLM proxy
+  mcpserver/       → MCP server (4 tools: search, get_citation, list_sources, deep_research)
+  obs/             → Observability (OTel tracing, structured logging, metrics)
+  router/          → Request routing + locale-aware ranking
+  synthesis/       → LLM synthesis client
+  usearch/         → Core domain (config, auth, storage)
+services/
+  researcher/      → Python: gpt-researcher-based deep research
+  storm/           → Python: STORM citation report generator
+  embedder/        → Python: text embedding service
+web/               → Next.js 16 App Router web UI
+deploy/            → docker-compose dev + prod stack
+docs/              → This documentation site (Nextra v4)
+```
+
+## Key Design Decisions
+
+| Decision | Choice | Rationale |
+|---|---|---|
+| Language | Go (orchestration) + Python (sidecars) | Go for latency-sensitive path; Python for ML/AI ecosystem |
+| CLI framework | Cobra | Standard Go CLI; SPEC-CLI-002 |
+| Search | SearXNG (AGPL-3 separate container) | 70+ engines, privacy-preserving, self-hostable |
+| Vector DB | Qdrant | Tiered multitenancy for team isolation |
+| Full-text | Meilisearch | Fast, typo-tolerant, self-hosted |
+| LLM routing | LiteLLM proxy | Multi-provider fallback, cost tracking |
+| MCP | go-sdk | Official Anthropic Go SDK |
+| Auth | JWT + OIDC | Stateless + SSO compatibility |
+
+## Adapter System
+
+The `internal/adapters` package defines a pluggable adapter interface:
+
+```go
+type Adapter interface {
+    Search(ctx context.Context, query string, opts SearchOptions) ([]Doc, error)
+    Capabilities() Capabilities
+}
+```
+
+Adapters: `searxng`, `arxiv`, `github`, `hn`, `reddit`, `youtube`, `naver`, `koreanews`, `social`
+
+See [Adapters Reference](/en/reference/adapters) for the full adapter catalog. SPEC-DOC-002 covers the adapter plugin system.
+
+## Related Documents
+
+- [`.moai/project/tech.md`](https://github.com/elymas/universal-search/blob/main/.moai/project/tech.md) — Full tech stack reference (internal)
+- SPEC-CLI-001, SPEC-CLI-002: CLI architecture
+- SPEC-MCP-001: MCP server design
+- SPEC-AUTH-001/002/003: Authentication architecture
+- SPEC-OBS-001: Observability design0:{"rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[{"value":"High-Level Architecture","id":"high-level-architecture","depth":2},{"value":"Repository Structure","id":"repository-structure","depth":2},{"value":"Key Design Decisions","id":"key-design-decisions","depth":2},{"value":"Adapter System","id":"adapter-system","depth":2},{"value":"Related Documents","id":"related-documents","depth":2}],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"title":"Architecture Overview","description":"Technical architecture of Universal Search","lastUpdated":"2026-05-30","filePath":"content/en/reference/architecture.mdx","timestamp":1782352722000},"sourceCode":"$5","children":["$L6","$L7"]}]]}]}],null,"$L8"]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"jAxU7kTdH6KdR2jtj7LLb"}
+6:["$","div",null,{"id":"nextra-skip-nav"}]
+7:["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["Architecture Overview","$undefined"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Universal Search is composed of a Go orchestration plane, Python sidecars, and a Next.js web UI, all wired together via Docker Compose."}],"\n",["$","h2",null,{"id":"high-level-architecture","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["High-Level Architecture",["$","$L9",null,{"id":"high-level-architecture"}]]}],"\n",["$","div",null,{"data-pagefind-ignore":"all","className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":["$undefined",["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-2","children":[["$","$La",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],["$","$Lb",null,{"className":""}]]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":[["$","span",null,{"children":["$","span",null,{"children":"┌─────────────────────────────────────────────────────────────┐"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"│  Client Surfaces                                            │"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  │"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"│  │ CLI      │  │ Web UI   │  │ MCP      │  │ Claude   │  │"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"│  │ usearch  │  │ Next.js  │  │ Server   │  │ Skill    │  │"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘  │"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"└───────┼─────────────┼─────────────┼──────────────┼─────────┘"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"        │             │             │              │"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"        ▼             ▼             ▼              ▼"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"┌─────────────────────────────────────────────────────────────┐"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"│  Go Orchestration Plane (cmd/usearch, internal/)            │"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"│  ┌──────────────────────────────────────────────────────┐   │"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"│  │  Router → Fanout → Adapters → Synthesis → Output     │   │"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"│  └──────────────────────────────────────────────────────┘   │"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"│  ┌──────────────────────────────────────────────────────┐   │"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"│  │  Auth (JWT/OIDC) │ Observability (OTel, slog)       │   │"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"│  └──────────────────────────────────────────────────────┘   │"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"└─────────────────────────┬───────────────────────────────────┘"}]}],"\n","$Lc","\n","$Ld","\n","$Le","\n","$Lf","\n","$L10","\n","$L11","\n","$L12","\n","$L13","\n","$L14","\n","$L15","\n","$L16","\n","$L17","\n","$L18","\n","$L19","\n","$L1a","\n","$L1b"]}]]}]]}],"\n","$L1c","\n","$L1d","\n","$L1e","\n","$L1f","\n","$L20","\n","$L21","\n","$L22","\n","$L23","\n","$L24","\n","$L25","\n","$L26"]}]
+8:["$","$L27",null,{"children":["$","$28",null,{"name":"Next.MetadataOutlet","children":"$@29"}]}]
+c:["$","span",null,{"children":["$","span",null,{"children":"                          │"}]}]
+d:["$","span",null,{"children":["$","span",null,{"children":"        ┌─────────────────┼─────────────────────┐"}]}]
+e:["$","span",null,{"children":["$","span",null,{"children":"        ▼                 ▼                     ▼"}]}]
+f:["$","span",null,{"children":["$","span",null,{"children":"┌────────────┐   ┌────────────────┐   ┌──────────────────┐"}]}]
+10:["$","span",null,{"children":["$","span",null,{"children":"│  SearXNG   │   │  Python        │   │  Storage Layer   │"}]}]
+11:["$","span",null,{"children":["$","span",null,{"children":"│  (AGPL-3   │   │  Sidecars      │   │  ┌────────────┐  │"}]}]
+12:["$","span",null,{"children":["$","span",null,{"children":"│  separate  │   │  ┌──────────┐  │   │  │  Qdrant    │  │"}]}]
+13:["$","span",null,{"children":["$","span",null,{"children":"│  container)│   │  │researcher│  │   │  │  (vectors) │  │"}]}]
+14:["$","span",null,{"children":["$","span",null,{"children":"└────────────┘   │  │storm     │  │   │  ├────────────┤  │"}]}]
+15:["$","span",null,{"children":["$","span",null,{"children":"                 │  │embedder  │  │   │  │Meilisearch │  │"}]}]
+16:["$","span",null,{"children":["$","span",null,{"children":"                 │  └──────────┘  │   │  │(full-text) │  │"}]}]
+17:["$","span",null,{"children":["$","span",null,{"children":"                 └────────────────┘   │  ├────────────┤  │"}]}]
+18:["$","span",null,{"children":["$","span",null,{"children":"                                      │  │ PostgreSQL │  │"}]}]
+19:["$","span",null,{"children":["$","span",null,{"children":"                                      │  │ (relational│  │"}]}]
+1a:["$","span",null,{"children":["$","span",null,{"children":"                                      │  └────────────┘  │"}]}]
+1b:["$","span",null,{"children":["$","span",null,{"children":"                                      └──────────────────┘"}]}]
+1c:["$","h2",null,{"id":"repository-structure","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Repository Structure",["$","$L9",null,{"id":"repository-structure"}]]}]
+1d:["$","div",null,{"data-pagefind-ignore":"all","className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":["$undefined",["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-2","children":[["$","$La",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],["$","$Lb",null,{"className":""}]]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":[["$","span",null,{"children":["$","span",null,{"children":"cmd/"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"  usearch/         → Go CLI binary (cobra, 7 subcommands)"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"internal/"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"  adapters/        → Source adapters (searxng, arxiv, naver, github, hn, reddit, youtube, social)"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"  deepagent/       → Multi-agent deep research pipeline"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"  fanout/          → Parallel adapter fan-out with circuit breaker"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"  llm/             → LLM routing via LiteLLM proxy"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"  mcpserver/       → MCP server (4 tools: search, get_citation, list_sources, deep_research)"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"  obs/             → Observability (OTel tracing, structured logging, metrics)"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"  router/          → Request routing + locale-aware ranking"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"  synthesis/       → LLM synthesis client"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"  usearch/         → Core domain (config, auth, storage)"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"services/"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"  researcher/      → Python: gpt-researcher-based deep research"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"  storm/           → Python: STORM citation report generator"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"  embedder/        → Python: text embedding service"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"web/               → Next.js 16 App Router web UI"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"deploy/            → docker-compose dev + prod stack"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"docs/              → This documentation site (Nextra v4)"}]}]]}]]}]]}]
+1e:["$","h2",null,{"id":"key-design-decisions","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Key Design Decisions",["$","$L9",null,{"id":"key-design-decisions"}]]}]
+1f:["$","table",null,{"className":"x:block x:overflow-x-auto nextra-scrollbar x:not-first:mt-[1.25em] x:p-0","children":[["$","thead",null,{"children":["$","tr",null,{"children":[["$","th",null,{"children":"Decision","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}],["$","th",null,{"children":"Choice","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}],["$","th",null,{"children":"Rationale","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]}],["$","tbody",null,{"children":[["$","tr",null,{"children":[["$","td",null,{"children":"Language","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"Go (orchestration) + Python (sidecars)","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"Go for latency-sensitive path; Python for ML/AI ecosystem","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":"CLI framework","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"Cobra","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"Standard Go CLI; SPEC-CLI-002","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":"Search","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"SearXNG (AGPL-3 separate container)","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"70+ engines, privacy-preserving, self-hostable","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":"Vector DB","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"Qdrant","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"Tiered multitenancy for team isolation","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":"Full-text","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"Meilisearch","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"Fast, typo-tolerant, self-hosted","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":"LLM routing","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"LiteLLM proxy","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],"$L2a"],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],"$L2b","$L2c"]}]]}]
+20:["$","h2",null,{"id":"adapter-system","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Adapter System",["$","$L9",null,{"id":"adapter-system"}]]}]
+21:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["The ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"internal/adapters"}]," package defines a pluggable adapter interface:"]}]
+22:["$","div",null,{"data-pagefind-ignore":"all","className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":["$undefined",["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-2","children":[["$","$La",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],["$","$Lb",null,{"className":""}]]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":[["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#D73A49","--shiki-dark":"#F97583"},"children":"type"}],["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":" Adapter"}],["$","span",null,{"style":{"--shiki-light":"#D73A49","--shiki-dark":"#F97583"},"children":" interface"}],["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":" {"}]]}],"\n",["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"    Search"}],["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":"("}],["$","span",null,{"style":{"--shiki-light":"#E36209","--shiki-dark":"#FFAB70"},"children":"ctx"}],["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":" context"}],["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":"."}],["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"Context"}],["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":", "}],["$","span",null,{"style":{"--shiki-light":"#E36209","--shiki-dark":"#FFAB70"},"children":"query"}],["$","span",null,{"style":{"--shiki-light":"#D73A49","--shiki-dark":"#F97583"},"children":" string"}],["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":", "}],["$","span",null,{"style":{"--shiki-light":"#E36209","--shiki-dark":"#FFAB70"},"children":"opts"}],["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":" SearchOptions"}],["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":") ([]"}],["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"Doc"}],["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":", "}],["$","span",null,{"style":{"--shiki-light":"#D73A49","--shiki-dark":"#F97583"},"children":"error"}],["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":")"}]]}],"\n",["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"    Capabilities"}],["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":"() "}],["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"Capabilities"}]]}],"\n",["$","span",null,{"children":["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":"}"}]}]]}]]}]]}]
+23:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["Adapters: ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"searxng"}],", ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"arxiv"}],", ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"github"}],", ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"hn"}],", ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"reddit"}],", ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"youtube"}],", ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"naver"}],", ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"koreanews"}],", ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"social"}]]}]
+24:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["See ",["$","$L2d",null,{"href":"/en/reference/adapters","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"Adapters Reference"}]," for the full adapter catalog. SPEC-DOC-002 covers the adapter plugin system."]}]
+25:["$","h2",null,{"id":"related-documents","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Related Documents",["$","$L9",null,{"id":"related-documents"}]]}]
+26:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","a",null,{"href":"https://github.com/elymas/universal-search/blob/main/.moai/project/tech.md","target":"_blank","rel":"noreferrer","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":[["$","code",null,{"className":"nextra-code","dir":"ltr","children":".moai/project/tech.md"}],false]}]," — Full tech stack reference (internal)"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"SPEC-CLI-001, SPEC-CLI-002: CLI architecture"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"SPEC-MCP-001: MCP server design"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"SPEC-AUTH-001/002/003: Authentication architecture"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"SPEC-OBS-001: Observability design"}],"\n"]}]
+29:null
+2a:["$","td",null,{"children":"Multi-provider fallback, cost tracking","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]
+2b:["$","tr",null,{"children":[["$","td",null,{"children":"MCP","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"go-sdk","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"Official Anthropic Go SDK","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]
+2c:["$","tr",null,{"children":[["$","td",null,{"children":"Auth","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"JWT + OIDC","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"Stateless + SSO compatibility","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]

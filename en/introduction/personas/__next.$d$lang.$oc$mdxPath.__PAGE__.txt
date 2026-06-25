@@ -1,0 +1,105 @@
+1:"$Sreact.fragment"
+2:I[22417,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"TOCProvider"]
+3:I[22312,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"Sidebar"]
+4:I[75003,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"ClientWrapper"]
+22:I[88040,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"HeadingAnchor"]
+23:I[71628,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js"],"OutletBoundary"]
+24:"$Sreact.suspense"
+5:T8a1,---
+title: Who is Universal Search for?
+description: Primary user personas and their use cases
+lastUpdated: 2026-05-30
+---
+
+# Who is Universal Search for?
+
+Universal Search is built for teams and individuals who do serious research work and need grounded, cited answers across multiple sources.
+
+## Primary Personas
+
+### Research-heavy Engineer
+
+**Need**: Technical deep-dives spanning GitHub, arXiv, docs, HN
+
+**Success Metric**: Finds grounded answer in ≤60s that previously took ≥15min
+
+**Key workflows**:
+- `usearch query "how does Raft consensus handle leader election?"` — cross-references arXiv, GitHub, HN
+- `usearch deep "compare Kafka vs Pulsar for event streaming"` — multi-agent deep research with citations
+- MCP integration with Claude for inline research during coding sessions
+
+---
+
+### Product / Strategy Lead
+
+**Need**: Market + social + news signal, Korean + global
+
+**Success Metric**: Weekly report assembled in under 10 minutes with cited sources
+
+**Key workflows**:
+- `usearch query "competitor product X market reception"` — web + social + news synthesis
+- Export cited markdown report for async sharing
+- Web UI dashboard for team-shared query history
+
+---
+
+### Korean Analyst / Journalist
+
+**Need**: Naver news, 다음, Korean RSS, cross-referenced with global sources
+
+**Success Metric**: Korean-first query returns Korean sources first, not translated summaries
+
+**Key workflows**:
+- `usearch query --locale ko "네이버 클로바 vs GPT-4o 비교"` — Korean-locale search
+- Naver news + 다음 + Korean tech blogs ranked first
+- mecab-ko tokenization for accurate Korean NLP
+
+---
+
+### Team Lead (Shared Memory)
+
+**Need**: Team's prior queries become re-searchable asset
+
+**Success Metric**: "Did anyone already research X?" answerable from shared index
+
+**Key workflows**:
+- Shared Qdrant + Meilisearch index across team
+- Query history via `usearch history`
+- RBAC for multi-user access control
+
+## Non-Targets
+
+Universal Search is **not** designed for:
+- General consumer search (use Google, Bing)
+- Coding assistance (use GitHub Copilot, Cursor)
+- Task execution (booking, sending emails)
+- Personal productivity (Gmail, Calendar integration — deferred to V1.1+)0:{"rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[{"value":"Primary Personas","id":"primary-personas","depth":2},{"value":"Research-heavy Engineer","id":"research-heavy-engineer","depth":3},{"value":"Product / Strategy Lead","id":"product--strategy-lead","depth":3},{"value":"Korean Analyst / Journalist","id":"korean-analyst--journalist","depth":3},{"value":"Team Lead (Shared Memory)","id":"team-lead-shared-memory","depth":3},{"value":"Non-Targets","id":"non-targets","depth":2}],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"title":"Who is Universal Search for?","description":"Primary user personas and their use cases","lastUpdated":"2026-05-30","filePath":"content/en/introduction/personas.mdx","timestamp":1782352722000},"sourceCode":"$5","children":[["$","div",null,{"id":"nextra-skip-nav"}],["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["Who is Universal Search for?","$undefined"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Universal Search is built for teams and individuals who do serious research work and need grounded, cited answers across multiple sources."}],"\n",["$","h2",null,{"id":"primary-personas","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Primary Personas","$L6"]}],"\n","$L7","\n","$L8","\n","$L9","\n","$La","\n","$Lb","\n","$Lc","\n","$Ld","\n","$Le","\n","$Lf","\n","$L10","\n","$L11","\n","$L12","\n","$L13","\n","$L14","\n","$L15","\n","$L16","\n","$L17","\n","$L18","\n","$L19","\n","$L1a","\n","$L1b","\n","$L1c","\n","$L1d","\n","$L1e","\n","$L1f","\n","$L20"]}]]}]]}]}],null,"$L21"]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"jAxU7kTdH6KdR2jtj7LLb"}
+6:["$","$L22",null,{"id":"primary-personas"}]
+7:["$","h3",null,{"id":"research-heavy-engineer","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Research-heavy Engineer",["$","$L22",null,{"id":"research-heavy-engineer"}]]}]
+8:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Need"}],": Technical deep-dives spanning GitHub, arXiv, docs, HN"]}]
+9:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Success Metric"}],": Finds grounded answer in ≤60s that previously took ≥15min"]}]
+a:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Key workflows"}],":"]}]
+b:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","code",null,{"className":"nextra-code","dir":"ltr","children":"usearch query \"how does Raft consensus handle leader election?\""}]," — cross-references arXiv, GitHub, HN"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","code",null,{"className":"nextra-code","dir":"ltr","children":"usearch deep \"compare Kafka vs Pulsar for event streaming\""}]," — multi-agent deep research with citations"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"MCP integration with Claude for inline research during coding sessions"}],"\n"]}]
+c:["$","hr",null,{"className":"x:my-[2em] nextra-border"}]
+d:["$","h3",null,{"id":"product--strategy-lead","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Product / Strategy Lead",["$","$L22",null,{"id":"product--strategy-lead"}]]}]
+e:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Need"}],": Market + social + news signal, Korean + global"]}]
+f:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Success Metric"}],": Weekly report assembled in under 10 minutes with cited sources"]}]
+10:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Key workflows"}],":"]}]
+11:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","code",null,{"className":"nextra-code","dir":"ltr","children":"usearch query \"competitor product X market reception\""}]," — web + social + news synthesis"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Export cited markdown report for async sharing"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Web UI dashboard for team-shared query history"}],"\n"]}]
+12:["$","hr",null,{"className":"x:my-[2em] nextra-border"}]
+13:["$","h3",null,{"id":"korean-analyst--journalist","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Korean Analyst / Journalist",["$","$L22",null,{"id":"korean-analyst--journalist"}]]}]
+14:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Need"}],": Naver news, 다음, Korean RSS, cross-referenced with global sources"]}]
+15:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Success Metric"}],": Korean-first query returns Korean sources first, not translated summaries"]}]
+16:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Key workflows"}],":"]}]
+17:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","code",null,{"className":"nextra-code","dir":"ltr","children":"usearch query --locale ko \"네이버 클로바 vs GPT-4o 비교\""}]," — Korean-locale search"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Naver news + 다음 + Korean tech blogs ranked first"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"mecab-ko tokenization for accurate Korean NLP"}],"\n"]}]
+18:["$","hr",null,{"className":"x:my-[2em] nextra-border"}]
+19:["$","h3",null,{"id":"team-lead-shared-memory","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["Team Lead (Shared Memory)",["$","$L22",null,{"id":"team-lead-shared-memory"}]]}]
+1a:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Need"}],": Team’s prior queries become re-searchable asset"]}]
+1b:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Success Metric"}],": “Did anyone already research X?” answerable from shared index"]}]
+1c:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Key workflows"}],":"]}]
+1d:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"Shared Qdrant + Meilisearch index across team"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["Query history via ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"usearch history"}]]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"RBAC for multi-user access control"}],"\n"]}]
+1e:["$","h2",null,{"id":"non-targets","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Non-Targets",["$","$L22",null,{"id":"non-targets"}]]}]
+1f:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["Universal Search is ",["$","strong",null,{"children":"not"}]," designed for:"]}]
+20:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"General consumer search (use Google, Bing)"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Coding assistance (use GitHub Copilot, Cursor)"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Task execution (booking, sending emails)"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Personal productivity (Gmail, Calendar integration — deferred to V1.1+)"}],"\n"]}]
+21:["$","$L23",null,{"children":["$","$24",null,{"name":"Next.MetadataOutlet","children":"$@25"}]}]
+25:null

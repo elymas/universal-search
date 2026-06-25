@@ -1,0 +1,51 @@
+1:"$Sreact.fragment"
+2:I[22417,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"TOCProvider"]
+3:I[22312,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"Sidebar"]
+4:I[75003,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"ClientWrapper"]
+e:I[88040,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"HeadingAnchor"]
+f:I[71628,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js"],"OutletBoundary"]
+10:"$Sreact.suspense"
+5:T566,---
+title: Security Runbook
+description: Incident response procedures — SPEC-SEC-001 forward reference
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# Security Runbook
+
+<Callout type="warning">
+  **Forward Reference — SPEC-SEC-001 Pending**
+
+  The full Security Runbook (incident response procedures, escalation paths, post-mortem templates) is delivered by **SPEC-SEC-001** (PR #42, pending merge into main).
+
+  This page is a placeholder. It will be expanded when SPEC-SEC-001 merges.
+</Callout>
+
+## What This Runbook Will Cover
+
+When SPEC-SEC-001 merges, this runbook will include:
+
+- **Incident Detection** — how to identify a security incident in Universal Search
+- **Severity Classification** — P0/P1/P2/P3 criteria for security incidents
+- **Escalation Path** — who to notify and in what order
+- **Containment Procedures** — immediate steps to limit blast radius
+- **Evidence Collection** — log retention and forensic artifact preservation
+- **Recovery Procedures** — restoring services after a security incident
+- **Post-Mortem Template** — structured review format for lessons learned
+
+## Immediate Contact
+
+Until SPEC-SEC-001 merges, report security incidents by opening a **private** security advisory on the GitHub repository (Security tab → Report a vulnerability).
+
+Do **not** report security incidents in public issues.0:{"rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[{"value":"What This Runbook Will Cover","id":"what-this-runbook-will-cover","depth":2},{"value":"Immediate Contact","id":"immediate-contact","depth":2}],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"title":"Security Runbook","description":"Incident response procedures — SPEC-SEC-001 forward reference","lastUpdated":"2026-05-30","filePath":"content/en/operators/security/runbook.mdx","timestamp":1782352722000},"sourceCode":"$5","children":[["$","div",null,{"id":"nextra-skip-nav"}],["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["Security Runbook","$undefined"]}],"\n",["$","div",null,{"className":"nextra-callout x:overflow-x-auto x:not-first:mt-[1.25em] x:flex x:rounded-lg x:border x:py-[.5em] x:pe-[1em] x:contrast-more:border-current! x:bg-yellow-50 x:dark:bg-yellow-700/30 x:text-yellow-700 x:dark:text-yellow-500 x:border-yellow-700","children":[["$","div",null,{"className":"x:select-none x:text-[1.25em] x:ps-[.6em] x:pe-[.4em]","style":{"fontFamily":"\"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\""},"data-pagefind-ignore":"all","children":["$","svg",null,{"viewBox":"0 0 16 16","fill":"currentColor","height":".8em","className":"x:mt-[.3em]","children":["$","path",null,{"d":"M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"}]}]}],["$","div",null,{"className":"x:w-full x:min-w-0","children":[["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["$","strong",null,{"children":"Forward Reference — SPEC-SEC-001 Pending"}]}],["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["The full Security Runbook (incident response procedures, escalation paths, post-mortem templates) is delivered by ",["$","strong",null,{"children":"SPEC-SEC-001"}]," (PR #42, pending merge into main)."]}],"$L6"]}]]}],"\n","$L7","\n","$L8","\n","$L9","\n","$La","\n","$Lb","\n","$Lc"]}]]}]]}]}],null,"$Ld"]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"jAxU7kTdH6KdR2jtj7LLb"}
+6:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"This page is a placeholder. It will be expanded when SPEC-SEC-001 merges."}]
+7:["$","h2",null,{"id":"what-this-runbook-will-cover","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["What This Runbook Will Cover",["$","$Le",null,{"id":"what-this-runbook-will-cover"}]]}]
+8:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"When SPEC-SEC-001 merges, this runbook will include:"}]
+9:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Incident Detection"}]," — how to identify a security incident in Universal Search"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Severity Classification"}]," — P0/P1/P2/P3 criteria for security incidents"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Escalation Path"}]," — who to notify and in what order"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Containment Procedures"}]," — immediate steps to limit blast radius"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Evidence Collection"}]," — log retention and forensic artifact preservation"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Recovery Procedures"}]," — restoring services after a security incident"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Post-Mortem Template"}]," — structured review format for lessons learned"]}],"\n"]}]
+a:["$","h2",null,{"id":"immediate-contact","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Immediate Contact",["$","$Le",null,{"id":"immediate-contact"}]]}]
+b:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["Until SPEC-SEC-001 merges, report security incidents by opening a ",["$","strong",null,{"children":"private"}]," security advisory on the GitHub repository (Security tab → Report a vulnerability)."]}]
+c:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["Do ",["$","strong",null,{"children":"not"}]," report security incidents in public issues."]}]
+d:["$","$Lf",null,{"children":["$","$10",null,{"name":"Next.MetadataOutlet","children":"$@11"}]}]
+11:null

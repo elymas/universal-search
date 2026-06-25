@@ -1,0 +1,91 @@
+1:"$Sreact.fragment"
+2:I[22417,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"TOCProvider"]
+3:I[22312,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"Sidebar"]
+4:I[75003,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"ClientWrapper"]
+6:I[82566,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"ToggleWordWrapButton"]
+7:I[76068,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"CopyToClipboard"]
+27:I[71628,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js"],"OutletBoundary"]
+28:"$Sreact.suspense"
+5:T4ce,---
+title: usearch history
+description: Auto-generated reference for usearch history
+generated: true
+source: usearch history --help
+lastGenerated: 2026-06-23T05:03:39Z
+---
+
+# usearch history
+
+> This page is auto-generated from `usearch history --help`.
+> Run `make gen-docs` after CLI changes to keep it in sync.
+
+```
+Manage query and deep invocation history.
+
+History is persisted to a JSONL file by default. Entries include prompt,
+summary, adapters used, latency, and cost.
+
+Usage:
+  usearch history [command]
+
+Examples:
+  usearch history list
+  usearch history list --limit 5
+  usearch history list --since 7d
+  usearch history show abc123
+  usearch history search "golang"
+  usearch history clear
+  usearch history clear --confirm
+  usearch history clear --since 30d --confirm
+
+Available Commands:
+  clear       Clear history entries
+  list        List recent history entries
+  search      Search history by prompt substring
+  show        Show details of a history entry
+
+Flags:
+  -h, --help   help for history
+
+Global Flags:
+      --repl   force interactive REPL mode
+
+Use "usearch history [command] --help" for more information about a command.
+```
+
+---
+
+*Generated: 2026-06-23T05:03:39Z*
+*Source: `usearch history --help`*0:{"rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"title":"usearch history","description":"Auto-generated reference for usearch history","generated":true,"source":"usearch history --help","lastGenerated":"2026-06-23T05:03:39Z","filePath":"content/en/reference/cli/history.mdx","timestamp":1782352722000},"sourceCode":"$5","children":[["$","div",null,{"id":"nextra-skip-nav"}],["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["usearch history","$undefined"]}],"\n",["$","blockquote",null,{"className":"x:not-first:mt-[1.25em] x:border-gray-300 x:italic x:text-gray-700 x:dark:border-gray-700 x:dark:text-gray-400 x:border-s-2 x:ps-[1.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["This page is auto-generated from ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"usearch history --help"}],".\nRun ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"make gen-docs"}]," after CLI changes to keep it in sync."]}],"\n"]}],"\n",["$","div",null,{"data-pagefind-ignore":"all","className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":["$undefined",["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-2","children":[["$","$L6",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],["$","$L7",null,{"className":""}]]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":[["$","span",null,{"children":["$","span",null,{"children":"Manage query and deep invocation history."}]}],"\n",["$","span",null,{"children":["$","span",null,{}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"History is persisted to a JSONL file by default. Entries include prompt,"}]}],"\n","$L8","\n","$L9","\n","$La","\n","$Lb","\n","$Lc","\n","$Ld","\n","$Le","\n","$Lf","\n","$L10","\n","$L11","\n","$L12","\n","$L13","\n","$L14","\n","$L15","\n","$L16","\n","$L17","\n","$L18","\n","$L19","\n","$L1a","\n","$L1b","\n","$L1c","\n","$L1d","\n","$L1e","\n","$L1f","\n","$L20","\n","$L21","\n","$L22","\n","$L23"]}]]}]]}],"\n","$L24","\n","$L25"]}]]}]]}]}],null,"$L26"]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"jAxU7kTdH6KdR2jtj7LLb"}
+8:["$","span",null,{"children":["$","span",null,{"children":"summary, adapters used, latency, and cost."}]}]
+9:["$","span",null,{"children":["$","span",null,{}]}]
+a:["$","span",null,{"children":["$","span",null,{"children":"Usage:"}]}]
+b:["$","span",null,{"children":["$","span",null,{"children":"  usearch history [command]"}]}]
+c:["$","span",null,{"children":["$","span",null,{}]}]
+d:["$","span",null,{"children":["$","span",null,{"children":"Examples:"}]}]
+e:["$","span",null,{"children":["$","span",null,{"children":"  usearch history list"}]}]
+f:["$","span",null,{"children":["$","span",null,{"children":"  usearch history list --limit 5"}]}]
+10:["$","span",null,{"children":["$","span",null,{"children":"  usearch history list --since 7d"}]}]
+11:["$","span",null,{"children":["$","span",null,{"children":"  usearch history show abc123"}]}]
+12:["$","span",null,{"children":["$","span",null,{"children":"  usearch history search \"golang\""}]}]
+13:["$","span",null,{"children":["$","span",null,{"children":"  usearch history clear"}]}]
+14:["$","span",null,{"children":["$","span",null,{"children":"  usearch history clear --confirm"}]}]
+15:["$","span",null,{"children":["$","span",null,{"children":"  usearch history clear --since 30d --confirm"}]}]
+16:["$","span",null,{"children":["$","span",null,{}]}]
+17:["$","span",null,{"children":["$","span",null,{"children":"Available Commands:"}]}]
+18:["$","span",null,{"children":["$","span",null,{"children":"  clear       Clear history entries"}]}]
+19:["$","span",null,{"children":["$","span",null,{"children":"  list        List recent history entries"}]}]
+1a:["$","span",null,{"children":["$","span",null,{"children":"  search      Search history by prompt substring"}]}]
+1b:["$","span",null,{"children":["$","span",null,{"children":"  show        Show details of a history entry"}]}]
+1c:["$","span",null,{"children":["$","span",null,{}]}]
+1d:["$","span",null,{"children":["$","span",null,{"children":"Flags:"}]}]
+1e:["$","span",null,{"children":["$","span",null,{"children":"  -h, --help   help for history"}]}]
+1f:["$","span",null,{"children":["$","span",null,{}]}]
+20:["$","span",null,{"children":["$","span",null,{"children":"Global Flags:"}]}]
+21:["$","span",null,{"children":["$","span",null,{"children":"      --repl   force interactive REPL mode"}]}]
+22:["$","span",null,{"children":["$","span",null,{}]}]
+23:["$","span",null,{"children":["$","span",null,{"children":"Use \"usearch history [command] --help\" for more information about a command."}]}]
+24:["$","hr",null,{"className":"x:my-[2em] nextra-border"}]
+25:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","em",null,{"children":"Generated: 2026-06-23T05:03:39Z"}],"\n",["$","em",null,{"children":["Source: ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"usearch history --help"}]]}]]}]
+26:["$","$L27",null,{"children":["$","$28",null,{"name":"Next.MetadataOutlet","children":"$@29"}]}]
+29:null

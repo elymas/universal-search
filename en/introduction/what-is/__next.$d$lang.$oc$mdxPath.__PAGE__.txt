@@ -1,0 +1,92 @@
+1:"$Sreact.fragment"
+2:I[22417,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"TOCProvider"]
+3:I[22312,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"Sidebar"]
+4:I[75003,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"ClientWrapper"]
+9:I[88040,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"HeadingAnchor"]
+14:I[71628,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js"],"OutletBoundary"]
+15:"$Sreact.suspense"
+17:I[82566,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"ToggleWordWrapButton"]
+18:I[76068,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"CopyToClipboard"]
+19:I[31817,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],""]
+5:Te72,---
+title: What is Universal Search?
+description: Overview of Universal Search — a team-scale, source-grounded research meta-agent
+lastUpdated: 2026-05-30
+---
+
+import { Callout } from 'nextra/components'
+
+# What is Universal Search?
+
+**Universal Search** is a team-scale, source-grounded research meta-agent. It unifies web, social, academic, technical, and Korean-locale retrieval behind a single query plane, then routes results through hybrid LLM synthesis (basic summarization by default, `/deep` multi-agent deep-research on demand).
+
+It is a composition — not a fork — of three proven open-source lineages:
+
+- **Access layer**: inspired by `fivetaku/insane-search` (5-phase adaptive scheduler, TLS fingerprint spoofing, Playwright fallback)
+- **Research orchestration**: built on `assafelovic/gpt-researcher` (Apache-2.0 planner-executor-publisher workflow, citation tracking, MCP server `gptr-mcp`)
+- **Breadth / real-time signal**: inspired by `mvanhorn/last30days-skill` (social-engagement-scored aggregation across Reddit / X / YouTube / HN / Polymarket / GitHub)
+- **Citation report generation**: inspired by Stanford **STORM** (long-form knowledge curation with per-claim provenance)
+- **Metasearch fanout**: **SearXNG** (70+ engine providers, privacy-preserving, self-hostable)
+
+## Problem Statement
+
+Research work today is fragmented:
+
+- Users context-switch across 5–10 tabs (Google, Reddit, arXiv, GitHub, Naver, YouTube, internal docs)
+- Each search returns raw links — synthesis is manual and slow
+- Existing "AI search" products (Perplexity, ChatGPT Search) are **single-tenant, closed, non-auditable**, and weak on Korean-locale sources and long-tail social platforms
+- Teams have no shared, auditable research trail — the same questions get re-asked, answers drift, provenance disappears
+
+Universal Search solves this by giving a team **one query → many sources → one cited synthesis → one shared, re-queryable memory**.
+
+## Architecture
+
+```
+cmd/usearch     → Go CLI binary (7 subcommands: query, config, history, deep, sources, login, repl)
+internal/       → Domain packages (adapters, LLM routing, MCP server, auth, observability)
+services/       → Python sidecars (researcher, storm, embedder)
+web/            → Next.js 16 App Router frontend
+deploy/         → docker-compose dev stack (Qdrant, Meilisearch, PG, SearXNG, LiteLLM, Redis)
+```
+
+## V1 Scope
+
+**In scope for V1**:
+- 4 source categories: web+social, academic+technical, Korean-locale, personal-context (read-only, opt-in per user — scoped for V1.1 gate)
+- Hybrid synthesis: default summarize-and-cite, `/deep` escalates to multi-agent pipeline (Researcher → Reviewer → Writer → Verifier)
+- Team auth + shared hybrid index (Qdrant Tiered Multitenancy + Meilisearch + Postgres)
+- Multiple surfaces: CLI, MCP server, Claude Skill, Web UI
+- Mixed LLM routing via LiteLLM proxy (Claude primary, OpenAI-compatible, local Ollama/vLLM fallback)
+- Observability: query log, citation-faithfulness eval, per-source success rate
+
+**Out of scope for V1**:
+- SaaS / public multi-tenant hosting (organization-scale self-hosted only)
+- Write-back to external systems (purely read / retrieve / synthesize)
+- Image / video generation
+- Agentic task execution beyond retrieval
+
+<Callout type="info">
+  Universal Search runs SearXNG (AGPL-3.0) as a separate Docker container. No SearXNG source code is bundled, modified, or redistributed. See [Licenses](/en/legal/licenses) for full attribution.
+</Callout>
+
+## Related SPECs
+
+- SPEC-CLI-001, SPEC-CLI-002: CLI surface
+- SPEC-MCP-001: MCP server and tools
+- SPEC-UI-001: Web UI
+- SPEC-AUTH-001/002/003: Authentication
+- SPEC-OBS-001: Observability0:{"rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[{"value":"Problem Statement","id":"problem-statement","depth":2},{"value":"Architecture","id":"architecture","depth":2},{"value":"V1 Scope","id":"v1-scope","depth":2},{"value":"Related SPECs","id":"related-specs","depth":2}],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"title":"What is Universal Search?","description":"Overview of Universal Search — a team-scale, source-grounded research meta-agent","lastUpdated":"2026-05-30","filePath":"content/en/introduction/what-is.mdx","timestamp":1782352722000},"sourceCode":"$5","children":["$L6","$L7"]}]]}]}],null,"$L8"]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"jAxU7kTdH6KdR2jtj7LLb"}
+6:["$","div",null,{"id":"nextra-skip-nav"}]
+7:["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["What is Universal Search?","$undefined"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Universal Search"}]," is a team-scale, source-grounded research meta-agent. It unifies web, social, academic, technical, and Korean-locale retrieval behind a single query plane, then routes results through hybrid LLM synthesis (basic summarization by default, ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"/deep"}]," multi-agent deep-research on demand)."]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"It is a composition — not a fork — of three proven open-source lineages:"}],"\n",["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Access layer"}],": inspired by ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"fivetaku/insane-search"}]," (5-phase adaptive scheduler, TLS fingerprint spoofing, Playwright fallback)"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Research orchestration"}],": built on ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"assafelovic/gpt-researcher"}]," (Apache-2.0 planner-executor-publisher workflow, citation tracking, MCP server ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"gptr-mcp"}],")"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Breadth / real-time signal"}],": inspired by ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"mvanhorn/last30days-skill"}]," (social-engagement-scored aggregation across Reddit / X / YouTube / HN / Polymarket / GitHub)"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Citation report generation"}],": inspired by Stanford ",["$","strong",null,{"children":"STORM"}]," (long-form knowledge curation with per-claim provenance)"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":"Metasearch fanout"}],": ",["$","strong",null,{"children":"SearXNG"}]," (70+ engine providers, privacy-preserving, self-hostable)"]}],"\n"]}],"\n",["$","h2",null,{"id":"problem-statement","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Problem Statement",["$","$L9",null,{"id":"problem-statement"}]]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"Research work today is fragmented:"}],"\n",["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"Users context-switch across 5–10 tabs (Google, Reddit, arXiv, GitHub, Naver, YouTube, internal docs)"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Each search returns raw links — synthesis is manual and slow"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["Existing “AI search” products (Perplexity, ChatGPT Search) are ",["$","strong",null,{"children":"single-tenant, closed, non-auditable"}],", and weak on Korean-locale sources and long-tail social platforms"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Teams have no shared, auditable research trail — the same questions get re-asked, answers drift, provenance disappears"}],"\n"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["Universal Search solves this by giving a team ",["$","strong",null,{"children":"one query → many sources → one cited synthesis → one shared, re-queryable memory"}],"."]}],"\n","$La","\n","$Lb","\n","$Lc","\n","$Ld","\n","$Le","\n","$Lf","\n","$L10","\n","$L11","\n","$L12","\n","$L13"]}]
+8:["$","$L14",null,{"children":["$","$15",null,{"name":"Next.MetadataOutlet","children":"$@16"}]}]
+a:["$","h2",null,{"id":"architecture","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Architecture",["$","$L9",null,{"id":"architecture"}]]}]
+b:["$","div",null,{"data-pagefind-ignore":"all","className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":["$undefined",["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-2","children":[["$","$L17",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],["$","$L18",null,{"className":""}]]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":[["$","span",null,{"children":["$","span",null,{"children":"cmd/usearch     → Go CLI binary (7 subcommands: query, config, history, deep, sources, login, repl)"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"internal/       → Domain packages (adapters, LLM routing, MCP server, auth, observability)"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"services/       → Python sidecars (researcher, storm, embedder)"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"web/            → Next.js 16 App Router frontend"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"deploy/         → docker-compose dev stack (Qdrant, Meilisearch, PG, SearXNG, LiteLLM, Redis)"}]}]]}]]}]]}]
+c:["$","h2",null,{"id":"v1-scope","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["V1 Scope",["$","$L9",null,{"id":"v1-scope"}]]}]
+d:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"In scope for V1"}],":"]}]
+e:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"4 source categories: web+social, academic+technical, Korean-locale, personal-context (read-only, opt-in per user — scoped for V1.1 gate)"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["Hybrid synthesis: default summarize-and-cite, ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"/deep"}]," escalates to multi-agent pipeline (Researcher → Reviewer → Writer → Verifier)"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Team auth + shared hybrid index (Qdrant Tiered Multitenancy + Meilisearch + Postgres)"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Multiple surfaces: CLI, MCP server, Claude Skill, Web UI"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Mixed LLM routing via LiteLLM proxy (Claude primary, OpenAI-compatible, local Ollama/vLLM fallback)"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Observability: query log, citation-faithfulness eval, per-source success rate"}],"\n"]}]
+f:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"Out of scope for V1"}],":"]}]
+10:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"SaaS / public multi-tenant hosting (organization-scale self-hosted only)"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Write-back to external systems (purely read / retrieve / synthesize)"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Image / video generation"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"Agentic task execution beyond retrieval"}],"\n"]}]
+11:["$","div",null,{"className":"nextra-callout x:overflow-x-auto x:not-first:mt-[1.25em] x:flex x:rounded-lg x:border x:py-[.5em] x:pe-[1em] x:contrast-more:border-current! x:bg-blue-100 x:dark:bg-blue-900/30 x:text-blue-700 x:dark:text-blue-400 x:border-blue-700 x:dark:border-blue-600","children":[["$","div",null,{"className":"x:select-none x:text-[1.25em] x:ps-[.6em] x:pe-[.4em]","style":{"fontFamily":"\"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\""},"data-pagefind-ignore":"all","children":["$","svg",null,{"viewBox":"0 0 16 16","fill":"currentColor","height":".8em","className":"x:mt-[.3em]","children":["$","path",null,{"d":"M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"}]}]}],["$","div",null,{"className":"x:w-full x:min-w-0","children":["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["Universal Search runs SearXNG (AGPL-3.0) as a separate Docker container. No SearXNG source code is bundled, modified, or redistributed. See ",["$","$L19",null,{"href":"/en/legal/licenses","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"Licenses"}]," for full attribution."]}]}]]}]
+12:["$","h2",null,{"id":"related-specs","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Related SPECs",["$","$L9",null,{"id":"related-specs"}]]}]
+13:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":"SPEC-CLI-001, SPEC-CLI-002: CLI surface"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"SPEC-MCP-001: MCP server and tools"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"SPEC-UI-001: Web UI"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"SPEC-AUTH-001/002/003: Authentication"}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":"SPEC-OBS-001: Observability"}],"\n"]}]
+16:null

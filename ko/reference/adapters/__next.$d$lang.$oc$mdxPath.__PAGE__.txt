@@ -1,0 +1,63 @@
+1:"$Sreact.fragment"
+2:I[22417,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"TOCProvider"]
+3:I[22312,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"Sidebar"]
+4:I[75003,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"ClientWrapper"]
+6:I[31817,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],""]
+7:I[34415,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"AdapterCatalog"]
+8:I[88040,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"HeadingAnchor"]
+14:I[71628,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js"],"OutletBoundary"]
+15:"$Sreact.suspense"
+5:T741,---
+title: 어댑터 카탈로그
+description: Universal Search 10개 프로덕션 어댑터 목록 (상태 배지 포함)
+lastVerified: 2026-05-31
+---
+
+import { AdapterCatalog } from '../../../../components/AdapterCatalog'
+
+# 어댑터 카탈로그
+
+Universal Search는 10개의 프로덕션 어댑터를 포함합니다. 각 어댑터는 검색 소스를 래핑하고 공통 `Adapter` 인터페이스(`pkg/types.Adapter`)를 구현합니다.
+
+아래 카테고리 필터로 목록을 좁힐 수 있습니다. 공유 오류 카테고리는 [오류 분류 체계](/ko/reference/adapters/errors) 페이지를 참고하세요.
+
+<AdapterCatalog />
+
+## 어댑터 라이프사이클
+
+상태 배지는 어댑터의 라이프사이클 분류를 나타냅니다 (SPEC-DOC-002 D5):
+
+| 배지 | 의미 |
+|------|------|
+| **stable** | 7일 롤링 성공률 ≥ 0.95 |
+| **beta** | 7일 롤링 성공률 0.80–0.94 |
+| **disabled** | 컴파일/플래그 게이트 스텁 — V1에서 실제 경로 없음 (현재: `x`) |
+| **deprecated** | post-V1 어댑터 제거를 위한 예약 |
+
+## 한국어 로케일 어댑터
+
+한국어 콘텐츠에 최적화된 두 어댑터:
+
+- **[Naver](/ko/reference/adapters/naver)** — `NAVER_CLIENT_ID` + `NAVER_CLIENT_SECRET` 필요; 한국어 UTF-8 쿼리를 그대로 전달
+- **[Korean News](/ko/reference/adapters/koreanews)** — 공개 RSS + 선택적 KNC 사이드카; mecab-ko 중복 감지
+
+인덱스 사이드 토크나이저 설정은 [한국어 로케일 설정](/ko/operators/korean-locale-setup)을 참고하세요.
+
+## 관련
+
+- [오류 분류 체계](/ko/reference/adapters/errors) — 공유 `Category` 참조
+- [아키텍처 참조](/ko/reference/architecture) — 어댑터 인터페이스 계약
+- [한국어 로케일 설정](/ko/operators/korean-locale-setup)
+- [배포 가이드](/ko/operators/deployment-helm)0:{"rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[{"value":"어댑터 라이프사이클","id":"어댑터-라이프사이클","depth":2},{"value":"한국어 로케일 어댑터","id":"한국어-로케일-어댑터","depth":2},{"value":"관련","id":"관련","depth":2}],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"title":"어댑터 카탈로그","description":"Universal Search 10개 프로덕션 어댑터 목록 (상태 배지 포함)","lastVerified":"2026-05-31","filePath":"content/ko/reference/adapters/index.mdx","timestamp":1782352722000},"sourceCode":"$5","children":[["$","div",null,{"id":"nextra-skip-nav"}],["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["어댑터 카탈로그","$undefined"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["Universal Search는 10개의 프로덕션 어댑터를 포함합니다. 각 어댑터는 검색 소스를 래핑하고 공통 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"Adapter"}]," 인터페이스(",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pkg/types.Adapter"}],")를 구현합니다."]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["아래 카테고리 필터로 목록을 좁힐 수 있습니다. 공유 오류 카테고리는 ",["$","$L6",null,{"href":"/ko/reference/adapters/errors","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"오류 분류 체계"}]," 페이지를 참고하세요."]}],"\n",["$","$L7",null,{}],"\n",["$","h2",null,{"id":"어댑터-라이프사이클","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["어댑터 라이프사이클",["$","$L8",null,{"id":"어댑터-라이프사이클"}]]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"상태 배지는 어댑터의 라이프사이클 분류를 나타냅니다 (SPEC-DOC-002 D5):"}],"\n",["$","table",null,{"className":"x:block x:overflow-x-auto nextra-scrollbar x:not-first:mt-[1.25em] x:p-0","children":[["$","thead",null,{"children":["$","tr",null,{"children":[["$","th",null,{"children":"배지","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}],["$","th",null,{"children":"의미","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]}],["$","tbody",null,{"children":[["$","tr",null,{"children":[["$","td",null,{"children":["$","strong",null,{"children":"stable"}],"className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],"$L9"],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],"$La","$Lb","$Lc"]}]]}],"\n","$Ld","\n","$Le","\n","$Lf","\n","$L10","\n","$L11","\n","$L12"]}]]}]]}]}],null,"$L13"]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"jAxU7kTdH6KdR2jtj7LLb"}
+9:["$","td",null,{"children":"7일 롤링 성공률 ≥ 0.95","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]
+a:["$","tr",null,{"children":[["$","td",null,{"children":["$","strong",null,{"children":"beta"}],"className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"7일 롤링 성공률 0.80–0.94","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]
+b:["$","tr",null,{"children":[["$","td",null,{"children":["$","strong",null,{"children":"disabled"}],"className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":["컴파일/플래그 게이트 스텁 — V1에서 실제 경로 없음 (현재: ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"x"}],")"],"className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]
+c:["$","tr",null,{"children":[["$","td",null,{"children":["$","strong",null,{"children":"deprecated"}],"className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"post-V1 어댑터 제거를 위한 예약","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]
+d:["$","h2",null,{"id":"한국어-로케일-어댑터","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["한국어 로케일 어댑터",["$","$L8",null,{"id":"한국어-로케일-어댑터"}]]}]
+e:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"한국어 콘텐츠에 최적화된 두 어댑터:"}]
+f:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":["$","$L6",null,{"href":"/ko/reference/adapters/naver","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"Naver"}]}]," — ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"NAVER_CLIENT_ID"}]," + ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"NAVER_CLIENT_SECRET"}]," 필요; 한국어 UTF-8 쿼리를 그대로 전달"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":["$","$L6",null,{"href":"/ko/reference/adapters/koreanews","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"Korean News"}]}]," — 공개 RSS + 선택적 KNC 사이드카; mecab-ko 중복 감지"]}],"\n"]}]
+10:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["인덱스 사이드 토크나이저 설정은 ",["$","$L6",null,{"href":"/ko/operators/korean-locale-setup","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"한국어 로케일 설정"}],"을 참고하세요."]}]
+11:["$","h2",null,{"id":"관련","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["관련",["$","$L8",null,{"id":"관련"}]]}]
+12:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","$L6",null,{"href":"/ko/reference/adapters/errors","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"오류 분류 체계"}]," — 공유 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"Category"}]," 참조"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","$L6",null,{"href":"/ko/reference/architecture","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"아키텍처 참조"}]," — 어댑터 인터페이스 계약"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["$","$L6",null,{"href":"/ko/operators/korean-locale-setup","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"한국어 로케일 설정"}]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":["$","$L6",null,{"href":"/ko/operators/deployment-helm","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"배포 가이드"}]}],"\n"]}]
+13:["$","$L14",null,{"children":["$","$15",null,{"name":"Next.MetadataOutlet","children":"$@16"}]}]
+16:null

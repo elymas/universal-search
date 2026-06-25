@@ -1,0 +1,224 @@
+1:"$Sreact.fragment"
+2:I[22417,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"TOCProvider"]
+3:I[22312,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"Sidebar"]
+4:I[75003,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"ClientWrapper"]
+9:I[31817,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],""]
+a:I[88040,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"HeadingAnchor"]
+43:I[71628,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js"],"OutletBoundary"]
+44:"$Sreact.suspense"
+46:I[82566,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"ToggleWordWrapButton"]
+47:I[76068,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"CopyToClipboard"]
+5:T13eb,---
+title: 오류 분류 체계
+description: Universal Search 모든 어댑터에 공통으로 사용되는 오류 카테고리 레퍼런스
+lastVerified: 2026-05-31
+---
+
+import { Callout } from 'nextra/components'
+
+# 오류 분류 체계
+
+모든 Universal Search 어댑터는 `*types.SourceError`에 `Category` 필드를 포함한 오류를 반환합니다. 팬아웃 디스패처(SPEC-FAN-001)는 이 카테고리를 사용하여 재시도 전략을 결정합니다.
+
+<Callout type="info">
+  소스: `pkg/types/errors.go` — 5개 값을 가진 `Category` 열거형.
+  재시도 의미론은 [SPEC-FAN-001](/ko/reference/architecture)에서 정의됩니다.
+</Callout>
+
+## Status &amp; Compatibility
+
+| 항목 | 값 |
+|------|-----|
+| 소스 파일 | `pkg/types/errors.go` |
+| 적용 대상 | 10개 프로덕션 어댑터 모두 |
+| 최종 확인일 | 2026-05-31 |
+
+## Overview
+
+어댑터 호출이 실패하면 오류는 `*types.SourceError`로 래핑됩니다:
+
+```go
+type SourceError struct {
+    Adapter    string
+    Category   Category
+    HTTPStatus int
+    Cause      error
+    RetryAfter time.Duration
+}
+```
+
+`Category` 필드는 팬아웃 디스패처가 실패를 처리하는 방법을 결정합니다.
+
+## Setup
+
+해당 없음 — 이 페이지는 오류 처리 의미론에 대한 레퍼런스 페이지입니다.
+
+## Capabilities
+
+해당 없음 — 오류 분류 체계는 모든 어댑터에 균일하게 적용됩니다.
+
+## Query syntax
+
+해당 없음.
+
+## Rate limits
+
+해당 없음.
+
+## Error reference
+
+### CategoryUnknown
+
+**값:** `0` (기본 제로 값)
+
+**트리거 HTTP 상태 코드:** 4가지 센티넬과 일치하지 않는 분류되지 않은 오류.
+
+**팬아웃 디스패처 동작:** 영구 오류로 처리 — 재시도 없음. Prometheus 결과 레이블 `"failure"`에 매핑.
+
+**예시 오류 메시지:**
+```
+adapter "searxng": unknown: unexpected EOF
+```
+
+---
+
+### CategoryTransient
+
+**값:** `1`
+
+**트리거 HTTP 상태 코드:** HTTP 5xx 응답, 네트워크 타임아웃(`context.DeadlineExceeded`), 일시적 연결 오류.
+
+**팬아웃 디스패처 동작:** 지수 백오프로 재시도 (SPEC-FAN-001 참조). Prometheus 결과 레이블 `"transient"`에 매핑.
+
+**`RetryAfter` 처리:** `RetryAfter > 0`이면 디스패처가 다음 재시도 전에 해당 지연을 적용합니다.
+
+**예시 오류 메시지:**
+```
+adapter "reddit": transient: dial tcp: i/o timeout
+```
+
+---
+
+### CategoryPermanent
+
+**값:** `2`
+
+**트리거 HTTP 상태 코드:** HTTP 400, 401, 403, 404, 422. 인증 실패 및 잘못된 쿼리 파라미터 포함.
+
+**팬아웃 디스패처 동작:** 재시도 없음 — 즉시 호출자에게 오류 전파. Prometheus 결과 레이블 `"failure"`에 매핑.
+
+**예시 오류 메시지:**
+```
+adapter "github": permanent: 401 Unauthorized — Bad credentials
+```
+
+---
+
+### CategoryRateLimited
+
+**값:** `3`
+
+**트리거 HTTP 상태 코드:** HTTP 429. SearXNG와 x를 제외한 모든 어댑터가 업스트림 속도 제한에 도달하면 이 카테고리를 반환합니다.
+
+**팬아웃 디스패처 동작:** 재시도 전에 `RetryAfter` 시간만큼 대기. Prometheus 결과 레이블 `"rate_limited"`에 매핑.
+
+**`RetryAfter` 처리:** 업스트림 `Retry-After` 응답 헤더에서 파싱됩니다. 헤더가 없는 경우 어댑터별 기본값 적용 (예: HN 5s, GitHub 최대 90s).
+
+**예시 오류 메시지:**
+```
+adapter "hackernews": rate_limited: 429 Too Many Requests (retry-after: 5s)
+```
+
+---
+
+### CategoryUnavailable
+
+**값:** `4`
+
+**트리거 HTTP 상태 코드:** HTTP 503, DNS 확인 실패, TCP 다이얼 타임아웃.
+
+**팬아웃 디스패처 동작:** 동일 어댑터의 반복적인 `CategoryUnavailable` 오류 후 서킷 브레이커가 열릴 수 있습니다. Prometheus 결과 레이블 `"unavailable"`에 매핑.
+
+**예시 오류 메시지:**
+```
+adapter "naver": unavailable: dial tcp: lookup openapi.naver.com: no such host
+```
+
+## Troubleshooting
+
+| 증상 | 원인 가능성 | 진단 명령 | 해결 방법 | 관련 SPEC |
+|------|-----------|----------|----------|----------|
+| 모든 어댑터가 `CategoryUnavailable` 반환 | 네트워크 파티션 또는 DNS 장애 | `ping openapi.naver.com`, 컨테이너 네트워킹 확인 | 네트워크 연결 확인, Docker DNS 설정 점검 | SPEC-DEPLOY-001 |
+| 어댑터가 반복적으로 `CategoryUnknown` 반환 | 어댑터 오류 매핑 코드의 처리되지 않은 오류 유형 | 원시 오류에 대한 어댑터 로그 확인 | 해당 어댑터의 SPEC-ADP-*에 버그 리포트 | SPEC-ADP-001..009 |
+
+## Version compatibility
+
+| usearch 버전 | errors.go Category 열거형 | 최종 확인일 |
+|-------------|--------------------------|------------|
+| v1.0.0 | 5개 값 (Unknown..Unavailable) | 2026-05-31 |
+
+## Related
+
+- [SPEC-FAN-001 팬아웃 디스패처](/ko/reference/architecture) — 재시도 의미론
+- [SPEC-CACHE-001 5단계 폴백](/ko/reference/architecture) — 오류 시 캐시 폴백
+- [pkg/types/errors.go](https://github.com/elymas/universal-search/blob/main/pkg/types/errors.go) — 소스 코드0:{"rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[{"value":"Status & Compatibility","id":"status--compatibility","depth":2},{"value":"Overview","id":"overview","depth":2},{"value":"Setup","id":"setup","depth":2},{"value":"Capabilities","id":"capabilities","depth":2},{"value":"Query syntax","id":"query-syntax","depth":2},{"value":"Rate limits","id":"rate-limits","depth":2},{"value":"Error reference","id":"error-reference","depth":2},{"value":"CategoryUnknown","id":"categoryunknown","depth":3},{"value":"CategoryTransient","id":"categorytransient","depth":3},{"value":"CategoryPermanent","id":"categorypermanent","depth":3},{"value":"CategoryRateLimited","id":"categoryratelimited","depth":3},{"value":"CategoryUnavailable","id":"categoryunavailable","depth":3},{"value":"Troubleshooting","id":"troubleshooting","depth":2},{"value":"Version compatibility","id":"version-compatibility","depth":2},{"value":"Related","id":"related","depth":2}],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"title":"오류 분류 체계","description":"Universal Search 모든 어댑터에 공통으로 사용되는 오류 카테고리 레퍼런스","lastVerified":"2026-05-31","filePath":"content/ko/reference/adapters/errors.mdx","timestamp":1782352722000},"sourceCode":"$5","children":["$L6","$L7"]}]]}]}],null,"$L8"]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"jAxU7kTdH6KdR2jtj7LLb"}
+6:["$","div",null,{"id":"nextra-skip-nav"}]
+7:["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["오류 분류 체계","$undefined"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["모든 Universal Search 어댑터는 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"*types.SourceError"}],"에 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"Category"}]," 필드를 포함한 오류를 반환합니다. 팬아웃 디스패처(SPEC-FAN-001)는 이 카테고리를 사용하여 재시도 전략을 결정합니다."]}],"\n",["$","div",null,{"className":"nextra-callout x:overflow-x-auto x:not-first:mt-[1.25em] x:flex x:rounded-lg x:border x:py-[.5em] x:pe-[1em] x:contrast-more:border-current! x:bg-blue-100 x:dark:bg-blue-900/30 x:text-blue-700 x:dark:text-blue-400 x:border-blue-700 x:dark:border-blue-600","children":[["$","div",null,{"className":"x:select-none x:text-[1.25em] x:ps-[.6em] x:pe-[.4em]","style":{"fontFamily":"\"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\""},"data-pagefind-ignore":"all","children":["$","svg",null,{"viewBox":"0 0 16 16","fill":"currentColor","height":".8em","className":"x:mt-[.3em]","children":["$","path",null,{"d":"M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"}]}]}],["$","div",null,{"className":"x:w-full x:min-w-0","children":["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["소스: ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pkg/types/errors.go"}]," — 5개 값을 가진 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"Category"}]," 열거형.\n재시도 의미론은 ",["$","$L9",null,{"href":"/ko/reference/architecture","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"SPEC-FAN-001"}],"에서 정의됩니다."]}]}]]}],"\n",["$","h2",null,{"id":"status--compatibility","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Status & Compatibility",["$","$La",null,{"id":"status--compatibility"}]]}],"\n",["$","table",null,{"className":"x:block x:overflow-x-auto nextra-scrollbar x:not-first:mt-[1.25em] x:p-0","children":[["$","thead",null,{"children":["$","tr",null,{"children":[["$","th",null,{"children":"항목","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}],["$","th",null,{"children":"값","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]}],["$","tbody",null,{"children":[["$","tr",null,{"children":[["$","td",null,{"children":"소스 파일","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":["$","code",null,{"className":"nextra-code","dir":"ltr","children":"pkg/types/errors.go"}],"className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":"적용 대상","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"10개 프로덕션 어댑터 모두","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":"최종 확인일","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],"$Lb"],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]]}]]}],"\n","$Lc","\n","$Ld","\n","$Le","\n","$Lf","\n","$L10","\n","$L11","\n","$L12","\n","$L13","\n","$L14","\n","$L15","\n","$L16","\n","$L17","\n","$L18","\n","$L19","\n","$L1a","\n","$L1b","\n","$L1c","\n","$L1d","\n","$L1e","\n","$L1f","\n","$L20","\n","$L21","\n","$L22","\n","$L23","\n","$L24","\n","$L25","\n","$L26","\n","$L27","\n","$L28","\n","$L29","\n","$L2a","\n","$L2b","\n","$L2c","\n","$L2d","\n","$L2e","\n","$L2f","\n","$L30","\n","$L31","\n","$L32","\n","$L33","\n","$L34","\n","$L35","\n","$L36","\n","$L37","\n","$L38","\n","$L39","\n","$L3a","\n","$L3b","\n","$L3c","\n","$L3d","\n","$L3e","\n","$L3f","\n","$L40","\n","$L41","\n","$L42"]}]
+8:["$","$L43",null,{"children":["$","$44",null,{"name":"Next.MetadataOutlet","children":"$@45"}]}]
+b:["$","td",null,{"children":"2026-05-31","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]
+c:["$","h2",null,{"id":"overview","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Overview",["$","$La",null,{"id":"overview"}]]}]
+d:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["어댑터 호출이 실패하면 오류는 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"*types.SourceError"}],"로 래핑됩니다:"]}]
+e:["$","div",null,{"data-pagefind-ignore":"all","className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":["$undefined",["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-2","children":[["$","$L46",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],["$","$L47",null,{"className":""}]]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":[["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#D73A49","--shiki-dark":"#F97583"},"children":"type"}],["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":" SourceError"}],["$","span",null,{"style":{"--shiki-light":"#D73A49","--shiki-dark":"#F97583"},"children":" struct"}],["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":" {"}]]}],"\n",["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":"    Adapter    "}],["$","span",null,{"style":{"--shiki-light":"#D73A49","--shiki-dark":"#F97583"},"children":"string"}]]}],"\n",["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":"    Category   "}],["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"Category"}]]}],"\n",["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":"    HTTPStatus "}],["$","span",null,{"style":{"--shiki-light":"#D73A49","--shiki-dark":"#F97583"},"children":"int"}]]}],"\n",["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":"    Cause      "}],["$","span",null,{"style":{"--shiki-light":"#D73A49","--shiki-dark":"#F97583"},"children":"error"}]]}],"\n",["$","span",null,{"children":[["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":"    RetryAfter "}],["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"time"}],["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":"."}],["$","span",null,{"style":{"--shiki-light":"#6F42C1","--shiki-dark":"#B392F0"},"children":"Duration"}]]}],"\n",["$","span",null,{"children":["$","span",null,{"style":{"--shiki-light":"#24292E","--shiki-dark":"#E1E4E8"},"children":"}"}]}]]}]]}]]}]
+f:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","code",null,{"className":"nextra-code","dir":"ltr","children":"Category"}]," 필드는 팬아웃 디스패처가 실패를 처리하는 방법을 결정합니다."]}]
+10:["$","h2",null,{"id":"setup","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Setup",["$","$La",null,{"id":"setup"}]]}]
+11:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"해당 없음 — 이 페이지는 오류 처리 의미론에 대한 레퍼런스 페이지입니다."}]
+12:["$","h2",null,{"id":"capabilities","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Capabilities",["$","$La",null,{"id":"capabilities"}]]}]
+13:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"해당 없음 — 오류 분류 체계는 모든 어댑터에 균일하게 적용됩니다."}]
+14:["$","h2",null,{"id":"query-syntax","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Query syntax",["$","$La",null,{"id":"query-syntax"}]]}]
+15:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"해당 없음."}]
+16:["$","h2",null,{"id":"rate-limits","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Rate limits",["$","$La",null,{"id":"rate-limits"}]]}]
+17:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"해당 없음."}]
+18:["$","h2",null,{"id":"error-reference","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Error reference",["$","$La",null,{"id":"error-reference"}]]}]
+19:["$","h3",null,{"id":"categoryunknown","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["CategoryUnknown",["$","$La",null,{"id":"categoryunknown"}]]}]
+1a:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"값:"}]," ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"0"}]," (기본 제로 값)"]}]
+1b:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"트리거 HTTP 상태 코드:"}]," 4가지 센티넬과 일치하지 않는 분류되지 않은 오류."]}]
+1c:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"팬아웃 디스패처 동작:"}]," 영구 오류로 처리 — 재시도 없음. Prometheus 결과 레이블 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"\"failure\""}],"에 매핑."]}]
+1d:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["$","strong",null,{"children":"예시 오류 메시지:"}]}]
+1e:["$","div",null,{"data-pagefind-ignore":"all","className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":["$undefined",["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-2","children":[["$","$L46",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],["$","$L47",null,{"className":""}]]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":["$","span",null,{"children":["$","span",null,{"children":"adapter \"searxng\": unknown: unexpected EOF"}]}]}]]}]]}]
+1f:["$","hr",null,{"className":"x:my-[2em] nextra-border"}]
+20:["$","h3",null,{"id":"categorytransient","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["CategoryTransient",["$","$La",null,{"id":"categorytransient"}]]}]
+21:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"값:"}]," ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"1"}]]}]
+22:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"트리거 HTTP 상태 코드:"}]," HTTP 5xx 응답, 네트워크 타임아웃(",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"context.DeadlineExceeded"}],"), 일시적 연결 오류."]}]
+23:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"팬아웃 디스패처 동작:"}]," 지수 백오프로 재시도 (SPEC-FAN-001 참조). Prometheus 결과 레이블 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"\"transient\""}],"에 매핑."]}]
+24:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":[["$","code",null,{"className":"nextra-code","dir":"ltr","children":"RetryAfter"}]," 처리:"]}]," ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"RetryAfter > 0"}],"이면 디스패처가 다음 재시도 전에 해당 지연을 적용합니다."]}]
+25:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["$","strong",null,{"children":"예시 오류 메시지:"}]}]
+26:["$","div",null,{"data-pagefind-ignore":"all","className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":["$undefined",["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-2","children":[["$","$L46",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],["$","$L47",null,{"className":""}]]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":["$","span",null,{"children":["$","span",null,{"children":"adapter \"reddit\": transient: dial tcp: i/o timeout"}]}]}]]}]]}]
+27:["$","hr",null,{"className":"x:my-[2em] nextra-border"}]
+28:["$","h3",null,{"id":"categorypermanent","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["CategoryPermanent",["$","$La",null,{"id":"categorypermanent"}]]}]
+29:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"값:"}]," ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"2"}]]}]
+2a:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"트리거 HTTP 상태 코드:"}]," HTTP 400, 401, 403, 404, 422. 인증 실패 및 잘못된 쿼리 파라미터 포함."]}]
+2b:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"팬아웃 디스패처 동작:"}]," 재시도 없음 — 즉시 호출자에게 오류 전파. Prometheus 결과 레이블 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"\"failure\""}],"에 매핑."]}]
+2c:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["$","strong",null,{"children":"예시 오류 메시지:"}]}]
+2d:["$","div",null,{"data-pagefind-ignore":"all","className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":["$undefined",["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-2","children":[["$","$L46",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],["$","$L47",null,{"className":""}]]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":["$","span",null,{"children":["$","span",null,{"children":"adapter \"github\": permanent: 401 Unauthorized — Bad credentials"}]}]}]]}]]}]
+2e:["$","hr",null,{"className":"x:my-[2em] nextra-border"}]
+2f:["$","h3",null,{"id":"categoryratelimited","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["CategoryRateLimited",["$","$La",null,{"id":"categoryratelimited"}]]}]
+30:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"값:"}]," ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"3"}]]}]
+31:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"트리거 HTTP 상태 코드:"}]," HTTP 429. SearXNG와 x를 제외한 모든 어댑터가 업스트림 속도 제한에 도달하면 이 카테고리를 반환합니다."]}]
+32:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"팬아웃 디스패처 동작:"}]," 재시도 전에 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"RetryAfter"}]," 시간만큼 대기. Prometheus 결과 레이블 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"\"rate_limited\""}],"에 매핑."]}]
+33:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":[["$","code",null,{"className":"nextra-code","dir":"ltr","children":"RetryAfter"}]," 처리:"]}]," 업스트림 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"Retry-After"}]," 응답 헤더에서 파싱됩니다. 헤더가 없는 경우 어댑터별 기본값 적용 (예: HN 5s, GitHub 최대 90s)."]}]
+34:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["$","strong",null,{"children":"예시 오류 메시지:"}]}]
+35:["$","div",null,{"data-pagefind-ignore":"all","className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":["$undefined",["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-2","children":[["$","$L46",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],["$","$L47",null,{"className":""}]]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":["$","span",null,{"children":["$","span",null,{"children":"adapter \"hackernews\": rate_limited: 429 Too Many Requests (retry-after: 5s)"}]}]}]]}]]}]
+36:["$","hr",null,{"className":"x:my-[2em] nextra-border"}]
+37:["$","h3",null,{"id":"categoryunavailable","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-8 x:text-2xl","children":["CategoryUnavailable",["$","$La",null,{"id":"categoryunavailable"}]]}]
+38:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"값:"}]," ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"4"}]]}]
+39:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"트리거 HTTP 상태 코드:"}]," HTTP 503, DNS 확인 실패, TCP 다이얼 타임아웃."]}]
+3a:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"팬아웃 디스패처 동작:"}]," 동일 어댑터의 반복적인 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"CategoryUnavailable"}]," 오류 후 서킷 브레이커가 열릴 수 있습니다. Prometheus 결과 레이블 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"\"unavailable\""}],"에 매핑."]}]
+3b:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["$","strong",null,{"children":"예시 오류 메시지:"}]}]
+3c:["$","div",null,{"data-pagefind-ignore":"all","className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":["$undefined",["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-2","children":[["$","$L46",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],["$","$L47",null,{"className":""}]]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":["$","span",null,{"children":["$","span",null,{"children":"adapter \"naver\": unavailable: dial tcp: lookup openapi.naver.com: no such host"}]}]}]]}]]}]
+3d:["$","h2",null,{"id":"troubleshooting","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Troubleshooting",["$","$La",null,{"id":"troubleshooting"}]]}]
+3e:["$","table",null,{"className":"x:block x:overflow-x-auto nextra-scrollbar x:not-first:mt-[1.25em] x:p-0","children":[["$","thead",null,{"children":["$","tr",null,{"children":[["$","th",null,{"children":"증상","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}],["$","th",null,{"children":"원인 가능성","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}],["$","th",null,{"children":"진단 명령","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}],["$","th",null,{"children":"해결 방법","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}],["$","th",null,{"children":"관련 SPEC","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]}],["$","tbody",null,{"children":[["$","tr",null,{"children":[["$","td",null,{"children":["모든 어댑터가 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"CategoryUnavailable"}]," 반환"],"className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"네트워크 파티션 또는 DNS 장애","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":[["$","code",null,{"className":"nextra-code","dir":"ltr","children":"ping openapi.naver.com"}],", 컨테이너 네트워킹 확인"],"className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"네트워크 연결 확인, Docker DNS 설정 점검","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"SPEC-DEPLOY-001","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":["어댑터가 반복적으로 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"CategoryUnknown"}]," 반환"],"className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"어댑터 오류 매핑 코드의 처리되지 않은 오류 유형","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"원시 오류에 대한 어댑터 로그 확인","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"해당 어댑터의 SPEC-ADP-*에 버그 리포트","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"SPEC-ADP-001..009","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]]}]]}]
+3f:["$","h2",null,{"id":"version-compatibility","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Version compatibility",["$","$La",null,{"id":"version-compatibility"}]]}]
+40:["$","table",null,{"className":"x:block x:overflow-x-auto nextra-scrollbar x:not-first:mt-[1.25em] x:p-0","children":[["$","thead",null,{"children":["$","tr",null,{"children":[["$","th",null,{"children":"usearch 버전","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}],["$","th",null,{"children":"errors.go Category 열거형","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}],["$","th",null,{"children":"최종 확인일","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]}],["$","tbody",null,{"children":["$","tr",null,{"children":[["$","td",null,{"children":"v1.0.0","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"5개 값 (Unknown..Unavailable)","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"2026-05-31","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]}]]}]
+41:["$","h2",null,{"id":"related","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["Related",["$","$La",null,{"id":"related"}]]}]
+42:["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","$L9",null,{"href":"/ko/reference/architecture","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"SPEC-FAN-001 팬아웃 디스패처"}]," — 재시도 의미론"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","$L9",null,{"href":"/ko/reference/architecture","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"SPEC-CACHE-001 5단계 폴백"}]," — 오류 시 캐시 폴백"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","a",null,{"href":"https://github.com/elymas/universal-search/blob/main/pkg/types/errors.go","target":"_blank","rel":"noreferrer","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":["pkg/types/errors.go",[" ",["$","svg",null,{"fill":"none","stroke":"currentColor","strokeLinecap":"round","strokeLinejoin":"round","strokeWidth":1.7,"viewBox":"0 0 24 24","height":"1em","className":"x:inline x:align-baseline x:shrink-0","children":[["$","path",null,{"d":"M7 17L17 7"}],["$","path",null,{"d":"M7 7h10v10"}]]}]]]}]," — 소스 코드"]}],"\n"]}]
+45:null

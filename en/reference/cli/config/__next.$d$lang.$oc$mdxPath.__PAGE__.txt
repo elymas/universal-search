@@ -1,0 +1,95 @@
+1:"$Sreact.fragment"
+2:I[22417,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"TOCProvider"]
+3:I[22312,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"Sidebar"]
+4:I[75003,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"ClientWrapper"]
+6:I[82566,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"ToggleWordWrapButton"]
+7:I[76068,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js","/_next/static/chunks/0zep9odxjk_lo.js","/_next/static/chunks/0y9883s4.as.o.js","/_next/static/chunks/187l0ym3k6f~d.js"],"CopyToClipboard"]
+2a:I[71628,["/_next/static/chunks/117s7p40wpca_.js","/_next/static/chunks/11k9.ne3f__8r.js"],"OutletBoundary"]
+2b:"$Sreact.suspense"
+5:T534,---
+title: usearch config
+description: Auto-generated reference for usearch config
+generated: true
+source: usearch config --help
+lastGenerated: 2026-06-23T05:03:39Z
+---
+
+# usearch config
+
+> This page is auto-generated from `usearch config --help`.
+> Run `make gen-docs` after CLI changes to keep it in sync.
+
+```
+Manage the usearch configuration file.
+
+Configuration is loaded from an XDG-compliant TOML file with layered precedence:
+  1. Command-line flags (highest)
+  2. Environment variables (USEARCH_* prefix)
+  3. Config file (~/.config/usearch/config.toml)
+  4. Built-in defaults (lowest)
+
+Usage:
+  usearch config [command]
+
+Examples:
+  usearch config path
+  usearch config show
+  usearch config init
+  usearch config get server.endpoint
+  usearch config set server.endpoint http://localhost:9090
+
+Available Commands:
+  get         Print the value of a single config key
+  init        Create a default config file
+  path        Print the resolved config file path
+  set         Set a config key value in the config file
+  show        Print the effective merged configuration
+
+Flags:
+  -h, --help   help for config
+
+Global Flags:
+      --repl   force interactive REPL mode
+
+Use "usearch config [command] --help" for more information about a command.
+```
+
+---
+
+*Generated: 2026-06-23T05:03:39Z*
+*Source: `usearch config --help`*0:{"rsc":["$","$1","c",{"children":[["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L2",null,{"value":[],"children":[["$","$L3",null,{}],["$","$L4",null,{"metadata":{"title":"usearch config","description":"Auto-generated reference for usearch config","generated":true,"source":"usearch config --help","lastGenerated":"2026-06-23T05:03:39Z","filePath":"content/en/reference/cli/config.mdx","timestamp":1782352722000},"sourceCode":"$5","children":[["$","div",null,{"id":"nextra-skip-nav"}],["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["usearch config","$undefined"]}],"\n",["$","blockquote",null,{"className":"x:not-first:mt-[1.25em] x:border-gray-300 x:italic x:text-gray-700 x:dark:border-gray-700 x:dark:text-gray-400 x:border-s-2 x:ps-[1.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":["This page is auto-generated from ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"usearch config --help"}],".\nRun ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"make gen-docs"}]," after CLI changes to keep it in sync."]}],"\n"]}],"\n",["$","div",null,{"data-pagefind-ignore":"all","className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":["$undefined",["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-2","children":[["$","$L6",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],["$","$L7",null,{"className":""}]]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":[["$","span",null,{"children":["$","span",null,{"children":"Manage the usearch configuration file."}]}],"\n","$L8","\n","$L9","\n","$La","\n","$Lb","\n","$Lc","\n","$Ld","\n","$Le","\n","$Lf","\n","$L10","\n","$L11","\n","$L12","\n","$L13","\n","$L14","\n","$L15","\n","$L16","\n","$L17","\n","$L18","\n","$L19","\n","$L1a","\n","$L1b","\n","$L1c","\n","$L1d","\n","$L1e","\n","$L1f","\n","$L20","\n","$L21","\n","$L22","\n","$L23","\n","$L24","\n","$L25","\n","$L26"]}]]}]]}],"\n","$L27","\n","$L28"]}]]}]]}]}],null,"$L29"]}],"isPartial":false,"staleTime":300,"varyParams":null,"buildId":"jAxU7kTdH6KdR2jtj7LLb"}
+8:["$","span",null,{"children":["$","span",null,{}]}]
+9:["$","span",null,{"children":["$","span",null,{"children":"Configuration is loaded from an XDG-compliant TOML file with layered precedence:"}]}]
+a:["$","span",null,{"children":["$","span",null,{"children":"  1. Command-line flags (highest)"}]}]
+b:["$","span",null,{"children":["$","span",null,{"children":"  2. Environment variables (USEARCH_* prefix)"}]}]
+c:["$","span",null,{"children":["$","span",null,{"children":"  3. Config file (~/.config/usearch/config.toml)"}]}]
+d:["$","span",null,{"children":["$","span",null,{"children":"  4. Built-in defaults (lowest)"}]}]
+e:["$","span",null,{"children":["$","span",null,{}]}]
+f:["$","span",null,{"children":["$","span",null,{"children":"Usage:"}]}]
+10:["$","span",null,{"children":["$","span",null,{"children":"  usearch config [command]"}]}]
+11:["$","span",null,{"children":["$","span",null,{}]}]
+12:["$","span",null,{"children":["$","span",null,{"children":"Examples:"}]}]
+13:["$","span",null,{"children":["$","span",null,{"children":"  usearch config path"}]}]
+14:["$","span",null,{"children":["$","span",null,{"children":"  usearch config show"}]}]
+15:["$","span",null,{"children":["$","span",null,{"children":"  usearch config init"}]}]
+16:["$","span",null,{"children":["$","span",null,{"children":"  usearch config get server.endpoint"}]}]
+17:["$","span",null,{"children":["$","span",null,{"children":"  usearch config set server.endpoint http://localhost:9090"}]}]
+18:["$","span",null,{"children":["$","span",null,{}]}]
+19:["$","span",null,{"children":["$","span",null,{"children":"Available Commands:"}]}]
+1a:["$","span",null,{"children":["$","span",null,{"children":"  get         Print the value of a single config key"}]}]
+1b:["$","span",null,{"children":["$","span",null,{"children":"  init        Create a default config file"}]}]
+1c:["$","span",null,{"children":["$","span",null,{"children":"  path        Print the resolved config file path"}]}]
+1d:["$","span",null,{"children":["$","span",null,{"children":"  set         Set a config key value in the config file"}]}]
+1e:["$","span",null,{"children":["$","span",null,{"children":"  show        Print the effective merged configuration"}]}]
+1f:["$","span",null,{"children":["$","span",null,{}]}]
+20:["$","span",null,{"children":["$","span",null,{"children":"Flags:"}]}]
+21:["$","span",null,{"children":["$","span",null,{"children":"  -h, --help   help for config"}]}]
+22:["$","span",null,{"children":["$","span",null,{}]}]
+23:["$","span",null,{"children":["$","span",null,{"children":"Global Flags:"}]}]
+24:["$","span",null,{"children":["$","span",null,{"children":"      --repl   force interactive REPL mode"}]}]
+25:["$","span",null,{"children":["$","span",null,{}]}]
+26:["$","span",null,{"children":["$","span",null,{"children":"Use \"usearch config [command] --help\" for more information about a command."}]}]
+27:["$","hr",null,{"className":"x:my-[2em] nextra-border"}]
+28:["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","em",null,{"children":"Generated: 2026-06-23T05:03:39Z"}],"\n",["$","em",null,{"children":["Source: ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"usearch config --help"}]]}]]}]
+29:["$","$L2a",null,{"children":["$","$2b",null,{"name":"Next.MetadataOutlet","children":"$@2c"}]}]
+2c:null
