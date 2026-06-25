@@ -86,11 +86,15 @@ jobs:
         uses: lycheeverse/lychee-action@v2
         with:
           # Internal links only — fail on broken.
+          # --offline: check only local file:// links here; external links are
+          # the separate warn-only step below (per lychee.toml design). Without
+          # it, an external 404 (e.g. GitHub Discussions disabled) fails the gate.
           # --root-dir (absolute) resolves root-absolute links like /en and
           # /_next; --base only rebases relative links, so the bundled lychee
           # resolved /en against the filesystem root and 404'd everything.
           args: >-
             --config docs/lychee.toml
+            --offline
             --no-progress
             --root-dir ${{ github.workspace }}/docs/out
             'docs/out/**/*.html'
