@@ -22,6 +22,7 @@ import (
 	"github.com/elymas/universal-search/internal/adapters/hn"
 	"github.com/elymas/universal-search/internal/adapters/koreanews"
 	"github.com/elymas/universal-search/internal/adapters/naver"
+	redditrss "github.com/elymas/universal-search/internal/adapters/reddit_rss"
 	"github.com/elymas/universal-search/internal/adapters/reddit"
 	"github.com/elymas/universal-search/internal/adapters/searxng"
 	"github.com/elymas/universal-search/internal/adapters/social"
@@ -180,6 +181,14 @@ func BuildProductionRegistryWithResolverAndError(resolver secretstore.Resolver) 
 		_ = reg.Register(a)
 	}
 	if a, err := koreanews.New(koreanews.OptionsFromEnv()); err == nil {
+		_ = reg.Register(a)
+	}
+	// reddit-rss: credential-free public RSS fallback (SPEC-ADP-001b REQ-ADP1B-020).
+	// Always registered unconditionally; no credentials required.
+	// REDDIT_RSS_BASE_URL overrides the production endpoint (parallel to HN_BASE_URL / ARXIV_BASE_URL).
+	if a, err := redditrss.New(redditrss.Options{
+		BaseURL: os.Getenv("REDDIT_RSS_BASE_URL"),
+	}); err == nil {
 		_ = reg.Register(a)
 	}
 
