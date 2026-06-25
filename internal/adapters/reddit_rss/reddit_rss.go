@@ -16,6 +16,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/elymas/universal-search/pkg/types"
 )
@@ -30,6 +31,11 @@ type Adapter struct {
 	opts       Options
 	httpClient *http.Client
 	userAgent  string
+
+	// cooldown + maxAttempts govern the 429 retry loop (SPEC-ADP-001b REQ-ADP1B-012).
+	// Initialised from defaults in New; overridable in tests via export_test.go.
+	cooldown    time.Duration
+	maxAttempts int
 }
 
 // New constructs a reddit-rss Adapter from opts, applying defaults to all
@@ -52,9 +58,11 @@ func New(opts Options) (*Adapter, error) {
 	}
 
 	return &Adapter{
-		opts:       opts,
-		httpClient: client,
-		userAgent:  ua,
+		opts:        opts,
+		httpClient:  client,
+		userAgent:   ua,
+		cooldown:    defaultCooldown,
+		maxAttempts: defaultMaxAttempts,
 	}, nil
 }
 

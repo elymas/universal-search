@@ -25,6 +25,13 @@ import (
 // URL format: <BaseURL>?q=<encoded_text>&sort=relevance
 // Empty/whitespace query text returns CategoryPermanent without a network call (REQ-ADP1B-016).
 // Context cancellation is honoured at every blocking point (REQ-ADP1B-010).
+//
+// Reddit's anonymous RSS endpoint rate-limits hard (~1 req/short window/IP). On
+// HTTP 429 the call secures a cooldown (max(a.cooldown, Retry-After)) and
+// re-issues the request, up to a.maxAttempts total. Only 429 is retried — every
+// other error is returned immediately. The cooldown wait is bounded by ctx: if
+// ctx expires first, Search returns the context-shaped error and makes no
+// further request (REQ-ADP1B-012).
 func (a *Adapter) Search(ctx context.Context, q types.Query) ([]types.NormalizedDoc, error) {
 	// REQ-ADP1B-016: empty/whitespace query → permanent error, no network call.
 	if strings.TrimSpace(q.Text) == "" {
@@ -42,9 +49,43 @@ func (a *Adapter) Search(ctx context.Context, q types.Query) ([]types.Normalized
 	default:
 	}
 
-	// Build the search URL.
 	searchURL := buildSearchURL(a.opts.BaseURL, q.Text)
 
+	attempts := a.maxAttempts
+	if attempts < 1 {
+		attempts = 1
+	}
+
+	var lastErr *types.SourceError
+	for attempt := 0; attempt < attempts; attempt++ {
+		docs, se := a.searchOnce(ctx, searchURL)
+		if se == nil {
+			return docs, nil
+		}
+		// Retry only on rate-limit (HTTP 429); all other errors are terminal.
+		if se.Category != types.CategoryRateLimited {
+			return nil, se
+		}
+		lastErr = se
+		if attempt == attempts-1 {
+			break
+		}
+		// Secure the cooldown window before the next single call; Retry-After wins.
+		wait := a.cooldown
+		if se.RetryAfter > wait {
+			wait = se.RetryAfter
+		}
+		if err := sleepCtx(ctx, wait); err != nil {
+			return nil, ctxError(a.Name(), ctx)
+		}
+	}
+	return nil, lastErr
+}
+
+// searchOnce performs a single HTTP request + RSS parse, returning a typed
+// *types.SourceError (nil on success) so the retry loop can inspect Category
+// and RetryAfter without an interface unwrap.
+func (a *Adapter) searchOnce(ctx context.Context, searchURL string) ([]types.NormalizedDoc, *types.SourceError) {
 	// Apply per-request timeout = min(opts.Timeout, remaining-ctx-deadline).
 	reqCtx, cancel := requestContext(ctx, a.opts.Timeout)
 	defer cancel()
@@ -97,6 +138,22 @@ func (a *Adapter) Search(ctx context.Context, q types.Query) ([]types.Normalized
 	}
 
 	return feedItemsToDocs(a.Name(), a.opts.NowFunc, feed), nil
+}
+
+// sleepCtx waits for d or until ctx is done, whichever comes first. Returns
+// ctx.Err() if the context fires before the timer.
+func sleepCtx(ctx context.Context, d time.Duration) error {
+	if d <= 0 {
+		return nil
+	}
+	t := time.NewTimer(d)
+	defer t.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-t.C:
+		return nil
+	}
 }
 
 // buildSearchURL constructs the RSS search URL from the base and query text.
