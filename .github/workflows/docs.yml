@@ -81,7 +81,7 @@ jobs:
           args: >-
             --config docs/lychee.toml
             --no-progress
-            --base docs/out
+            --base ${{ github.workspace }}/docs/out
             'docs/out/**/*.html'
           fail: true
 
@@ -191,7 +191,11 @@ jobs:
           tmpdir=$(mktemp -d)
           cp -r docs/content/en/reference/cli/. "$tmpdir/"
           docs/scripts/gen-cli-reference.sh --binary ./cmd/usearch/usearch
-          if ! diff -r "$tmpdir" docs/content/en/reference/cli/ --exclude="*.bak" > /tmp/cli_diff.txt 2>&1; then
+          # Ignore the volatile lastGenerated/*Generated* timestamp lines: the
+          # generator stamps a fresh UTC time every run, so a plain diff always
+          # differs and the gate could never pass. -I compares real --help content.
+          if ! diff -r "$tmpdir" docs/content/en/reference/cli/ --exclude="*.bak" \
+               -I 'lastGenerated:' -I 'Generated:' > /tmp/cli_diff.txt 2>&1; then
             echo "::error::CLI reference MDX files are out of sync with binary --help output."
             echo "Run: docs/scripts/gen-cli-reference.sh --binary <binary> and commit the result."
             cat /tmp/cli_diff.txt
