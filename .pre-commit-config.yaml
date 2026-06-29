@@ -24,7 +24,7 @@ exclude: |
 repos:
   # ── General file hygiene ────────────────────────────────────────────────────
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -48,7 +48,7 @@ repos:
   # rev kept in sync with the ruff version declared in services/*/pyproject.toml
   # dev dependency-group to avoid cross-version format drift.
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.11
+    rev: v0.15.20
     hooks:
       - id: ruff
         args: [--fix]
@@ -82,25 +82,25 @@ repos:
   # allowlist. The CI security.yml gitleaks job is the backstop if this hook is
   # bypassed with --no-verify.
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.20.0
+    rev: v8.30.0
     hooks:
       - id: gitleaks
 
   # ── Dockerfile linting ───────────────────────────────────────────────────────
   - repo: https://github.com/hadolint/hadolint
-    rev: v2.12.0
+    rev: v2.14.0
     hooks:
       - id: hadolint
 
   # ── Shell script linting ─────────────────────────────────────────────────────
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.10.0.1
+    rev: v0.11.0.1
     hooks:
       - id: shellcheck
 
   # ── YAML linting ─────────────────────────────────────────────────────────────
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.35.1
+    rev: v1.38.0
     hooks:
       - id: yamllint
         args: [-d, relaxed]
